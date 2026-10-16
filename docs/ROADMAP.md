@@ -117,6 +117,38 @@ content model gains a stable source key.
 Reuse `PushSubscription` + `web-push` with FCM/APNs transport; the mobile model,
 storage and history UI already exist. Needs Firebase/APNs credentials.
 
+## Status — 2026-10-16
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| T1.1–1.2 sync contract + merge rule | done | [SYNC-API.md](SYNC-API.md) |
+| T2.1 additive Prisma models | done | applied to Neon; `docs/mobile-sync-migration.sql` in `SLNews` |
+| T2.2–2.4 sync routes (pull/push/auth/limits) | done | `SLNews` PR [#101](https://github.com/anselmeM/SLNews/pull/101) |
+| T2.5 route + engine tests | done | 73 new PWA tests; full suite 609 green |
+| T2.6 migration applied and verified | done | `migrate diff` → no difference; write/read/update probe rolled back clean |
+| T3.1–3.3 scraper accepts Clerk JWTs | done | `SLNewsAPIScapper` PR [#8](https://github.com/anselmeM/SLNewsAPIScapper/pull/8) — 125 tests, static-key path proven unchanged |
+| T4.1–4.2 sync client, ledger, merge-on-sign-in | done | `lib/core/{domain,data}/sync`, `LocalSyncLedger`, `SyncController` |
+| T4.3–4.5 wiring, account card, token allow-list | done | controllers hook changes; `AccountCard` shows sync state |
+| T4.4 mobile sync tests | done | 90 new tests; `flutter analyze` clean, 354 total |
+| T4.6 precise 429 backoff | open | `ApiException` carries no `cause`, so the `Retry-After` header cannot reach `RemoteSyncSource`; the failure still surfaces as `SyncRateLimited` with a null hint |
+| T5 web ↔ mobile content parity | not started | needs `Article.sourceUrl` (owner decision) |
+| T6 mobile push notifications | not started | needs FCM/APNs credentials |
+
+**End-to-end proof** (not just unit tests): `SLNews/scripts/verify-mobile-sync.mjs`
+mints a real Clerk session token for a throwaway probe user, drives the deployed
+contract against a locally running PWA and the real Neon database, and passed
+**17/17 checks** — invalid token → 401, first sync creates the Postgres user,
+push applies, re-push is idempotent, newer `updatedAt` wins, older is rejected
+`stale`, a tombstone applies and cannot be resurrected by a stale push, delta
+pull returns the tombstone, and the 400/413 caps hold. The probe user and its
+cascaded rows are deleted afterwards.
+
+**Bug that only that run could catch:** the PWA resolver read `.data`/`.errors`
+off `verifyToken` (the removed `@clerk/backend` v1 shape). v3 resolves with the
+claims and throws on failure, so every valid session token was 401'd. The unit
+tests mocked the same wrong shape; the resolver, its mocks and the contract note
+are now fixed.
+
 ## Verification plan
 
 | Layer | Command | Expected |

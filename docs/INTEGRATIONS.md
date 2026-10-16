@@ -148,6 +148,30 @@ Two independent decisions, neither required for the app to work today:
   `docs/CLERK-PRODUCTION-SETUP.md` (live keys, `clerk.slnews.sl` CNAME, optional
   `frontendApiProxy`). This app only needs the matching publishable key.
 
+## 3. Mobile sync API (reader state)
+
+Bookmarks, likes and follows sync to the reader's Clerk account through the PWA's
+`/api/mobile/v1/sync` so they survive a reinstall and follow the reader between
+devices. The contract is [SYNC-API.md](SYNC-API.md); the platform plan is
+[ROADMAP.md](ROADMAP.md).
+
+| Piece | Where |
+| --- | --- |
+| Contract | `docs/SYNC-API.md` (this repo, frozen) |
+| Backend | `SLNews` — `src/app/api/mobile/v1/sync/route.ts`, `src/lib/mobile-sync/` |
+| Tables | `MobileBookmark`, `MobileReaction`, `MobileFollow` (Neon, applied) |
+| Client | `lib/core/data/sync/`, contract in `lib/core/domain/sync/` |
+| Server notes | `SLNews/docs/mobile-sync-api.md` |
+
+Why its own tables: the PWA's `SavedArticle` points at a PWA `Article` row, while
+mobile items are external ids (`slnews-api:4821`, `rss:<hash>`) with no PWA row to
+reference. Sync rows are therefore user-scoped snapshots keyed by the mobile item
+id — no change to the existing web tables, and `sourceUrl` is already carried for
+the later reconciliation in roadmap phase 5.
+
+Configuration: `--dart-define=SLNEWS_SYNC_URL=<origin>` (default `https://slnews.sl`).
+Signed-out readers keep using device-local storage exactly as before.
+
 ## Roadmap
 
 | Step | State |
@@ -155,8 +179,11 @@ Two independent decisions, neither required for the app to work today:
 | Scraper API source + `ApiClient` auth seams | done (43 tests) |
 | Clerk contract, wiring, sign-in page, account card | done |
 | `clerk_flutter` dependency + adapter + APK build | done |
-| User-scoped bookmarks/likes/follows sync | not started (needs backend) |
-| Scraper JWT verification | not started (backend change) |
+| Sync contract + Neon tables + migration | done |
+| Mobile sync routes (PWA) + scraper Clerk JWT verification | in review |
+| Sync client, offline queue, merge-on-first-sign-in | in review |
+| User-scoped sync end-to-end on device | after deploy + keys |
+| Web ↔ mobile saved-story reconciliation, mobile push | roadmap phases 5–6 |
 
 ### Dependency trade-off introduced by the beta SDK
 

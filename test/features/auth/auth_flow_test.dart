@@ -116,8 +116,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Aminata Kamara'), findsOneWidget);
-      expect(find.text('aminata@example.com'), findsOneWidget);
       expect(find.text('AK'), findsOneWidget, reason: 'avatar falls back to initials');
+      // Sync is unconfigured in this scope, so the row says so rather than
+      // pretending to have synced.
+      expect(find.textContaining('Sync unavailable'), findsOneWidget);
 
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();

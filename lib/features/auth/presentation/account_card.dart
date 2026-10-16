@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/providers/auth_providers.dart';
+import '../../../core/providers/sync_controller.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -12,15 +15,33 @@ import '../../../core/widgets/sl_network_image.dart';
 /// Account entry point at the top of the Following tab.
 ///
 /// Signed out it invites the reader to sign in (the reference app keeps a single
-/// obvious account affordance); signed in it shows who is signed in and offers
-/// sign-out. Identity itself lives behind [authRepositoryProvider], so this
-/// widget contains no SDK code.
-class AccountCard extends ConsumerWidget {
+/// obvious account affordance); signed in it shows who is signed in, the sync
+/// state of their saved stories and a sign-out. Identity itself lives behind
+/// [authRepositoryProvider], so this widget contains no SDK code.
+class AccountCard extends ConsumerStatefulWidget {
   const AccountCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends ConsumerState<AccountCard> {
+  bool _mergeRequested = false;
+
+  @override
+  Widget build(BuildContext context) {
     final AuthState auth = ref.watch(authControllerProvider);
+    final SyncStatus sync = _readSyncStatus(ref);
+
+    // First frame a reader is signed in: converge this device's local state with
+    // the account's. Guarded so a rebuild cannot start a second run, and deferred
+    // to a post-frame callback because it writes to providers.
+    if (auth.isSignedIn && !_mergeRequested && sync.phase == SyncPhase.idle) {
+      _mergeRequested = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
+      });
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
@@ -30,7 +51,7 @@ class AccountCard extends ConsumerWidget {
         child: Padding(
           padding: AppSpacing.row,
           child: auth.isSignedIn
-              ? _SignedInRow(user: auth.user!)
+              ? _SignedInRow(user: auth.user!, sync: sync)
               : _SignedOutRow(
                   onSignIn: () => context.push(AppRoutes.signIn),
                 ),
@@ -41,9 +62,10 @@ class AccountCard extends ConsumerWidget {
 }
 
 class _SignedInRow extends ConsumerWidget {
-  const _SignedInRow({required this.user});
+  const _SignedInRow({required this.user, required this.sync});
 
   final AuthUser user;
+  final SyncStatus sync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,17 +83,33 @@ class _SignedInRow extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 style: context.typography.groupTitle.copyWith(fontSize: 17),
               ),
-              if (user.primaryEmail != null)
-                Text(
-                  user.primaryEmail!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.meta,
+              Text(
+                sync.label,
+                maxLines: 2,
+                style: context.typography.meta.copyWith(
+                  color: sync.phase == SyncPhase.failed
+                      ? context.colors.live
+                      : context.colors.onSurfaceVariant,
                 ),
+              ),
             ],
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
+        if (sync.phase != SyncPhase.disabled)
+          IconButton(
+            tooltip: 'Sync now',
+            onPressed: sync.isBusy
+                ? null
+                : () => ref.read(syncControllerProvider.notifier).mergeOnSignIn(),
+            icon: sync.isBusy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+          ),
         TextButton(
           onPressed: () async {
             await ref.read(authControllerProvider.notifier).signOut();
@@ -156,5 +194,22 @@ class _Avatar extends StatelessWidget {
         style: context.typography.overline.copyWith(color: context.colors.onSurfaceInverse),
       ),
     );
+  }
+}
+
+/// Reads the sync status, tolerating a scope with no sync stack.
+///
+/// Feature widget tests build a bare `ProviderScope` with only the repositories
+/// they exercise; there `syncRepositoryProvider` has no `ApiClient` to talk to.
+/// The account card must still render (signed-out readers never see sync state
+/// anyway), so a missing stack reads as "sync unavailable in this build".
+SyncStatus _readSyncStatus(WidgetRef ref) {
+  try {
+    return ref.watch(syncControllerProvider);
+  } on UnimplementedError {
+    return const SyncStatus(phase: SyncPhase.disabled);
+  } catch (error) {
+    debugPrint('AccountCard: sync status unavailable ($error)');
+    return const SyncStatus(phase: SyncPhase.disabled);
   }
 }

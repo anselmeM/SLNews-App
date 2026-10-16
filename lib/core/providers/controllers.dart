@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/app_settings.dart';
@@ -5,7 +6,9 @@ import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
 import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
+import '../domain/sync/sync_repository.dart';
 import 'app_providers.dart';
+import 'sync_controller.dart';
 
 /// Reader preferences (theme, text scale, home location, alerts).
 final NotifierProvider<SettingsController, AppSettings> settingsControllerProvider =
@@ -63,6 +66,12 @@ class BookmarksController extends Notifier<Set<String>> {
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleBookmark(articleId);
     state = <String>{...repository.bookmarkedIds};
+    await recordSyncChange(
+      ref,
+      SyncCollections.bookmarks,
+      articleId,
+      deleted: !state.contains(articleId),
+    );
   }
 }
 
@@ -80,6 +89,12 @@ class LikesController extends Notifier<Set<String>> {
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleLike(articleId);
     state = <String>{...repository.likedIds};
+    await recordSyncChange(
+      ref,
+      SyncCollections.reactions,
+      articleId,
+      deleted: !state.contains(articleId),
+    );
   }
 }
 
@@ -96,14 +111,49 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 
   Future<void> toggle(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).toggle(target);
+    await recordSyncChange(
+      ref,
+      SyncCollections.follows,
+      target.id,
+      deleted: !state.isFollowed(target.id),
+    );
   }
 
   Future<void> follow(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).follow(target);
+    await recordSyncChange(ref, SyncCollections.follows, target.id);
   }
 
   Future<void> unfollow(String targetId) async {
     state = await ref.read(followingRepositoryProvider).unfollow(targetId);
+    await recordSyncChange(ref, SyncCollections.follows, targetId, deleted: true);
+  }
+}
+
+/// Records a local reader-state change for sync, tolerating a scope without a
+/// sync stack.
+///
+/// Feature widget tests build a bare `ProviderScope` with only the repositories
+/// they care about; the ledger and the sync repository are not overridden there.
+/// A bookmark toggle must still work in that world, so a missing sync stack is
+/// treated as "this build does not sync" rather than an error.
+Future<void> recordSyncChange(
+  Ref ref,
+  String collection,
+  String id, {
+  bool deleted = false,
+}) async {
+  try {
+    await ref.read(syncControllerProvider.notifier).recordLocalChange(
+      collection,
+      id,
+      deleted: deleted,
+    );
+  } on UnimplementedError {
+    // No sync stack in this scope (a feature test, or a build without one):
+    // local state is still saved, it simply does not sync.
+  } catch (error) {
+    debugPrint('SLNews: sync hook skipped ($error)');
   }
 }
 

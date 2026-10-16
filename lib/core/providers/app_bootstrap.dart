@@ -17,6 +17,7 @@ import '../data/seed/seed_loader.dart';
 import '../data/sources/api_client.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/sl_news_api_source.dart';
+import '../data/sync/sync_api_config.dart';
 import '../domain/repositories/ad_repository.dart';
 import '../domain/repositories/article_repository.dart';
 import '../domain/repositories/following_repository.dart';
@@ -26,6 +27,7 @@ import '../domain/repositories/user_state_repository.dart';
 import '../domain/repositories/weather_repository.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
+import 'sync_repository_provider.dart';
 
 /// Opens local storage and wires the object graph before the first frame.
 ///
@@ -115,6 +117,11 @@ class AppBootstrap {
     // configuration behaves exactly like the RSS + seed app.
     final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment();
 
+    // Reader-state sync (bookmarks, likes, follows) lives on the PWA origin, so
+    // its host must be allow-listed for the session token too — otherwise every
+    // sync call would be anonymous and answer 401.
+    final SyncApiConfig syncConfig = SyncApiConfig.fromEnvironment();
+
     // Identity is optional too; a rejected key or an unreachable Frontend API
     // must never stop the reader from opening the app.
     final ClerkAuthRepository? auth = await _createAuth();
@@ -125,6 +132,7 @@ class AppBootstrap {
       // also fetches third-party publisher feeds, which must never see them.
       authTokenHosts: <String>{
         if (apiConfig.host.isNotEmpty) apiConfig.host,
+        if (syncConfig.isConfigured) syncConfig.host,
         'slnews.sl',
         'www.slnews.sl',
         'slnews.app',
@@ -197,6 +205,10 @@ class AppBootstrap {
           weatherRepositoryProvider.overrideWithValue(weatherRepository),
           userStateProvider.overrideWithValue(userStateRepository),
           adRepositoryProvider.overrideWithValue(adRepository),
+          // Keep the provider and the composition root on the same configuration
+          // (and URL host allow-list), so a test or a staging build overrides one
+          // place and everything follows.
+          syncApiConfigProvider.overrideWithValue(syncConfig),
           // Identity is only overridden when a provider is actually configured;
           // otherwise the default (unconfigured, signed-out) stand-ins apply.
           if (auth != null) authRepositoryProvider.overrideWithValue(auth),
