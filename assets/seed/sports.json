@@ -1,0 +1,230 @@
+{
+  "providerLabel": "yahoo/sports",
+  "updatedAt": "2026-10-15T20:00:00Z",
+  "games": [
+    {
+      "id": "spl-2026-10-11-bo-blackpool",
+      "leagueLabel": "Sierra Leone Premier League",
+      "away": {
+        "id": "team:blackpool",
+        "name": "Mighty Blackpool",
+        "code": "MBL",
+        "logoUrl": null,
+        "colourHex": "#0B3D91"
+      },
+      "home": {
+        "id": "team:bo-rangers",
+        "name": "Bo Rangers",
+        "code": "BOR",
+        "logoUrl": null,
+        "colourHex": "#1E7A3C"
+      },
+      "status": "final",
+      "awayScore": 1,
+      "homeScore": 2,
+      "startsAt": "2026-10-11T16:30:00Z",
+      "periodLabel": null,
+      "venue": "Southern Arena, Bo"
+    },
+    {
+      "id": "spl-2026-10-17-eel-kamboi",
+      "leagueLabel": "Sierra Leone Premier League",
+      "away": {
+        "id": "team:kamboi-eagles",
+        "name": "Kamboi Eagles",
+        "code": "KAM",
+        "logoUrl": null,
+        "colourHex": "#F2A104"
+      },
+      "home": {
+        "id": "team:east-end-lions",
+        "name": "East End Lions",
+        "code": "EEL",
+        "logoUrl": null,
+        "colourHex": "#C8102E"
+      },
+      "status": "scheduled",
+      "awayScore": null,
+      "homeScore": null,
+      "startsAt": "2026-10-17T16:00:00Z",
+      "periodLabel": null,
+      "venue": "Trade Centre, Freetown"
+    },
+    {
+      "id": "afconq-2026-10-15-leone-stars-guinea",
+      "leagueLabel": "AFCON Qualifier",
+      "away": {
+        "id": "team:guinea",
+        "name": "Guinea",
+        "code": "GUI",
+        "logoUrl": null,
+        "colourHex": "#CE1126"
+      },
+      "home": {
+        "id": "team:leone-stars",
+        "name": "Leone Stars",
+        "code": "SLE",
+        "logoUrl": null,
+        "colourHex": "#1EB53A"
+      },
+      "status": "live",
+      "awayScore": 1,
+      "homeScore": 1,
+      "startsAt": "2026-10-15T18:00:00Z",
+      "periodLabel": "72'",
+      "venue": "National Stadium, Freetown"
+    },
+    {
+      "id": "nba-2026-10-13-gsw-lal",
+      "leagueLabel": "NBA",
+      "away": {
+        "id": "team:gsw",
+        "name": "Golden State Warriors",
+        "code": "GSW",
+        "logoUrl": null,
+        "colourHex": "#1D428A"
+      },
+      "home": {
+        "id": "team:lal",
+        "name": "Los Angeles Lakers",
+        "code": "LAL",
+        "logoUrl": null,
+        "colourHex": "#552583"
+      },
+      "status": "final",
+      "awayScore": 101,
+      "homeScore": 89,
+      "startsAt": "2026-10-13T02:30:00Z",
+      "periodLabel": null,
+      "venue": "Crypto.com Arena"
+    },
+    {
+      "id": "nba-2026-10-16-den-lal",
+      "leagueLabel": "NBA",
+      "away": {
+        "id": "team:den",
+        "name": "Denver Nuggets",
+        "code": "DEN",
+        "logoUrl": null,
+        "colourHex": "#0E2240"
+      },
+      "home": {
+        "id": "team:lal",
+        "name": "Los Angeles Lakers",
+        "code": "LAL",
+        "logoUrl": null,
+        "colourHex": "#552583"
+      },
+      "status": "scheduled",
+      "awayScore": null,
+      "homeScore": null,
+      "startsAt": "2026-10-16T22:30:00Z",
+      "periodLabel": null,
+      "venue": "Crypto.com Arena"
+    },
+    {
+      "id": "epl-2026-10-12-ars-liv",
+      "leagueLabel": "Premier League",
+      "away": {
+        "id": "team:liverpool",
+        "name": "Liverpool",
+        "code": "LIV",
+        "logoUrl": null,
+        "colourHex": "#C8102E"
+      },
+      "home": {
+        "id": "team:arsenal",
+        "name": "Arsenal",
+        "code": "ARS",
+        "logoUrl": null,
+        "colourHex": "#EF0107"
+      },
+      "status": "final",
+      "awayScore": 2,
+      "homeScore": 2,
+      "startsAt": "2026-10-12T19:00:00Z",
+      "periodLabel": null,
+      "venue": "Emirates Stadium"
+    }
+  ],
+  "standings": [
+    {
+      "team": {
+        "id": "team:bo-rangers",
+        "name": "Bo Rangers",
+        "code": "BOR",
+        "logoUrl": null,
+        "colourHex": "#1E7A3C"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 12W 4D 2L",
+      "rank": 1
+    },
+    {
+      "team": {
+        "id": "team:east-end-lions",
+        "name": "East End Lions",
+        "code": "EEL",
+        "logoUrl": null,
+        "colourHex": "#C8102E"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 11W 5D 2L",
+      "rank": 2
+    },
+    {
+      "team": {
+        "id": "team:blackpool",
+        "name": "Mighty Blackpool",
+        "code": "MBL",
+        "logoUrl": null,
+        "colourHex": "#0B3D91"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 9W 5D 4L",
+      "rank": 3
+    },
+    {
+      "team": {
+        "id": "team:kamboi-eagles",
+        "name": "Kamboi Eagles",
+        "code": "KAM",
+        "logoUrl": null,
+        "colourHex": "#F2A104"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 7W 6D 5L",
+      "rank": 4
+    },
+    {
+      "team": {
+        "id": "team:fc-kallon",
+        "name": "FC Kallon",
+        "code": "FCK",
+        "logoUrl": null,
+        "colourHex": "#111827"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 6W 6D 6L",
+      "rank": 5
+    },
+    {
+      "team": {
+        "id": "team:diamond-stars",
+        "name": "Diamond Stars",
+        "code": "DIA",
+        "logoUrl": null,
+        "colourHex": "#0EA5E9"
+      },
+      "leagueId": "league:spl",
+      "leagueLabel": "Sierra Leone Premier League",
+      "record": "18P 5W 5D 8L",
+      "rank": 6
+    }
+  ]
+}

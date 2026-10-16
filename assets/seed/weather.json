@@ -1,0 +1,52 @@
+{
+  "city:freetown": {
+    "locationLabel": "Freetown",
+    "temperatureC": 29,
+    "conditionLabel": "Thundery showers",
+    "glyph": "storm",
+    "highC": 31,
+    "lowC": 24,
+    "humidityPercent": 82,
+    "updatedAt": "2026-10-15T19:40:00Z"
+  },
+  "city:bo": {
+    "locationLabel": "Bo",
+    "temperatureC": 31,
+    "conditionLabel": "Partly cloudy",
+    "glyph": "cloud",
+    "highC": 33,
+    "lowC": 23,
+    "humidityPercent": 74,
+    "updatedAt": "2026-10-15T19:40:00Z"
+  },
+  "city:kenema": {
+    "locationLabel": "Kenema",
+    "temperatureC": 32,
+    "conditionLabel": "Sunny",
+    "glyph": "sun",
+    "highC": 34,
+    "lowC": 22,
+    "humidityPercent": 65,
+    "updatedAt": "2026-10-15T19:40:00Z"
+  },
+  "city:makeni": {
+    "locationLabel": "Makeni",
+    "temperatureC": 30,
+    "conditionLabel": "Thundery showers",
+    "glyph": "storm",
+    "highC": 32,
+    "lowC": 23,
+    "humidityPercent": 78,
+    "updatedAt": "2026-10-15T19:40:00Z"
+  },
+  "city:koidu": {
+    "locationLabel": "Koidu",
+    "temperatureC": 27,
+    "conditionLabel": "Light rain",
+    "glyph": "rain",
+    "highC": 29,
+    "lowC": 21,
+    "humidityPercent": 85,
+    "updatedAt": "2026-10-15T19:40:00Z"
+  }
+}

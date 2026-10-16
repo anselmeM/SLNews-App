@@ -1,0 +1,281 @@
+[
+  {
+    "id": "team:lal",
+    "kind": "team",
+    "label": "Los Angeles Lakers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:leone-stars",
+    "kind": "team",
+    "label": "Leone Stars",
+    "subtitle": "Football · Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bo-rangers",
+    "kind": "team",
+    "label": "Bo Rangers",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:east-end-lions",
+    "kind": "team",
+    "label": "East End Lions",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:blackpool",
+    "kind": "team",
+    "label": "Mighty Blackpool",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:kamboi-eagles",
+    "kind": "team",
+    "label": "Kamboi Eagles",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "league:nba",
+    "kind": "league",
+    "label": "NBA",
+    "subtitle": "Basketball · United States",
+    "imageUrl": null,
+    "emojiOrGlyph": "emoji_events",
+    "isPopular": false
+  },
+  {
+    "id": "league:epl",
+    "kind": "league",
+    "label": "Premier League",
+    "subtitle": "Football · England",
+    "imageUrl": null,
+    "emojiOrGlyph": "emoji_events",
+    "isPopular": false
+  },
+  {
+    "id": "league:spl",
+    "kind": "league",
+    "label": "Sierra Leone Premier League",
+    "subtitle": "Football · Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "emoji_events",
+    "isPopular": false
+  },
+  {
+    "id": "city:freetown",
+    "kind": "location",
+    "label": "Freetown",
+    "subtitle": "Western Area",
+    "imageUrl": null,
+    "emojiOrGlyph": "location_on",
+    "isPopular": true
+  },
+  {
+    "id": "city:bo",
+    "kind": "location",
+    "label": "Bo",
+    "subtitle": "Southern Province",
+    "imageUrl": null,
+    "emojiOrGlyph": "location_on",
+    "isPopular": true
+  },
+  {
+    "id": "city:kenema",
+    "kind": "location",
+    "label": "Kenema",
+    "subtitle": "Eastern Province",
+    "imageUrl": null,
+    "emojiOrGlyph": "location_on",
+    "isPopular": false
+  },
+  {
+    "id": "city:makeni",
+    "kind": "location",
+    "label": "Makeni",
+    "subtitle": "Northern Province",
+    "imageUrl": null,
+    "emojiOrGlyph": "location_on",
+    "isPopular": false
+  },
+  {
+    "id": "city:koidu",
+    "kind": "location",
+    "label": "Koidu",
+    "subtitle": "Kono District",
+    "imageUrl": null,
+    "emojiOrGlyph": "location_on",
+    "isPopular": false
+  },
+  {
+    "id": "topic:politics",
+    "kind": "topic",
+    "label": "Politics",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": true
+  },
+  {
+    "id": "topic:music",
+    "kind": "topic",
+    "label": "Music",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": true
+  },
+  {
+    "id": "topic:business",
+    "kind": "topic",
+    "label": "Business",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:health",
+    "kind": "topic",
+    "label": "Health",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:culture",
+    "kind": "topic",
+    "label": "Culture",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:cars",
+    "kind": "topic",
+    "label": "Cars and Vehicles",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:mining",
+    "kind": "topic",
+    "label": "Mining",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:education",
+    "kind": "topic",
+    "label": "Education",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:tech",
+    "kind": "topic",
+    "label": "Tech",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:awoko",
+    "kind": "publisher",
+    "label": "Awoko Newspaper",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:sltelegraph",
+    "kind": "publisher",
+    "label": "The Sierra Leone Telegraph",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:sierraloaded",
+    "kind": "publisher",
+    "label": "Sierraloaded",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:politicosl",
+    "kind": "publisher",
+    "label": "Politico SL",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:concordtimes",
+    "kind": "publisher",
+    "label": "Concord Times",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:standardtimes",
+    "kind": "publisher",
+    "label": "Standard Times",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:kallon",
+    "kind": "publisher",
+    "label": "Kallon's Newswire",
+    "subtitle": "Sierra Leone",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  },
+  {
+    "id": "publisher:bbcafrica",
+    "kind": "publisher",
+    "label": "BBC News Africa",
+    "subtitle": "Wire service",
+    "imageUrl": null,
+    "emojiOrGlyph": "newspaper",
+    "isPopular": false
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ad-salone-rewards",
+    "headline": "CLAIM YOUR REWARD",
+    "body": "Play games and complete simple offers to unlock mobile top-up credit and data bundles.",
+    "ctaLabel": "View more",
+    "advertiser": "Salone Rewards",
+    "brandHex": "#0B6FD1",
+    "brandAccentHex": "#2E9BF5",
+    "assetLabel": "$20",
+    "disclosure": "Actual payout depends on playing games and engaging with the JustPlay app.",
+    "targetUrl": null
+  },
+  {
+    "id": "ad-salone-enterprise-week",
+    "headline": "GROW YOUR BUSINESS",
+    "body": "Three days of finance, export and logistics sessions for Sierra Leonean small businesses.",
+    "ctaLabel": "Register free",
+    "advertiser": "Salone Enterprise Week",
+    "brandHex": "#0F7B6C",
+    "brandAccentHex": "#17A38C",
+    "assetLabel": null,
+    "disclosure": "Sponsored placement. Registering does not require a payment.",
+    "targetUrl": null
+  },
+  {
+    "id": "ad-salone-market",
+    "headline": "SHOP LOCAL",
+    "body": "Groceries, phones and home goods delivered across Freetown in under two hours.",
+    "ctaLabel": "Browse stores",
+    "advertiser": "Salone Market",
+    "brandHex": "#B45309",
+    "brandAccentHex": "#F59E0B",
+    "assetLabel": null,
+    "disclosure": "Sponsored placement by Salone Market. Delivery fees vary by area.",
+    "targetUrl": null
+  }
+]

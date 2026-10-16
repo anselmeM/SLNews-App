@@ -1,0 +1,283 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:slnews_mobile/core/data/local/article_cache.dart';
+import 'package:slnews_mobile/core/data/repositories/offline_first_article_repository.dart';
+import 'package:slnews_mobile/core/data/seed/seed_data.dart';
+import 'package:slnews_mobile/core/data/seed/seed_loader.dart';
+import 'package:slnews_mobile/core/data/sources/api_client.dart';
+import 'package:slnews_mobile/core/data/sources/feed_source.dart';
+import 'package:slnews_mobile/core/domain/models/article.dart';
+
+import 'fakes.dart';
+
+OfflineFirstArticleRepository build({
+  required List<FeedSource> sources,
+  ArticleCache? cache,
+  SeedData? seed,
+}) => OfflineFirstArticleRepository(
+  sources: sources,
+  cache: cache ?? InMemoryArticleCache(),
+  seedLoader: InMemorySeedLoader(seed ?? SeedData.empty),
+);
+
+void main() {
+  group('OfflineFirstArticleRepository resolution order', () {
+    test('falls back to the bundled seed when every source fails', () async {
+      final OfflineFirstArticleRepository repository = build(
+        sources: <FeedSource>[
+          FakeFeedSource(
+            config: config('awoko'),
+            error: ApiException('offline'),
+          ),
+        ],
+        seed: seedData(
+          articles: <Article>[article('seed-1'), article('seed-2')],
+        ),
+      );
+
+      final List<Article> stories = await repository.topStories();
+      expect(
+        stories.map((Article a) => a.id),
+        containsAll(<String>['seed-1', 'seed-2']),
+      );
+      expect(repository.isOffline, isTrue);
+      expect(repository.lastSyncedAt, isNull);
+    });
+
+    test('hydrates from the cache written by a previous run', () async {
+      final InMemoryArticleCache cache = InMemoryArticleCache();
+      final OfflineFirstArticleRepository online = build(
+        sources: <FeedSource>[
+          FakeFeedSource(
+            config: config('a'),
+            articles: <Article>[
+              article('a-1', publishedAt: DateTime.utc(2026, 10, 5)),
+            ],
+          ),
+        ],
+        cache: cache,
+      );
+      await online.refresh();
+      expect(cache.syncedAt('all'), isNotNull);
+
+      final OfflineFirstArticleRepository offline = build(
+        sources: <FeedSource>[
+          FakeFeedSource(config: config('b'), error: ApiException('down')),
+        ],
+        cache: cache,
+      );
+
+      expect(
+        (await offline.topStories()).map((Article a) => a.id),
+        contains('a-1'),
+      );
+      expect(offline.isOffline, isTrue, reason: 'nothing was fetched this run');
+      expect(offline.lastSyncedAt, isNotNull, reason: 'carried over from disk');
+    });
+
+    test('topStories prefers breaking and live stories, then fills with the latest', () async {
+      final OfflineFirstArticleRepository repository = build(
+        sources: const <FeedSource>[],
+        seed: seedData(
+          articles: <Article>[
+            article('plain-new', publishedAt: DateTime.utc(2026, 10, 14)),
+            article(
+              'breaking-old',
+              publishedAt: DateTime.utc(2026, 10, 2),
+              isBreaking: true,
+            ),
+            article(
+              'live-mid',
+              publishedAt: DateTime.utc(2026, 10, 9),
+              isLive: true,
+            ),
+          ],
+        ),
+      );
+
+      expect(
+        (await repository.topStories(limit: 3)).map((Article a) => a.id),
+        <String>['live-mid', 'breaking-old', 'plain-new'],
+      );
+    });
+  });
+
+  group('OfflineFirstArticleRepository.refresh', () {
+    test('merges sources, de-duplicates by id keeping the newest and sorts descending', () async {
+      final OfflineFirstArticleRepository repository = build(
+        sources: <FeedSource>[
+          FakeFeedSource(
+            config: config('a'),
+            articles: <Article>[
+              article(
+                'dup',
+                title: 'Older copy',
+                publishedAt: DateTime.utc(2026, 10, 1),
+              ),
+              article('a-1', publishedAt: DateTime.utc(2026, 10, 5)),
+            ],
+          ),
+          FakeFeedSource(
+            config: config('b'),
+            articles: <Article>[
+              article(
+                'dup',
+                title: 'Newer copy',
+                publishedAt: DateTime.utc(2026, 10, 9),
+              ),
+            ],
+          ),
+        ],
+        seed: SeedData.empty,
+      );
+
+      final List<Article> merged = await repository.refresh();
+      expect(merged.map((Article a) => a.id), <String>['dup', 'a-1']);
+      expect(merged.first.title, 'Newer copy');
+      expect(repository.isOffline, isFalse);
+      expect(repository.lastSyncedAt, isNotNull);
+    });
+
+    test(
+      'keeps seeded content and stays offline when nothing could be fetched',
+      () async {
+        final OfflineFirstArticleRepository repository = build(
+          sources: <FeedSource>[
+            FakeFeedSource(config: config('a'), error: ApiException('timeout')),
+            FakeFeedSource(
+              config: config('b'),
+              error: StateError('socket closed'),
+            ),
+          ],
+          seed: seedData(articles: <Article>[article('seed-1')]),
+        );
+
+        final List<Article> refreshed = await repository.refresh();
+        expect(refreshed.map((Article a) => a.id), contains('seed-1'));
+        expect(repository.isOffline, isTrue);
+        expect(repository.lastSyncedAt, isNull);
+      },
+    );
+
+    test('de-duplicates concurrent refresh calls', () async {
+      final FakeFeedSource source = FakeFeedSource(
+        config: config('a'),
+        articles: <Article>[article('a-1')],
+      );
+      final OfflineFirstArticleRepository repository = build(
+        sources: <FeedSource>[source],
+      );
+
+      await Future.wait(<Future<List<Article>>>[
+        repository.refresh(),
+        repository.refresh(),
+        repository.refresh(),
+      ]);
+
+      expect(source.fetchCount, 1);
+    });
+
+    test('survives a source that never answers', () async {
+      final FeedSource slow = FakeFeedSource(
+        config: config('slow'),
+        articles: <Article>[article('slow-1')],
+        delay: const Duration(seconds: 30),
+      );
+      final FakeFeedSource fast = FakeFeedSource(
+        config: config('fast'),
+        articles: <Article>[article('fast-1')],
+      );
+      final OfflineFirstArticleRepository repository = build(
+        sources: <FeedSource>[slow, fast],
+      );
+
+      final List<Article> merged = await repository.refresh().timeout(
+        OfflineFirstArticleRepository.sourceTimeout +
+            const Duration(seconds: 5),
+      );
+
+      expect(merged.map((Article a) => a.id), contains('fast-1'));
+    });
+  });
+
+  group('OfflineFirstArticleRepository reads', () {
+    Future<OfflineFirstArticleRepository> seeded() async => build(
+      sources: <FeedSource>[FakeFeedSource(config: config('awoko'))],
+      seed: seedData(
+        articles: <Article>[
+          article(
+            'p1',
+            categoryId: 'politics',
+            publishedAt: DateTime.utc(2026, 10, 10),
+          ),
+          article(
+            'p2',
+            categoryId: 'politics',
+            publishedAt: DateTime.utc(2026, 10, 9),
+          ),
+          article(
+            'b1',
+            categoryId: 'business',
+            publishedAt: DateTime.utc(2026, 10, 8),
+          ),
+          article(
+            'h1',
+            categoryId: 'health',
+            title: 'Guma Valley water shutdown',
+            tags: <String>['freetown'],
+          ),
+        ],
+      ),
+    );
+
+    test('byCategory filters to the category, sorts and never returns empty for a pill', () async {
+      final OfflineFirstArticleRepository repository = await seeded();
+
+      expect(
+        (await repository.byCategory('politics')).map((Article a) => a.id),
+        <String>['p1', 'p2'],
+      );
+      expect(
+        (await repository.byCategory('top')).map((Article a) => a.id),
+        <String>['p1', 'p2', 'b1', 'h1'],
+      );
+      expect(
+        await repository.byCategory('cars'),
+        isNotEmpty,
+        reason: 'unseeded pill falls back to the feed',
+      );
+    });
+
+    test('byId, search and byLocation read the bundle', () async {
+      final OfflineFirstArticleRepository repository = await seeded();
+
+      expect(
+        (await repository.byId('h1'))?.title,
+        'Guma Valley water shutdown',
+      );
+      expect(await repository.byId('missing'), isNull);
+      expect(
+        (await repository.search('guma')).map((Article a) => a.id),
+        <String>['h1'],
+      );
+      expect(
+        (await repository.search('freetown')).map((Article a) => a.id),
+        <String>['h1'],
+      );
+      expect(await repository.search('   '), isEmpty);
+    });
+
+    test(
+      'byLocation matches city tags and otherwise returns the latest feed',
+      () async {
+        final OfflineFirstArticleRepository repository = await seeded();
+
+        expect(
+          (await repository.byLocation('city:freetown'))
+              .map((Article a) => a.id),
+          <String>['h1'],
+        );
+        expect(await repository.byLocation('city:koidu'), isNotEmpty);
+      },
+    );
+  });
+}

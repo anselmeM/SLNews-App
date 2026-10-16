@@ -1,0 +1,15 @@
+# Copy to android/key.properties and fill in real values before shipping.
+# This file (key.properties) is git-ignored; the keystore itself must never be
+# committed. When it is missing, `flutter build apk --release` signs with the
+# debug key so you still get an installable APK for device testing.
+#
+# Generate a keystore:
+#   keytool -genkeypair -v -keystore slnews-release.jks -storetype JKS \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias slnews \
+#     -dname "CN=SLNews, OU=Mobile, O=SLNews, L=Freetown, C=SL"
+#
+storePassword=changeit
+keyPassword=changeit
+keyAlias=slnews
+# Path is resolved relative to android/app/
+storeFile=../slnews-release.jks

@@ -1,0 +1,136 @@
+# SLNews platform roadmap — backend first
+
+Owner: platform (mobile + backend). Last updated: 2026-10-16.
+
+Scope: turn the Flutter app's device-local reader state into **account-scoped,
+cross-device state**, and remove the last shared-secret from the mobile client.
+
+Repos touched:
+
+| Repo | Role in this roadmap |
+| --- | --- |
+| `SLNews` (Next.js + Prisma + Neon + Clerk) | owns identity and user data; hosts the new mobile sync API |
+| `SLNewsAPIScapper` (Express + Prisma + Neon) | content API; gains Clerk JWT verification |
+| `SLNews-Mobile` (Flutter) | sync client, merge-on-first-sign-in, Clerk session |
+
+Both backend repos are branch-protected: every change lands through a feature
+branch, conventional commits and a PR. Local gates before pushing are
+`npm run test:run && npm run typecheck && npm run lint` (PWA) and
+`npm test && npx tsc --noEmit && npm run lint` (scraper).
+
+## Where we are
+
+| Done | Evidence |
+| --- | --- |
+| Scraper API consumed as a real content source (`/v1/news`, 43 tests) | `lib/core/data/sources/sl_news_api_source.dart` |
+| Clerk identity in the app behind `AuthRepository` (beta SDK isolated) | `lib/core/data/auth/clerk_auth_repository.dart` |
+| Offline-first content pipeline + 264 app tests | `flutter analyze`, `flutter test` |
+
+| Missing | Consequence today |
+| --- | --- |
+| Mobile user state is device-only (Hive) | reinstall or second device = bookmarks, likes and follows are gone |
+| Scraper authorises with a static key embedded in the app | extractable; no per-user identity or quota |
+| No stable join key between PWA `Article` rows and scraped articles | web and mobile "saved stories" cannot be reconciled yet |
+
+## Phase 1 — Sync contract (no code dependencies)
+
+**Goal:** freeze the interface before either side implements it.
+
+- **T1.1** `docs/SYNC-API.md` in `SLNews-Mobile`: endpoints, payloads, idempotency,
+  conflict rule (last-write-wins on `updatedAt`), delta cursor, error codes,
+  versioning (`/api/mobile/v1`), and the item-id scheme (`slnews-api:123`,
+  `rss:<hash>`, `web:<cuid>`).
+- **T1.2** Document the merge-on-first-sign-in rule: local wins on conflict, union
+  otherwise, deletions are tombstoned so they cannot resurrect.
+
+## Phase 2 — Backend: mobile sync API (PWA)
+
+**Goal:** account-scoped bookmarks, likes and follows for the mobile client.
+
+Design decision: **snapshot rows, not joins.** The PWA `SavedArticle` points at a
+PWA `Article` row, which mobile items have no stable mapping to (the PWA content
+model has no external id — see Phase 5). Mobile sync therefore stores its own
+user-scoped rows carrying just enough display data to render a saved list
+offline, keyed by the mobile item id. Nothing in the existing web tables changes.
+
+- **T2.1** Additive Prisma models: `MobileBookmark`, `MobileReaction`,
+  `MobileFollow` (`userId` = Clerk id, `itemId`, snapshot fields,
+  `updatedAt`, `deletedAt` tombstone; unique on `(userId, itemId)` /
+  `(userId, itemId, kind)`; indexes on `(userId, updatedAt)`).
+- **T2.2** `GET /api/mobile/v1/sync?since=<iso>` — delta pull of all three
+  collections plus `serverTime` and `hasMore`.
+- **T2.3** `POST /api/mobile/v1/sync` — batched idempotent upserts and tombstones,
+  LWW by `updatedAt`; returns the applied state so the client can converge in one
+  round trip.
+- **T2.4** Guard rails: Clerk `auth()`, per-user rate limit via the existing
+  `checkDbRateLimit`, payload validation and size caps, `reportError` on failure.
+- **T2.5** Vitest coverage for both routes: unauthenticated → 401, delta filter,
+  tombstone handling, LWW conflict, payload validation, rate limiting.
+- **T2.6** Migration prepared (`prisma migrate diff` SQL) and applied only with
+  owner approval; deploy notes for Vercel env.
+
+## Phase 3 — Backend: scraper accepts Clerk JWTs
+
+**Goal:** retire the static key from the mobile client without breaking the PWA.
+
+- **T3.1** `requireAuthentication` replaces `requireApiKey`: accept the existing
+  static bearer key **or** a Clerk session JWT whose signature verifies against
+  Clerk's JWKS and whose claims pass (`exp`, `nbf`, `azp` in the authorised set).
+- **T3.2** Config `CLERK_SECRET_KEY` / `CLERK_AUTHORIZED_PARTIES`; absent →
+  behaviour is exactly today's (static key only), so the PWA is unaffected.
+- **T3.3** Vitest: valid JWT, wrong signature, expired, wrong `azp`, missing
+  header, static key still works, JWKS fetched once and cached, key rotation.
+- **T3.4** Document Render env changes and the rollout order (scraper first,
+  mobile second).
+
+## Phase 4 — Mobile: sync client + merge on first sign-in
+
+**Goal:** the app writes locally as it does today, and converges when signed in.
+
+- **T4.1** `SyncApiClient` (Dio) + `SyncRepository` contract in
+  `core/domain/sync`, offline-first: local write always succeeds, sync is queued
+  and retried.
+- **T4.2** Merge-on-first-sign-in: push local state, pull server state, union
+  with last-write-wins, tombstone local deletions.
+- **T4.3** Wire `bookmarksControllerProvider`, `likesControllerProvider` and
+  `followingControllerProvider` to enqueue sync; surface sync state in the
+  account card (signed in — last synced / retry).
+- **T4.4** Tests: stubbed adapters for push/pull/merge, tombstone round-trip,
+  offline queue replay, conflict resolution; plus a widget test for the account
+  card's sync state.
+- **T4.5** Point the app's Clerk token at the PWA host allow-list so the session
+  JWT is attached to sync calls (never to publisher feeds — already enforced).
+
+## Phase 5 — Web ↔ mobile content parity (flagged, needs a decision)
+
+`SavedArticle.articleId` references a PWA `Article` row and the mobile ids are
+external, so cross-surface saved stories cannot be reconciled until the PWA
+content model gains a stable source key.
+
+- **T5.1** Additive `Article.sourceUrl @unique` (or `externalId`) + backfill from
+  the scraper sync, then reconcile `SavedArticle` with `MobileBookmark`.
+- **T5.2** Show mobile-saved stories on the web profile and vice versa.
+- Out of scope until the owner approves a production schema change + backfill.
+
+## Phase 6 — Mobile push notifications (later)
+
+Reuse `PushSubscription` + `web-push` with FCM/APNs transport; the mobile model,
+storage and history UI already exist. Needs Firebase/APNs credentials.
+
+## Verification plan
+
+| Layer | Command | Expected |
+| --- | --- | --- |
+| PWA backend | `npm run test:run && npm run typecheck && npm run lint` | all green |
+| Scraper backend | `npm test && npx tsc --noEmit && npm run lint` | all green |
+| Mobile | `flutter analyze && flutter test test/core test/data test/features` | 0 issues, all pass |
+| Live | `scripts/smoke_api.ps1` + signed-in sync round trip | after deploy + keys |
+
+## Risks
+
+| Risk | Mitigation |
+| --- | --- |
+| Production schema change on Neon | additive models only; migration reviewed and applied by the owner |
+| Beta Clerk SDK churn | already quarantined behind `AuthRepository` |
+| Node locally 24 vs PWA `.nvmrc` 22 | run the repos' gates; CI remains the authority |
+| Hand-rolled JWT verification | use the official Clerk backend SDK rather than bespoke crypto |

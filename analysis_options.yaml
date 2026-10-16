@@ -1,0 +1,20 @@
+# Static analysis configuration for SLNews Mobile.
+# Run `flutter analyze` for the full report and `dart format .` before committing.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+  errors:
+    unused_import: error
+    unused_local_variable: error
+    unawaited_futures: error
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_single_quotes
+    - sort_child_properties_last
+    - use_super_parameters

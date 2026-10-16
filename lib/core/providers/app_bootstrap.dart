@@ -1,0 +1,245 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+import '../data/auth/clerk_auth_repository.dart';
+import '../data/local/article_cache.dart';
+import '../data/local/preferences_store.dart';
+import '../data/repositories/default_ad_repository.dart';
+import '../data/repositories/default_following_repository.dart';
+import '../data/repositories/default_notification_repository.dart';
+import '../data/repositories/default_sports_repository.dart';
+import '../data/repositories/default_user_state_repository.dart';
+import '../data/repositories/default_weather_repository.dart';
+import '../data/repositories/offline_first_article_repository.dart';
+import '../data/seed/outlet_registry.dart';
+import '../data/seed/seed_loader.dart';
+import '../data/sources/api_client.dart';
+import '../data/sources/feed_source.dart';
+import '../data/sources/sl_news_api_source.dart';
+import '../domain/repositories/ad_repository.dart';
+import '../domain/repositories/article_repository.dart';
+import '../domain/repositories/following_repository.dart';
+import '../domain/repositories/notification_repository.dart';
+import '../domain/repositories/sports_repository.dart';
+import '../domain/repositories/user_state_repository.dart';
+import '../domain/repositories/weather_repository.dart';
+import 'app_providers.dart';
+import 'auth_providers.dart';
+
+/// Opens local storage and wires the object graph before the first frame.
+///
+/// Doing this in `main()` (instead of inside providers) keeps every provider
+/// synchronous, so widgets never have to reason about a half-initialised app and
+/// tests can substitute the whole graph with in-memory fakes.
+///
+/// The overrides are installed into a [ProviderContainer] here rather than being
+/// handed back as a list: Riverpod 3 keeps the `Override` type out of its public
+/// API, so the list literal can only be built where the parameter type is known.
+class AppBootstrap {
+  AppBootstrap._({
+    required this.container,
+    required this.articleRepository,
+    required this.isPersistent,
+    required this.preferences,
+    required this.cache,
+    required this.seedLoader,
+    required this.apiClient,
+    required this.feedSources,
+    required this.sportsRepository,
+    required this.followingRepository,
+    required this.notificationRepository,
+    required this.weatherRepository,
+    required this.userStateRepository,
+    required this.adRepository,
+  });
+
+  /// Container holding every production dependency; pass it to
+  /// `UncontrolledProviderScope`. Dispose it when the app is torn down in tests.
+  final ProviderContainer container;
+
+  final ArticleRepository articleRepository;
+
+  /// False when Hive failed to open and the app fell back to memory-only
+  /// storage; the reader keeps working but nothing survives a restart.
+  final bool isPersistent;
+
+  final PreferencesStore preferences;
+  final ArticleCache cache;
+  final SeedLoader seedLoader;
+  final ApiClient apiClient;
+  final List<FeedSource> feedSources;
+  final SportsRepository sportsRepository;
+  final FollowingRepository followingRepository;
+  final NotificationRepository notificationRepository;
+  final WeatherRepository weatherRepository;
+  final UserStateRepository userStateRepository;
+  final AdRepository adRepository;
+
+  /// Opens local storage and wires the object graph.
+  ///
+  /// [seedLoaderOverride] lets a harness supply deterministic content (the
+  /// golden render tests pin every timestamp so screens are byte-comparable);
+  /// the app always uses the bundled assets.
+  static Future<AppBootstrap> create({
+    bool allowPersistence = true,
+    SeedLoader? seedLoaderOverride,
+  }) async {
+    PreferencesStore preferences;
+    ArticleCache cache;
+    bool persistent = false;
+
+    if (allowPersistence) {
+      try {
+        // Hive needs a writable app directory before either box can open.
+        await Hive.initFlutter();
+        preferences = await HivePreferencesStore.open();
+        cache = await HiveArticleCache.open();
+        persistent = true;
+      } catch (error, stackTrace) {
+        debugPrint('SLNews: local storage unavailable, falling back to memory ($error)');
+        debugPrintStack(stackTrace: stackTrace);
+        preferences = InMemoryPreferencesStore();
+        cache = InMemoryArticleCache();
+      }
+    } else {
+      preferences = InMemoryPreferencesStore();
+      cache = InMemoryArticleCache();
+    }
+
+    await preferences.init();
+    await cache.init();
+
+    // The aggregated Sierra Leone feed from the SLNews scraper API is an optional
+    // extra source: without a key it is absent entirely, so a build with no
+    // configuration behaves exactly like the RSS + seed app.
+    final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment();
+
+    // Identity is optional too; a rejected key or an unreachable Frontend API
+    // must never stop the reader from opening the app.
+    final ClerkAuthRepository? auth = await _createAuth();
+
+    final ApiClient client = ApiClient(
+      authTokenProvider: auth?.sessionToken,
+      // Session tokens are only attached to SLNews-owned hosts: the same client
+      // also fetches third-party publisher feeds, which must never see them.
+      authTokenHosts: <String>{
+        if (apiConfig.host.isNotEmpty) apiConfig.host,
+        'slnews.sl',
+        'www.slnews.sl',
+        'slnews.app',
+      },
+    );
+    final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();
+    final List<FeedSource> sources = <FeedSource>[
+      ...OutletRegistry.buildSources(client),
+      if (apiConfig.isConfigured) SlNewsApiSource(config: apiConfig, client: client),
+    ];
+    debugPrint(
+      'SLNews: ingest sources=${sources.length} '
+      '(scraper API ${apiConfig.isConfigured ? 'enabled on ${apiConfig.host}' : 'disabled - no SLNEWS_API_KEY'}), '
+      'identity ${auth == null ? 'disabled' : 'Clerk'}',
+    );
+
+    // Concrete types: the seed-backed implementations expose an extra `ready()`
+    // used below, which is not part of the repository contracts.
+    final OfflineFirstArticleRepository articleRepository = OfflineFirstArticleRepository(
+      sources: sources,
+      cache: cache,
+      seedLoader: seedLoader,
+      client: client,
+    );
+    final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
+      seedLoader: seedLoader,
+      client: client,
+    );
+    final DefaultFollowingRepository followingRepository = DefaultFollowingRepository(
+      preferences: preferences,
+      seedLoader: seedLoader,
+    );
+    final DefaultNotificationRepository notificationRepository = DefaultNotificationRepository(
+      preferences: preferences,
+      seedLoader: seedLoader,
+    );
+    final DefaultWeatherRepository weatherRepository = DefaultWeatherRepository(
+      seedLoader: seedLoader,
+      client: client,
+    );
+    final DefaultUserStateRepository userStateRepository = DefaultUserStateRepository(
+      preferences: preferences,
+    );
+    final DefaultAdRepository adRepository = DefaultAdRepository(seedLoader: seedLoader);
+
+    // The seed-backed repositories expose synchronous reads (required by the
+    // frozen interfaces) over an async seed load. Awaiting them here means the
+    // very first frame already has the followed-teams catalogue, alert history,
+    // ad rotation, scoreboard and weather instead of an empty flash.
+    await Future.wait(<Future<void>>[
+      sportsRepository.ready(),
+      followingRepository.ready(),
+      notificationRepository.ready(),
+      weatherRepository.ready(),
+      adRepository.ready(),
+    ]);
+
+    return AppBootstrap._(
+      container: ProviderContainer(
+        overrides: [
+          preferencesStoreProvider.overrideWithValue(preferences),
+          articleCacheProvider.overrideWithValue(cache),
+          seedLoaderProvider.overrideWithValue(seedLoader),
+          apiClientProvider.overrideWithValue(client),
+          feedSourcesProvider.overrideWithValue(sources),
+          articleRepositoryProvider.overrideWithValue(articleRepository),
+          sportsRepositoryProvider.overrideWithValue(sportsRepository),
+          followingRepositoryProvider.overrideWithValue(followingRepository),
+          notificationRepositoryProvider.overrideWithValue(notificationRepository),
+          weatherRepositoryProvider.overrideWithValue(weatherRepository),
+          userStateProvider.overrideWithValue(userStateRepository),
+          adRepositoryProvider.overrideWithValue(adRepository),
+          // Identity is only overridden when a provider is actually configured;
+          // otherwise the default (unconfigured, signed-out) stand-ins apply.
+          if (auth != null) authRepositoryProvider.overrideWithValue(auth),
+          if (auth != null) signInSurfaceProvider.overrideWithValue(auth),
+          if (auth != null) authAppWrapperProvider.overrideWithValue(auth.wrapApp),
+        ],
+      ),
+      articleRepository: articleRepository,
+      isPersistent: persistent,
+      preferences: preferences,
+      cache: cache,
+      seedLoader: seedLoader,
+      apiClient: client,
+      feedSources: sources,
+      sportsRepository: sportsRepository,
+      followingRepository: followingRepository,
+      notificationRepository: notificationRepository,
+      weatherRepository: weatherRepository,
+      userStateRepository: userStateRepository,
+      adRepository: adRepository,
+    );
+  }
+
+  /// Builds the Clerk session when `CLERK_PUBLISHABLE_KEY` is configured.
+  ///
+  /// Returns `null` (app runs anonymously) when the key is absent, rejected, or
+  /// the Frontend API cannot be reached — start-up must not depend on identity.
+  static Future<ClerkAuthRepository?> _createAuth() async {
+    const String key = String.fromEnvironment('CLERK_PUBLISHABLE_KEY');
+    if (key.trim().isEmpty) {
+      debugPrint('SLNews: identity disabled - no CLERK_PUBLISHABLE_KEY');
+      return null;
+    }
+    try {
+      final ClerkAuthRepository repository = await ClerkAuthRepository.create(
+        publishableKey: key.trim(),
+      );
+      debugPrint('SLNews: identity enabled via Clerk');
+      return repository;
+    } catch (error, stackTrace) {
+      debugPrint('SLNews: Clerk unavailable, continuing anonymously ($error)');
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
+  }
+}

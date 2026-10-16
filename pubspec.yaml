@@ -1,0 +1,65 @@
+name: slnews_mobile
+description: "SLNews - Sierra Leone news aggregation app (Flutter, iOS + Android)."
+publish_to: 'none' # Private application; never published to pub.dev.
+
+# versionName / versionCode for Android, CFBundleShortVersionString / CFBundleVersion for iOS.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management (MVVM view models) + dependency injection.
+  flutter_riverpod: ^3.4.3
+
+  # Declarative routing (/for_you, /news, /sports, /following, /article/:id).
+  go_router: ^18.1.0
+
+  # Data layer: REST / GraphQL / JSON ingestion.
+  dio: ^5.11.1
+
+  # Offline-first local storage (articles, bookmarks, preferences).
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Images with disk cache + graceful placeholders.
+  cached_network_image: ^4.0.4
+
+  # Feed parsing at the boundary: RSS/Atom via xml, article bodies via html.
+  #
+  # `xml` is pinned below 7.0.1 because clerk_flutter -> flutter_svg ->
+  # vector_graphics_compiler caps it there. The RSS/Atom parser only uses the
+  # stable document/element API, and test/data/rss_parser_test.dart guards the
+  # behaviour after any change here.
+  xml: ^6.6.1
+  html: ^0.15.7
+
+  # Identity: Clerk's community-maintained (beta) Flutter SDK. Quarantined behind
+  # AuthRepository/SignInSurface in lib/core/{domain/auth,providers}; no feature
+  # imports this package. See docs/INTEGRATIONS.md before upgrading.
+  clerk_flutter: ^0.0.18-beta
+
+  # Article actions.
+  url_launcher: ^6.3.3
+  share_plus: ^13.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/seed/
+
+  fonts:
+    - family: SLNewsSans
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "notif-stelco-review",
+    "title": "Breaking: Stelco steel plant review ordered",
+    "body": "The Attorney General has asked for a legal review of the Stelco steel works in the Ottawa industrial area.",
+    "receivedMinutesAgo": 12,
+    "kind": "breaking",
+    "articleId": "art-politics-stelco-review",
+    "isRead": false
+  },
+  {
+    "id": "notif-leone-stars-guinea",
+    "title": "Leone Stars level against Guinea",
+    "body": "Sierra Leone equalise in the second half of the AFCON qualifier at the National Stadium.",
+    "receivedMinutesAgo": 8,
+    "kind": "team",
+    "articleId": "art-sports-leone-stars-guinea",
+    "isRead": false
+  },
+  {
+    "id": "notif-spl-bo-rangers",
+    "title": "Full time: Bo Rangers 2-1 Mighty Blackpool",
+    "body": "Bo Rangers stay top of the Sierra Leone Premier League after a late winner in Bo.",
+    "receivedMinutesAgo": 240,
+    "kind": "score",
+    "articleId": "art-sports-spl-bo-rangers",
+    "isRead": false
+  },
+  {
+    "id": "notif-guma-water",
+    "title": "Breaking: Guma Valley announces 12-hour shutdown",
+    "body": "Freetown's western districts will lose supply on Saturday while a transmission main is repaired.",
+    "receivedMinutesAgo": 55,
+    "kind": "breaking",
+    "articleId": "art-health-guma-water",
+    "isRead": false
+  },
+  {
+    "id": "notif-diamond-exports",
+    "title": "Newswire: diamond exports up on last year",
+    "body": "Kallon's Newswire reports a rise in official diamond exports for the third quarter.",
+    "receivedMinutesAgo": 95,
+    "kind": "publisher",
+    "articleId": "art-business-diamond-exports",
+    "isRead": false
+  },
+  {
+    "id": "notif-offline-ready",
+    "title": "Offline reading is ready",
+    "body": "Today's top stories, sports scores and weather are saved on your device for when the network drops.",
+    "receivedMinutesAgo": 400,
+    "kind": "system",
+    "articleId": null,
+    "isRead": true
+  }
+]
