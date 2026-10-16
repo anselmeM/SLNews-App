@@ -122,10 +122,10 @@ storage and history UI already exist. Needs Firebase/APNs credentials.
 | Task | State | Evidence |
 | --- | --- | --- |
 | T1.1–1.2 sync contract + merge rule | done | [SYNC-API.md](SYNC-API.md) |
-| T2.1 additive Prisma models | done | applied to Neon; `docs/mobile-sync-migration.sql` in `SLNews` |
+| T2.1 additive Prisma models | done | `SLNews/docs/mobile-sync-migration.sql` (idempotent, applied by the deployment) |
 | T2.2–2.4 sync routes (pull/push/auth/limits) | done | `SLNews` PR [#101](https://github.com/anselmeM/SLNews/pull/101) |
 | T2.5 route + engine tests | done | 73 new PWA tests; full suite 609 green |
-| T2.6 migration applied and verified | done | `migrate diff` → no difference; write/read/update probe rolled back clean |
+| T2.6 schema present in the deployed database | done | applied by `vercel-build` (`SLNews` PR [#102](https://github.com/anselmeM/SLNews/pull/102)); proven by the production end-to-end run |
 | T3.1–3.3 scraper accepts Clerk JWTs | done | `SLNewsAPIScapper` PR [#8](https://github.com/anselmeM/SLNewsAPIScapper/pull/8) — 125 tests, static-key path proven unchanged |
 | T4.1–4.2 sync client, ledger, merge-on-sign-in | done | `lib/core/{domain,data}/sync`, `LocalSyncLedger`, `SyncController` |
 | T4.3–4.5 wiring, account card, token allow-list | done | controllers hook changes; `AccountCard` shows sync state |
@@ -135,15 +135,23 @@ storage and history UI already exist. Needs Firebase/APNs credentials.
 | T6 mobile push notifications | not started | needs FCM/APNs credentials |
 
 **End-to-end proof** (not just unit tests): `SLNews/scripts/verify-mobile-sync.mjs`
-mints a real Clerk session token for a throwaway probe user, drives the deployed
-contract against a locally running PWA and the real Neon database, and passed
-**17/17 checks** — invalid token → 401, first sync creates the Postgres user,
-push applies, re-push is idempotent, newer `updatedAt` wins, older is rejected
-`stale`, a tombstone applies and cannot be resurrected by a stale push, delta
-pull returns the tombstone, and the 400/413 caps hold. The probe user and its
-cascaded rows are deleted afterwards.
+mints a real Clerk session token for a throwaway probe user and drives the real
+contract, then deletes the probe. It passes **17/17 checks** — invalid token →
+401, first sync creates the Postgres user, push applies, re-push is idempotent,
+newer `updatedAt` wins, older is rejected `stale`, a tombstone applies and cannot
+be resurrected by a stale push, delta pull returns the tombstone, and the 400/413
+caps hold.
 
-**Bug that only that run could catch:** the PWA resolver read `.data`/`.errors`
+**That run is now against production**
+(`--base https://sl-news.vercel.app`). It first passed against a *locally running*
+PWA while the deployed API answered **500** for every authenticated request: the
+tables had been created by hand against the local Postgres and never existed in
+the database the deployment talks to (`The table public.MobileBookmark does not
+exist`, from the Vercel logs). A green localhost run is not deployment
+verification — the schema now travels with the deploy, and the 17/17 result was
+re-produced against the deployed origin.
+
+**Bug that only a live run could catch:** the PWA resolver read `.data`/`.errors`
 off `verifyToken` (the removed `@clerk/backend` v1 shape). v3 resolves with the
 claims and throws on failure, so every valid session token was 401'd. The unit
 tests mocked the same wrong shape; the resolver, its mocks and the contract note
@@ -162,7 +170,7 @@ are now fixed.
 
 | Risk | Mitigation |
 | --- | --- |
-| Production schema change on Neon | additive models only; migration reviewed and applied by the owner |
+| Tables missing in the database a deployment uses | `vercel-build` applies the idempotent SQL and **fails the deploy** if the objects are absent, so a half-migrated database cannot serve 500s silently |
 | Beta Clerk SDK churn | already quarantined behind `AuthRepository` |
 | Node locally 24 vs PWA `.nvmrc` 22 | run the repos' gates; CI remains the authority |
 | Hand-rolled JWT verification | use the official Clerk backend SDK rather than bespoke crypto |

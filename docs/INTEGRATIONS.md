@@ -159,7 +159,7 @@ devices. The contract is [SYNC-API.md](SYNC-API.md); the platform plan is
 | --- | --- |
 | Contract | `docs/SYNC-API.md` (this repo, frozen) |
 | Backend | `SLNews` — `src/app/api/mobile/v1/sync/route.ts`, `src/lib/mobile-sync/` |
-| Tables | `MobileBookmark`, `MobileReaction`, `MobileFollow` (Neon, applied) |
+| Tables | `MobileBookmark`, `MobileReaction`, `MobileFollow` — applied by the deployment (`SLNews` PR [#102](https://github.com/anselmeM/SLNews/pull/102)); idempotent SQL in `SLNews/docs/mobile-sync-migration.sql` |
 | Client | `lib/core/data/sync/`, contract in `lib/core/domain/sync/` |
 | Server notes | `SLNews/docs/mobile-sync-api.md` |
 
@@ -171,11 +171,13 @@ the later reconciliation in roadmap phase 5.
 
 Configuration: `--dart-define=SLNEWS_SYNC_URL=<origin>`. The default is the live
 Vercel origin **`https://sl-news.vercel.app`** — verified 2026-10-16: `/api/health`
-returns `healthy` and `/api/mobile/v1/sync` answers `401 {"error":"Unauthorized"}`
-for anonymous GET and POST. The intended public domain `slnews.sl` does **not**
-resolve yet, so a release build should pass the origin explicitly rather than
-trust the default: a wrong origin degrades to "sync silently does nothing".
-Signed-out readers keep using device-local storage exactly as before.
+returns `healthy`, `/api/mobile/v1/sync` answers `401 {"error":"Unauthorized"}` for
+anonymous GET and POST, and the full 17-check end-to-end run passes against it
+(`node SLNews/scripts/verify-mobile-sync.mjs --base https://sl-news.vercel.app`).
+The intended public domain `slnews.sl` does **not** resolve yet, so a release
+build should pass the origin explicitly rather than trust the default: a wrong
+origin degrades to "sync silently does nothing". Signed-out readers keep using
+device-local storage exactly as before.
 
 ## Roadmap
 
@@ -184,9 +186,9 @@ Signed-out readers keep using device-local storage exactly as before.
 | Scraper API source + `ApiClient` auth seams | done (43 tests) |
 | Clerk contract, wiring, sign-in page, account card | done |
 | `clerk_flutter` dependency + adapter + APK build | done |
-| Sync contract + Neon tables + migration | done |
-| Mobile sync routes (PWA) + scraper Clerk JWT verification | in review |
-| Sync client, offline queue, merge-on-first-sign-in | in review |
+| Sync contract + tables applied by the deploy | done |
+| Mobile sync routes (PWA) + scraper Clerk JWT verification | done (#101, #8, #9 merged) |
+| Sync client, offline queue, merge-on-first-sign-in | done (358 tests) |
 | User-scoped sync end-to-end on device | after deploy + keys |
 | Web ↔ mobile saved-story reconciliation, mobile push | roadmap phases 5–6 |
 
