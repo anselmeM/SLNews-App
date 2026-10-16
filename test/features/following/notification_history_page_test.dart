@@ -51,7 +51,9 @@ void main() {
           theme: AppTheme.light(),
           // The history screen is a nested route: reach it through the tab
           // branch so the router has a real stack to pop back to.
-          routerConfig: buildFollowingTestRouter(initialLocation: '/following/notifications'),
+          routerConfig: buildFollowingTestRouter(
+            initialLocation: '/following/notifications',
+          ),
         ),
       ),
     );
@@ -61,8 +63,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   }
 
-  testWidgets('renders the seeded alerts with date headers and unread state',
-      (WidgetTester tester) async {
+  testWidgets('renders the seeded alerts with date headers and unread state', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -76,15 +79,19 @@ void main() {
     expect(find.text('Freetown weather alert'), findsOneWidget);
 
     // Two alerts are unread, one is already read.
-    expect(container.read(notificationsControllerProvider.notifier).unreadCount, 2);
+    expect(
+      container.read(notificationsControllerProvider.notifier).unreadCount,
+      2,
+    );
 
     // Two alerts arrived today, one yesterday: two inline date headers.
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('Yesterday'), findsOneWidget);
   });
 
-  testWidgets('tapping a row marks it read and clears its unread dot',
-      (WidgetTester tester) async {
+  testWidgets('tapping a row marks it read and clears its unread dot', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -100,21 +107,26 @@ void main() {
     // The fake recorded the read and recomputed its unread count.
     expect(fixture.notifications.markReadLog, contains('n2'));
     expect(fixture.notifications.unreadCount, 1);
-    expect(container.read(notificationsControllerProvider.notifier).unreadCount, 1);
+    expect(
+      container.read(notificationsControllerProvider.notifier).unreadCount,
+      1,
+    );
 
     // The row's unread dot is gone: one of the three seeded alerts is still
     // unread, so exactly one row renders as unread.
     expect(
       find.byWidgetPredicate(
-        (Widget widget) => widget is NotificationHistoryRow && !widget.item.isRead,
+        (Widget widget) =>
+            widget is NotificationHistoryRow && !widget.item.isRead,
       ),
       findsOneWidget,
     );
     expect(find.byType(NotificationHistoryRow), findsNWidgets(3));
   });
 
-  testWidgets('an alert that links to a story pushes the reader route',
-      (WidgetTester tester) async {
+  testWidgets('an alert that links to a story pushes the reader route', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -130,16 +142,23 @@ void main() {
     expect(find.text('article-stub:article-1'), findsOneWidget);
   });
 
-  testWidgets('an empty history shows the empty state', (WidgetTester tester) async {
+  testWidgets('an empty history shows the empty state', (
+    WidgetTester tester,
+  ) async {
     containerWith(InMemoryNotificationRepository(<NotificationItem>[]));
 
     await pumpPage(tester);
 
     expect(find.text('No alerts yet'), findsOneWidget);
-    expect(find.text('Breaking news alerts you receive will appear here.'), findsOneWidget);
+    expect(
+      find.text('Breaking news alerts you receive will appear here.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('a failing repository shows the error state', (WidgetTester tester) async {
+  testWidgets('a failing repository shows the error state', (
+    WidgetTester tester,
+  ) async {
     containerWith(_FailingNotificationRepository());
 
     await pumpPage(tester);

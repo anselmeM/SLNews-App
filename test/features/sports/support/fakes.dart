@@ -49,13 +49,17 @@ class FakeSportsRepository implements SportsRepository {
       _gamesByTeam[teamId] ?? const <GameScore>[];
 
   @override
-  Future<List<TeamStanding>> standings(String leagueId) async => const <TeamStanding>[];
+  Future<List<TeamStanding>> standings(String leagueId) async =>
+      const <TeamStanding>[];
 }
 
 /// An [ArticleRepository] serving literal per-category lists.
 class FakeArticleRepository implements ArticleRepository {
-  FakeArticleRepository({Map<String, List<Article>>? feeds, this.isOffline = false, this.lastSyncedAt})
-    : feeds = feeds ?? <String, List<Article>>{};
+  FakeArticleRepository({
+    Map<String, List<Article>>? feeds,
+    this.isOffline = false,
+    this.lastSyncedAt,
+  }) : feeds = feeds ?? <String, List<Article>>{};
 
   /// Category slug → stories.
   final Map<String, List<Article>> feeds;
@@ -67,23 +71,27 @@ class FakeArticleRepository implements ArticleRepository {
   final DateTime? lastSyncedAt;
 
   /// Seeds the feed returned by [byCategory].
-  void seed(String categoryId, List<Article> articles) => feeds[categoryId] = articles;
+  void seed(String categoryId, List<Article> articles) =>
+      feeds[categoryId] = articles;
 
   @override
-  Future<List<Article>> topStories({int limit = 8}) async => feeds['top'] ?? const <Article>[];
+  Future<List<Article>> topStories({int limit = 8}) async =>
+      feeds['top'] ?? const <Article>[];
 
   @override
   Future<List<Article>> byCategory(String categoryId, {int limit = 30}) async =>
       feeds[categoryId] ?? const <Article>[];
 
   @override
-  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async => const <Article>[];
+  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async =>
+      const <Article>[];
 
   @override
   Future<Article?> byId(String id) async => null;
 
   @override
-  Future<List<Article>> search(String query, {int limit = 20}) async => const <Article>[];
+  Future<List<Article>> search(String query, {int limit = 20}) async =>
+      const <Article>[];
 
   @override
   Future<List<Article>> refresh() async => const <Article>[];
@@ -226,8 +234,11 @@ GameScore buildGame({
   return GameScore(
     id: id,
     leagueLabel: leagueLabel,
-    home: home ?? const Team(id: 'team:lal', name: 'Los Angeles Lakers', code: 'LAL'),
-    away: away ?? const Team(id: 'team:bos', name: 'Boston Celtics', code: 'BOS'),
+    home:
+        home ??
+        const Team(id: 'team:lal', name: 'Los Angeles Lakers', code: 'LAL'),
+    away:
+        away ?? const Team(id: 'team:bos', name: 'Boston Celtics', code: 'BOS'),
     status: status,
     homeScore: homeScore,
     awayScore: awayScore,

@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/models/follow_models.dart';
-import '../../../core/domain/models/notification_item.dart';import '../../../core/providers/controllers.dart';
+import '../../../core/domain/models/notification_item.dart';
+import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -54,9 +55,16 @@ class FollowingPage extends ConsumerWidget {
         // and signing in is what makes saved stories and alerts portable.
         const SliverToBoxAdapter(child: AccountCard()),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            0,
+          ),
           sliver: SliverToBoxAdapter(
-            child: _NotificationHistoryEntry(unreadCount: viewModel.unreadNotifications),
+            child: _NotificationHistoryEntry(
+              unreadCount: viewModel.unreadNotifications,
+            ),
           ),
         ),
         ..._groupSlivers(context, ref, viewModel),
@@ -92,7 +100,12 @@ class FollowingPage extends ConsumerWidget {
     if (viewModel.isLoading && !viewModel.hasError) {
       return const <Widget>[
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 0),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.lg,
+            0,
+          ),
           sliver: SliverToBoxAdapter(child: _FollowingSkeleton()),
         ),
       ];
@@ -101,11 +114,17 @@ class FollowingPage extends ConsumerWidget {
     if (!viewModel.hasAnyGroup) {
       return const <Widget>[
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 0),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.lg,
+            0,
+          ),
           sliver: SliverToBoxAdapter(
             child: EmptyStateView(
               title: 'Nothing followed yet',
-              message: 'Follow teams, places and topics to build your own feed.',
+              message:
+                  'Follow teams, places and topics to build your own feed.',
               icon: Icons.add_circle_outline,
             ),
           ),
@@ -121,25 +140,27 @@ class FollowingPage extends ConsumerWidget {
         ),
         child: FollowSection(
           targets: viewModel.sports,
-          rowBuilder: (BuildContext context, FollowTarget target) => _followedRow(
-            context,
-            ref,
-            target,
-            leadingIcon: AppGlyphs.follow(target.kind),
-          ),
+          rowBuilder: (BuildContext context, FollowTarget target) =>
+              _followedRow(
+                context,
+                ref,
+                target,
+                leadingIcon: AppGlyphs.follow(target.kind),
+              ),
         ),
       ),
       _sliverSection(
         header: const SectionHeader(title: 'Locations'),
         child: FollowSection(
           targets: viewModel.locations,
-          rowBuilder: (BuildContext context, FollowTarget target) => _followedRow(
-            context,
-            ref,
-            target,
-            leadingIcon: AppGlyphs.follow(FollowKind.location),
-            invertCircle: true,
-          ),
+          rowBuilder: (BuildContext context, FollowTarget target) =>
+              _followedRow(
+                context,
+                ref,
+                target,
+                leadingIcon: AppGlyphs.follow(FollowKind.location),
+                invertCircle: true,
+              ),
         ),
       ),
     ];
@@ -150,11 +171,8 @@ class FollowingPage extends ConsumerWidget {
           header: const FollowGroupLabel(label: 'Most popular with users'),
           child: FollowSection(
             targets: viewModel.popularLocations,
-            rowBuilder: (BuildContext context, FollowTarget target) => _suggestedRow(
-              context,
-              ref,
-              target,
-            ),
+            rowBuilder: (BuildContext context, FollowTarget target) =>
+                _suggestedRow(context, ref, target),
           ),
         ),
       );
@@ -162,10 +180,14 @@ class FollowingPage extends ConsumerWidget {
 
     slivers.add(
       _sliverSection(
-        header: SectionHeader(title: 'Topics', onTap: () => context.go(AppRoutes.news)),
+        header: SectionHeader(
+          title: 'Topics',
+          onTap: () => context.go(AppRoutes.news),
+        ),
         child: FollowSection(
           targets: viewModel.topics,
-          rowBuilder: (BuildContext context, FollowTarget target) => _topicRow(context, ref, target),
+          rowBuilder: (BuildContext context, FollowTarget target) =>
+              _topicRow(context, ref, target),
         ),
       ),
     );
@@ -194,7 +216,8 @@ class FollowingPage extends ConsumerWidget {
     required IconData leadingIcon,
     bool invertCircle = false,
   }) {
-    final bool hasImage = target.imageUrl != null && target.imageUrl!.trim().isNotEmpty;
+    final bool hasImage =
+        target.imageUrl != null && target.imageUrl!.trim().isNotEmpty;
     final bool inverted = invertCircle && !hasImage;
     return FollowRow(
       label: target.label,
@@ -205,14 +228,21 @@ class FollowingPage extends ConsumerWidget {
       foregroundColor: inverted ? context.colors.onSurfaceInverse : null,
       trailing: _semanticChip(
         label: 'Unfollow ${target.label}',
-        child: FollowChip(isFollowing: true, onPressed: () => _toggle(context, ref, target)),
+        child: FollowChip(
+          isFollowing: true,
+          onPressed: () => _toggle(context, ref, target),
+        ),
       ),
     );
   }
 
   /// Row for "Most popular with users": outlined chip that follows the
   /// suggestion, which also removes it from this list on the next frame.
-  Widget _suggestedRow(BuildContext context, WidgetRef ref, FollowTarget target) {
+  Widget _suggestedRow(
+    BuildContext context,
+    WidgetRef ref,
+    FollowTarget target,
+  ) {
     return FollowRow(
       label: target.label,
       subtitle: target.subtitle,
@@ -220,7 +250,10 @@ class FollowingPage extends ConsumerWidget {
       leadingIcon: AppGlyphs.follow(target.kind),
       trailing: _semanticChip(
         label: 'Follow ${target.label}',
-        child: FollowChip(isFollowing: false, onPressed: () => _toggle(context, ref, target)),
+        child: FollowChip(
+          isFollowing: false,
+          onPressed: () => _toggle(context, ref, target),
+        ),
       ),
     );
   }
@@ -228,7 +261,9 @@ class FollowingPage extends ConsumerWidget {
   /// Topics group: the whole row toggles follow (chevron affordance) and the
   /// trailing dense chip mirrors the state.
   Widget _topicRow(BuildContext context, WidgetRef ref, FollowTarget target) {
-    final bool isFollowing = ref.watch(followingControllerProvider).isFollowed(target.id);
+    final bool isFollowing = ref
+        .watch(followingControllerProvider)
+        .isFollowed(target.id);
     return FollowRow(
       label: target.label,
       subtitle: target.subtitle,
@@ -249,7 +284,11 @@ class FollowingPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Icon(Icons.chevron_right, size: 22, color: context.colors.onSurfaceFaint),
+          Icon(
+            Icons.chevron_right,
+            size: 22,
+            color: context.colors.onSurfaceFaint,
+          ),
         ],
       ),
     );
@@ -261,15 +300,23 @@ class FollowingPage extends ConsumerWidget {
     return Semantics(button: true, label: label, child: child);
   }
 
-  Future<void> _toggle(BuildContext context, WidgetRef ref, FollowTarget target) async {
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    FollowTarget target,
+  ) async {
     await ref.read(followingControllerProvider.notifier).toggle(target);
     if (!context.mounted) return;
-    final bool isFollowing = ref.read(followingControllerProvider).isFollowed(target.id);
+    final bool isFollowing = ref
+        .read(followingControllerProvider)
+        .isFollowed(target.id);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('${isFollowing ? 'Following' : 'Unfollowed'} ${target.label}'),
+          content: Text(
+            '${isFollowing ? 'Following' : 'Unfollowed'} ${target.label}',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -295,7 +342,10 @@ class _NotificationHistoryEntry extends StatelessWidget {
           child: Row(
             children: <Widget>[
               Expanded(
-                child: Text('Notification history', style: context.typography.groupTitle),
+                child: Text(
+                  'Notification history',
+                  style: context.typography.groupTitle,
+                ),
               ),
               if (unreadCount > 0) ...<Widget>[
                 Container(
@@ -311,12 +361,18 @@ class _NotificationHistoryEntry extends StatelessWidget {
                   child: Text(
                     '$unreadCount',
                     textAlign: TextAlign.center,
-                    style: context.typography.overline.copyWith(color: context.colors.onPrimary),
+                    style: context.typography.overline.copyWith(
+                      color: context.colors.onPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
-              Icon(Icons.chevron_right, size: 22, color: context.colors.onSurfaceFaint),
+              Icon(
+                Icons.chevron_right,
+                size: 22,
+                color: context.colors.onSurfaceFaint,
+              ),
             ],
           ),
         ),

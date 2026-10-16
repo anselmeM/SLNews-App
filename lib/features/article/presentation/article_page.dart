@@ -68,12 +68,13 @@ class _ReaderBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<Article> related = ref
-        .watch(categoryFeedProvider(article.categoryId))
-        .value
-        ?.where((Article candidate) => candidate.id != article.id)
-        .take(4)
-        .toList(growable: false) ??
+    final List<Article> related =
+        ref
+            .watch(categoryFeedProvider(article.categoryId))
+            .value
+            ?.where((Article candidate) => candidate.id != article.id)
+            .take(4)
+            .toList(growable: false) ??
         const <Article>[];
 
     return CustomScrollView(
@@ -91,7 +92,9 @@ class _ReaderBody extends ConsumerWidget {
           ),
           title: Text(
             article.publisher.mark,
-            style: context.typography.meta.copyWith(color: context.colors.onSurfaceVariant),
+            style: context.typography.meta.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
           ),
           centerTitle: true,
           actions: <Widget>[
@@ -99,8 +102,15 @@ class _ReaderBody extends ConsumerWidget {
               icon: const Icon(Icons.bookmark_border),
               tooltip: 'Save story',
               onPressed: () {
-                ref.read(bookmarksControllerProvider.notifier).toggle(article.id);
-                _showSnack(context, ref.read(bookmarksControllerProvider).contains(article.id) ? 'Saved' : 'Removed from saved');
+                ref
+                    .read(bookmarksControllerProvider.notifier)
+                    .toggle(article.id);
+                _showSnack(
+                  context,
+                  ref.read(bookmarksControllerProvider).contains(article.id)
+                      ? 'Saved'
+                      : 'Removed from saved',
+                );
               },
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -117,7 +127,10 @@ class _ReaderBody extends ConsumerWidget {
               // Shown only when the outlet did not simply repeat the standfirst
               // as the body's opening paragraph.
               if (article.summary.isNotEmpty &&
-                  !HtmlBlocks.opensWith(article.bodyHtml, article.summary)) ...<Widget>[
+                  !HtmlBlocks.opensWith(
+                    article.bodyHtml,
+                    article.summary,
+                  )) ...<Widget>[
                 Text(article.summary, style: context.typography.lead),
                 const SizedBox(height: AppSpacing.lg),
               ],
@@ -156,7 +169,9 @@ class _ReaderBody extends ConsumerWidget {
   void _showSnack(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 2)));
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
   }
 }
 

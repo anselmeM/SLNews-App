@@ -99,7 +99,9 @@ class AppBootstrap {
         cache = await HiveArticleCache.open();
         persistent = true;
       } catch (error, stackTrace) {
-        debugPrint('SLNews: local storage unavailable, falling back to memory ($error)');
+        debugPrint(
+          'SLNews: local storage unavailable, falling back to memory ($error)',
+        );
         debugPrintStack(stackTrace: stackTrace);
         preferences = InMemoryPreferencesStore();
         cache = InMemoryArticleCache();
@@ -141,7 +143,8 @@ class AppBootstrap {
     final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();
     final List<FeedSource> sources = <FeedSource>[
       ...OutletRegistry.buildSources(client),
-      if (apiConfig.isConfigured) SlNewsApiSource(config: apiConfig, client: client),
+      if (apiConfig.isConfigured)
+        SlNewsApiSource(config: apiConfig, client: client),
     ];
     debugPrint(
       'SLNews: ingest sources=${sources.length} '
@@ -151,32 +154,36 @@ class AppBootstrap {
 
     // Concrete types: the seed-backed implementations expose an extra `ready()`
     // used below, which is not part of the repository contracts.
-    final OfflineFirstArticleRepository articleRepository = OfflineFirstArticleRepository(
-      sources: sources,
-      cache: cache,
-      seedLoader: seedLoader,
-      client: client,
-    );
+    final OfflineFirstArticleRepository articleRepository =
+        OfflineFirstArticleRepository(
+          sources: sources,
+          cache: cache,
+          seedLoader: seedLoader,
+          client: client,
+        );
     final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
       seedLoader: seedLoader,
       client: client,
     );
-    final DefaultFollowingRepository followingRepository = DefaultFollowingRepository(
-      preferences: preferences,
-      seedLoader: seedLoader,
-    );
-    final DefaultNotificationRepository notificationRepository = DefaultNotificationRepository(
-      preferences: preferences,
-      seedLoader: seedLoader,
-    );
+    final DefaultFollowingRepository followingRepository =
+        DefaultFollowingRepository(
+          preferences: preferences,
+          seedLoader: seedLoader,
+        );
+    final DefaultNotificationRepository notificationRepository =
+        DefaultNotificationRepository(
+          preferences: preferences,
+          seedLoader: seedLoader,
+        );
     final DefaultWeatherRepository weatherRepository = DefaultWeatherRepository(
       seedLoader: seedLoader,
       client: client,
     );
-    final DefaultUserStateRepository userStateRepository = DefaultUserStateRepository(
-      preferences: preferences,
+    final DefaultUserStateRepository userStateRepository =
+        DefaultUserStateRepository(preferences: preferences);
+    final DefaultAdRepository adRepository = DefaultAdRepository(
+      seedLoader: seedLoader,
     );
-    final DefaultAdRepository adRepository = DefaultAdRepository(seedLoader: seedLoader);
 
     // The seed-backed repositories expose synchronous reads (required by the
     // frozen interfaces) over an async seed load. Awaiting them here means the
@@ -201,7 +208,9 @@ class AppBootstrap {
           articleRepositoryProvider.overrideWithValue(articleRepository),
           sportsRepositoryProvider.overrideWithValue(sportsRepository),
           followingRepositoryProvider.overrideWithValue(followingRepository),
-          notificationRepositoryProvider.overrideWithValue(notificationRepository),
+          notificationRepositoryProvider.overrideWithValue(
+            notificationRepository,
+          ),
           weatherRepositoryProvider.overrideWithValue(weatherRepository),
           userStateProvider.overrideWithValue(userStateRepository),
           adRepositoryProvider.overrideWithValue(adRepository),
@@ -213,7 +222,8 @@ class AppBootstrap {
           // otherwise the default (unconfigured, signed-out) stand-ins apply.
           if (auth != null) authRepositoryProvider.overrideWithValue(auth),
           if (auth != null) signInSurfaceProvider.overrideWithValue(auth),
-          if (auth != null) authAppWrapperProvider.overrideWithValue(auth.wrapApp),
+          if (auth != null)
+            authAppWrapperProvider.overrideWithValue(auth.wrapApp),
         ],
       ),
       articleRepository: articleRepository,

@@ -15,7 +15,8 @@ import 'package:slnews_mobile/features/auth/presentation/sign_in_page.dart';
 class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({this.status = AuthStatus.signedOut, this.currentUser});
 
-  final StreamController<AuthStatus> _changes = StreamController<AuthStatus>.broadcast();
+  final StreamController<AuthStatus> _changes =
+      StreamController<AuthStatus>.broadcast();
 
   @override
   AuthStatus status;
@@ -103,7 +104,9 @@ void main() {
   }
 
   group('AccountCard', () {
-    testWidgets('invites a signed-out reader to sign in', (WidgetTester tester) async {
+    testWidgets('invites a signed-out reader to sign in', (
+      WidgetTester tester,
+    ) async {
       await pumpApp(tester);
 
       expect(find.text('Sign in'), findsWidgets);
@@ -116,7 +119,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Aminata Kamara'), findsOneWidget);
-      expect(find.text('AK'), findsOneWidget, reason: 'avatar falls back to initials');
+      expect(
+        find.text('AK'),
+        findsOneWidget,
+        reason: 'avatar falls back to initials',
+      );
       // Sync is unconfigured in this scope, so the row says so rather than
       // pretending to have synced.
       expect(find.textContaining('Sync unavailable'), findsOneWidget);
@@ -143,7 +150,8 @@ void main() {
           ),
           GoRoute(
             path: AppRoutes.signIn,
-            builder: (BuildContext context, GoRouterState state) => const SignInPage(),
+            builder: (BuildContext context, GoRouterState state) =>
+                const SignInPage(),
           ),
         ],
       );
@@ -154,7 +162,10 @@ void main() {
             authRepositoryProvider.overrideWithValue(repository),
             signInSurfaceProvider.overrideWithValue(const FakeSignInSurface()),
           ],
-          child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            routerConfig: router,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -172,7 +183,9 @@ void main() {
   });
 
   group('AuthController', () {
-    testWidgets('reflects provider status and a later sign-in', (WidgetTester tester) async {
+    testWidgets('reflects provider status and a later sign-in', (
+      WidgetTester tester,
+    ) async {
       late WidgetRef captured;
       await pumpApp(
         tester,
@@ -216,7 +229,10 @@ void main() {
     test('derives a display label and initials from whatever is available', () {
       expect(testUser.label, 'Aminata Kamara');
       expect(testUser.initials, 'AK');
-      expect(const AuthUser(id: 'u', primaryEmail: 'kadiatu@example.com').initials, 'KA');
+      expect(
+        const AuthUser(id: 'u', primaryEmail: 'kadiatu@example.com').initials,
+        'KA',
+      );
       expect(const AuthUser(id: 'u').label, 'Signed in');
       expect(const AuthUser(id: 'u').initials, '?');
     });

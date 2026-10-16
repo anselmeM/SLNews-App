@@ -92,54 +92,74 @@ void main() {
     expect(find.byType(FollowRow), findsWidgets);
   });
 
-  testWidgets('tapping a Follow chip flips it to Following and mutates the repository',
-      (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(390, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'tapping a Follow chip flips it to Following and mutates the repository',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(390, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    await pumpPage(tester);
+      await pumpPage(tester);
 
-    expect(fixture.following.isFollowed(FollowingTestFixture.koidu.id), isFalse);
+      expect(
+        fixture.following.isFollowed(FollowingTestFixture.koidu.id),
+        isFalse,
+      );
 
-    // Two outlined "Follow" chips are on screen (Kenema and Koidu); the topic
-    // row already renders "Following" for the followed topic. The suggestions
-    // are sorted by label, so target the Koidu row explicitly rather than
-    // relying on document order.
-    expect(find.text('Follow'), findsNWidgets(2));
-    expect(
-      container.read(followingControllerProvider).isFollowed(FollowingTestFixture.politics.id),
-      isTrue,
-    );
+      // Two outlined "Follow" chips are on screen (Kenema and Koidu); the topic
+      // row already renders "Following" for the followed topic. The suggestions
+      // are sorted by label, so target the Koidu row explicitly rather than
+      // relying on document order.
+      expect(find.text('Follow'), findsNWidgets(2));
+      expect(
+        container
+            .read(followingControllerProvider)
+            .isFollowed(FollowingTestFixture.politics.id),
+        isTrue,
+      );
 
-    final Finder koiduRow = find.ancestor(
-      of: find.text('Koidu'),
-      matching: find.byType(FollowRow),
-    );
-    final Finder koiduChip = find.descendant(of: koiduRow, matching: find.text('Follow'));
-    expect(koiduChip, findsOneWidget);
+      final Finder koiduRow = find.ancestor(
+        of: find.text('Koidu'),
+        matching: find.byType(FollowRow),
+      );
+      final Finder koiduChip = find.descendant(
+        of: koiduRow,
+        matching: find.text('Follow'),
+      );
+      expect(koiduChip, findsOneWidget);
 
-    await tester.tap(koiduChip);
-    await tester.pump();
-    await tester.pump();
+      await tester.tap(koiduChip);
+      await tester.pump();
+      await tester.pump();
 
-    // The fake recorded the follow and the controller state converged.
-    expect(fixture.following.toggleLog.map((FollowTarget target) => target.id), contains('city:koidu'));
-    expect(
-      container.read(followingControllerProvider).isFollowed(FollowingTestFixture.koidu.id),
-      isTrue,
-    );
+      // The fake recorded the follow and the controller state converged.
+      expect(
+        fixture.following.toggleLog.map((FollowTarget target) => target.id),
+        contains('city:koidu'),
+      );
+      expect(
+        container
+            .read(followingControllerProvider)
+            .isFollowed(FollowingTestFixture.koidu.id),
+        isTrue,
+      );
 
-    // Koidu's chip now reads "Following": one outlined chip remains (Kenema).
-    expect(find.text('Follow'), findsOneWidget);
-    expect(find.descendant(of: koiduRow, matching: find.text('Following')), findsOneWidget);
+      // Koidu's chip now reads "Following": one outlined chip remains (Kenema).
+      expect(find.text('Follow'), findsOneWidget);
+      expect(
+        find.descendant(of: koiduRow, matching: find.text('Following')),
+        findsOneWidget,
+      );
 
-    // The action is confirmed with a snack bar.
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Following Koidu'), findsOneWidget);
-  });
+      // The action is confirmed with a snack bar.
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Following Koidu'), findsOneWidget);
+    },
+  );
 
-  testWidgets('the notification history row shows the unread count', (WidgetTester tester) async {
+  testWidgets('the notification history row shows the unread count', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -152,17 +172,25 @@ void main() {
           matching: find.byType(Material),
         )
         .first;
-    expect(find.descendant(of: historyTile, matching: find.text('2')), findsOneWidget);
+    expect(
+      find.descendant(of: historyTile, matching: find.text('2')),
+      findsOneWidget,
+    );
 
     // Mark the seeded alerts read: the badge must disappear.
     await fixture.notifications.markAllRead();
     await container.read(notificationsControllerProvider.notifier).reload();
     await tester.pump();
 
-    expect(find.descendant(of: historyTile, matching: find.text('2')), findsNothing);
+    expect(
+      find.descendant(of: historyTile, matching: find.text('2')),
+      findsNothing,
+    );
   });
 
-  testWidgets('does not overflow at 320pt width with text scale 1.3', (WidgetTester tester) async {
+  testWidgets('does not overflow at 320pt width with text scale 1.3', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(320, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -174,7 +202,8 @@ void main() {
           theme: AppTheme.light(),
           routerConfig: buildFollowingTestRouter(),
           builder: (BuildContext context, Widget? child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.3)),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.3)),
             child: child ?? const SizedBox.shrink(),
           ),
         ),

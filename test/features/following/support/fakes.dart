@@ -95,11 +95,16 @@ class InMemoryFollowingRepository implements FollowingRepository {
   @override
   bool isFollowed(String targetId) => _entries[targetId]?.followed ?? false;
 
-  _Entry _entryFor(FollowTarget target) =>
-      _entries.putIfAbsent(target.id, () => _Entry(catalogue: target, followed: false));
+  _Entry _entryFor(FollowTarget target) => _entries.putIfAbsent(
+    target.id,
+    () => _Entry(catalogue: target, followed: false),
+  );
 
   List<FollowTarget> _byKind(Set<FollowKind> kinds) => _entries.values
-      .where((_Entry entry) => entry.followed && kinds.contains(entry.catalogue.kind))
+      .where(
+        (_Entry entry) =>
+            entry.followed && kinds.contains(entry.catalogue.kind),
+      )
       .map((_Entry entry) => entry.catalogue)
       .toList(growable: false);
 }
@@ -117,7 +122,8 @@ class InMemoryNotificationRepository implements NotificationRepository {
   int markAllReadCalls = 0;
 
   @override
-  List<NotificationItem> get cachedHistory => List<NotificationItem>.unmodifiable(_items);
+  List<NotificationItem> get cachedHistory =>
+      List<NotificationItem>.unmodifiable(_items);
 
   @override
   Future<List<NotificationItem>> history({int limit = 30}) async =>
@@ -132,18 +138,24 @@ class InMemoryNotificationRepository implements NotificationRepository {
   Future<void> markRead(String id) async {
     markReadLog.add(id);
     _items = _items
-        .map((NotificationItem item) => item.id == id ? item.copyWith(isRead: true) : item)
+        .map(
+          (NotificationItem item) =>
+              item.id == id ? item.copyWith(isRead: true) : item,
+        )
         .toList(growable: false);
   }
 
   @override
   Future<void> markAllRead() async {
     markAllReadCalls++;
-    _items = _items.map((NotificationItem item) => item.copyWith(isRead: true)).toList(growable: false);
+    _items = _items
+        .map((NotificationItem item) => item.copyWith(isRead: true))
+        .toList(growable: false);
   }
 
   @override
-  int get unreadCount => _items.where((NotificationItem item) => !item.isRead).length;
+  int get unreadCount =>
+      _items.where((NotificationItem item) => !item.isRead).length;
 }
 
 /// Seeded catalogue + alert fixtures shared by the widget tests.
@@ -173,7 +185,9 @@ class FollowingTestFixture {
           id: 'n3',
           title: 'Freetown weather alert',
           body: 'Heavy rain expected across the Western Area this weekend.',
-          receivedAt: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
+          receivedAt: DateTime.now().subtract(
+            const Duration(days: 1, hours: 2),
+          ),
           kind: NotificationKind.system,
           isRead: true,
         ),
@@ -245,11 +259,13 @@ GoRouter buildFollowingTestRouter({String initialLocation = '/following'}) {
     routes: <RouteBase>[
       GoRoute(
         path: '/following',
-        builder: (BuildContext context, GoRouterState state) => const FollowingPage(),
+        builder: (BuildContext context, GoRouterState state) =>
+            const FollowingPage(),
         routes: <RouteBase>[
           GoRoute(
             path: 'notifications',
-            builder: (BuildContext context, GoRouterState state) => const NotificationHistoryPage(),
+            builder: (BuildContext context, GoRouterState state) =>
+                const NotificationHistoryPage(),
           ),
         ],
       ),

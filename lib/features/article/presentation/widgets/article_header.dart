@@ -17,7 +17,11 @@ class ArticleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        PublisherMark(publisher: article.publisher, logoHeight: 22, maxWidth: 200),
+        PublisherMark(
+          publisher: article.publisher,
+          logoHeight: 22,
+          maxWidth: 200,
+        ),
         const SizedBox(height: AppSpacing.lg),
         Text(article.title, style: context.typography.articleTitle),
         const SizedBox(height: AppSpacing.md),
@@ -31,13 +35,17 @@ class ArticleHeader extends StatelessWidget {
             Flexible(
               child: Text(
                 article.publishedAt.absoluteLabel,
-                style: context.typography.meta.copyWith(color: context.colors.onSurfaceFaint),
+                style: context.typography.meta.copyWith(
+                  color: context.colors.onSurfaceFaint,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               '· ${article.estimatedReadingMinutes} min read',
-              style: context.typography.meta.copyWith(color: context.colors.onSurfaceFaint),
+              style: context.typography.meta.copyWith(
+                color: context.colors.onSurfaceFaint,
+              ),
             ),
           ],
         ),

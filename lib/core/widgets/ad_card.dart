@@ -23,8 +23,14 @@ class AdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color start = _parseHex(unit.brandAccentHex, context.colors.accentGradientStart);
-    final Color end = _parseHex(unit.brandHex, context.colors.accentGradientEnd);
+    final Color start = _parseHex(
+      unit.brandAccentHex,
+      context.colors.accentGradientStart,
+    );
+    final Color end = _parseHex(
+      unit.brandHex,
+      context.colors.accentGradientEnd,
+    );
     return Semantics(
       label: 'Advertisement: ${unit.advertiser}',
       child: Material(
@@ -50,7 +56,12 @@ class AdCard extends StatelessWidget {
                     colors: <Color>[start, end],
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xxl, AppSpacing.lg, AppSpacing.lg),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xxl,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -71,10 +82,16 @@ class AdCard extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           'Ad',
-                          style: context.typography.overline.copyWith(color: const Color(0xCCFFFFFF)),
+                          style: context.typography.overline.copyWith(
+                            color: const Color(0xCCFFFFFF),
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
-                        const Icon(Icons.info_outline, size: 13, color: Color(0xCCFFFFFF)),
+                        const Icon(
+                          Icons.info_outline,
+                          size: 13,
+                          color: Color(0xCCFFFFFF),
+                        ),
                       ],
                     ),
                     if (unit.disclosure != null) ...<Widget>[
@@ -93,7 +110,12 @@ class AdCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
               child: Row(
                 children: <Widget>[
                   Expanded(
@@ -146,12 +168,19 @@ class _OfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: AppSpacing.lg,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(AppRadius.md)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Row(

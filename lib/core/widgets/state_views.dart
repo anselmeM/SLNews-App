@@ -37,7 +37,10 @@ class ErrorStateView extends StatelessWidget {
             ),
             if (onRetry != null) ...<Widget>[
               const SizedBox(height: AppSpacing.lg),
-              OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: const Text('Try again'),
+              ),
             ],
           ],
         ),
@@ -73,10 +76,18 @@ class EmptyStateView extends StatelessWidget {
           children: <Widget>[
             Icon(icon, size: 40, color: context.colors.onSurfaceFaint),
             const SizedBox(height: AppSpacing.lg),
-            Text(title, textAlign: TextAlign.center, style: context.typography.groupTitle),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: context.typography.groupTitle,
+            ),
             if (message != null) ...<Widget>[
               const SizedBox(height: AppSpacing.sm),
-              Text(message!, textAlign: TextAlign.center, style: context.typography.caption),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: context.typography.caption,
+              ),
             ],
             if (actionLabel != null && onAction != null) ...<Widget>[
               const SizedBox(height: AppSpacing.lg),
@@ -105,14 +116,23 @@ class OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!isOffline) return const SizedBox.shrink();
-    final String detail = lastSyncedAt == null ? message : '$message · updated ${lastSyncedAt!.relativeLabel}';
+    final String detail = lastSyncedAt == null
+        ? message
+        : '$message · updated ${lastSyncedAt!.relativeLabel}';
     return Container(
       width: double.infinity,
       color: context.colors.surfaceMuted,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         children: <Widget>[
-          Icon(Icons.wifi_off_outlined, size: 15, color: context.colors.onSurfaceVariant),
+          Icon(
+            Icons.wifi_off_outlined,
+            size: 15,
+            color: context.colors.onSurfaceVariant,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

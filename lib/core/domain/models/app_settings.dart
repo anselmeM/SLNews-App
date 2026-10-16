@@ -65,7 +65,8 @@ class AppSettings {
       themeMode: themeMode ?? this.themeMode,
       textScale: textScale ?? this.textScale,
       activeLocationId: activeLocationId ?? this.activeLocationId,
-      breakingNewsAlertsEnabled: breakingNewsAlertsEnabled ?? this.breakingNewsAlertsEnabled,
+      breakingNewsAlertsEnabled:
+          breakingNewsAlertsEnabled ?? this.breakingNewsAlertsEnabled,
     );
   }
 
@@ -78,5 +79,10 @@ class AppSettings {
       other.breakingNewsAlertsEnabled == breakingNewsAlertsEnabled;
 
   @override
-  int get hashCode => Object.hash(themeMode, textScale, activeLocationId, breakingNewsAlertsEnabled);
+  int get hashCode => Object.hash(
+    themeMode,
+    textScale,
+    activeLocationId,
+    breakingNewsAlertsEnabled,
+  );
 }

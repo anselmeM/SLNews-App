@@ -11,8 +11,11 @@ import 'app_providers.dart';
 import 'sync_controller.dart';
 
 /// Reader preferences (theme, text scale, home location, alerts).
-final NotifierProvider<SettingsController, AppSettings> settingsControllerProvider =
-    NotifierProvider<SettingsController, AppSettings>(SettingsController.new, name: 'settings');
+final NotifierProvider<SettingsController, AppSettings>
+settingsControllerProvider = NotifierProvider<SettingsController, AppSettings>(
+  SettingsController.new,
+  name: 'settings',
+);
 
 class SettingsController extends Notifier<AppSettings> {
   @override
@@ -53,8 +56,12 @@ class SettingsController extends Notifier<AppSettings> {
 }
 
 /// Saved stories.
-final NotifierProvider<BookmarksController, Set<String>> bookmarksControllerProvider =
-    NotifierProvider<BookmarksController, Set<String>>(BookmarksController.new, name: 'bookmarks');
+final NotifierProvider<BookmarksController, Set<String>>
+bookmarksControllerProvider =
+    NotifierProvider<BookmarksController, Set<String>>(
+      BookmarksController.new,
+      name: 'bookmarks',
+    );
 
 class BookmarksController extends Notifier<Set<String>> {
   @override
@@ -77,7 +84,10 @@ class BookmarksController extends Notifier<Set<String>> {
 
 /// Liked stories.
 final NotifierProvider<LikesController, Set<String>> likesControllerProvider =
-    NotifierProvider<LikesController, Set<String>>(LikesController.new, name: 'likes');
+    NotifierProvider<LikesController, Set<String>>(
+      LikesController.new,
+      name: 'likes',
+    );
 
 class LikesController extends Notifier<Set<String>> {
   @override
@@ -99,7 +109,8 @@ class LikesController extends Notifier<Set<String>> {
 }
 
 /// Followed teams, leagues, locations and topics.
-final NotifierProvider<FollowingController, FollowingSnapshot> followingControllerProvider =
+final NotifierProvider<FollowingController, FollowingSnapshot>
+followingControllerProvider =
     NotifierProvider<FollowingController, FollowingSnapshot>(
       FollowingController.new,
       name: 'following',
@@ -126,7 +137,12 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 
   Future<void> unfollow(String targetId) async {
     state = await ref.read(followingRepositoryProvider).unfollow(targetId);
-    await recordSyncChange(ref, SyncCollections.follows, targetId, deleted: true);
+    await recordSyncChange(
+      ref,
+      SyncCollections.follows,
+      targetId,
+      deleted: true,
+    );
   }
 }
 
@@ -144,11 +160,9 @@ Future<void> recordSyncChange(
   bool deleted = false,
 }) async {
   try {
-    await ref.read(syncControllerProvider.notifier).recordLocalChange(
-      collection,
-      id,
-      deleted: deleted,
-    );
+    await ref
+        .read(syncControllerProvider.notifier)
+        .recordLocalChange(collection, id, deleted: deleted);
   } on UnimplementedError {
     // No sync stack in this scope (a feature test, or a build without one):
     // local state is still saved, it simply does not sync.
@@ -167,19 +181,25 @@ notificationsControllerProvider =
 
 class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
   @override
-  Future<List<NotificationItem>> build() => ref.watch(notificationRepositoryProvider).history();
+  Future<List<NotificationItem>> build() =>
+      ref.watch(notificationRepositoryProvider).history();
 
-  int get unreadCount => state.value?.where((NotificationItem item) => !item.isRead).length ?? 0;
+  int get unreadCount =>
+      state.value?.where((NotificationItem item) => !item.isRead).length ?? 0;
 
   Future<void> markRead(String id) async {
-    final NotificationRepository repository = ref.read(notificationRepositoryProvider);
+    final NotificationRepository repository = ref.read(
+      notificationRepositoryProvider,
+    );
     await repository.markRead(id);
     final List<NotificationItem> items = await repository.history();
     state = AsyncData<List<NotificationItem>>(items);
   }
 
   Future<void> markAllRead() async {
-    final NotificationRepository repository = ref.read(notificationRepositoryProvider);
+    final NotificationRepository repository = ref.read(
+      notificationRepositoryProvider,
+    );
     await repository.markAllRead();
     final List<NotificationItem> items = await repository.history();
     state = AsyncData<List<NotificationItem>>(items);

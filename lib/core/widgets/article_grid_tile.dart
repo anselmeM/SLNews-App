@@ -74,7 +74,10 @@ class ArticleGridTile extends StatelessWidget {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: PublisherMark(publisher: article.publisher, logoHeight: 14),
+                            child: PublisherMark(
+                              publisher: article.publisher,
+                              logoHeight: 14,
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Flexible(

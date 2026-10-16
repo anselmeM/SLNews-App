@@ -15,13 +15,21 @@ class AppShell extends ConsumerWidget {
 
   static const List<_TabSpec> _tabs = <_TabSpec>[
     _TabSpec(label: 'For you', icon: Icons.star_border, activeIcon: Icons.star),
-    _TabSpec(label: 'News', icon: Icons.article_outlined, activeIcon: Icons.article),
+    _TabSpec(
+      label: 'News',
+      icon: Icons.article_outlined,
+      activeIcon: Icons.article,
+    ),
     _TabSpec(
       label: 'Sports',
       icon: Icons.sports_basketball_outlined,
       activeIcon: Icons.sports_basketball,
     ),
-    _TabSpec(label: 'Following', icon: Icons.notifications_none, activeIcon: Icons.notifications),
+    _TabSpec(
+      label: 'Following',
+      icon: Icons.notifications_none,
+      activeIcon: Icons.notifications,
+    ),
   ];
 
   @override
@@ -59,12 +67,19 @@ class AppShell extends ConsumerWidget {
 
   void _onDestinationSelected(int index) {
     // Tapping the active tab resets that branch to its root.
-    navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 }
 
 class _TabSpec {
-  const _TabSpec({required this.label, required this.icon, required this.activeIcon});
+  const _TabSpec({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
 
   final String label;
   final IconData icon;

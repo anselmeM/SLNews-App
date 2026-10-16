@@ -27,8 +27,12 @@ class CategoryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color background = selected ? context.colors.surfaceInverse : context.colors.surface;
-    final Color foreground = selected ? context.colors.onSurfaceInverse : context.colors.onSurface;
+    final Color background = selected
+        ? context.colors.surfaceInverse
+        : context.colors.surface;
+    final Color foreground = selected
+        ? context.colors.onSurfaceInverse
+        : context.colors.onSurface;
     return Semantics(
       button: true,
       selected: selected,
@@ -39,7 +43,10 @@ class CategoryPill extends StatelessWidget {
           onTap: onTap,
           borderRadius: AppRadius.pillRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm + 2,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -49,7 +56,9 @@ class CategoryPill extends StatelessWidget {
                     height: 26,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: selected ? foreground : context.colors.surfaceMuted,
+                      color: selected
+                          ? foreground
+                          : context.colors.surfaceMuted,
                     ),
                     child: Icon(
                       icon,
@@ -59,7 +68,10 @@ class CategoryPill extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                 ],
-                Text(label, style: context.typography.chip.copyWith(color: foreground)),
+                Text(
+                  label,
+                  style: context.typography.chip.copyWith(color: foreground),
+                ),
               ],
             ),
           ),
@@ -97,7 +109,8 @@ class CategoryPillStrip extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: padding,
         itemCount: categories.length,
-        separatorBuilder: (BuildContext context, int index) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (BuildContext context, int index) =>
+            const SizedBox(width: AppSpacing.sm),
         itemBuilder: (BuildContext context, int index) {
           final NewsCategory category = categories[index];
           return CategoryPill(

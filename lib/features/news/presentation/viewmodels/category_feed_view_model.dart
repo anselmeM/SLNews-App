@@ -111,8 +111,10 @@ abstract final class NewsCategoryFeedViewModel {
   }
 
   /// Convenience overload that takes the [NewsCategory] rather than its id.
-  static NewsCategoryFeed buildForArticles(List<Article> articles, NewsCategory category) =>
-      build(articles, category.id);
+  static NewsCategoryFeed buildForArticles(
+    List<Article> articles,
+    NewsCategory category,
+  ) => build(articles, category.id);
 
   /// The hero a feed would render, without building the whole model.
   ///

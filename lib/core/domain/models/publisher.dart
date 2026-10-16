@@ -31,7 +31,12 @@ class Publisher {
 
   String get mark => wordmark ?? name.toUpperCase();
 
-  Publisher copyWith({String? name, String? wordmark, String? logoUrl, String? websiteUrl}) {
+  Publisher copyWith({
+    String? name,
+    String? wordmark,
+    String? logoUrl,
+    String? websiteUrl,
+  }) {
     return Publisher(
       id: id,
       name: name ?? this.name,
@@ -75,5 +80,6 @@ class Publisher {
       other.isWire == isWire;
 
   @override
-  int get hashCode => Object.hash(id, name, wordmark, logoUrl, websiteUrl, country, isWire);
+  int get hashCode =>
+      Object.hash(id, name, wordmark, logoUrl, websiteUrl, country, isWire);
 }

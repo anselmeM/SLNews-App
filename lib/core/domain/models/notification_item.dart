@@ -73,18 +73,20 @@ class NotificationItem {
     'isRead': isRead,
   };
 
-  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    body: json['body'] as String? ?? '',
-    receivedAt: DateTime.parse(json['receivedAt'] as String),
-    kind: NotificationKind.fromWire(json['kind'] as String?),
-    articleId: json['articleId'] as String?,
-    isRead: json['isRead'] as bool? ?? false,
-  );
+  factory NotificationItem.fromJson(Map<String, dynamic> json) =>
+      NotificationItem(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        body: json['body'] as String? ?? '',
+        receivedAt: DateTime.parse(json['receivedAt'] as String),
+        kind: NotificationKind.fromWire(json['kind'] as String?),
+        articleId: json['articleId'] as String?,
+        isRead: json['isRead'] as bool? ?? false,
+      );
 
   @override
-  bool operator ==(Object other) => other is NotificationItem && other.id == id && other.isRead == isRead;
+  bool operator ==(Object other) =>
+      other is NotificationItem && other.id == id && other.isRead == isRead;
 
   @override
   int get hashCode => Object.hash(id, isRead);

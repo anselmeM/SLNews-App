@@ -79,7 +79,8 @@ class FollowTarget {
   );
 
   @override
-  bool operator ==(Object other) => other is FollowTarget && other.id == id && other.kind == kind;
+  bool operator ==(Object other) =>
+      other is FollowTarget && other.id == id && other.kind == kind;
 
   @override
   int get hashCode => Object.hash(id, kind);
@@ -116,7 +117,8 @@ class FollowingSnapshot {
   final List<FollowTarget> topics;
   final List<FollowTarget> publishers;
 
-  List<String> get followedIds => followed.map((FollowTarget t) => t.id).toList(growable: false);
+  List<String> get followedIds =>
+      followed.map((FollowTarget t) => t.id).toList(growable: false);
 
   bool isFollowed(String id) => followed.any((FollowTarget t) => t.id == id);
 

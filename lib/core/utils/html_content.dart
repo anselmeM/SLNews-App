@@ -14,7 +14,11 @@ import '../widgets/sl_network_image.dart';
 /// typography, and unknown tags degrade to their text content rather than
 /// disappearing. Scripts, styles and event attributes are dropped.
 class HtmlContent extends StatelessWidget {
-  const HtmlContent({super.key, required this.html, this.spacing = AppSpacing.lg});
+  const HtmlContent({
+    super.key,
+    required this.html,
+    this.spacing = AppSpacing.lg,
+  });
 
   final String html;
 
@@ -23,7 +27,11 @@ class HtmlContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> blocks = HtmlBlocks.toWidgets(context, html, spacing: spacing);
+    final List<Widget> blocks = HtmlBlocks.toWidgets(
+      context,
+      html,
+      spacing: spacing,
+    );
     if (blocks.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,9 +43,19 @@ class HtmlContent extends StatelessWidget {
 /// Pure helpers so body rendering can be asserted in unit tests.
 abstract final class HtmlBlocks {
   /// Tags whose content is never rendered.
-  static const Set<String> _dropped = <String>{'script', 'style', 'noscript', 'iframe', 'form'};
+  static const Set<String> _dropped = <String>{
+    'script',
+    'style',
+    'noscript',
+    'iframe',
+    'form',
+  };
 
-  static List<Widget> toWidgets(BuildContext context, String html, {double spacing = AppSpacing.lg}) {
+  static List<Widget> toWidgets(
+    BuildContext context,
+    String html, {
+    double spacing = AppSpacing.lg,
+  }) {
     final String trimmed = html.trim();
     if (trimmed.isEmpty) return const <Widget>[];
 
@@ -50,13 +68,21 @@ abstract final class HtmlBlocks {
   }
 
   /// Inline spans for a fragment, used for summaries and captions.
-  static List<InlineSpan> toSpans(BuildContext context, String html, {TextStyle? baseStyle}) {
+  static List<InlineSpan> toSpans(
+    BuildContext context,
+    String html, {
+    TextStyle? baseStyle,
+  }) {
     final TextStyle base = baseStyle ?? context.typography.body;
     final dom.DocumentFragment fragment = html_parser.parseFragment(html);
     return _inlineSpans(context, fragment.nodes, base);
   }
 
-  static List<Widget> _block(BuildContext context, dom.Node node, double spacing) {
+  static List<Widget> _block(
+    BuildContext context,
+    dom.Node node,
+    double spacing,
+  ) {
     if (node is dom.Text) {
       final String text = node.text.trim();
       if (text.isEmpty) return const <Widget>[];
@@ -81,7 +107,13 @@ abstract final class HtmlBlocks {
       case 'h6':
         return <Widget>[
           Text.rich(
-            TextSpan(children: _inlineSpans(context, node.nodes, context.typography.sectionTitle)),
+            TextSpan(
+              children: _inlineSpans(
+                context,
+                node.nodes,
+                context.typography.sectionTitle,
+              ),
+            ),
           ),
           SizedBox(height: spacing),
         ];
@@ -90,7 +122,9 @@ abstract final class HtmlBlocks {
           Container(
             padding: const EdgeInsets.only(left: AppSpacing.lg),
             decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: context.colors.primary, width: 3)),
+              border: Border(
+                left: BorderSide(color: context.colors.primary, width: 3),
+              ),
             ),
             child: Text.rich(
               TextSpan(
@@ -143,7 +177,11 @@ abstract final class HtmlBlocks {
     }
   }
 
-  static List<Widget> _paragraph(BuildContext context, dom.Element node, double spacing) {
+  static List<Widget> _paragraph(
+    BuildContext context,
+    dom.Element node,
+    double spacing,
+  ) {
     final String plain = node.text.trim();
     final bool hasImage = node.querySelector('img') != null;
     if (plain.isEmpty && !hasImage) return const <Widget>[];
@@ -151,19 +189,36 @@ abstract final class HtmlBlocks {
     final List<Widget> widgets = <Widget>[];
     if (hasImage) {
       final dom.Element? image = node.querySelector('img');
-      if (image != null) widgets.addAll(_image(context, image, null, AppSpacing.md));
+      if (image != null) {
+        widgets.addAll(_image(context, image, null, AppSpacing.md));
+      }
     }
     if (plain.isNotEmpty) {
       widgets.add(
-        Text.rich(TextSpan(children: _inlineSpans(context, node.nodes, context.typography.body))),
+        Text.rich(
+          TextSpan(
+            children: _inlineSpans(
+              context,
+              node.nodes,
+              context.typography.body,
+            ),
+          ),
+        ),
       );
     }
     widgets.add(SizedBox(height: spacing));
     return widgets;
   }
 
-  static List<Widget> _list(BuildContext context, dom.Element node, double spacing, {required bool ordered}) {
-    final List<dom.Element> items = node.children.where((dom.Element e) => e.localName == 'li').toList();
+  static List<Widget> _list(
+    BuildContext context,
+    dom.Element node,
+    double spacing, {
+    required bool ordered,
+  }) {
+    final List<dom.Element> items = node.children
+        .where((dom.Element e) => e.localName == 'li')
+        .toList();
     final List<Widget> rows = <Widget>[];
     for (int i = 0; i < items.length; i++) {
       final String marker = ordered ? '${i + 1}.' : '•';
@@ -179,7 +234,13 @@ abstract final class HtmlBlocks {
               ),
               Expanded(
                 child: Text.rich(
-                  TextSpan(children: _inlineSpans(context, items[i].nodes, context.typography.body)),
+                  TextSpan(
+                    children: _inlineSpans(
+                      context,
+                      items[i].nodes,
+                      context.typography.body,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -190,15 +251,25 @@ abstract final class HtmlBlocks {
     return <Widget>[...rows, SizedBox(height: spacing - AppSpacing.sm)];
   }
 
-  static List<Widget> _figure(BuildContext context, dom.Element node, double spacing) {
+  static List<Widget> _figure(
+    BuildContext context,
+    dom.Element node,
+    double spacing,
+  ) {
     final dom.Element? image = node.querySelector('img');
     final String caption = node.querySelector('figcaption')?.text.trim() ?? '';
     if (image == null) return const <Widget>[];
     return _image(context, image, caption.isEmpty ? null : caption, spacing);
   }
 
-  static List<Widget> _image(BuildContext context, dom.Element image, String? caption, double spacing) {
-    final String src = image.attributes['src'] ?? image.attributes['data-src'] ?? '';
+  static List<Widget> _image(
+    BuildContext context,
+    dom.Element image,
+    String? caption,
+    double spacing,
+  ) {
+    final String src =
+        image.attributes['src'] ?? image.attributes['data-src'] ?? '';
     if (src.isEmpty) return const <Widget>[];
     return <Widget>[
       SlNetworkImage(
@@ -215,7 +286,11 @@ abstract final class HtmlBlocks {
     ];
   }
 
-  static List<InlineSpan> _inlineSpans(BuildContext context, List<dom.Node> nodes, TextStyle base) {
+  static List<InlineSpan> _inlineSpans(
+    BuildContext context,
+    List<dom.Node> nodes,
+    TextStyle base,
+  ) {
     final List<InlineSpan> raw = <InlineSpan>[];
     _collect(context, nodes, base, raw);
 
@@ -233,7 +308,12 @@ abstract final class HtmlBlocks {
     return cleaned;
   }
 
-  static void _collect(BuildContext context, List<dom.Node> nodes, TextStyle style, List<InlineSpan> out) {
+  static void _collect(
+    BuildContext context,
+    List<dom.Node> nodes,
+    TextStyle style,
+    List<InlineSpan> out,
+  ) {
     for (final dom.Node node in nodes) {
       if (node is dom.Text) {
         final String text = node.text.replaceAll(RegExp(r'\s+'), ' ');
@@ -258,7 +338,12 @@ abstract final class HtmlBlocks {
       if (tag == 'img') {
         final String alt = node.attributes['alt'] ?? '';
         if (alt.isNotEmpty) {
-          out.add(TextSpan(text: ' $alt ', style: style.copyWith(fontStyle: FontStyle.italic)));
+          out.add(
+            TextSpan(
+              text: ' $alt ',
+              style: style.copyWith(fontStyle: FontStyle.italic),
+            ),
+          );
         }
         continue;
       }
@@ -266,7 +351,12 @@ abstract final class HtmlBlocks {
     }
   }
 
-  static TextStyle _styleFor(BuildContext context, String tag, dom.Element node, TextStyle base) {
+  static TextStyle _styleFor(
+    BuildContext context,
+    String tag,
+    dom.Element node,
+    TextStyle base,
+  ) {
     switch (tag) {
       case 'strong':
       case 'b':
@@ -296,7 +386,10 @@ abstract final class HtmlBlocks {
     }
   }
 
-  static List<Widget> _stripTrailingSpacing(List<Widget> widgets, double spacing) {
+  static List<Widget> _stripTrailingSpacing(
+    List<Widget> widgets,
+    double spacing,
+  ) {
     if (widgets.isEmpty) return widgets;
     final List<Widget> result = List<Widget>.of(widgets);
     while (result.isNotEmpty && result.last is SizedBox) {
@@ -309,11 +402,17 @@ abstract final class HtmlBlocks {
   ///
   /// Outlets frequently repeat the standfirst as the first paragraph; the reader
   /// uses this to avoid printing the same sentence twice.
-  static bool opensWith(String html, String candidate, {int compareChars = 80}) {
+  static bool opensWith(
+    String html,
+    String candidate, {
+    int compareChars = 80,
+  }) {
     final String body = toPlainText(html).toLowerCase();
     final String lead = candidate.trim().toLowerCase();
     if (body.isEmpty || lead.isEmpty) return false;
-    final String needle = lead.length > compareChars ? lead.substring(0, compareChars) : lead;
+    final String needle = lead.length > compareChars
+        ? lead.substring(0, compareChars)
+        : lead;
     return body.startsWith(needle);
   }
 

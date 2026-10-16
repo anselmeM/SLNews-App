@@ -25,8 +25,12 @@ class FollowChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color border = isFollowing ? context.colors.divider : context.colors.onSurface;
-    final Color background = isFollowing ? context.colors.surfaceMuted : Colors.transparent;
+    final Color border = isFollowing
+        ? context.colors.divider
+        : context.colors.onSurface;
+    final Color background = isFollowing
+        ? context.colors.surfaceMuted
+        : Colors.transparent;
     return Semantics(
       button: true,
       toggled: isFollowing,
@@ -48,7 +52,9 @@ class FollowChip extends StatelessWidget {
               isFollowing ? followingLabel : followLabel,
               style: context.typography.button.copyWith(
                 fontSize: dense ? 13 : 15,
-                color: isFollowing ? context.colors.onSurfaceVariant : context.colors.onSurface,
+                color: isFollowing
+                    ? context.colors.onSurfaceVariant
+                    : context.colors.onSurface,
               ),
             ),
           ),

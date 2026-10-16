@@ -62,7 +62,8 @@ class FollowedTeamsRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: targets.length,
         separatorBuilder: (BuildContext context, int index) =>
-            const SizedBox(width: AppSpacing.lg),        itemBuilder: (BuildContext context, int index) {
+            const SizedBox(width: AppSpacing.lg),
+        itemBuilder: (BuildContext context, int index) {
           final FollowTarget target = targets[index];
           final String label = SportsViewModel.shortLabel(target);
           return Semantics(

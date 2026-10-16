@@ -19,10 +19,11 @@ export '../auth/sign_in_surface.dart';
 /// Defaults to an unconfigured stand-in so a test or a key-less build can pump
 /// the app without an auth stack; `AppBootstrap` replaces it with Clerk's
 /// adapter when a publishable key is present.
-final Provider<AuthRepository> authRepositoryProvider = Provider<AuthRepository>(
-  (Ref ref) => const UnconfiguredAuthRepository(),
-  name: 'authRepository',
-);
+final Provider<AuthRepository> authRepositoryProvider =
+    Provider<AuthRepository>(
+      (Ref ref) => const UnconfiguredAuthRepository(),
+      name: 'authRepository',
+    );
 
 final Provider<SignInSurface> signInSurfaceProvider = Provider<SignInSurface>(
   (Ref ref) => const UnavailableSignInSurface(),
@@ -35,21 +36,30 @@ final Provider<SignInSurface> signInSurfaceProvider = Provider<SignInSurface>(
 /// Clerk adapter supplies `(child) => ClerkAuth(authState: …, child: child)` and
 /// a key-less build supplies the identity function.
 final Provider<Widget Function(Widget child)> authAppWrapperProvider =
-    Provider<Widget Function(Widget child)>((Ref ref) => (Widget child) => child, name: 'authAppWrapper');
+    Provider<Widget Function(Widget child)>(
+      (Ref ref) =>
+          (Widget child) => child,
+      name: 'authAppWrapper',
+    );
 
 /// Session state for widgets.
 final NotifierProvider<AuthController, AuthState> authControllerProvider =
-    NotifierProvider<AuthController, AuthState>(AuthController.new, name: 'authController');
+    NotifierProvider<AuthController, AuthState>(
+      AuthController.new,
+      name: 'authController',
+    );
 
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
     final AuthRepository repository = ref.watch(authRepositoryProvider);
-    final StreamSubscription<AuthStatus> subscription = repository.statusChanges.listen((
-      AuthStatus _,
-    ) {
-      state = AuthState(status: repository.status, user: repository.currentUser);
-    });
+    final StreamSubscription<AuthStatus> subscription = repository.statusChanges
+        .listen((AuthStatus _) {
+          state = AuthState(
+            status: repository.status,
+            user: repository.currentUser,
+          );
+        });
     ref.onDispose(subscription.cancel);
     return AuthState(status: repository.status, user: repository.currentUser);
   }

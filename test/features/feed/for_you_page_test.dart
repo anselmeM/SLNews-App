@@ -60,7 +60,8 @@ void main() {
       routes: <RouteBase>[
         GoRoute(
           path: '/for_you',
-          builder: (BuildContext context, GoRouterState state) => const ForYouPage(),
+          builder: (BuildContext context, GoRouterState state) =>
+              const ForYouPage(),
         ),
         GoRoute(
           path: '/article/:id',
@@ -77,28 +78,32 @@ void main() {
           userState: userState,
           weather: weather,
         ),
-        child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
     return router;
   }
 
-  testWidgets('renders hero headline, breaking tag, weather label and streams', (
-    WidgetTester tester,
-  ) async {
-    await pumpForYou(tester);
+  testWidgets(
+    'renders hero headline, breaking tag, weather label and streams',
+    (WidgetTester tester) async {
+      await pumpForYou(tester);
 
-    expect(find.text('Top stories'), findsWidgets);
-    expect(find.text('Breaking: bridge closed after storm'), findsOneWidget);
-    // Once on the hero card, once in the weather/alert header.
-    expect(find.text('BREAKING'), findsNWidgets(2));
-    expect(find.text('29° Freetown'), findsOneWidget);
-    expect(find.text('From Freetown'), findsOneWidget);
-    expect(find.text('Latest'), findsOneWidget);
-    expect(find.text('Local story in Freetown'), findsOneWidget);
-    expect(find.text('Only in the latest stream'), findsOneWidget);
-  });
+      expect(find.text('Top stories'), findsWidgets);
+      expect(find.text('Breaking: bridge closed after storm'), findsOneWidget);
+      // Once on the hero card, once in the weather/alert header.
+      expect(find.text('BREAKING'), findsNWidgets(2));
+      expect(find.text('29° Freetown'), findsOneWidget);
+      expect(find.text('From Freetown'), findsOneWidget);
+      expect(find.text('Latest'), findsOneWidget);
+      expect(find.text('Local story in Freetown'), findsOneWidget);
+      expect(find.text('Only in the latest stream'), findsOneWidget);
+    },
+  );
 
   testWidgets('never repeats a story between the carousel and the streams', (
     WidgetTester tester,
@@ -110,7 +115,9 @@ void main() {
     expect(find.text('Breaking: bridge closed after storm'), findsOneWidget);
   });
 
-  testWidgets('tapping a tile pushes the article route', (WidgetTester tester) async {
+  testWidgets('tapping a tile pushes the article route', (
+    WidgetTester tester,
+  ) async {
     final GoRouter router = await pumpForYou(tester);
 
     // The latest tile sits below the fold on the test surface, so it is scrolled
@@ -118,18 +125,29 @@ void main() {
     // scrolled sliver are unreliable here, while this asserts the wiring that
     // matters (tile -> reader route). `push` keeps `/for_you` in the router's
     // reported configuration, so the pushed page is asserted instead.
-    final Finder tile = find.widgetWithText(ArticleTile, 'Only in the latest stream');
+    final Finder tile = find.widgetWithText(
+      ArticleTile,
+      'Only in the latest stream',
+    );
     expect(tile, findsOneWidget);
     await tester.ensureVisible(tile);
     await tester.pumpAndSettle();
 
     final ArticleTile tileWidget = tester.widget<ArticleTile>(tile);
-    expect(tileWidget.onTap, isNotNull, reason: 'feed tiles must open the reader');
+    expect(
+      tileWidget.onTap,
+      isNotNull,
+      reason: 'feed tiles must open the reader',
+    );
     tileWidget.onTap!();
     await tester.pumpAndSettle();
 
     expect(find.text('article latest-1'), findsOneWidget);
-    expect(router.canPop(), isTrue, reason: 'the reader is pushed over the feed');
+    expect(
+      router.canPop(),
+      isTrue,
+      reason: 'the reader is pushed over the feed',
+    );
   });
 
   testWidgets('shows the offline banner when the repository is offline', (
@@ -147,10 +165,15 @@ void main() {
     expect(find.textContaining('Offline'), findsOneWidget);
   });
 
-  testWidgets('shows an error state instead of a raw exception', (WidgetTester tester) async {
+  testWidgets('shows an error state instead of a raw exception', (
+    WidgetTester tester,
+  ) async {
     await pumpForYou(
       tester,
-      articles: FakeArticleRepository(topStories: <Article>[newest], failTopStories: true),
+      articles: FakeArticleRepository(
+        topStories: <Article>[newest],
+        failTopStories: true,
+      ),
     );
 
     expect(find.text("We couldn't load this right now."), findsOneWidget);
@@ -158,7 +181,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows the empty state when every stream is empty', (WidgetTester tester) async {
+  testWidgets('shows the empty state when every stream is empty', (
+    WidgetTester tester,
+  ) async {
     await pumpForYou(tester, articles: FakeArticleRepository());
 
     expect(find.text('No stories yet'), findsOneWidget);
@@ -167,18 +192,26 @@ void main() {
   testWidgets('weather chip survives a 320pt screen at 1.3 text scale', (
     WidgetTester tester,
   ) async {
-    final FakeWeatherRepository weather = FakeWeatherRepository(throwOnCurrent: true);
+    final FakeWeatherRepository weather = FakeWeatherRepository(
+      throwOnCurrent: true,
+    );
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: feedTestOverrides(articles: FakeArticleRepository(), weather: weather),
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(),
+          weather: weather,
+        ),
         child: themedChild(
           Scaffold(
             body: Padding(
               padding: const EdgeInsets.all(8),
               child: SizedBox(
                 width: 304,
-                child: WeatherAlertHeader(location: SlLocations.fallback, hasBreaking: true),
+                child: WeatherAlertHeader(
+                  location: SlLocations.fallback,
+                  hasBreaking: true,
+                ),
               ),
             ),
           ),

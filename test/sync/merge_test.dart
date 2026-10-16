@@ -47,10 +47,10 @@ void main() {
         bookmark('b', updatedAt: t(5)),
       ];
 
-      expect(
-        idsOf(mergeBookmarks(const <SyncBookmark>[], remote)),
-        <String>['b', 'a'],
-      );
+      expect(idsOf(mergeBookmarks(const <SyncBookmark>[], remote)), <String>[
+        'b',
+        'a',
+      ]);
     });
 
     test('an empty remote side is the local side, newest first', () {
@@ -59,10 +59,10 @@ void main() {
         bookmark('b', updatedAt: t(5)),
       ];
 
-      expect(
-        idsOf(mergeBookmarks(local, const <SyncBookmark>[])),
-        <String>['b', 'a'],
-      );
+      expect(idsOf(mergeBookmarks(local, const <SyncBookmark>[])), <String>[
+        'b',
+        'a',
+      ]);
     });
   });
 
@@ -155,9 +155,7 @@ void main() {
         <SyncBookmark>[
           bookmark('slnews-api:4821', updatedAt: t(10), title: 'Saved on web'),
         ],
-        <SyncBookmark>[
-          deletedBookmark('slnews-api:4821', updatedAt: t(20)),
-        ],
+        <SyncBookmark>[deletedBookmark('slnews-api:4821', updatedAt: t(20))],
       );
 
       expect(merged.single.deleted, isTrue);
@@ -177,22 +175,25 @@ void main() {
       expect(merged.single.title, 'Re-saved');
     });
 
-    test('a tombstone is never resurrected by a merge, only by a newer save', () {
-      final SyncState server = SyncState(
-        bookmarks: <SyncBookmark>[
-          deletedBookmark('slnews-api:4821', updatedAt: t(20)),
-        ],
-      );
-      final SyncState staleDevice = SyncState(
-        bookmarks: <SyncBookmark>[
-          bookmark('slnews-api:4821', updatedAt: t(10), title: 'Stale'),
-        ],
-      );
+    test(
+      'a tombstone is never resurrected by a merge, only by a newer save',
+      () {
+        final SyncState server = SyncState(
+          bookmarks: <SyncBookmark>[
+            deletedBookmark('slnews-api:4821', updatedAt: t(20)),
+          ],
+        );
+        final SyncState staleDevice = SyncState(
+          bookmarks: <SyncBookmark>[
+            bookmark('slnews-api:4821', updatedAt: t(10), title: 'Stale'),
+          ],
+        );
 
-      final SyncState merged = mergeSyncStates(staleDevice, server);
+        final SyncState merged = mergeSyncStates(staleDevice, server);
 
-      expect(merged.bookmarks.single.deleted, isTrue);
-    });
+        expect(merged.bookmarks.single.deleted, isTrue);
+      },
+    );
 
     test('tombstones survive a state merge alongside live rows', () {
       final SyncState local = SyncState(
@@ -246,10 +247,9 @@ void main() {
     });
 
     test('the result is unmodifiable', () {
-      final List<SyncBookmark> merged = mergeBookmarks(
-        <SyncBookmark>[bookmark('a', updatedAt: t(1))],
-        const <SyncBookmark>[],
-      );
+      final List<SyncBookmark> merged = mergeBookmarks(<SyncBookmark>[
+        bookmark('a', updatedAt: t(1)),
+      ], const <SyncBookmark>[]);
 
       expect(
         () => merged.add(bookmark('b', updatedAt: t(2))),
@@ -264,7 +264,9 @@ void main() {
         bookmarks: <SyncBookmark>[
           bookmark('slnews-api:4821', updatedAt: t(10), title: 'Phone'),
         ],
-        reactions: <SyncReaction>[reaction('slnews-api:4821', updatedAt: t(10))],
+        reactions: <SyncReaction>[
+          reaction('slnews-api:4821', updatedAt: t(10)),
+        ],
         follows: <SyncFollow>[follow('team:lal', updatedAt: t(10))],
       );
       final SyncState remote = SyncState(
@@ -282,10 +284,10 @@ void main() {
 
       final SyncState merged = mergeSyncStates(local, remote);
 
-      expect(
-        merged.bookmarks.map((SyncBookmark r) => r.title),
-        <String>['Wire story', 'Web'],
-      );
+      expect(merged.bookmarks.map((SyncBookmark r) => r.title), <String>[
+        'Wire story',
+        'Web',
+      ]);
       expect(merged.reactions.single.deleted, isFalse);
       expect(idsOf(merged.follows), <String>['city:freetown', 'team:lal']);
     });
@@ -427,10 +429,10 @@ void main() {
         follow('team:lal', updatedAt: t(50)),
       ];
 
-      expect(
-        idsOf(SyncState.rowsWhere<SyncRow>(rows, t(10))),
-        <String>['b', 'team:lal'],
-      );
+      expect(idsOf(SyncState.rowsWhere<SyncRow>(rows, t(10))), <String>[
+        'b',
+        'team:lal',
+      ]);
     });
 
     test('withoutRows drops rejected rows by collection and id', () {
@@ -477,7 +479,11 @@ void main() {
 
     test('returns the local row on a tie', () {
       final SyncBookmark local = bookmark('a', updatedAt: t(1), title: 'Local');
-      final SyncBookmark remote = bookmark('a', updatedAt: t(1), title: 'Remote');
+      final SyncBookmark remote = bookmark(
+        'a',
+        updatedAt: t(1),
+        title: 'Remote',
+      );
 
       expect(mergeRows(local, remote).title, 'Local');
     });

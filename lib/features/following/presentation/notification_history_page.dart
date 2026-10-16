@@ -41,10 +41,15 @@ class NotificationHistoryPage extends ConsumerWidget {
               tooltip: 'Back',
               onPressed: () => context.pop(),
             ),
-            title: Text('Notification history', style: context.typography.groupTitle),
+            title: Text(
+              'Notification history',
+              style: context.typography.groupTitle,
+            ),
             actions: <Widget>[
               TextButton(
-                onPressed: () => ref.read(notificationsControllerProvider.notifier).markAllRead(),
+                onPressed: () => ref
+                    .read(notificationsControllerProvider.notifier)
+                    .markAllRead(),
                 child: const Text('Mark all read'),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -64,7 +69,12 @@ class NotificationHistoryPage extends ConsumerWidget {
     if (notifications.isLoading && !notifications.hasValue) {
       return const <Widget>[
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            0,
+          ),
           sliver: SliverToBoxAdapter(child: _HistorySkeleton()),
         ),
       ];
@@ -82,7 +92,8 @@ class NotificationHistoryPage extends ConsumerWidget {
       ];
     }
 
-    final List<NotificationItem> items = notifications.value ?? const <NotificationItem>[];
+    final List<NotificationItem> items =
+        notifications.value ?? const <NotificationItem>[];
     if (items.isEmpty) {
       return const <Widget>[
         SliverFillRemaining(
@@ -107,9 +118,16 @@ class NotificationHistoryPage extends ConsumerWidget {
 
   /// A plain list with an inline date header whenever the day changes — no
   /// sticky-header machinery, which the reference screen does not need.
-  List<Widget> _rows(BuildContext context, WidgetRef ref, List<NotificationItem> items) {
+  List<Widget> _rows(
+    BuildContext context,
+    WidgetRef ref,
+    List<NotificationItem> items,
+  ) {
     final List<NotificationItem> sorted = List<NotificationItem>.of(items)
-      ..sort((NotificationItem a, NotificationItem b) => b.receivedAt.compareTo(a.receivedAt));
+      ..sort(
+        (NotificationItem a, NotificationItem b) =>
+            b.receivedAt.compareTo(a.receivedAt),
+      );
 
     final List<Widget> rows = <Widget>[];
     String? currentHeader;
@@ -142,7 +160,11 @@ class NotificationHistoryPage extends ConsumerWidget {
     return rows;
   }
 
-  Future<void> _open(BuildContext context, WidgetRef ref, NotificationItem item) async {
+  Future<void> _open(
+    BuildContext context,
+    WidgetRef ref,
+    NotificationItem item,
+  ) async {
     await ref.read(notificationsControllerProvider.notifier).markRead(item.id);
     if (!context.mounted) return;
     final String? articleId = item.articleId;

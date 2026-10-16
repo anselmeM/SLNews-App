@@ -59,12 +59,20 @@ Future<void> _runBookmark(
   }
   _showMessage(
     messenger,
-    action == ArticleAction.bookmark ? 'Saved for offline reading' : 'Removed from saved',
+    action == ArticleAction.bookmark
+        ? 'Saved for offline reading'
+        : 'Removed from saved',
   );
 }
 
-Future<void> _toggleBookmark(WidgetRef ref, Article article, ArticleAction action) async {
-  final BookmarksController controller = ref.read(bookmarksControllerProvider.notifier);
+Future<void> _toggleBookmark(
+  WidgetRef ref,
+  Article article,
+  ArticleAction action,
+) async {
+  final BookmarksController controller = ref.read(
+    bookmarksControllerProvider.notifier,
+  );
   final bool currentlySaved = controller.isBookmarked(article.id);
   // Honours the explicit action so "Remove from saved" always removes, even if
   // another screen changed the state between build and tap.
@@ -75,7 +83,9 @@ Future<void> _toggleBookmark(WidgetRef ref, Article article, ArticleAction actio
 
 Future<void> _share(Article article, ScaffoldMessengerState messenger) async {
   final String? url = article.sourceUrl;
-  final String text = (url == null || url.isEmpty) ? article.title : '${article.title}\n$url';
+  final String text = (url == null || url.isEmpty)
+      ? article.title
+      : '${article.title}\n$url';
   try {
     await SharePlus.instance.share(ShareParams(text: text));
   } on Object {
@@ -83,7 +93,10 @@ Future<void> _share(Article article, ScaffoldMessengerState messenger) async {
   }
 }
 
-Future<void> _openInBrowser(Article article, ScaffoldMessengerState messenger) async {
+Future<void> _openInBrowser(
+  Article article,
+  ScaffoldMessengerState messenger,
+) async {
   final String? url = article.sourceUrl;
   if (url == null || url.isEmpty) {
     _showMessage(messenger, 'No link available for this story');

@@ -13,7 +13,8 @@ const double kCategoryPillHeaderHeight = 56;
 /// while the article stream scrolls underneath it. A `canvas`-coloured band is
 /// painted behind the pills so article cards never show through the gap above
 /// and below the 46pt-tall strip.
-class CategoryPillHeader extends StatelessWidget implements PreferredSizeWidget {
+class CategoryPillHeader extends StatelessWidget
+    implements PreferredSizeWidget {
   const CategoryPillHeader({
     super.key,
     required this.categories,

@@ -82,7 +82,9 @@ class ArticleHeroCard extends StatelessWidget {
                       children: <Widget>[
                         if (article.isBreaking || article.isLive)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
                             child: _BreakingTag(isLive: article.isLive),
                           ),
                         Text(
@@ -91,13 +93,16 @@ class ArticleHeroCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: context.typography.heroTitle,
                         ),
-                        if (showSummary && article.summary.isNotEmpty) ...<Widget>[
+                        if (showSummary &&
+                            article.summary.isNotEmpty) ...<Widget>[
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             article.summary,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: context.typography.meta.copyWith(color: const Color(0xCCFFFFFF)),
+                            style: context.typography.meta.copyWith(
+                              color: const Color(0xCCFFFFFF),
+                            ),
                           ),
                         ],
                         const SizedBox(height: AppSpacing.md),
@@ -114,7 +119,9 @@ class ArticleHeroCard extends StatelessWidget {
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               '· ${article.relativeAge}',
-                              style: context.typography.meta.copyWith(color: const Color(0xCCFFFFFF)),
+                              style: context.typography.meta.copyWith(
+                                color: const Color(0xCCFFFFFF),
+                              ),
                             ),
                             const Spacer(),
                             LikeButton(
@@ -151,7 +158,10 @@ class _BreakingTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: context.colors.live,
         borderRadius: const BorderRadius.all(Radius.circular(AppRadius.sm)),

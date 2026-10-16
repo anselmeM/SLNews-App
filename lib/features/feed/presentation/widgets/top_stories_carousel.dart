@@ -37,7 +37,9 @@ class _TopStoriesCarouselState extends ConsumerState<TopStoriesCarousel> {
   /// 0.94 leaves a sliver of the next card visible, as in the reference UI.
   static const double _viewportFraction = 0.94;
 
-  late final PageController _controller = PageController(viewportFraction: _viewportFraction);
+  late final PageController _controller = PageController(
+    viewportFraction: _viewportFraction,
+  );
   int _page = 0;
 
   @override
@@ -71,7 +73,9 @@ class _TopStoriesCarouselState extends ConsumerState<TopStoriesCarousel> {
                   height: widget.height,
                   isLiked: liked.contains(article.id),
                   onTap: () => widget.onOpenArticle?.call(article),
-                  onLike: () => ref.read(likesControllerProvider.notifier).toggle(article.id),
+                  onLike: () => ref
+                      .read(likesControllerProvider.notifier)
+                      .toggle(article.id),
                   onMore: (ArticleAction action) =>
                       handleArticleAction(context, ref, article, action),
                 ),
@@ -111,7 +115,9 @@ class _PageDots extends StatelessWidget {
               width: dot == index ? 18 : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: dot == index ? context.colors.onSurface : context.colors.onSurfaceFaint,
+                color: dot == index
+                    ? context.colors.onSurface
+                    : context.colors.onSurfaceFaint,
                 borderRadius: AppRadius.pillRadius,
               ),
             ),

@@ -29,12 +29,14 @@ void main() {
     WidgetTester tester, {
     required Set<String> bookmarkedIds,
   }) async {
-    await useTallSurface(tester, size: const Size(390, 900));    final GoRouter router = GoRouter(
+    await useTallSurface(tester, size: const Size(390, 900));
+    final GoRouter router = GoRouter(
       initialLocation: '/saved',
       routes: <RouteBase>[
         GoRoute(
           path: '/saved',
-          builder: (BuildContext context, GoRouterState state) => const SavedStoriesPage(),
+          builder: (BuildContext context, GoRouterState state) =>
+              const SavedStoriesPage(),
         ),
         GoRoute(
           path: '/article/:id',
@@ -53,13 +55,18 @@ void main() {
           ),
           userState: FakeUserStateRepository(bookmarkedIds: bookmarkedIds),
         ),
-        child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
   }
 
-  testWidgets('renders every saved article and nothing else', (WidgetTester tester) async {
+  testWidgets('renders every saved article and nothing else', (
+    WidgetTester tester,
+  ) async {
     await pumpSaved(tester, bookmarkedIds: <String>{saved.id});
 
     expect(find.text('Saved stories'), findsWidgets);
@@ -67,14 +74,21 @@ void main() {
     expect(find.text('Never bookmarked story'), findsNothing);
   });
 
-  testWidgets('shows the empty state when nothing is saved', (WidgetTester tester) async {
+  testWidgets('shows the empty state when nothing is saved', (
+    WidgetTester tester,
+  ) async {
     await pumpSaved(tester, bookmarkedIds: const <String>{});
 
     expect(find.text('Nothing saved yet'), findsOneWidget);
-    expect(find.text('Tap Save on any story to read it offline.'), findsOneWidget);
+    expect(
+      find.text('Tap Save on any story to read it offline.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('remove control drops the story from the list', (WidgetTester tester) async {
+  testWidgets('remove control drops the story from the list', (
+    WidgetTester tester,
+  ) async {
     await pumpSaved(tester, bookmarkedIds: <String>{saved.id});
 
     await tester.tap(find.byTooltip('Remove from saved'));
@@ -84,7 +98,9 @@ void main() {
     expect(find.text('Nothing saved yet'), findsOneWidget);
   });
 
-  testWidgets('tapping a saved story opens the reader route', (WidgetTester tester) async {
+  testWidgets('tapping a saved story opens the reader route', (
+    WidgetTester tester,
+  ) async {
     await pumpSaved(tester, bookmarkedIds: <String>{saved.id});
 
     await tester.tap(find.text('Saved ferry timetable story'));

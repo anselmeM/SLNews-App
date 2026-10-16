@@ -42,14 +42,20 @@ class SportsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(scoreboardProvider);
+    final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(
+      scoreboardProvider,
+    );
     final FollowingSnapshot following = ref.watch(followingControllerProvider);
     final SportsViewModel viewModel = SportsViewModel.from(
       snapshot: scoreboard.asData?.value,
       following: following,
     );
-    final AsyncValue<List<Article>> news = ref.watch(categoryFeedProvider('sports'));
-    final AsyncValue<List<AdUnit>> ads = ref.watch(adUnitsProvider('sports_stream'));
+    final AsyncValue<List<Article>> news = ref.watch(
+      categoryFeedProvider('sports'),
+    );
+    final AsyncValue<List<AdUnit>> ads = ref.watch(
+      adUnitsProvider('sports_stream'),
+    );
     final Set<String> liked = ref.watch(likesControllerProvider);
 
     // Only the first followed team gets a news heading and a fixture list; the
@@ -110,9 +116,13 @@ class SportsPage extends ConsumerWidget {
           ),
         ),
         if (ad != null) _adSliver(context, ad),
-        SliverToBoxAdapter(child: SectionHeader(title: viewModel.newsSectionTitle)),
+        SliverToBoxAdapter(
+          child: SectionHeader(title: viewModel.newsSectionTitle),
+        ),
         ..._newsSlivers(context, ref, news, liked),
-        SliverToBoxAdapter(child: SectionHeader(title: viewModel.fixturesSectionTitle)),
+        SliverToBoxAdapter(
+          child: SectionHeader(title: viewModel.fixturesSectionTitle),
+        ),
         ..._fixtureSlivers(context, ref, fixtures, fixtureTeamId),
       ],
     );
@@ -132,8 +142,10 @@ class SportsPage extends ConsumerWidget {
         ),
         child: AdCard(
           unit: unit,
-          onCtaPressed: () => _showSnack(context, 'Sponsored by ${unit.advertiser}'),
-          onOpened: (AdUnit opened) => _showSnack(context, 'Sponsored by ${opened.advertiser}'),
+          onCtaPressed: () =>
+              _showSnack(context, 'Sponsored by ${unit.advertiser}'),
+          onOpened: (AdUnit opened) =>
+              _showSnack(context, 'Sponsored by ${opened.advertiser}'),
         ),
       ),
     );
@@ -168,7 +180,9 @@ class SportsPage extends ConsumerWidget {
                   isLiked: liked.contains(article.id),
                   onTap: () => context.push(AppRoutes.articleFor(article.id)),
                   onLike: () => unawaited(
-                    ref.read(likesControllerProvider.notifier).toggle(article.id),
+                    ref
+                        .read(likesControllerProvider.notifier)
+                        .toggle(article.id),
                   ),
                   onMore: (ArticleAction action) =>
                       _showSnack(context, '${action.label} · ${article.title}'),
@@ -210,7 +224,10 @@ class SportsPage extends ConsumerWidget {
   ) {
     if (teamId == null || fixtures == null) {
       return <Widget>[
-        _noticeSliver(context, 'Follow a team to see its fixtures and results.'),
+        _noticeSliver(
+          context,
+          'Follow a team to see its fixtures and results.',
+        ),
       ];
     }
     return fixtures.when(
@@ -265,7 +282,11 @@ class SportsPage extends ConsumerWidget {
   }
 
   /// Small in-stream surface used instead of a full-page error for one stream.
-  Widget _noticeSliver(BuildContext context, String message, {VoidCallback? onRetry}) {
+  Widget _noticeSliver(
+    BuildContext context,
+    String message, {
+    VoidCallback? onRetry,
+  }) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -301,7 +322,8 @@ class SportsPage extends ConsumerWidget {
                   style: context.typography.caption,
                 ),
               ),
-              if (onRetry != null) TextButton(onPressed: onRetry, child: const Text('Retry')),
+              if (onRetry != null)
+                TextButton(onPressed: onRetry, child: const Text('Retry')),
             ],
           ),
         ),
@@ -311,6 +333,7 @@ class SportsPage extends ConsumerWidget {
 
   /// Confirmation surface for the tab's non-destructive actions.
   void _showSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

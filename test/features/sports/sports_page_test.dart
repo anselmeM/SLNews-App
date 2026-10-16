@@ -88,7 +88,10 @@ void main() {
   FakeArticleRepository articlesWithSportsNews() {
     final FakeArticleRepository repository = FakeArticleRepository();
     repository.seed('sports', <Article>[
-      buildArticle(id: 'story-1', title: 'Leone Stars hold Bo Rangers in Freetown derby'),
+      buildArticle(
+        id: 'story-1',
+        title: 'Leone Stars hold Bo Rangers in Freetown derby',
+      ),
     ]);
     return repository;
   }
@@ -113,7 +116,8 @@ void main() {
       routes: <RouteBase>[
         GoRoute(
           path: '/sports',
-          builder: (BuildContext context, GoRouterState state) => const SportsPage(),
+          builder: (BuildContext context, GoRouterState state) =>
+              const SportsPage(),
         ),
         GoRoute(
           path: '/following',
@@ -122,25 +126,35 @@ void main() {
         ),
         GoRoute(
           path: '/article/:id',
-          builder: (BuildContext context, GoRouterState state) =>
-              Scaffold(body: Center(child: Text('Article ${state.pathParameters['id']}'))),
+          builder: (BuildContext context, GoRouterState state) => Scaffold(
+            body: Center(child: Text('Article ${state.pathParameters['id']}')),
+          ),
         ),
       ],
     );
 
     return ProviderScope(
       overrides: [
-        articleRepositoryProvider.overrideWithValue(articles ?? articlesWithSportsNews()),
-        sportsRepositoryProvider.overrideWithValue(sports ?? sportsWithScores()),
-        followingRepositoryProvider.overrideWithValue(following ?? followingLeoneStars()),
-        adRepositoryProvider.overrideWithValue(ads ?? FakeAdRepository(units: <AdUnit>[sportsAd])),
+        articleRepositoryProvider.overrideWithValue(
+          articles ?? articlesWithSportsNews(),
+        ),
+        sportsRepositoryProvider.overrideWithValue(
+          sports ?? sportsWithScores(),
+        ),
+        followingRepositoryProvider.overrideWithValue(
+          following ?? followingLeoneStars(),
+        ),
+        adRepositoryProvider.overrideWithValue(
+          ads ?? FakeAdRepository(units: <AdUnit>[sportsAd]),
+        ),
         userStateProvider.overrideWithValue(FakeUserStateRepository()),
       ],
       child: MaterialApp.router(
         theme: AppTheme.light(),
         routerConfig: router,
         builder: (BuildContext context, Widget? child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
         ),
       ),
@@ -154,46 +168,51 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('scoreboard strip renders team codes, scores and the FINAL label', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(buildApp());
-    await settle(tester);
+  testWidgets(
+    'scoreboard strip renders team codes, scores and the FINAL label',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(buildApp());
+      await settle(tester);
 
-    expect(find.text('LAL'), findsOneWidget);
-    expect(find.text('BOS'), findsOneWidget);
-    expect(find.text('101'), findsOneWidget);
-    expect(find.text('99'), findsOneWidget);
-    expect(find.text('FINAL'), findsOneWidget);
-    expect(find.text("72'"), findsOneWidget);
-    expect(find.text('Powered by slnews'), findsOneWidget);
-    expect(find.text('8:45PM'), findsOneWidget);
-  });
+      expect(find.text('LAL'), findsOneWidget);
+      expect(find.text('BOS'), findsOneWidget);
+      expect(find.text('101'), findsOneWidget);
+      expect(find.text('99'), findsOneWidget);
+      expect(find.text('FINAL'), findsOneWidget);
+      expect(find.text("72'"), findsOneWidget);
+      expect(find.text('Powered by slnews'), findsOneWidget);
+      expect(find.text('8:45PM'), findsOneWidget);
+    },
+  );
 
-  testWidgets('renders the following row, the team news stream and the fixtures', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(buildApp());
-    await settle(tester);
+  testWidgets(
+    'renders the following row, the team news stream and the fixtures',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(buildApp());
+      await settle(tester);
 
-    expect(find.text('Following'), findsOneWidget);
-    // The followed chip is a crest carrying the initials plus the code below it.
-    expect(
-      find.descendant(of: find.byType(FollowedTeamsRow), matching: find.text('LS')),
-      findsNWidgets(2),
-    );
+      expect(find.text('Following'), findsOneWidget);
+      // The followed chip is a crest carrying the initials plus the code below it.
+      expect(
+        find.descendant(
+          of: find.byType(FollowedTeamsRow),
+          matching: find.text('LS'),
+        ),
+        findsNWidgets(2),
+      );
 
-    // Slivers below the fold are only built once they scroll into view.
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
-    await tester.pump();
-    expect(find.text('Leone Stars news'), findsOneWidget);
+      // Slivers below the fold are only built once they scroll into view.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
+      await tester.pump();
+      expect(find.text('Leone Stars news'), findsOneWidget);
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
-    await tester.pump();
-    expect(find.text('Fixtures & results'), findsOneWidget);
-    // The fixture row reads "away v home".
-    expect(find.text('Bo Rangers v Leone Stars'), findsOneWidget);
-  });
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
+      await tester.pump();
+      expect(find.text('Fixtures & results'), findsOneWidget);
+      // The fixture row reads "away v home".
+      expect(find.text('Bo Rangers v Leone Stars'), findsOneWidget);
+    },
+  );
 
   testWidgets('embeds exactly one inline ad unit carrying the Ad label', (
     WidgetTester tester,
@@ -210,14 +229,19 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      buildApp(sports: FakeSportsRepository(error: StateError('scores offline'))),
+      buildApp(
+        sports: FakeSportsRepository(error: StateError('scores offline')),
+      ),
     );
     await settle(tester);
 
     expect(find.text('Scores are unavailable right now.'), findsOneWidget);
     expect(find.text('Following'), findsOneWidget);
     expect(
-      find.descendant(of: find.byType(FollowedTeamsRow), matching: find.text('LS')),
+      find.descendant(
+        of: find.byType(FollowedTeamsRow),
+        matching: find.text('LS'),
+      ),
       findsNWidgets(2),
     );
     expect(find.text('Ad'), findsOneWidget);
@@ -225,38 +249,46 @@ void main() {
     expect(find.byType(ErrorStateView), findsNothing);
   });
 
-  testWidgets('uses the full-page error only when the screen has no data at all', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      buildApp(
-        articles: FakeArticleRepository(),
-        sports: FakeSportsRepository(error: StateError('scores offline')),
-        following: FakeFollowingRepository(snapshot: const FollowingSnapshot.empty()),
-        ads: FakeAdRepository(),
-      ),
-    );
-    await settle(tester);
+  testWidgets(
+    'uses the full-page error only when the screen has no data at all',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        buildApp(
+          articles: FakeArticleRepository(),
+          sports: FakeSportsRepository(error: StateError('scores offline')),
+          following: FakeFollowingRepository(
+            snapshot: const FollowingSnapshot.empty(),
+          ),
+          ads: FakeAdRepository(),
+        ),
+      );
+      await settle(tester);
 
-    expect(find.byType(ErrorStateView), findsOneWidget);
-    expect(find.text('Sports'), findsOneWidget);
-  });
+      expect(find.byType(ErrorStateView), findsOneWidget);
+      expect(find.text('Sports'), findsOneWidget);
+    },
+  );
 
-  testWidgets('empty following row prompts the reader and routes to /following', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      buildApp(following: FakeFollowingRepository(snapshot: const FollowingSnapshot.empty())),
-    );
-    await settle(tester);
+  testWidgets(
+    'empty following row prompts the reader and routes to /following',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        buildApp(
+          following: FakeFollowingRepository(
+            snapshot: const FollowingSnapshot.empty(),
+          ),
+        ),
+      );
+      await settle(tester);
 
-    expect(find.text('Follow a team'), findsOneWidget);
+      expect(find.text('Follow a team'), findsOneWidget);
 
-    await tester.tap(find.text('Follow a team'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Follow a team'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Following tab'), findsOneWidget);
-  });
+      expect(find.text('Following tab'), findsOneWidget);
+    },
+  );
 
   // The inline ad is deliberately left out of this case: the Lead-owned
   // `AdCard` paints its simulated offer row with `mainAxisSize.min` and no

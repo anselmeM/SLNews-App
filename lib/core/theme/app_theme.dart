@@ -21,18 +21,19 @@ abstract final class AppTheme {
       tertiaryText: colors.onSurfaceFaint,
     );
 
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: colors.primary,
-      brightness: colors.brightness,
-    ).copyWith(
-      primary: colors.primary,
-      onPrimary: colors.onPrimary,
-      surface: colors.surface,
-      onSurface: colors.onSurface,
-      onSurfaceVariant: colors.onSurfaceVariant,
-      outlineVariant: colors.divider,
-      error: colors.live,
-    );
+    final ColorScheme scheme =
+        ColorScheme.fromSeed(
+          seedColor: colors.primary,
+          brightness: colors.brightness,
+        ).copyWith(
+          primary: colors.primary,
+          onPrimary: colors.onPrimary,
+          surface: colors.surface,
+          onSurface: colors.onSurface,
+          onSurfaceVariant: colors.onSurfaceVariant,
+          outlineVariant: colors.divider,
+          error: colors.live,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -61,14 +62,22 @@ abstract final class AppTheme {
         margin: EdgeInsets.zero,
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.cardRadius),
       ),
-      dividerTheme: DividerThemeData(color: colors.divider, thickness: 1, space: 1),
+      dividerTheme: DividerThemeData(
+        color: colors.divider,
+        thickness: 1,
+        space: 1,
+      ),
       iconTheme: IconThemeData(color: colors.onSurface, size: 22),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colors.surface,
         selectedItemColor: colors.onSurface,
         unselectedItemColor: colors.onSurfaceFaint,
-        selectedLabelStyle: typography.navLabel.copyWith(color: colors.onSurface),
-        unselectedLabelStyle: typography.navLabel.copyWith(color: colors.onSurfaceFaint),
+        selectedLabelStyle: typography.navLabel.copyWith(
+          color: colors.onSurface,
+        ),
+        unselectedLabelStyle: typography.navLabel.copyWith(
+          color: colors.onSurfaceFaint,
+        ),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
         showUnselectedLabels: true,
@@ -80,7 +89,9 @@ abstract final class AppTheme {
         elevation: 0,
         height: 64,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        labelTextStyle: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+        labelTextStyle: WidgetStateProperty.resolveWith((
+          Set<WidgetState> states,
+        ) {
           final Color color = states.contains(WidgetState.selected)
               ? colors.onSurface
               : colors.onSurfaceFaint;
@@ -98,8 +109,13 @@ abstract final class AppTheme {
           backgroundColor: colors.surfaceInverse,
           foregroundColor: colors.onSurfaceInverse,
           textStyle: typography.button,
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.pillRadius),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.pillRadius,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.md,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -107,12 +123,20 @@ abstract final class AppTheme {
           foregroundColor: colors.onSurface,
           textStyle: typography.button,
           side: BorderSide(color: colors.onSurface),
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.pillRadius),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.pillRadius,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.sm,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: colors.onSurface, textStyle: typography.button),
+        style: TextButton.styleFrom(
+          foregroundColor: colors.onSurface,
+          textStyle: typography.button,
+        ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: colors.surface,
@@ -124,7 +148,9 @@ abstract final class AppTheme {
       progressIndicatorTheme: ProgressIndicatorThemeData(color: colors.primary),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colors.surfaceInverse,
-        contentTextStyle: typography.meta.copyWith(color: colors.onSurfaceInverse),
+        contentTextStyle: typography.meta.copyWith(
+          color: colors.onSurfaceInverse,
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );

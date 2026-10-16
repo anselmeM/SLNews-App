@@ -72,7 +72,10 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
     // The pill tap also handles this, but the category can change from outside
     // this widget (deep link, "See all" elsewhere), so the provider stays the
     // single source of truth.
-    ref.listenManual<String>(selectedCategoryProvider, (String? previous, String next) {
+    ref.listenManual<String>(selectedCategoryProvider, (
+      String? previous,
+      String next,
+    ) {
       if (previous == next) {
         return;
       }
@@ -123,7 +126,9 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
       _pendingRestore = false;
       // The new category's slivers only exist after this frame, so the offset
       // has to be applied once they are attached.
-      WidgetsBinding.instance.addPostFrameCallback((Duration _) => _restoreOffset());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (Duration _) => _restoreOffset(),
+      );
     }
 
     return SlPageScaffold(
@@ -136,7 +141,8 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
         showIcons: false,
       ),
       onRefresh: ref.read(refreshFeedsProvider),
-      onOverflowSelected: (ArticleAction action) => _showSnack(context, action.label),
+      onOverflowSelected: (ArticleAction action) =>
+          _showSnack(context, action.label),
       slivers: <Widget>[
         _NewsFeed(
           // Keying the stream by category gives the scroll view a clean
@@ -156,7 +162,9 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
     if ((_scrollController.offset - target).abs() < 0.5) {
       return;
     }
-    _scrollController.jumpTo(target.clamp(0, _scrollController.position.maxScrollExtent));
+    _scrollController.jumpTo(
+      target.clamp(0, _scrollController.position.maxScrollExtent),
+    );
   }
 }
 
@@ -171,7 +179,9 @@ class _NewsFeed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<Article>> feed = ref.watch(categoryFeedProvider(categoryId));
+    final AsyncValue<List<Article>> feed = ref.watch(
+      categoryFeedProvider(categoryId),
+    );
     final String label = NewsCategories.byId(categoryId).label;
 
     return SliverMainAxisGroup(
@@ -187,13 +197,17 @@ class _NewsFeed extends ConsumerWidget {
             ),
           ),
           data: (List<Article> articles) {
-            final NewsCategoryFeed model = NewsCategoryFeedViewModel.build(articles, categoryId);
+            final NewsCategoryFeed model = NewsCategoryFeedViewModel.build(
+              articles,
+              categoryId,
+            );
             if (model.isEmpty) {
               return SliverFillRemaining(
                 hasScrollBody: false,
                 child: EmptyStateView(
                   title: 'Nothing here yet',
-                  message: 'No ${label.toLowerCase()} stories right now — check back soon.',
+                  message:
+                      'No ${label.toLowerCase()} stories right now — check back soon.',
                   icon: Icons.newspaper_outlined,
                 ),
               );
@@ -218,7 +232,12 @@ class _NewsContentSlivers extends ConsumerWidget {
     return SliverMainAxisGroup(
       slivers: <Widget>[
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
           sliver: SliverToBoxAdapter(
             // The hero's own metadata row (wordmark + age + actions) has the
             // same non-flexible layout as the grid tile's, so it gets the same
@@ -231,7 +250,8 @@ class _NewsContentSlivers extends ConsumerWidget {
                 height: 420,
                 onTap: () => _openArticle(context, hero),
                 onLike: () => _toggleLike(ref, hero.id),
-                onMore: (ArticleAction action) => _handleAction(context, ref, hero, action),
+                onMore: (ArticleAction action) =>
+                    _handleAction(context, ref, hero, action),
               ),
             ),
           ),
@@ -254,7 +274,10 @@ class _NewsContentSlivers extends ConsumerWidget {
             const SectionHeader(title: 'Latest'),
             for (int index = 0; index < feed.list.length; index++) ...<Widget>[
               if (index == kNewsAdAfterRow)
-                _InStreamAd(onCtaPressed: () => _showSnack(context, 'Opening the advertiser…')),
+                _InStreamAd(
+                  onCtaPressed: () =>
+                      _showSnack(context, 'Opening the advertiser…'),
+                ),
               _ArticleRow(
                 article: feed.list[index],
                 onTap: () => _openArticle(context, feed.list[index]),
@@ -279,7 +302,12 @@ class _NewsLoadingSlivers extends StatelessWidget {
     return SliverList(
       delegate: SliverChildListDelegate(<Widget>[
         const Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
           child: HeroCardSkeleton(),
         ),
         for (int index = 0; index < 4; index++)
@@ -355,7 +383,9 @@ class _InStreamAd extends ConsumerWidget {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: NewsRowInset(child: AdCard(unit: units.first, onCtaPressed: onCtaPressed)),
+      child: NewsRowInset(
+        child: AdCard(unit: units.first, onCtaPressed: onCtaPressed),
+      ),
     );
   }
 }
@@ -401,5 +431,7 @@ void _handleAction(
 void _showSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 2)));
+    ..showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
 }

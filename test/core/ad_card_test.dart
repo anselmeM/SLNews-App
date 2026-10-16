@@ -17,7 +17,8 @@ void main() {
     ctaLabel: 'View more',
     advertiser: 'Salone Rewards',
     assetLabel: r'$20',
-    disclosure: 'Actual payout depends on playing games and engaging with the app.',
+    disclosure:
+        'Actual payout depends on playing games and engaging with the app.',
   );
 
   const AdUnit withoutLabel = AdUnit(
@@ -42,7 +43,8 @@ void main() {
       MaterialApp(
         theme: AppTheme.light(),
         builder: (BuildContext context, Widget? child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
           child: child ?? const SizedBox.shrink(),
         ),
         home: Scaffold(
@@ -58,7 +60,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('lays out on a 320pt screen at a 1.3x text scale', (WidgetTester tester) async {
+  testWidgets('lays out on a 320pt screen at a 1.3x text scale', (
+    WidgetTester tester,
+  ) async {
     await pumpCard(tester, withLabel);
 
     expect(find.text('CLAIM YOUR REWARD'), findsOneWidget);
@@ -74,12 +78,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('carries the Ad label and its disclosure', (WidgetTester tester) async {
+  testWidgets('carries the Ad label and its disclosure', (
+    WidgetTester tester,
+  ) async {
     await pumpCard(tester, withLabel, textScale: 1);
 
     expect(find.text('Ad'), findsOneWidget);
     expect(
-      find.text('Actual payout depends on playing games and engaging with the app.'),
+      find.text(
+        'Actual payout depends on playing games and engaging with the app.',
+      ),
       findsOneWidget,
     );
     expect(find.byIcon(Icons.info_outline), findsOneWidget);

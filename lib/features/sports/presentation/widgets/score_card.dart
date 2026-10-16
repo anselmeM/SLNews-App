@@ -69,7 +69,9 @@ class ScoreCard extends StatelessWidget {
                   game.statusLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.typography.overline.copyWith(color: statusColour),
+                  style: context.typography.overline.copyWith(
+                    color: statusColour,
+                  ),
                 ),
               ),
             ],
@@ -100,13 +102,18 @@ class ScoreCard extends StatelessWidget {
     required int? score,
     required int? opponentScore,
   }) {
-    final bool muted = score != null && opponentScore != null && score < opponentScore;
+    final bool muted =
+        score != null && opponentScore != null && score < opponentScore;
     final TextStyle style = context.typography.score.copyWith(
       color: muted ? context.colors.onSurfaceVariant : context.colors.onSurface,
     );
     return Row(
       children: <Widget>[
-        TeamCrest(name: team.name, logoUrl: team.logoUrl, colourHex: team.colourHex),
+        TeamCrest(
+          name: team.name,
+          logoUrl: team.logoUrl,
+          colourHex: team.colourHex,
+        ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(

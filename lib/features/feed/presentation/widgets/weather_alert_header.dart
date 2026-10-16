@@ -16,7 +16,11 @@ import 'location_picker_sheet.dart';
 /// the error case fall back to [WeatherSnapshot.placeholder] for the active
 /// location. Tapping it opens the location picker.
 class WeatherAlertHeader extends ConsumerWidget {
-  const WeatherAlertHeader({super.key, required this.location, this.hasBreaking = false});
+  const WeatherAlertHeader({
+    super.key,
+    required this.location,
+    this.hasBreaking = false,
+  });
 
   /// Active location, resolved by the view model so the label is stable even
   /// while the weather request is in flight.
@@ -27,8 +31,11 @@ class WeatherAlertHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<WeatherSnapshot> weather = ref.watch(activeWeatherProvider);
-    final WeatherSnapshot snapshot = weather.value ?? WeatherSnapshot.placeholder(location.label);
+    final AsyncValue<WeatherSnapshot> weather = ref.watch(
+      activeWeatherProvider,
+    );
+    final WeatherSnapshot snapshot =
+        weather.value ?? WeatherSnapshot.placeholder(location.label);
 
     return Semantics(
       button: true,
@@ -37,11 +44,18 @@ class WeatherAlertHeader extends ConsumerWidget {
         onTap: () => openLocationPicker(context, ref),
         borderRadius: AppRadius.pillRadius,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(AppGlyphs.weather(snapshot.glyph), size: 18, color: context.colors.onSurface),
+              Icon(
+                AppGlyphs.weather(snapshot.glyph),
+                size: 18,
+                color: context.colors.onSurface,
+              ),
               const SizedBox(width: AppSpacing.xs),
               // Flexible + ellipsis keeps the chip inside a 320pt screen and at
               // large text scales instead of overflowing the header row.
@@ -75,7 +89,10 @@ class _BreakingTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: context.colors.live,
         borderRadius: AppRadius.pillRadius,

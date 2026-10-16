@@ -11,7 +11,12 @@ class SectionHeader extends StatelessWidget {
     required this.title,
     this.onTap,
     this.trailing,
-    this.padding = const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.md),
+    this.padding = const EdgeInsets.fromLTRB(
+      AppSpacing.lg,
+      AppSpacing.xl,
+      AppSpacing.lg,
+      AppSpacing.md,
+    ),
     this.compact = false,
   });
 
@@ -30,15 +35,26 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle style = compact ? context.typography.groupTitle : context.typography.sectionTitle;
+    final TextStyle style = compact
+        ? context.typography.groupTitle
+        : context.typography.sectionTitle;
     final Widget row = Row(
       children: <Widget>[
         Flexible(
-          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style),
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
         ),
         if (onTap != null) ...<Widget>[
           const SizedBox(width: AppSpacing.xs),
-          Icon(Icons.chevron_right, size: compact ? 22 : 26, color: context.colors.onSurface),
+          Icon(
+            Icons.chevron_right,
+            size: compact ? 22 : 26,
+            color: context.colors.onSurface,
+          ),
         ],
         const Spacer(),
         ?trailing,

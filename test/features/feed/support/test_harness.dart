@@ -20,10 +20,14 @@ List<Override> feedTestOverrides({
   return <Override>[
     articleRepositoryProvider.overrideWithValue(articles),
     userStateProvider.overrideWithValue(userState ?? FakeUserStateRepository()),
-    weatherRepositoryProvider.overrideWithValue(weather ?? FakeWeatherRepository()),
+    weatherRepositoryProvider.overrideWithValue(
+      weather ?? FakeWeatherRepository(),
+    ),
     sportsRepositoryProvider.overrideWithValue(FakeSportsRepository()),
     followingRepositoryProvider.overrideWithValue(FakeFollowingRepository()),
-    notificationRepositoryProvider.overrideWithValue(FakeNotificationRepository()),
+    notificationRepositoryProvider.overrideWithValue(
+      FakeNotificationRepository(),
+    ),
     adRepositoryProvider.overrideWithValue(FakeAdRepository()),
     // Pull-to-refresh is a platform concern; stubbing it keeps the tests off
     // the network entirely.
@@ -36,7 +40,10 @@ List<Override> feedTestOverrides({
 ///
 /// The window is sized in physical pixels, so the logical size is
 /// `physicalSize / devicePixelRatio`.
-Future<void> useTallSurface(WidgetTester tester, {Size size = const Size(390, 2200)}) async {
+Future<void> useTallSurface(
+  WidgetTester tester, {
+  Size size = const Size(390, 2200),
+}) async {
   const double ratio = 3;
   tester.view.devicePixelRatio = ratio;
   tester.view.physicalSize = size * ratio;
@@ -52,7 +59,8 @@ Widget themedChild(Widget child, {double textScaler = 1}) {
     theme: AppTheme.light(),
     home: Builder(
       builder: (BuildContext context) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScaler)),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScaler)),
         child: child,
       ),
     ),

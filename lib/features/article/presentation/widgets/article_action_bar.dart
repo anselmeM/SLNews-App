@@ -28,21 +28,33 @@ class ArticleActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final FollowTarget target = publisherFollowTarget(article);
-    final bool isFollowing = ref.watch(followingControllerProvider).isFollowed(target.id);
-    final bool isLiked = ref.watch(likesControllerProvider).contains(article.id);
+    final bool isFollowing = ref
+        .watch(followingControllerProvider)
+        .isFollowed(target.id);
+    final bool isLiked = ref
+        .watch(likesControllerProvider)
+        .contains(article.id);
     final AppSettings settings = ref.watch(settingsControllerProvider);
 
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.sm,
+        ),
         child: Material(
           color: context.colors.surface,
           elevation: 6,
           shadowColor: const Color(0x33000000),
           borderRadius: AppRadius.pillRadius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               children: <Widget>[
                 FollowChip(
@@ -51,11 +63,15 @@ class ArticleActionBar extends ConsumerWidget {
                   followLabel: 'Follow',
                   followingLabel: 'Following',
                   onPressed: () async {
-                    await ref.read(followingControllerProvider.notifier).toggle(target);
+                    await ref
+                        .read(followingControllerProvider.notifier)
+                        .toggle(target);
                     if (!context.mounted) return;
                     _snack(
                       context,
-                      ref.read(followingControllerProvider).isFollowed(target.id)
+                      ref
+                              .read(followingControllerProvider)
+                              .isFollowed(target.id)
                           ? 'Following ${article.publisher.name}'
                           : 'Unfollowed ${article.publisher.name}',
                     );
@@ -68,7 +84,9 @@ class ArticleActionBar extends ConsumerWidget {
                   child: Tooltip(
                     message: 'Text size ${(settings.textScale * 100).round()}%',
                     child: InkResponse(
-                      onTap: () => ref.read(settingsControllerProvider.notifier).cycleTextScale(),
+                      onTap: () => ref
+                          .read(settingsControllerProvider.notifier)
+                          .cycleTextScale(),
                       radius: 24,
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.xs),
@@ -91,7 +109,9 @@ class ArticleActionBar extends ConsumerWidget {
                   isLiked: isLiked,
                   size: 22,
                   semanticLabel: 'Like ${article.title}',
-                  onPressed: () => ref.read(likesControllerProvider.notifier).toggle(article.id),
+                  onPressed: () => ref
+                      .read(likesControllerProvider.notifier)
+                      .toggle(article.id),
                 ),
                 InkResponse(
                   radius: 24,
@@ -113,7 +133,8 @@ class ArticleActionBar extends ConsumerWidget {
                     ArticleAction.openInBrowser,
                     ArticleAction.report,
                   ],
-                  onSelected: (ArticleAction action) => _handle(context, ref, action),
+                  onSelected: (ArticleAction action) =>
+                      _handle(context, ref, action),
                 ),
               ],
             ),
@@ -123,7 +144,11 @@ class ArticleActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _handle(BuildContext context, WidgetRef ref, ArticleAction action) async {
+  Future<void> _handle(
+    BuildContext context,
+    WidgetRef ref,
+    ArticleAction action,
+  ) async {
     switch (action) {
       case ArticleAction.bookmark:
       case ArticleAction.removeBookmark:
@@ -155,7 +180,9 @@ class ArticleActionBar extends ConsumerWidget {
         ? article.title
         : '${article.title}\n${article.sourceUrl}';
     try {
-      await SharePlus.instance.share(ShareParams(text: text, subject: article.title));
+      await SharePlus.instance.share(
+        ShareParams(text: text, subject: article.title),
+      );
     } catch (error) {
       if (!context.mounted) return;
       _snack(context, 'Sharing is unavailable on this device');
@@ -169,8 +196,13 @@ class ArticleActionBar extends ConsumerWidget {
       return;
     }
     try {
-      final bool opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      if (!opened && context.mounted) _snack(context, 'Could not open the link');
+      final bool opened = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && context.mounted) {
+        _snack(context, 'Could not open the link');
+      }
     } catch (error) {
       if (!context.mounted) return;
       _snack(context, 'Could not open the link');
@@ -180,6 +212,8 @@ class ArticleActionBar extends ConsumerWidget {
   void _snack(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 2)));
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
   }
 }

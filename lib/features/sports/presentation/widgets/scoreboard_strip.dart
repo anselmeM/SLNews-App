@@ -21,7 +21,9 @@ class ScoreboardStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(scoreboardProvider);
+    final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(
+      scoreboardProvider,
+    );
 
     return scoreboard.when(
       data: (ScoreboardSnapshot snapshot) => snapshot.games.isEmpty
@@ -37,8 +39,15 @@ class ScoreboardStrip extends ConsumerWidget {
   }
 
   /// The scrollable card row plus the attribution / refresh footer.
-  Widget _loaded(BuildContext context, WidgetRef ref, ScoreboardSnapshot snapshot) {
-    final double cardWidth = (MediaQuery.sizeOf(context).width * 0.62).clamp(180.0, 260.0);
+  Widget _loaded(
+    BuildContext context,
+    WidgetRef ref,
+    ScoreboardSnapshot snapshot,
+  ) {
+    final double cardWidth = (MediaQuery.sizeOf(context).width * 0.62).clamp(
+      180.0,
+      260.0,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -57,7 +66,10 @@ class ScoreboardStrip extends ConsumerWidget {
               for (final GameScore game in snapshot.games)
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.md),
-                  child: SizedBox(width: cardWidth, child: ScoreCard(game: game)),
+                  child: SizedBox(
+                    width: cardWidth,
+                    child: ScoreCard(game: game),
+                  ),
                 ),
             ],
           ),
@@ -108,14 +120,13 @@ class ScoreboardStrip extends ConsumerWidget {
   }
 
   /// Compact inline message; the rest of the screen must still render.
-  Widget _notice(BuildContext context, String message, {VoidCallback? onRetry}) {
+  Widget _notice(
+    BuildContext context,
+    String message, {
+    VoidCallback? onRetry,
+  }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        0,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 0),
       child: Container(
         decoration: BoxDecoration(
           color: context.colors.surface,
@@ -162,9 +173,13 @@ class _StripSkeleton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Row(
         children: <Widget>[
-          const Expanded(child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius)),
+          const Expanded(
+            child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius),
+          ),
           const SizedBox(width: AppSpacing.md),
-          const Expanded(child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius)),
+          const Expanded(
+            child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius),
+          ),
         ],
       ),
     );

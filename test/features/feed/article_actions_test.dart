@@ -38,13 +38,21 @@ void main() {
                 body: Column(
                   children: <Widget>[
                     ElevatedButton(
-                      onPressed: () =>
-                          handleArticleAction(context, ref, article, ArticleAction.bookmark),
+                      onPressed: () => handleArticleAction(
+                        context,
+                        ref,
+                        article,
+                        ArticleAction.bookmark,
+                      ),
                       child: const Text('save'),
                     ),
                     ElevatedButton(
-                      onPressed: () =>
-                          handleArticleAction(context, ref, article, ArticleAction.removeBookmark),
+                      onPressed: () => handleArticleAction(
+                        context,
+                        ref,
+                        article,
+                        ArticleAction.removeBookmark,
+                      ),
                       child: const Text('unsave'),
                     ),
                   ],
@@ -66,7 +74,10 @@ void main() {
     await tester.tap(find.text('unsave'));
     await tester.pumpAndSettle();
 
-    expect(capturedRef.read(bookmarksControllerProvider), isNot(contains(article.id)));
+    expect(
+      capturedRef.read(bookmarksControllerProvider),
+      isNot(contains(article.id)),
+    );
     expect(find.text('Removed from saved'), findsOneWidget);
   });
 
@@ -83,12 +94,18 @@ void main() {
         ),
         child: themedChild(
           Consumer(
-            builder: (BuildContext context, WidgetRef ref, Widget? child) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => handleArticleAction(context, ref, article, ArticleAction.hide),
-                child: const Text('hide'),
-              ),
-            ),
+            builder: (BuildContext context, WidgetRef ref, Widget? child) =>
+                Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () => handleArticleAction(
+                      context,
+                      ref,
+                      article,
+                      ArticleAction.hide,
+                    ),
+                    child: const Text('hide'),
+                  ),
+                ),
           ),
         ),
       ),
@@ -112,13 +129,18 @@ void main() {
         overrides: feedTestOverrides(articles: FakeArticleRepository()),
         child: themedChild(
           Consumer(
-            builder: (BuildContext context, WidgetRef ref, Widget? child) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () =>
-                    handleArticleAction(context, ref, withoutUrl, ArticleAction.openInBrowser),
-                child: const Text('browser'),
-              ),
-            ),
+            builder: (BuildContext context, WidgetRef ref, Widget? child) =>
+                Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () => handleArticleAction(
+                      context,
+                      ref,
+                      withoutUrl,
+                      ArticleAction.openInBrowser,
+                    ),
+                    child: const Text('browser'),
+                  ),
+                ),
           ),
         ),
       ),
@@ -131,18 +153,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('report action acknowledges without a backend call', (WidgetTester tester) async {
+  testWidgets('report action acknowledges without a backend call', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: feedTestOverrides(articles: FakeArticleRepository()),
         child: themedChild(
           Consumer(
-            builder: (BuildContext context, WidgetRef ref, Widget? child) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => handleArticleAction(context, ref, article, ArticleAction.report),
-                child: const Text('report'),
-              ),
-            ),
+            builder: (BuildContext context, WidgetRef ref, Widget? child) =>
+                Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () => handleArticleAction(
+                      context,
+                      ref,
+                      article,
+                      ArticleAction.report,
+                    ),
+                    child: const Text('report'),
+                  ),
+                ),
           ),
         ),
       ),

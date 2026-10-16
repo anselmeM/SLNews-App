@@ -50,8 +50,7 @@ final DateTime syncEpoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
 /// Serialises [value] as ISO-8601 UTC with milliseconds — the only timestamp
 /// shape the API accepts (`2026-10-16T05:00:00.000Z`).
-String? syncTimestamp(DateTime? value) =>
-    value?.toUtc().toIso8601String();
+String? syncTimestamp(DateTime? value) => value?.toUtc().toIso8601String();
 
 /// Parses a wire timestamp tolerantly.
 ///
@@ -277,16 +276,13 @@ class SyncReaction implements SyncRow {
   String get collection => SyncCollections.reactions;
 
   /// Copy of this row with the given fields replaced.
-  SyncReaction copyWith({
-    String? kind,
-    DateTime? updatedAt,
-    bool? deleted,
-  }) => SyncReaction(
-    itemId: itemId,
-    kind: kind ?? this.kind,
-    updatedAt: updatedAt ?? this.updatedAt,
-    deleted: deleted ?? this.deleted,
-  );
+  SyncReaction copyWith({String? kind, DateTime? updatedAt, bool? deleted}) =>
+      SyncReaction(
+        itemId: itemId,
+        kind: kind ?? this.kind,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deleted: deleted ?? this.deleted,
+      );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'itemId': itemId,
@@ -472,8 +468,7 @@ class SyncState {
   ];
 
   /// True when all three collections are empty.
-  bool get isEmpty =>
-      bookmarks.isEmpty && reactions.isEmpty && follows.isEmpty;
+  bool get isEmpty => bookmarks.isEmpty && reactions.isEmpty && follows.isEmpty;
 
   /// Bookmarks keyed by item id, tombstones included.
   Map<String, SyncBookmark> get bookmarksById => <String, SyncBookmark>{
@@ -497,7 +492,9 @@ class SyncState {
   DateTime? get latestUpdatedAt {
     DateTime? latest;
     for (final SyncRow row in _allRows) {
-      if (latest == null || row.updatedAt.isAfter(latest)) latest = row.updatedAt;
+      if (latest == null || row.updatedAt.isAfter(latest)) {
+        latest = row.updatedAt;
+      }
     }
     return latest;
   }
@@ -532,7 +529,9 @@ class SyncState {
     final List<SyncBookmark> changedBookmarks = bookmarksSince(since);
     final List<SyncReaction> changedReactions = reactionsSince(since);
     final List<SyncFollow> changedFollows = followsSince(since);
-    if (changedBookmarks.isEmpty && changedReactions.isEmpty && changedFollows.isEmpty) {
+    if (changedBookmarks.isEmpty &&
+        changedReactions.isEmpty &&
+        changedFollows.isEmpty) {
       return null;
     }
     return SyncState(
@@ -693,11 +692,7 @@ abstract interface class SyncRowRef {
 @immutable
 class SyncApplied {
   /// Wraps the three counts.
-  const SyncApplied({
-    this.bookmarks = 0,
-    this.reactions = 0,
-    this.follows = 0,
-  });
+  const SyncApplied({this.bookmarks = 0, this.reactions = 0, this.follows = 0});
 
   /// Nothing applied.
   static const SyncApplied none = SyncApplied();
@@ -823,10 +818,8 @@ sealed class SyncFailure {
   static SyncFailure unauthorized(String message) => SyncUnauthorized(message);
 
   /// Per-user rate limit hit (`429`); [retryAfter] is the server's hint.
-  static SyncFailure rateLimited({
-    Duration? retryAfter,
-    String? message,
-  }) => SyncRateLimited(retryAfter: retryAfter, message: message);
+  static SyncFailure rateLimited({Duration? retryAfter, String? message}) =>
+      SyncRateLimited(retryAfter: retryAfter, message: message);
 
   /// Request refused as malformed or oversized (`400`/`413`) — retrying the
   /// same payload unchanged cannot succeed.

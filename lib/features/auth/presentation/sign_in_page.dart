@@ -53,7 +53,10 @@ class SignInPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Sign in to sync your stories', style: context.typography.sectionTitle),
+                  Text(
+                    'Sign in to sync your stories',
+                    style: context.typography.sectionTitle,
+                  ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'Saved stories, reactions and alerts follow you between this app and slnews.sl.',

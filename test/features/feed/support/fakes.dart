@@ -20,7 +20,11 @@ import 'package:slnews_mobile/core/domain/repositories/weather_repository.dart';
 /// widget tests never touch Hive, `dio` or the network.
 
 /// Shared outlet used by every fake article.
-const Publisher testPublisher = Publisher(id: 'awoko', name: 'Awoko Newspaper', wordmark: 'AWOKO');
+const Publisher testPublisher = Publisher(
+  id: 'awoko',
+  name: 'Awoko Newspaper',
+  wordmark: 'AWOKO',
+);
 
 /// Builds a deterministic article; override only what a test cares about.
 Article testArticle({
@@ -121,7 +125,9 @@ class FakeArticleRepository implements ArticleRepository {
   Future<List<Article>> search(String query, {int limit = 20}) async {
     final String needle = query.toLowerCase();
     return all
-        .where((Article article) => article.title.toLowerCase().contains(needle))
+        .where(
+          (Article article) => article.title.toLowerCase().contains(needle),
+        )
         .take(limit)
         .toList(growable: false);
   }
@@ -186,7 +192,8 @@ class FakeUserStateRepository implements UserStateRepository {
   String activeLocationId;
 
   @override
-  Future<void> setActiveLocationId(String locationId) async => activeLocationId = locationId;
+  Future<void> setActiveLocationId(String locationId) async =>
+      activeLocationId = locationId;
 
   @override
   bool breakingNewsAlertsEnabled;
@@ -218,18 +225,20 @@ class FakeWeatherRepository implements WeatherRepository {
 /// Empty standings/scoreboard double for pages that render the sports strip.
 class FakeSportsRepository implements SportsRepository {
   @override
-  Future<ScoreboardSnapshot> scoreboard({int limit = 8}) async => ScoreboardSnapshot(
-    games: const <GameScore>[],
-    providerLabel: 'test',
-    updatedAt: DateTime(2026, 10, 15),
-  );
+  Future<ScoreboardSnapshot> scoreboard({int limit = 8}) async =>
+      ScoreboardSnapshot(
+        games: const <GameScore>[],
+        providerLabel: 'test',
+        updatedAt: DateTime(2026, 10, 15),
+      );
 
   @override
   Future<List<GameScore>> gamesForTeam(String teamId, {int limit = 10}) async =>
       const <GameScore>[];
 
   @override
-  Future<List<TeamStanding>> standings(String leagueId) async => const <TeamStanding>[];
+  Future<List<TeamStanding>> standings(String leagueId) async =>
+      const <TeamStanding>[];
 }
 
 /// Empty following double; the app bar reads nothing from it in these tests.
@@ -270,7 +279,8 @@ class FakeNotificationRepository implements NotificationRepository {
       _items.take(limit).toList(growable: false);
 
   @override
-  List<NotificationItem> get cachedHistory => List<NotificationItem>.unmodifiable(_items);
+  List<NotificationItem> get cachedHistory =>
+      List<NotificationItem>.unmodifiable(_items);
 
   @override
   Future<void> record(NotificationItem item) async => _items.add(item);
@@ -282,13 +292,15 @@ class FakeNotificationRepository implements NotificationRepository {
   Future<void> markAllRead() async {}
 
   @override
-  int get unreadCount => _items.where((NotificationItem item) => !item.isRead).length;
+  int get unreadCount =>
+      _items.where((NotificationItem item) => !item.isRead).length;
 }
 
 /// Empty ad rotation double.
 class FakeAdRepository implements AdRepository {
   @override
-  Future<List<AdUnit>> units({String placement = 'default'}) async => const <AdUnit>[];
+  Future<List<AdUnit>> units({String placement = 'default'}) async =>
+      const <AdUnit>[];
 
   @override
   List<AdUnit> get cachedUnits => const <AdUnit>[];

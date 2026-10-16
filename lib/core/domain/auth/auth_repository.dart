@@ -30,7 +30,9 @@ class AuthUser {
   final String? imageUrl;
 
   /// Best available one-line label for the account row.
-  String get label => _firstNonEmpty(<String?>[displayName, username, primaryEmail]) ?? 'Signed in';
+  String get label =>
+      _firstNonEmpty(<String?>[displayName, username, primaryEmail]) ??
+      'Signed in';
 
   /// Initials for the avatar fallback when no [imageUrl] is available.
   ///
@@ -53,7 +55,9 @@ class AuthUser {
 
   static String? _firstNonEmpty(List<String?> candidates) {
     for (final String? candidate in candidates) {
-      if (candidate != null && candidate.trim().isNotEmpty) return candidate.trim();
+      if (candidate != null && candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
     }
     return null;
   }
@@ -68,7 +72,8 @@ class AuthUser {
       other.imageUrl == imageUrl;
 
   @override
-  int get hashCode => Object.hash(id, displayName, username, primaryEmail, imageUrl);
+  int get hashCode =>
+      Object.hash(id, displayName, username, primaryEmail, imageUrl);
 }
 
 /// Immutable view of the session for widgets.

@@ -60,7 +60,10 @@ class ArticleTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       if (showPublisherMark) ...<Widget>[
-                        PublisherMark(publisher: article.publisher, logoHeight: 17),
+                        PublisherMark(
+                          publisher: article.publisher,
+                          logoHeight: 17,
+                        ),
                         const SizedBox(height: AppSpacing.md),
                       ],
                       Text(
@@ -69,7 +72,8 @@ class ArticleTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: context.typography.cardTitle,
                       ),
-                      if (showSummary && article.summary.isNotEmpty) ...<Widget>[
+                      if (showSummary &&
+                          article.summary.isNotEmpty) ...<Widget>[
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           article.summary,
@@ -78,7 +82,9 @@ class ArticleTile extends StatelessWidget {
                           style: context.typography.caption,
                         ),
                       ],
-                      SizedBox(height: showSummary ? AppSpacing.md : AppSpacing.xl),
+                      SizedBox(
+                        height: showSummary ? AppSpacing.md : AppSpacing.xl,
+                      ),
                       Row(
                         children: <Widget>[
                           Flexible(

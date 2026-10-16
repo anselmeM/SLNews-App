@@ -77,8 +77,7 @@ class Harness {
       .toList();
 
   /// Query parameters of the request at [index].
-  Map<String, dynamic> queryAt(int index) =>
-      queryOf(adapter.requests[index]);
+  Map<String, dynamic> queryAt(int index) => queryOf(adapter.requests[index]);
 
   /// Header value (case-insensitive) of the request at [index].
   String? headerAt(int index, String name) =>
@@ -100,13 +99,14 @@ class Harness {
   );
 
   /// Builds a response body that is not valid JSON.
-  static ResponseBody malformed({int statusCode = 200}) => ResponseBody.fromString(
-    '<html>not json</html>',
-    statusCode,
-    headers: <String, List<String>>{
-      'content-type': <String>['text/html'],
-    },
-  );
+  static ResponseBody malformed({int statusCode = 200}) =>
+      ResponseBody.fromString(
+        '<html>not json</html>',
+        statusCode,
+        headers: <String, List<String>>{
+          'content-type': <String>['text/html'],
+        },
+      );
 
   /// Builds an error response carrying a JSON error object.
   static ResponseBody error(int statusCode) =>
@@ -155,21 +155,22 @@ Map<String, dynamic> v1Envelope({
 };
 
 /// A bare `/api/news` row with [extra] merged in.
-Map<String, dynamic> legacyRow([Map<String, dynamic> extra = const <String, dynamic>{}]) =>
-    <String, dynamic>{
-      'id': 7,
-      'title': 'Freetown market traders strike',
-      'link': 'https://example.test/story/7',
-      'author': 'A. Kamara',
-      'description': '<p>Trade halted for a second day.</p>',
-      'category': <String>['Business'],
-      'imageUrl': 'https://example.test/img/7.jpg',
-      'paragraphs': <String>['Ignored body paragraph.'],
-      'pubDate': 'Tue, 13 Oct 2026 13:30:25 +0000',
-      'source': 'Awoko Newspaper',
-      'createdAt': '2026-10-13T13:30:25.000Z',
-      ...extra,
-    };
+Map<String, dynamic> legacyRow([
+  Map<String, dynamic> extra = const <String, dynamic>{},
+]) => <String, dynamic>{
+  'id': 7,
+  'title': 'Freetown market traders strike',
+  'link': 'https://example.test/story/7',
+  'author': 'A. Kamara',
+  'description': '<p>Trade halted for a second day.</p>',
+  'category': <String>['Business'],
+  'imageUrl': 'https://example.test/img/7.jpg',
+  'paragraphs': <String>['Ignored body paragraph.'],
+  'pubDate': 'Tue, 13 Oct 2026 13:30:25 +0000',
+  'source': 'Awoko Newspaper',
+  'createdAt': '2026-10-13T13:30:25.000Z',
+  ...extra,
+};
 
 void main() {
   group('SlNewsApiConfig', () {
@@ -220,7 +221,9 @@ void main() {
 
   group('SlNewsApiSource.config', () {
     test('describes the synthetic aggregate feed', () {
-      final Harness harness = Harness((RequestOptions options) async => Harness.json(v1Envelope()));
+      final Harness harness = Harness(
+        (RequestOptions options) async => Harness.json(v1Envelope()),
+      );
 
       expect(harness.source.config.id, 'slnews-api');
       expect(harness.source.config.outlet, 'SLNews');
@@ -268,7 +271,10 @@ void main() {
         ),
       );
 
-      final SlNewsApiPage page = await harness.source.fetchPage(page: 2, pageSize: 10);
+      final SlNewsApiPage page = await harness.source.fetchPage(
+        page: 2,
+        pageSize: 10,
+      );
 
       expect(page.page, 2);
       expect(page.pageSize, 10);
@@ -303,7 +309,8 @@ void main() {
         ),
       );
 
-      final Article article = (await harness.source.fetchPage()).articles.single;
+      final Article article =
+          (await harness.source.fetchPage()).articles.single;
 
       expect(article.title, 'Roads flooded again');
       expect(article.summary, 'Freetown & Waterloo affected.');
@@ -346,21 +353,30 @@ void main() {
       expect(page.articles[1].publishedAt, expected);
     });
 
-    test('falls back to now() for an unparseable date instead of throwing', () async {
-      final Harness harness = Harness(
-        (RequestOptions options) async => Harness.json(
-          v1Envelope(row: <String, dynamic>{'published_at': 'not-a-date'}),
-        ),
-      );
-      final DateTime before = DateTime.now();
+    test(
+      'falls back to now() for an unparseable date instead of throwing',
+      () async {
+        final Harness harness = Harness(
+          (RequestOptions options) async => Harness.json(
+            v1Envelope(row: <String, dynamic>{'published_at': 'not-a-date'}),
+          ),
+        );
+        final DateTime before = DateTime.now();
 
-      final SlNewsApiPage page = await harness.source.fetchPage();
+        final SlNewsApiPage page = await harness.source.fetchPage();
 
-      expect(page.articles, hasLength(1));
-      final DateTime published = page.articles.single.publishedAt;
-      expect(published.isBefore(before.subtract(const Duration(seconds: 5))), isFalse);
-      expect(published.isAfter(DateTime.now().add(const Duration(seconds: 5))), isFalse);
-    });
+        expect(page.articles, hasLength(1));
+        final DateTime published = page.articles.single.publishedAt;
+        expect(
+          published.isBefore(before.subtract(const Duration(seconds: 5))),
+          isFalse,
+        );
+        expect(
+          published.isAfter(DateTime.now().add(const Duration(seconds: 5))),
+          isFalse,
+        );
+      },
+    );
 
     test('skips rows that describe no story', () async {
       final Harness harness = Harness(
@@ -383,7 +399,12 @@ void main() {
         (RequestOptions options) async => Harness.json(v1Envelope()),
       );
 
-      await harness.source.fetchPage(page: 3, pageSize: 25, source: 'Awoko', query: 'flood');
+      await harness.source.fetchPage(
+        page: 3,
+        pageSize: 25,
+        source: 'Awoko',
+        query: 'flood',
+      );
 
       expect(harness.adapter.requests, hasLength(1));
       expect(harness.paths.single, '/v1/news');
@@ -430,20 +451,23 @@ void main() {
       expect(harness.queryAt(0), <String, dynamic>{'page': 1, 'page_size': 5});
     });
 
-    test('uses the configured page size when the caller does not pick one', () async {
-      final Harness harness = Harness(
-        (RequestOptions options) async => Harness.json(v1Envelope()),
-        config: const SlNewsApiConfig(
-          baseUrl: testBaseUrl,
-          apiKey: testApiKey,
-          pageSize: 50,
-        ),
-      );
+    test(
+      'uses the configured page size when the caller does not pick one',
+      () async {
+        final Harness harness = Harness(
+          (RequestOptions options) async => Harness.json(v1Envelope()),
+          config: const SlNewsApiConfig(
+            baseUrl: testBaseUrl,
+            apiKey: testApiKey,
+            pageSize: 50,
+          ),
+        );
 
-      await harness.source.fetchPage();
+        await harness.source.fetchPage();
 
-      expect(harness.queryAt(0)['page_size'], 50);
-    });
+        expect(harness.queryAt(0)['page_size'], 50);
+      },
+    );
 
     test('health() does not send the bearer token', () async {
       final Harness harness = Harness(
@@ -465,9 +489,8 @@ void main() {
 
     test('health() reports false for a non-ok status and for faults', () async {
       final Harness degraded = Harness(
-        (RequestOptions options) async => Harness.json(<String, dynamic>{
-          'status': 'degraded',
-        }),
+        (RequestOptions options) async =>
+            Harness.json(<String, dynamic>{'status': 'degraded'}),
       );
       expect(await degraded.source.health(), isFalse);
 
@@ -477,48 +500,57 @@ void main() {
       expect(await broken.source.health(), isFalse);
     });
 
-    test('a 404 on /v1/news falls back to /api/news and reads X-Total-Count', () async {
-      final Harness harness = Harness((RequestOptions options) async {
-        if (options.uri.path == '/v1/news') return Harness.error(404);
-        return Harness.json(
-          <Map<String, dynamic>>[legacyRow()],
-          headers: <String, String>{'X-Total-Count': '1234'},
+    test(
+      'a 404 on /v1/news falls back to /api/news and reads X-Total-Count',
+      () async {
+        final Harness harness = Harness((RequestOptions options) async {
+          if (options.uri.path == '/v1/news') return Harness.error(404);
+          return Harness.json(
+            <Map<String, dynamic>>[legacyRow()],
+            headers: <String, String>{'X-Total-Count': '1234'},
+          );
+        });
+
+        final SlNewsApiPage page = await harness.source.fetchPage(
+          page: 2,
+          pageSize: 20,
         );
-      });
 
-      final SlNewsApiPage page = await harness.source.fetchPage(page: 2, pageSize: 20);
+        expect(harness.paths, <String>['/v1/news', '/api/news']);
+        expect(harness.queryAt(0), containsPair('page_size', 20));
+        expect(harness.queryAt(1), <String, dynamic>{'limit': 20, 'page': 2});
+        expect(harness.headerAt(1, 'authorization'), 'Bearer $testApiKey');
+        expect(page.total, 1234);
+        expect(page.hasMore, isTrue);
+        expect(page.page, 2);
+        expect(page.articles.single.id, 'slnews-api:7');
+      },
+    );
 
-      expect(harness.paths, <String>['/v1/news', '/api/news']);
-      expect(harness.queryAt(0), containsPair('page_size', 20));
-      expect(harness.queryAt(1), <String, dynamic>{'limit': 20, 'page': 2});
-      expect(harness.headerAt(1, 'authorization'), 'Bearer $testApiKey');
-      expect(page.total, 1234);
-      expect(page.hasMore, isTrue);
-      expect(page.page, 2);
-      expect(page.articles.single.id, 'slnews-api:7');
-    });
+    test(
+      'derives hasMore from the page length when the header is absent',
+      () async {
+        final Harness harness = Harness((RequestOptions options) async {
+          if (options.uri.path == '/v1/news') return Harness.error(404);
+          return Harness.json(<Map<String, dynamic>>[legacyRow()]);
+        });
 
-    test('derives hasMore from the page length when the header is absent', () async {
-      final Harness harness = Harness((RequestOptions options) async {
-        if (options.uri.path == '/v1/news') return Harness.error(404);
-        return Harness.json(<Map<String, dynamic>>[legacyRow()]);
-      });
+        final SlNewsApiPage page = await harness.source.fetchPage(pageSize: 1);
 
-      final SlNewsApiPage page = await harness.source.fetchPage(pageSize: 1);
+        expect(page.total, 1);
+        expect(page.hasMore, isTrue);
 
-      expect(page.total, 1);
-      expect(page.hasMore, isTrue);
+        final Harness short = Harness((RequestOptions options) async {
+          if (options.uri.path == '/v1/news') return Harness.error(404);
+          return Harness.json(<Map<String, dynamic>>[]);
+        });
 
-      final Harness short = Harness((RequestOptions options) async {
-        if (options.uri.path == '/v1/news') return Harness.error(404);
-        return Harness.json(<Map<String, dynamic>>[]);
-      });
+        final SlNewsApiPage empty = await short.source.fetchPage(pageSize: 20);
 
-      final SlNewsApiPage empty = await short.source.fetchPage(pageSize: 20);
-
-      expect(empty.total, 0);
-      expect(empty.hasMore, isFalse);
-    });
+        expect(empty.total, 0);
+        expect(empty.hasMore, isFalse);
+      },
+    );
 
     test('preferVersioned: false goes straight to /api/news', () async {
       final Harness harness = Harness(
@@ -554,7 +586,8 @@ void main() {
         ),
       );
 
-      final Article article = (await harness.source.fetchPage()).articles.single;
+      final Article article =
+          (await harness.source.fetchPage()).articles.single;
 
       expect(article.id, 'slnews-api:7');
       expect(article.title, 'Freetown market traders strike');
@@ -591,18 +624,21 @@ void main() {
       expect(harness.adapter.requests, isEmpty);
     });
 
-    test('a 401 on /v1/news does not fall back and yields an empty page', () async {
-      final Harness harness = Harness(
-        (RequestOptions options) async => Harness.error(401),
-      );
+    test(
+      'a 401 on /v1/news does not fall back and yields an empty page',
+      () async {
+        final Harness harness = Harness(
+          (RequestOptions options) async => Harness.error(401),
+        );
 
-      final SlNewsApiPage page = await harness.source.fetchPage();
+        final SlNewsApiPage page = await harness.source.fetchPage();
 
-      expect(harness.paths, <String>['/v1/news']);
-      expect(page.articles, isEmpty);
-      expect(page.total, 0);
-      expect(page.hasMore, isFalse);
-    });
+        expect(harness.paths, <String>['/v1/news']);
+        expect(page.articles, isEmpty);
+        expect(page.total, 0);
+        expect(page.hasMore, isFalse);
+      },
+    );
 
     test('a 403 on /api/news yields an empty page without throwing', () async {
       final Harness harness = Harness(
@@ -670,7 +706,9 @@ void main() {
         (RequestOptions options) async => Harness.json(legacyRow()),
       );
 
-      final Article? namespaced = await harness.source.articleById('slnews-api:7');
+      final Article? namespaced = await harness.source.articleById(
+        'slnews-api:7',
+      );
       final Article? bare = await harness.source.articleById('7');
 
       expect(harness.paths, <String>['/api/news/7', '/api/news/7']);
@@ -682,7 +720,8 @@ void main() {
 
     test('returns null without a request for a non-numeric id', () async {
       final Harness harness = Harness(
-        (RequestOptions options) async => fail('no request expected for id "abc"'),
+        (RequestOptions options) async =>
+            fail('no request expected for id "abc"'),
       );
 
       expect(await harness.source.articleById('abc'), isNull);
@@ -697,7 +736,8 @@ void main() {
         (RequestOptions options) async => Harness.error(404),
       );
       final Harness malformed = Harness(
-        (RequestOptions options) async => Harness.json(<String, dynamic>{'id': 7}),
+        (RequestOptions options) async =>
+            Harness.json(<String, dynamic>{'id': 7}),
       );
 
       expect(await missing.source.articleById('7'), isNull);
@@ -723,8 +763,14 @@ void main() {
     });
 
     test('splits compound labels before matching', () {
-      expect(SlNewsApiSource.categoryIdFor(<String>['Politics & Law']), 'politics');
-      expect(SlNewsApiSource.categoryIdFor(<String>['Business,Economy']), 'business');
+      expect(
+        SlNewsApiSource.categoryIdFor(<String>['Politics & Law']),
+        'politics',
+      );
+      expect(
+        SlNewsApiSource.categoryIdFor(<String>['Business,Economy']),
+        'business',
+      );
       expect(SlNewsApiSource.categoryIdFor(<String>['Top Stories']), 'top');
     });
 
@@ -753,7 +799,9 @@ void main() {
     });
 
     test('uses significant-word initials for a long outlet', () {
-      final Publisher long = SlNewsApiSource.publisherFor('The Sierra Leone Telegraph');
+      final Publisher long = SlNewsApiSource.publisherFor(
+        'The Sierra Leone Telegraph',
+      );
 
       expect(long.id, 'publisher:the-sierra-leone-telegraph');
       expect(long.name, 'The Sierra Leone Telegraph');
@@ -771,7 +819,10 @@ void main() {
       expect(SlNewsApiSource.publisherFor('Reuters').isWire, isTrue);
       expect(SlNewsApiSource.publisherFor('BBC News').isWire, isTrue);
       expect(SlNewsApiSource.publisherFor('AFP').isWire, isTrue);
-      expect(SlNewsApiSource.publisherFor('The Associated Press').isWire, isTrue);
+      expect(
+        SlNewsApiSource.publisherFor('The Associated Press').isWire,
+        isTrue,
+      );
       expect(SlNewsApiSource.publisherFor('Awoko Newspaper').isWire, isFalse);
     });
 

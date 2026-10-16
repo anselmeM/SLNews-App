@@ -19,7 +19,12 @@ Future<void> _pumpHtml(WidgetTester tester, String html) async {
 /// The [RichText] the renderer produced for the first block.
 RichText _firstRichText(WidgetTester tester) {
   return tester.widget<RichText>(
-    find.descendant(of: find.byType(HtmlContent), matching: find.byType(RichText)).first,
+    find
+        .descendant(
+          of: find.byType(HtmlContent),
+          matching: find.byType(RichText),
+        )
+        .first,
   );
 }
 
@@ -38,38 +43,57 @@ TextSpan? _spanWithText(InlineSpan span, String text) {
 void main() {
   group('HtmlBlocks.toPlainText', () {
     test('strips markup and collapses whitespace', () {
-      const String html = '<p>Hello   <strong>Salone</strong></p>\n<p>Second line</p>';
+      const String html =
+          '<p>Hello   <strong>Salone</strong></p>\n<p>Second line</p>';
       expect(HtmlBlocks.toPlainText(html), 'Hello Salone Second line');
     });
 
     test('drops script and style content entirely', () {
-      const String html = '<p>Visible</p><script>alert(1)</script><style>p{color:red}</style>';
+      const String html =
+          '<p>Visible</p><script>alert(1)</script><style>p{color:red}</style>';
       expect(HtmlBlocks.toPlainText(html), 'Visible');
     });
 
     test('keeps entities as readable text', () {
-      expect(HtmlBlocks.toPlainText('<p>Freetown &amp; Bo</p>'), 'Freetown & Bo');
+      expect(
+        HtmlBlocks.toPlainText('<p>Freetown &amp; Bo</p>'),
+        'Freetown & Bo',
+      );
     });
 
     test('keeps image alt text so figures are searchable', () {
       expect(
-        HtmlBlocks.toPlainText('<figure><img src="a.jpg" alt="Stelco plant"/></figure>'),
+        HtmlBlocks.toPlainText(
+          '<figure><img src="a.jpg" alt="Stelco plant"/></figure>',
+        ),
         'Stelco plant',
       );
     });
 
     test('detects a body that repeats the standfirst', () {
-      const String body = '<p>Sierra Leone equalised early.</p><p>More detail follows.</p>';
-      expect(HtmlBlocks.opensWith(body, 'Sierra Leone equalised early.'), isTrue);
-      expect(HtmlBlocks.opensWith(body, 'SIERRA LEONE EQUALISED EARLY.'), isTrue);
-      expect(HtmlBlocks.opensWith(body, 'A completely different standfirst.'), isFalse);
+      const String body =
+          '<p>Sierra Leone equalised early.</p><p>More detail follows.</p>';
+      expect(
+        HtmlBlocks.opensWith(body, 'Sierra Leone equalised early.'),
+        isTrue,
+      );
+      expect(
+        HtmlBlocks.opensWith(body, 'SIERRA LEONE EQUALISED EARLY.'),
+        isTrue,
+      );
+      expect(
+        HtmlBlocks.opensWith(body, 'A completely different standfirst.'),
+        isFalse,
+      );
       expect(HtmlBlocks.opensWith(body, ''), isFalse);
       expect(HtmlBlocks.opensWith('', 'anything'), isFalse);
     });
   });
 
   group('HtmlContent rendering', () {
-    testWidgets('renders paragraphs, headings, lists and blockquotes', (WidgetTester tester) async {
+    testWidgets('renders paragraphs, headings, lists and blockquotes', (
+      WidgetTester tester,
+    ) async {
       const String html = '''
         <h2>Power crisis</h2>
         <p>The <strong>Bumbuna</strong> line was restored.</p>
@@ -81,17 +105,26 @@ void main() {
       expect(find.textContaining('Power crisis'), findsOneWidget);
       expect(find.textContaining('was restored'), findsOneWidget);
       expect(find.text('•'), findsNWidgets(2));
-      expect(find.textContaining('Everything is on the table.'), findsOneWidget);
+      expect(
+        find.textContaining('Everything is on the table.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('keeps inline emphasis inside a single rich paragraph', (WidgetTester tester) async {
+    testWidgets('keeps inline emphasis inside a single rich paragraph', (
+      WidgetTester tester,
+    ) async {
       await _pumpHtml(tester, '<p>Alpha <strong>Beta</strong> Gamma</p>');
 
       final RichText rich = _firstRichText(tester);
       expect(rich.text.toPlainText(), 'Alpha Beta Gamma');
 
       final TextSpan? bold = _spanWithText(rich.text, 'Beta');
-      expect(bold, isNotNull, reason: 'the emphasised run must survive as its own span');
+      expect(
+        bold,
+        isNotNull,
+        reason: 'the emphasised run must survive as its own span',
+      );
       expect(bold!.style!.fontWeight, FontWeight.w700);
     });
 
@@ -101,7 +134,9 @@ void main() {
       expect(find.text('Safe'), findsOneWidget);
     });
 
-    testWidgets('renders a figure image with its caption', (WidgetTester tester) async {
+    testWidgets('renders a figure image with its caption', (
+      WidgetTester tester,
+    ) async {
       await _pumpHtml(
         tester,
         '<figure><img src="https://example.com/a.jpg" alt="Plant"/><figcaption>Stelco steel works</figcaption></figure>',
@@ -109,15 +144,22 @@ void main() {
       expect(find.text('Stelco steel works'), findsOneWidget);
     });
 
-    testWidgets('an empty body renders nothing at all', (WidgetTester tester) async {
+    testWidgets('an empty body renders nothing at all', (
+      WidgetTester tester,
+    ) async {
       await _pumpHtml(tester, '   ');
       expect(find.byType(Text), findsNothing);
     });
 
-    testWidgets('paragraphs use the design-system body style', (WidgetTester tester) async {
+    testWidgets('paragraphs use the design-system body style', (
+      WidgetTester tester,
+    ) async {
       await _pumpHtml(tester, '<p>Body copy</p>');
 
-      final TextSpan? paragraph = _spanWithText(_firstRichText(tester).text, 'Body copy');
+      final TextSpan? paragraph = _spanWithText(
+        _firstRichText(tester).text,
+        'Body copy',
+      );
       expect(paragraph, isNotNull);
       expect(paragraph!.style!.fontSize, 17);
       expect(paragraph.style!.fontFamily, AppTypography.fontFamily);

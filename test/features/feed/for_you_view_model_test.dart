@@ -26,13 +26,22 @@ void main() {
   }
 
   test('de-duplicates the same story arriving from every stream', () {
-    final Article shared = testArticle(id: 'shared', publishedAt: DateTime(2026, 10, 15, 9));
-    final Article extra = testArticle(id: 'only-extra', publishedAt: DateTime(2026, 10, 15, 7));
+    final Article shared = testArticle(
+      id: 'shared',
+      publishedAt: DateTime(2026, 10, 15, 9),
+    );
+    final Article extra = testArticle(
+      id: 'only-extra',
+      publishedAt: DateTime(2026, 10, 15, 7),
+    );
 
     final ForYouFeed feed = build(
       topStories: <Article>[shared],
       localStories: <Article>[shared],
-      extraStories: <Article>[shared.copyWith(title: 'Shared from category'), extra],
+      extraStories: <Article>[
+        shared.copyWith(title: 'Shared from category'),
+        extra,
+      ],
     );
 
     final List<String> rendered = <String>[
@@ -43,7 +52,9 @@ void main() {
     expect(rendered.where((String id) => id == 'shared'), hasLength(1));
     // The extra feed only contributes what the carousel did not take.
     expect(feed.hero.map((Article a) => a.id).toList(), <String>['shared']);
-    expect(feed.stream.map((Article a) => a.id).toList(), <String>['only-extra']);
+    expect(feed.stream.map((Article a) => a.id).toList(), <String>[
+      'only-extra',
+    ]);
   });
 
   test('orders the merged stream newest first', () {
@@ -59,7 +70,11 @@ void main() {
       heroLimit: 3,
     );
 
-    expect(feed.hero.map((Article a) => a.id).toList(), <String>['newest', 'second', 'middle']);
+    expect(feed.hero.map((Article a) => a.id).toList(), <String>[
+      'newest',
+      'second',
+      'middle',
+    ]);
     expect(feed.stream.map((Article a) => a.id).toList(), <String>['oldest']);
   });
 
@@ -76,7 +91,11 @@ void main() {
     final ForYouFeed feed = build(
       topStories: <Article>[
         testArticle(id: 'fresh', publishedAt: DateTime(2026, 10, 15, 18)),
-        testArticle(id: 'alert', publishedAt: DateTime(2026, 10, 15, 6), isBreaking: true),
+        testArticle(
+          id: 'alert',
+          publishedAt: DateTime(2026, 10, 15, 6),
+          isBreaking: true,
+        ),
       ],
     );
 
@@ -88,7 +107,10 @@ void main() {
   test('caps the hero at the limit and streams the rest', () {
     final List<Article> stories = <Article>[
       for (int index = 0; index < 9; index++)
-        testArticle(id: 'story-$index', publishedAt: DateTime(2026, 10, 15, 18 - index)),
+        testArticle(
+          id: 'story-$index',
+          publishedAt: DateTime(2026, 10, 15, 18 - index),
+        ),
     ];
 
     final ForYouFeed feed = build(topStories: stories, heroLimit: 3);
@@ -112,7 +134,10 @@ void main() {
     final ForYouFeed feed = build(
       topStories: <Article>[
         for (int index = 0; index < 7; index++)
-          testArticle(id: 'story-$index', publishedAt: DateTime(2026, 10, 15, 18 - index)),
+          testArticle(
+            id: 'story-$index',
+            publishedAt: DateTime(2026, 10, 15, 18 - index),
+          ),
       ],
       localStories: <Article>[
         testArticle(id: 'local-1', publishedAt: DateTime(2026, 10, 15, 5)),
@@ -123,7 +148,10 @@ void main() {
     expect(feed.hero, hasLength(ForYouViewModel.heroLimit));
     expect(feed.hero.any((Article a) => a.id.startsWith('local-')), isFalse);
     expect(feed.stream.first.id, 'local-1');
-    expect(feed.stream.where((Article a) => a.id.startsWith('local-')), hasLength(2));
+    expect(
+      feed.stream.where((Article a) => a.id.startsWith('local-')),
+      hasLength(2),
+    );
     expect(feed.stream.last.id, 'story-6');
   });
 }

@@ -32,10 +32,8 @@ class FollowingViewModel {
   final bool isLoading;
 
   /// Teams and leagues the reader follows, alphabetically sorted.
-  List<FollowTarget> get sports => _group(<FollowKind>{
-        FollowKind.team,
-        FollowKind.league,
-      });
+  List<FollowTarget> get sports =>
+      _group(<FollowKind>{FollowKind.team, FollowKind.league});
 
   /// Followed cities, alphabetically sorted.
   List<FollowTarget> get locations => _group(<FollowKind>{FollowKind.location});
@@ -47,7 +45,8 @@ class FollowingViewModel {
     final List<FollowTarget> candidates = snapshot.suggested
         .where(
           (FollowTarget target) =>
-              target.kind == FollowKind.location && !followedIds.contains(target.id),
+              target.kind == FollowKind.location &&
+              !followedIds.contains(target.id),
         )
         .toList(growable: false);
     return _dedupe(_sort(candidates));
@@ -57,7 +56,9 @@ class FollowingViewModel {
   /// a stray publisher entry falls back here rather than rendering nowhere.
   List<FollowTarget> get topics {
     final List<FollowTarget> grouped = _group(<FollowKind>{FollowKind.topic});
-    final Set<String> ids = grouped.map((FollowTarget target) => target.id).toSet();
+    final Set<String> ids = grouped
+        .map((FollowTarget target) => target.id)
+        .toSet();
     final List<FollowTarget> publishers = snapshot.followed
         .where(
           (FollowTarget target) =>
@@ -68,7 +69,8 @@ class FollowingViewModel {
   }
 
   /// Followed publishers, kept separate for completeness of the derivation.
-  List<FollowTarget> get publishers => _group(<FollowKind>{FollowKind.publisher});
+  List<FollowTarget> get publishers =>
+      _group(<FollowKind>{FollowKind.publisher});
 
   /// Unread alerts; drives the badge on the "Notification history" row.
   int get unreadNotifications =>
@@ -90,11 +92,21 @@ class FollowingViewModel {
     // `followed` leads so a followed entity is present even if the per-kind
     // catalogue is stale or missing the id.
     final List<FollowTarget> merged = <FollowTarget>[
-      ...snapshot.followed.where((FollowTarget target) => kinds.contains(target.kind)),
-      ...snapshot.sports.where((FollowTarget target) => kinds.contains(target.kind)),
-      ...snapshot.locations.where((FollowTarget target) => kinds.contains(target.kind)),
-      ...snapshot.topics.where((FollowTarget target) => kinds.contains(target.kind)),
-      ...snapshot.publishers.where((FollowTarget target) => kinds.contains(target.kind)),
+      ...snapshot.followed.where(
+        (FollowTarget target) => kinds.contains(target.kind),
+      ),
+      ...snapshot.sports.where(
+        (FollowTarget target) => kinds.contains(target.kind),
+      ),
+      ...snapshot.locations.where(
+        (FollowTarget target) => kinds.contains(target.kind),
+      ),
+      ...snapshot.topics.where(
+        (FollowTarget target) => kinds.contains(target.kind),
+      ),
+      ...snapshot.publishers.where(
+        (FollowTarget target) => kinds.contains(target.kind),
+      ),
     ];
     return _sort(_dedupe(merged));
   }

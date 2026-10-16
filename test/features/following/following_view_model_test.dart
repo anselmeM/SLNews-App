@@ -38,14 +38,15 @@ void main() {
     label: 'Politics',
   );
 
-  NotificationItem alert({required String id, bool isRead = false}) => NotificationItem(
-    id: id,
-    title: 'Alert $id',
-    body: 'Body',
-    receivedAt: DateTime(2026, 10, 15, 12),
-    kind: NotificationKind.breaking,
-    isRead: isRead,
-  );
+  NotificationItem alert({required String id, bool isRead = false}) =>
+      NotificationItem(
+        id: id,
+        title: 'Alert $id',
+        body: 'Body',
+        receivedAt: DateTime(2026, 10, 15, 12),
+        kind: NotificationKind.breaking,
+        isRead: isRead,
+      );
 
   group('FollowingViewModel', () {
     test('an empty snapshot yields empty groups and no unread badge', () {
@@ -71,9 +72,15 @@ void main() {
         ),
       );
 
-      expect(viewModel.sports.map((FollowTarget t) => t.id), <String>['team:lal']);
-      expect(viewModel.locations.map((FollowTarget t) => t.id), <String>['city:freetown']);
-      expect(viewModel.topics.map((FollowTarget t) => t.id), <String>['topic:politics']);
+      expect(viewModel.sports.map((FollowTarget t) => t.id), <String>[
+        'team:lal',
+      ]);
+      expect(viewModel.locations.map((FollowTarget t) => t.id), <String>[
+        'city:freetown',
+      ]);
+      expect(viewModel.topics.map((FollowTarget t) => t.id), <String>[
+        'topic:politics',
+      ]);
       expect(viewModel.hasAnyGroup, isTrue);
     });
 
@@ -88,10 +95,10 @@ void main() {
         ),
       );
 
-      expect(
-        viewModel.sports.map((FollowTarget t) => t.label),
-        <String>['Arsenal', 'Los Angeles Lakers'],
-      );
+      expect(viewModel.sports.map((FollowTarget t) => t.label), <String>[
+        'Arsenal',
+        'Los Angeles Lakers',
+      ]);
       expect(viewModel.locations.single.label, 'Freetown');
       expect(viewModel.topics.single.label, 'Politics');
     });
@@ -127,29 +134,32 @@ void main() {
         ),
       );
 
-      expect(
-        viewModel.sports.map((FollowTarget t) => t.label),
-        <String>['Arsenal', 'zebras'],
-      );
-      expect(
-        viewModel.locations.map((FollowTarget t) => t.label),
-        <String>['Bo', 'Freetown'],
-      );
+      expect(viewModel.sports.map((FollowTarget t) => t.label), <String>[
+        'Arsenal',
+        'zebras',
+      ]);
+      expect(viewModel.locations.map((FollowTarget t) => t.label), <String>[
+        'Bo',
+        'Freetown',
+      ]);
     });
 
-    test('popular suggestions exclude followed locations and non-location kinds', () {
-      const FollowingViewModel viewModel = FollowingViewModel(
-        snapshot: FollowingSnapshot(
-          followed: <FollowTarget>[freetown],
-          suggested: <FollowTarget>[freetown, bo, koidu, lakers, politics],
-        ),
-      );
+    test(
+      'popular suggestions exclude followed locations and non-location kinds',
+      () {
+        const FollowingViewModel viewModel = FollowingViewModel(
+          snapshot: FollowingSnapshot(
+            followed: <FollowTarget>[freetown],
+            suggested: <FollowTarget>[freetown, bo, koidu, lakers, politics],
+          ),
+        );
 
-      expect(
-        viewModel.popularLocations.map((FollowTarget t) => t.id),
-        <String>['city:bo', 'city:koidu'],
-      );
-    });
+        expect(
+          viewModel.popularLocations.map((FollowTarget t) => t.id),
+          <String>['city:bo', 'city:koidu'],
+        );
+      },
+    );
 
     test('counts unread notifications only', () {
       final FollowingViewModel viewModel = FollowingViewModel(

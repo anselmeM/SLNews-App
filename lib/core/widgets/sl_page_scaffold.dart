@@ -102,7 +102,9 @@ class SlPageScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: context.colors.canvas,
-      body: onRefresh == null ? content : RefreshIndicator(onRefresh: onRefresh!, child: content),
+      body: onRefresh == null
+          ? content
+          : RefreshIndicator(onRefresh: onRefresh!, child: content),
       floatingActionButton: floatingActionButton,
     );
   }
@@ -110,7 +112,12 @@ class SlPageScaffold extends StatelessWidget {
 
 /// Large in-content page title, e.g. "Top stories ›".
 class SlPageTitle extends StatelessWidget {
-  const SlPageTitle({super.key, required this.title, this.onTap, this.trailing});
+  const SlPageTitle({
+    super.key,
+    required this.title,
+    this.onTap,
+    this.trailing,
+  });
 
   final String title;
   final VoidCallback? onTap;
@@ -119,7 +126,12 @@ class SlPageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
       child: Row(
         children: <Widget>[
           // The title owns the row: it is laid out against the whole width and
@@ -140,7 +152,11 @@ class SlPageTitle extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xs),
                   GestureDetector(
                     onTap: onTap,
-                    child: Icon(Icons.chevron_right, size: 30, color: context.colors.onSurface),
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 30,
+                      color: context.colors.onSurface,
+                    ),
                   ),
                 ],
               ],

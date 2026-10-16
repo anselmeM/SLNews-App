@@ -49,7 +49,12 @@ class FollowSection extends StatelessWidget {
           child: Column(
             children: <Widget>[
               for (int index = 0; index < targets.length; index++) ...<Widget>[
-                if (index > 0) Divider(height: 1, thickness: 1, color: context.colors.divider),
+                if (index > 0)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: context.colors.divider,
+                  ),
                 rowBuilder(context, targets[index]),
               ],
             ],
@@ -73,7 +78,12 @@ class FollowGroupLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
       child: Text(label, style: context.typography.overline),
     );
   }

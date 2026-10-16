@@ -69,7 +69,8 @@ class Team {
   );
 
   @override
-  bool operator ==(Object other) => other is Team && other.id == id && other.code == code;
+  bool operator ==(Object other) =>
+      other is Team && other.id == id && other.code == code;
 
   @override
   int get hashCode => Object.hash(id, code);
@@ -139,7 +140,9 @@ class GameScore {
     status: GameStatus.fromWire(json['status'] as String?),
     awayScore: (json['awayScore'] as num?)?.toInt(),
     homeScore: (json['homeScore'] as num?)?.toInt(),
-    startsAt: json['startsAt'] == null ? null : DateTime.parse(json['startsAt'] as String),
+    startsAt: json['startsAt'] == null
+        ? null
+        : DateTime.parse(json['startsAt'] as String),
     periodLabel: json['periodLabel'] as String?,
     venue: json['venue'] as String?,
   );

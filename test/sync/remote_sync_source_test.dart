@@ -38,10 +38,7 @@ void main() {
     test('an empty origin disables sync', () {
       expect(unconfiguredSyncConfig.isConfigured, isFalse);
       expect(unconfiguredSyncConfig.host, isEmpty);
-      expect(
-        const SyncApiConfig(baseUrl: '   ').isConfigured,
-        isFalse,
-      );
+      expect(const SyncApiConfig(baseUrl: '   ').isConfigured, isFalse);
     });
 
     test('fromEnvironment defaults to the PWA origin with no dart-define', () {
@@ -91,7 +88,9 @@ void main() {
         (RequestOptions options) async => SyncHarness.json(pullEnvelope()),
       );
 
-      await harness.source.pull(since: DateTime.utc(2026, 10, 16, 4, 51, 2, 114));
+      await harness.source.pull(
+        since: DateTime.utc(2026, 10, 16, 4, 51, 2, 114),
+      );
 
       expect(harness.query['since'], '2026-10-16T04:51:02.114Z');
     });
@@ -132,7 +131,10 @@ void main() {
         (RequestOptions options) async => SyncHarness.json(
           pullEnvelope(
             bookmarks: <Map<String, dynamic>>[
-              bookmarkRow('slnews-api:4821', updatedAt: '2026-10-16T04:51:02.114Z'),
+              bookmarkRow(
+                'slnews-api:4821',
+                updatedAt: '2026-10-16T04:51:02.114Z',
+              ),
               bookmarkRow(
                 'rss:9f2c4a1b77e0d135',
                 updatedAt: '2026-10-16T04:52:00.000Z',
@@ -141,7 +143,10 @@ void main() {
               ),
             ],
             reactions: <Map<String, dynamic>>[
-              reactionRow('slnews-api:4821', updatedAt: '2026-10-16T04:51:02.114Z'),
+              reactionRow(
+                'slnews-api:4821',
+                updatedAt: '2026-10-16T04:51:02.114Z',
+              ),
             ],
             follows: <Map<String, dynamic>>[
               followRow(
@@ -184,8 +189,9 @@ void main() {
 
     test('an absent collection is empty, not an error', () async {
       final SyncHarness harness = SyncHarness(
-        (RequestOptions options) async =>
-            SyncHarness.json(<String, dynamic>{'serverTime': '2026-10-16T05:00:00.000Z'}),
+        (RequestOptions options) async => SyncHarness.json(<String, dynamic>{
+          'serverTime': '2026-10-16T05:00:00.000Z',
+        }),
       );
 
       final SyncState state = await harness.source.pull();
@@ -233,9 +239,8 @@ void main() {
 
     test('a missing serverTime on an empty response is not null', () async {
       final SyncHarness harness = SyncHarness(
-        (RequestOptions options) async => SyncHarness.json(
-          pullEnvelope(includeServerTime: false),
-        ),
+        (RequestOptions options) async =>
+            SyncHarness.json(pullEnvelope(includeServerTime: false)),
       );
 
       final SyncState state = await harness.source.pull();
@@ -270,26 +275,35 @@ void main() {
       expect(state.bookmarks.single.savedAt, state.bookmarks.single.updatedAt);
     });
 
-    test('skips a row with no identity key instead of failing the response', () async {
-      final SyncHarness harness = SyncHarness(
-        (RequestOptions options) async => SyncHarness.json(
-          pullEnvelope(
-            bookmarks: <Map<String, dynamic>>[
-              <String, dynamic>{'title': 'No id', 'updatedAt': '2026-10-16T04:00:00.000Z'},
-              bookmarkRow('slnews-api:2', updatedAt: '2026-10-16T04:00:00.000Z'),
-            ],
-            reactions: const <Map<String, dynamic>>[
-              <String, dynamic>{'kind': 'like'},
-            ],
+    test(
+      'skips a row with no identity key instead of failing the response',
+      () async {
+        final SyncHarness harness = SyncHarness(
+          (RequestOptions options) async => SyncHarness.json(
+            pullEnvelope(
+              bookmarks: <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'title': 'No id',
+                  'updatedAt': '2026-10-16T04:00:00.000Z',
+                },
+                bookmarkRow(
+                  'slnews-api:2',
+                  updatedAt: '2026-10-16T04:00:00.000Z',
+                ),
+              ],
+              reactions: const <Map<String, dynamic>>[
+                <String, dynamic>{'kind': 'like'},
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      final SyncState state = await harness.source.pull();
+        final SyncState state = await harness.source.pull();
 
-      expect(state.bookmarks.single.itemId, 'slnews-api:2');
-      expect(state.reactions, isEmpty);
-    });
+        expect(state.bookmarks.single.itemId, 'slnews-api:2');
+        expect(state.reactions, isEmpty);
+      },
+    );
 
     test('ignores a collection that is not a list', () async {
       final SyncHarness harness = SyncHarness(
@@ -321,8 +335,10 @@ void main() {
 
     test('429 maps to SyncRateLimited', () async {
       final SyncHarness harness = SyncHarness(
-        (RequestOptions options) async =>
-            SyncHarness.error(429, headers: <String, String>{'Retry-After': '900'}),
+        (RequestOptions options) async => SyncHarness.error(
+          429,
+          headers: <String, String>{'Retry-After': '900'},
+        ),
       );
 
       final SyncState state = await harness.source.pull();
@@ -356,7 +372,10 @@ void main() {
 
       expect(state.isEmpty, isTrue);
       expect(harness.source.lastFailure, isA<SyncUnavailable>());
-      expect((harness.source.lastFailure! as SyncUnavailable).statusCode, isNull);
+      expect(
+        (harness.source.lastFailure! as SyncUnavailable).statusCode,
+        isNull,
+      );
     });
 
     test('a 500 maps to SyncUnavailable and does not throw', () async {
@@ -427,11 +446,20 @@ void main() {
       );
       final SyncState local = SyncState(
         bookmarks: <SyncBookmark>[
-          bookmark('slnews-api:4821', updatedAt: DateTime.utc(2026, 10, 16, 4, 51, 2, 114)),
-          deletedBookmark('rss:aa', updatedAt: DateTime.utc(2026, 10, 16, 4, 52)),
+          bookmark(
+            'slnews-api:4821',
+            updatedAt: DateTime.utc(2026, 10, 16, 4, 51, 2, 114),
+          ),
+          deletedBookmark(
+            'rss:aa',
+            updatedAt: DateTime.utc(2026, 10, 16, 4, 52),
+          ),
         ],
         reactions: <SyncReaction>[
-          reaction('slnews-api:4821', updatedAt: DateTime.utc(2026, 10, 16, 4, 51, 2, 114)),
+          reaction(
+            'slnews-api:4821',
+            updatedAt: DateTime.utc(2026, 10, 16, 4, 51, 2, 114),
+          ),
         ],
         follows: <SyncFollow>[
           follow(
@@ -449,23 +477,27 @@ void main() {
       expect(harness.request.uri.path, '/api/mobile/v1/sync');
       expect(harness.request.contentType, contains('application/json'));
 
-      final List<dynamic> bookmarks = harness.body['bookmarks'] as List<dynamic>;
+      final List<dynamic> bookmarks =
+          harness.body['bookmarks'] as List<dynamic>;
       expect(bookmarks, hasLength(2));
-      final Map<String, dynamic> first =
-          Map<String, dynamic>.from(bookmarks.first as Map<dynamic, dynamic>);
+      final Map<String, dynamic> first = Map<String, dynamic>.from(
+        bookmarks.first as Map<dynamic, dynamic>,
+      );
       expect(first['itemId'], 'slnews-api:4821');
       expect(first['updatedAt'], '2026-10-16T04:51:02.114Z');
       expect(first['savedAt'], '2026-10-16T04:51:02.114Z');
       expect(first['publishedAt'], '2026-10-16T02:51:02.114Z');
       expect(first['deleted'], isFalse);
 
-      final Map<String, dynamic> tombstone =
-          Map<String, dynamic>.from(bookmarks.last as Map<dynamic, dynamic>);
+      final Map<String, dynamic> tombstone = Map<String, dynamic>.from(
+        bookmarks.last as Map<dynamic, dynamic>,
+      );
       expect(tombstone['itemId'], 'rss:aa');
       expect(tombstone['deleted'], isTrue);
 
       final Map<String, dynamic> followRow = Map<String, dynamic>.from(
-        (harness.body['follows'] as List<dynamic>).single as Map<dynamic, dynamic>,
+        (harness.body['follows'] as List<dynamic>).single
+            as Map<dynamic, dynamic>,
       );
       expect(followRow['targetId'], 'team:lal');
       expect(followRow['kind'], 'team');
@@ -473,7 +505,8 @@ void main() {
       expect(followRow['updatedAt'], '2026-10-16T04:53:00.000Z');
 
       final Map<String, dynamic> reactionRow = Map<String, dynamic>.from(
-        (harness.body['reactions'] as List<dynamic>).single as Map<dynamic, dynamic>,
+        (harness.body['reactions'] as List<dynamic>).single
+            as Map<dynamic, dynamic>,
       );
       expect(reactionRow['itemId'], 'slnews-api:4821');
       expect(reactionRow['kind'], 'like');
@@ -487,7 +520,10 @@ void main() {
 
       await harness.source.push(const SyncState.empty());
 
-      expect(harness.body.keys, containsAll(<String>['bookmarks', 'reactions', 'follows']));
+      expect(
+        harness.body.keys,
+        containsAll(<String>['bookmarks', 'reactions', 'follows']),
+      );
       expect(harness.body['bookmarks'], isEmpty);
       expect(harness.body['reactions'], isEmpty);
       expect(harness.body['follows'], isEmpty);
@@ -513,7 +549,8 @@ void main() {
       );
 
       final Map<String, dynamic> row = Map<String, dynamic>.from(
-        (harness.body['bookmarks'] as List<dynamic>).single as Map<dynamic, dynamic>,
+        (harness.body['bookmarks'] as List<dynamic>).single
+            as Map<dynamic, dynamic>,
       );
       // `toUtc()` shifts the wall clock but keeps the instant.
       expect(row['updatedAt'], local.toUtc().toIso8601String());
@@ -526,7 +563,11 @@ void main() {
       final SyncHarness harness = SyncHarness(
         (RequestOptions options) async => SyncHarness.json(
           pushEnvelope(
-            applied: <String, dynamic>{'bookmarks': 3, 'reactions': 1, 'follows': 0},
+            applied: <String, dynamic>{
+              'bookmarks': 3,
+              'reactions': 1,
+              'follows': 0,
+            },
             rejected: <Map<String, dynamic>>[
               <String, dynamic>{
                 'collection': 'bookmarks',
@@ -536,7 +577,10 @@ void main() {
             ],
             state: <String, dynamic>{
               'bookmarks': <Map<String, dynamic>>[
-                bookmarkRow('slnews-api:4821', updatedAt: '2026-10-16T06:00:00.000Z'),
+                bookmarkRow(
+                  'slnews-api:4821',
+                  updatedAt: '2026-10-16T06:00:00.000Z',
+                ),
               ],
             },
           ),
@@ -546,7 +590,10 @@ void main() {
       final SyncResult result = await harness.source.push(
         SyncState(
           bookmarks: <SyncBookmark>[
-            bookmark('slnews-api:4821', updatedAt: DateTime.utc(2026, 10, 16, 4)),
+            bookmark(
+              'slnews-api:4821',
+              updatedAt: DateTime.utc(2026, 10, 16, 4),
+            ),
           ],
         ),
       );
@@ -563,7 +610,10 @@ void main() {
       expect(result.rejected.single.id, 'slnews-api:4821');
       expect(result.rejected.single.reason, 'stale');
       // The server's own row is the converged value.
-      expect(result.state.bookmarks.single.updatedAt, DateTime.utc(2026, 10, 16, 6));
+      expect(
+        result.state.bookmarks.single.updatedAt,
+        DateTime.utc(2026, 10, 16, 6),
+      );
     });
 
     test('accepts targetId and a bare id in a rejection', () async {
@@ -586,9 +636,14 @@ void main() {
         ),
       );
 
-      final SyncResult result = await harness.source.push(const SyncState.empty());
+      final SyncResult result = await harness.source.push(
+        const SyncState.empty(),
+      );
 
-      expect(result.rejected.map((SyncRejection r) => r.id), <String>['team:lal', 'slnews-api:9']);
+      expect(result.rejected.map((SyncRejection r) => r.id), <String>[
+        'team:lal',
+        'slnews-api:9',
+      ]);
       expect(result.rejected.last.reason, 'invalid');
     });
 
@@ -596,7 +651,11 @@ void main() {
       final SyncHarness harness = SyncHarness(
         (RequestOptions options) async => SyncHarness.json(
           pushEnvelope(
-            applied: <String, dynamic>{'bookmarks': 1, 'reactions': 0, 'follows': 1},
+            applied: <String, dynamic>{
+              'bookmarks': 1,
+              'reactions': 0,
+              'follows': 1,
+            },
             rejected: <Map<String, dynamic>>[
               <String, dynamic>{
                 'collection': 'bookmarks',
@@ -621,26 +680,33 @@ void main() {
 
       expect(result.ok, isTrue);
       // The rejected row is dropped; everything else is reported as converged.
-      expect(result.state.bookmarks.map((SyncBookmark r) => r.itemId), <String>['fresh']);
+      expect(result.state.bookmarks.map((SyncBookmark r) => r.itemId), <String>[
+        'fresh',
+      ]);
       expect(result.state.follows, hasLength(1));
       // The cursor does not move backwards: the push's own serverTime is used.
       expect(result.state.serverTime, DateTime.utc(2026, 10, 16, 5));
     });
 
-    test('an empty rejected array and missing applied object are tolerated', () async {
-      final SyncHarness harness = SyncHarness(
-        (RequestOptions options) async => SyncHarness.json(<String, dynamic>{
-          'serverTime': '2026-10-16T05:00:00.000Z',
-          'state': pullEnvelope(),
-        }),
-      );
+    test(
+      'an empty rejected array and missing applied object are tolerated',
+      () async {
+        final SyncHarness harness = SyncHarness(
+          (RequestOptions options) async => SyncHarness.json(<String, dynamic>{
+            'serverTime': '2026-10-16T05:00:00.000Z',
+            'state': pullEnvelope(),
+          }),
+        );
 
-      final SyncResult result = await harness.source.push(const SyncState.empty());
+        final SyncResult result = await harness.source.push(
+          const SyncState.empty(),
+        );
 
-      expect(result.ok, isTrue);
-      expect(result.rejected, isEmpty);
-      expect(result.applied, SyncApplied.none);
-    });
+        expect(result.ok, isTrue);
+        expect(result.rejected, isEmpty);
+        expect(result.applied, SyncApplied.none);
+      },
+    );
 
     test('a malformed push body does not throw', () async {
       final SyncHarness harness = SyncHarness(
@@ -669,8 +735,12 @@ void main() {
         (RequestOptions options) async => SyncHarness.error(429),
       );
 
-      final SyncResult first = await unauthorized.source.push(const SyncState.empty());
-      final SyncResult second = await limited.source.push(const SyncState.empty());
+      final SyncResult first = await unauthorized.source.push(
+        const SyncState.empty(),
+      );
+      final SyncResult second = await limited.source.push(
+        const SyncState.empty(),
+      );
 
       expect(first.ok, isFalse);
       expect(first.failure, isA<SyncUnauthorized>());
@@ -684,7 +754,9 @@ void main() {
         (RequestOptions options) async => SyncHarness.error(413),
       );
 
-      final SyncResult result = await harness.source.push(const SyncState.empty());
+      final SyncResult result = await harness.source.push(
+        const SyncState.empty(),
+      );
 
       expect(result.failure, isA<SyncRejected>());
       expect((result.failure! as SyncRejected).statusCode, 413);
@@ -695,7 +767,9 @@ void main() {
         (RequestOptions options) async => throw SyncHarness.timeout(options),
       );
 
-      final SyncResult result = await harness.source.push(const SyncState.empty());
+      final SyncResult result = await harness.source.push(
+        const SyncState.empty(),
+      );
 
       expect(result.failure, isA<SyncUnavailable>());
     });
@@ -743,7 +817,10 @@ void main() {
       );
 
       expect(limited, isA<SyncRateLimited>());
-      expect((limited as SyncRateLimited).retryAfter, const Duration(seconds: 540));
+      expect(
+        (limited as SyncRateLimited).retryAfter,
+        const Duration(seconds: 540),
+      );
     });
 
     test('failureForResponse maps the rest of the contract', () {
@@ -806,9 +883,7 @@ void main() {
       expect(SyncFailure.rejected().kind, 'rejected');
       expect(SyncFailure.unavailable('a').kind, 'unavailable');
       expect(
-        const SyncRateLimited(
-          retryAfter: Duration(seconds: 30),
-        ).toString(),
+        const SyncRateLimited(retryAfter: Duration(seconds: 30)).toString(),
         contains('30s'),
       );
     });

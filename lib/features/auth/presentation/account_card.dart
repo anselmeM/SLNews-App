@@ -39,12 +39,19 @@ class _AccountCardState extends ConsumerState<AccountCard> {
     if (auth.isSignedIn && !_mergeRequested && sync.phase == SyncPhase.idle) {
       _mergeRequested = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
+        if (mounted) {
+          unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
+        }
       });
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        0,
+      ),
       child: Material(
         color: context.colors.surface,
         borderRadius: AppRadius.cardRadius,
@@ -52,9 +59,7 @@ class _AccountCardState extends ConsumerState<AccountCard> {
           padding: AppSpacing.row,
           child: auth.isSignedIn
               ? _SignedInRow(user: auth.user!, sync: sync)
-              : _SignedOutRow(
-                  onSignIn: () => context.push(AppRoutes.signIn),
-                ),
+              : _SignedOutRow(onSignIn: () => context.push(AppRoutes.signIn)),
         ),
       ),
     );
@@ -101,7 +106,8 @@ class _SignedInRow extends ConsumerWidget {
             tooltip: 'Sync now',
             onPressed: sync.isBusy
                 ? null
-                : () => ref.read(syncControllerProvider.notifier).mergeOnSignIn(),
+                : () =>
+                      ref.read(syncControllerProvider.notifier).mergeOnSignIn(),
             icon: sync.isBusy
                 ? const SizedBox(
                     width: 18,
@@ -141,7 +147,10 @@ class _SignedOutRow extends StatelessWidget {
             shape: BoxShape.circle,
             color: context.colors.surfaceMuted,
           ),
-          child: Icon(Icons.person_outline, color: context.colors.onSurfaceVariant),
+          child: Icon(
+            Icons.person_outline,
+            color: context.colors.onSurfaceVariant,
+          ),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -188,10 +197,15 @@ class _Avatar extends StatelessWidget {
       width: 44,
       height: 44,
       alignment: Alignment.center,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: context.colors.surfaceInverse),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: context.colors.surfaceInverse,
+      ),
       child: Text(
         user.initials,
-        style: context.typography.overline.copyWith(color: context.colors.onSurfaceInverse),
+        style: context.typography.overline.copyWith(
+          color: context.colors.onSurfaceInverse,
+        ),
       ),
     );
   }

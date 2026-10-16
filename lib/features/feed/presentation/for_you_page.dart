@@ -32,8 +32,12 @@ class ForYouPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ForYouFeed? feed = ref.watch(forYouFeedProvider);
     final AsyncValue<List<Article>> topStories = ref.watch(topStoriesProvider);
-    final String locationId = ref.watch(settingsControllerProvider).activeLocationId;
-    final AsyncValue<List<Article>> localStories = ref.watch(locationFeedProvider(locationId));
+    final String locationId = ref
+        .watch(settingsControllerProvider)
+        .activeLocationId;
+    final AsyncValue<List<Article>> localStories = ref.watch(
+      locationFeedProvider(locationId),
+    );
     final _OfflineStatus offline = _readOffline(ref);
 
     final Widget content;
@@ -41,7 +45,9 @@ class ForYouPage extends ConsumerWidget {
       content = topStories.hasError
           ? SliverFillRemaining(
               hasScrollBody: false,
-              child: ErrorStateView(onRetry: () => ref.invalidate(topStoriesProvider)),
+              child: ErrorStateView(
+                onRetry: () => ref.invalidate(topStoriesProvider),
+              ),
             )
           : const _FeedSkeletonSliver();
     } else if (feed.isEmpty) {
@@ -54,7 +60,10 @@ class ForYouPage extends ConsumerWidget {
         ),
       );
     } else {
-      content = _FeedSliver(feed: feed, localStories: localStories.value ?? const <Article>[]);
+      content = _FeedSliver(
+        feed: feed,
+        localStories: localStories.value ?? const <Article>[],
+      );
     }
 
     return SlPageScaffold(
@@ -63,14 +72,22 @@ class ForYouPage extends ConsumerWidget {
       onRefresh: ref.watch(refreshFeedsProvider),
       slivers: <Widget>[
         SliverToBoxAdapter(
-          child: OfflineBanner(isOffline: offline.isOffline, lastSyncedAt: offline.lastSyncedAt),
+          child: OfflineBanner(
+            isOffline: offline.isOffline,
+            lastSyncedAt: offline.lastSyncedAt,
+          ),
         ),
         if (feed != null) ...<Widget>[
           // The weather/alert header is its own row above the title: on the
           // reference screen the title never competes with it for width.
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                0,
+              ),
               child: WeatherAlertHeader(
                 location: feed.activeLocation,
                 hasBreaking: feed.hasBreaking,
@@ -134,11 +151,14 @@ class _FeedSliver extends ConsumerWidget {
         SliverToBoxAdapter(
           child: TopStoriesCarousel(
             articles: feed.hero,
-            onOpenArticle: (Article article) => context.push(AppRoutes.articleFor(article.id)),
+            onOpenArticle: (Article article) =>
+                context.push(AppRoutes.articleFor(article.id)),
           ),
         ),
         if (localStream.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(child: SectionHeader(title: 'From ${feed.activeLocation.label}')),
+          SliverToBoxAdapter(
+            child: SectionHeader(title: 'From ${feed.activeLocation.label}'),
+          ),
           _ArticleTileSliver(articles: localStream),
         ],
         if (latestStream.isNotEmpty) ...<Widget>[
@@ -162,7 +182,8 @@ class _ArticleTileSliver extends ConsumerWidget {
 
     return SliverList.separated(
       itemCount: articles.length,
-      separatorBuilder: (BuildContext context, int index) => const SizedBox(height: AppSpacing.md),
+      separatorBuilder: (BuildContext context, int index) =>
+          const SizedBox(height: AppSpacing.md),
       itemBuilder: (BuildContext context, int index) {
         final Article article = articles[index];
         return Padding(
@@ -171,8 +192,10 @@ class _ArticleTileSliver extends ConsumerWidget {
             article: article,
             isLiked: liked.contains(article.id),
             onTap: () => context.push(AppRoutes.articleFor(article.id)),
-            onLike: () => ref.read(likesControllerProvider.notifier).toggle(article.id),
-            onMore: (ArticleAction action) => handleArticleAction(context, ref, article, action),
+            onLike: () =>
+                ref.read(likesControllerProvider.notifier).toggle(article.id),
+            onMore: (ArticleAction action) =>
+                handleArticleAction(context, ref, article, action),
           ),
         );
       },
@@ -194,7 +217,12 @@ class _FeedSkeletonSliver extends StatelessWidget {
         ),
         for (int index = 0; index < 2; index++)
           const Padding(
-            padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              0,
+            ),
             child: ArticleTileSkeleton(),
           ),
       ],

@@ -12,7 +12,9 @@ import '../../../../core/widgets/app_glyphs.dart';
 /// The sheet is intentionally a plain list: switching the home city is a
 /// two-tap action and the selected row is the only state it renders.
 Future<void> openLocationPicker(BuildContext context, WidgetRef ref) {
-  final String selectedId = ref.read(settingsControllerProvider).activeLocationId;
+  final String selectedId = ref
+      .read(settingsControllerProvider)
+      .activeLocationId;
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: context.colors.surface,
@@ -20,7 +22,8 @@ Future<void> openLocationPicker(BuildContext context, WidgetRef ref) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (BuildContext sheetContext) => _LocationPickerSheet(selectedId: selectedId),
+    builder: (BuildContext sheetContext) =>
+        _LocationPickerSheet(selectedId: selectedId),
   );
 }
 
@@ -37,7 +40,12 @@ class _LocationPickerSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
             child: Text('Your location', style: context.typography.groupTitle),
           ),
           Flexible(
@@ -50,22 +58,35 @@ class _LocationPickerSheet extends ConsumerWidget {
                 return ListTile(
                   leading: Icon(
                     AppGlyphs.follow(FollowKind.location),
-                    color: isSelected ? context.colors.primary : context.colors.onSurfaceVariant,
+                    color: isSelected
+                        ? context.colors.primary
+                        : context.colors.onSurfaceVariant,
                   ),
                   title: Text(
                     location.label,
                     style: isSelected
-                        ? context.typography.cardTitleSmall.copyWith(color: context.colors.primary)
+                        ? context.typography.cardTitleSmall.copyWith(
+                            color: context.colors.primary,
+                          )
                         : context.typography.cardTitleSmall,
                   ),
-                  subtitle: Text(location.subtitle, style: context.typography.caption),
+                  subtitle: Text(
+                    location.subtitle,
+                    style: context.typography.caption,
+                  ),
                   trailing: isSelected
-                      ? Icon(Icons.check, size: 20, color: context.colors.primary)
+                      ? Icon(
+                          Icons.check,
+                          size: 20,
+                          color: context.colors.primary,
+                        )
                       : null,
                   onTap: () {
                     // Switch the home city, then close; the page rebuilds from
                     // the settings controller, so no local state is needed.
-                    ref.read(settingsControllerProvider.notifier).setActiveLocation(location.id);
+                    ref
+                        .read(settingsControllerProvider.notifier)
+                        .setActiveLocation(location.id);
                     Navigator.of(context).pop();
                   },
                 );

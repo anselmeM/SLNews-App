@@ -75,9 +75,7 @@ class RemoteSyncSource implements SyncApiSource {
         return _degraded(failureForResponse(response));
       }
       if (!_isJson(response.data)) {
-        return _degraded(
-          SyncFailure.unavailable('sync response was not JSON'),
-        );
+        return _degraded(SyncFailure.unavailable('sync response was not JSON'));
       }
       _lastFailure = null;
       return parseState(_map(response.data));
@@ -128,12 +126,15 @@ class RemoteSyncSource implements SyncApiSource {
   /// request shape identical to the contract's example and keeps the body
   /// byte-for-byte stable for a retry.
   static Map<String, dynamic> encodeState(SyncState state) => <String, dynamic>{
-    SyncCollections.bookmarks:
-        state.bookmarks.map((SyncBookmark row) => row.toJson()).toList(growable: false),
-    SyncCollections.reactions:
-        state.reactions.map((SyncReaction row) => row.toJson()).toList(growable: false),
-    SyncCollections.follows:
-        state.follows.map((SyncFollow row) => row.toJson()).toList(growable: false),
+    SyncCollections.bookmarks: state.bookmarks
+        .map((SyncBookmark row) => row.toJson())
+        .toList(growable: false),
+    SyncCollections.reactions: state.reactions
+        .map((SyncReaction row) => row.toJson())
+        .toList(growable: false),
+    SyncCollections.follows: state.follows
+        .map((SyncFollow row) => row.toJson())
+        .toList(growable: false),
   };
 
   /// Parses the `GET` response body.
@@ -157,7 +158,9 @@ class RemoteSyncSource implements SyncApiSource {
     if (parsed.serverTime != null) return parsed;
     return parsed.copyWith(
       serverTime:
-          fallbackServerTime ?? parsed.latestUpdatedAt ?? DateTime.now().toUtc(),
+          fallbackServerTime ??
+          parsed.latestUpdatedAt ??
+          DateTime.now().toUtc(),
     );
   }
 
@@ -189,7 +192,9 @@ class RemoteSyncSource implements SyncApiSource {
       state = state.copyWith(serverTime: serverTime);
     }
     if (rawState != null && serverState == null) {
-      debugPrint('RemoteSyncSource: "state" was not an object, using the sent rows');
+      debugPrint(
+        'RemoteSyncSource: "state" was not an object, using the sent rows',
+      );
     }
 
     return SyncResult(
@@ -214,7 +219,8 @@ class RemoteSyncSource implements SyncApiSource {
         429 => SyncFailure.rateLimited(retryAfter: parseRetryAfter(retryAfter)),
         // 400 and 413 are the payload's fault: retrying it unchanged cannot
         // succeed, which is exactly what distinguishes them from `unavailable`.
-        400 || 413 => SyncFailure.rejected(statusCode: status, message: error.message),
+        400 ||
+        413 => SyncFailure.rejected(statusCode: status, message: error.message),
         _ => SyncFailure.unavailable(error.message, statusCode: status),
       };
     }
@@ -229,10 +235,8 @@ class RemoteSyncSource implements SyncApiSource {
       429 => SyncFailure.rateLimited(
         retryAfter: parseRetryAfter(response.headers[retryAfterHeader]),
       ),
-      400 || 413 => SyncFailure.rejected(
-        statusCode: status,
-        message: 'HTTP $status',
-      ),
+      400 ||
+      413 => SyncFailure.rejected(statusCode: status, message: 'HTTP $status'),
       _ => SyncFailure.unavailable(
         'HTTP ${status ?? 'no response'}',
         statusCode: status,
@@ -306,12 +310,14 @@ class RemoteSyncSource implements SyncApiSource {
     return rows;
   }
 
-  static List<Map<String, dynamic>> _objects(Object? raw) => <Map<String, dynamic>>[
-    for (final Object? entry in _list(raw))
-      if (entry is Map) _map(entry),
-  ];
+  static List<Map<String, dynamic>> _objects(Object? raw) =>
+      <Map<String, dynamic>>[
+        for (final Object? entry in _list(raw))
+          if (entry is Map) _map(entry),
+      ];
 
-  static List<Object?> _list(Object? raw) => raw is List ? raw : const <Object?>[];
+  static List<Object?> _list(Object? raw) =>
+      raw is List ? raw : const <Object?>[];
 
   static Map<String, dynamic> _map(Object? raw) {
     if (raw is String) {
@@ -345,7 +351,9 @@ class RemoteSyncSource implements SyncApiSource {
     try {
       return build();
     } catch (error) {
-      debugPrint('RemoteSyncSource: skipping malformed $collection row ($error)');
+      debugPrint(
+        'RemoteSyncSource: skipping malformed $collection row ($error)',
+      );
       return null;
     }
   }

@@ -28,19 +28,26 @@ GoRouter createAppRouter() {
     routes: <RouteBase>[
       GoRoute(
         path: '/',
-        redirect: (BuildContext context, GoRouterState state) => AppRoutes.forYou,
+        redirect: (BuildContext context, GoRouterState state) =>
+            AppRoutes.forYou,
       ),
       StatefulShellRoute.indexedStack(
-        builder: (BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
-          return AppShell(navigationShell: navigationShell);
-        },
+        builder:
+            (
+              BuildContext context,
+              GoRouterState state,
+              StatefulNavigationShell navigationShell,
+            ) {
+              return AppShell(navigationShell: navigationShell);
+            },
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
                 path: AppRoutes.forYou,
                 name: RouteNames.forYou,
-                builder: (BuildContext context, GoRouterState state) => const ForYouPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const ForYouPage(),
               ),
             ],
           ),
@@ -49,7 +56,8 @@ GoRouter createAppRouter() {
               GoRoute(
                 path: AppRoutes.news,
                 name: RouteNames.news,
-                builder: (BuildContext context, GoRouterState state) => const NewsPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const NewsPage(),
               ),
             ],
           ),
@@ -58,7 +66,8 @@ GoRouter createAppRouter() {
               GoRoute(
                 path: AppRoutes.sports,
                 name: RouteNames.sports,
-                builder: (BuildContext context, GoRouterState state) => const SportsPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const SportsPage(),
               ),
             ],
           ),
@@ -67,7 +76,8 @@ GoRouter createAppRouter() {
               GoRoute(
                 path: AppRoutes.following,
                 name: RouteNames.following,
-                builder: (BuildContext context, GoRouterState state) => const FollowingPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const FollowingPage(),
                 routes: <RouteBase>[
                   GoRoute(
                     path: 'notifications',
@@ -93,17 +103,21 @@ GoRouter createAppRouter() {
         path: AppRoutes.saved,
         name: RouteNames.saved,
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (BuildContext context, GoRouterState state) => const SavedStoriesPage(),
+        builder: (BuildContext context, GoRouterState state) =>
+            const SavedStoriesPage(),
       ),
       GoRoute(
         path: AppRoutes.signIn,
         name: RouteNames.signIn,
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (BuildContext context, GoRouterState state) => const SignInPage(),
+        builder: (BuildContext context, GoRouterState state) =>
+            const SignInPage(),
       ),
     ],
   );
 }
 
 /// Root navigator so pushed routes cover the bottom navigation shell.
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);

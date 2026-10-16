@@ -50,7 +50,9 @@ class DefaultSyncRepository implements SyncRepository {
 
   /// How many rows are waiting to be retried (0 when nothing is queued).
   int get pendingRowCount =>
-      _pending.bookmarks.length + _pending.reactions.length + _pending.follows.length;
+      _pending.bookmarks.length +
+      _pending.reactions.length +
+      _pending.follows.length;
 
   /// `true` while a failed push is waiting for the next attempt.
   bool get hasPendingPush => !_pending.isEmpty;

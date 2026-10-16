@@ -37,7 +37,9 @@ class SlNewsApiConfig {
     return SlNewsApiConfig(
       baseUrl: url,
       apiKey: key,
-      pageSize: _clampPageSize(int.tryParse(rawPageSize.trim()) ?? defaultPageSize),
+      pageSize: _clampPageSize(
+        int.tryParse(rawPageSize.trim()) ?? defaultPageSize,
+      ),
     );
   }
 
@@ -70,7 +72,8 @@ class SlNewsApiConfig {
   final Duration timeout;
 
   /// True only when both a base URL and a non-empty key are present.
-  bool get isConfigured => baseUrl.trim().isNotEmpty && apiKey.trim().isNotEmpty;
+  bool get isConfigured =>
+      baseUrl.trim().isNotEmpty && apiKey.trim().isNotEmpty;
 
   /// Copy of this configuration with the given fields replaced.
   SlNewsApiConfig copyWith({
@@ -107,8 +110,9 @@ class SlNewsApiConfig {
       'pageSize: $pageSize)';
 
   /// Clamps [value] into the range the API accepts.
-  static int _clampPageSize(int value) =>
-      value < minPageSize ? minPageSize : (value > maxPageSize ? maxPageSize : value);
+  static int _clampPageSize(int value) => value < minPageSize
+      ? minPageSize
+      : (value > maxPageSize ? maxPageSize : value);
 }
 
 /// One page of the scraper API.
@@ -139,13 +143,14 @@ class SlNewsApiPage {
   final bool hasMore;
 
   /// Empty page used for every degraded path.
-  static SlNewsApiPage empty({int page = 1, int pageSize = 20}) => SlNewsApiPage(
-    articles: const <Article>[],
-    page: page,
-    pageSize: pageSize,
-    total: 0,
-    hasMore: false,
-  );
+  static SlNewsApiPage empty({int page = 1, int pageSize = 20}) =>
+      SlNewsApiPage(
+        articles: const <Article>[],
+        page: page,
+        pageSize: pageSize,
+        total: 0,
+        hasMore: false,
+      );
 }
 
 /// Aggregated Sierra Leone feed served by the SLNews scraper API.
@@ -171,15 +176,13 @@ class SlNewsApiSource implements FeedSource {
   /// reader see. The scraper runs on a cold-starting free tier, so
   /// [SlNewsApiConfig.timeout] is applied to [client] here rather than relying
   /// on the default the app happened to build the client with.
-  SlNewsApiSource({
-    required SlNewsApiConfig config,
-    required ApiClient client,
-  }) : _apiConfig = config,
-       _api = client,
-       // Shadows the parameter deliberately: the field is the derived
-       // aggregate feed config, not the [SlNewsApiConfig] passed in.
-       // ignore: prefer_initializing_formals
-       config = configFor(config) {
+  SlNewsApiSource({required SlNewsApiConfig config, required ApiClient client})
+    : _apiConfig = config,
+      _api = client,
+      // Shadows the parameter deliberately: the field is the derived
+      // aggregate feed config, not the [SlNewsApiConfig] passed in.
+      // ignore: prefer_initializing_formals
+      config = configFor(config) {
     _api.setTimeout(config.timeout);
   }
 
@@ -236,7 +239,12 @@ class SlNewsApiSource implements FeedSource {
 
     if (_apiConfig.preferVersioned) {
       try {
-        return await _fetchVersioned(page: page, pageSize: size, source: source, query: query);
+        return await _fetchVersioned(
+          page: page,
+          pageSize: size,
+          source: source,
+          query: query,
+        );
       } on ApiException catch (error) {
         if (error.statusCode != 404) {
           debugPrint('SlNewsApiSource(${config.id}): /v1/news failed ($error)');
@@ -252,7 +260,12 @@ class SlNewsApiSource implements FeedSource {
     }
 
     try {
-      return await _fetchLegacy(page: page, pageSize: size, source: source, query: query);
+      return await _fetchLegacy(
+        page: page,
+        pageSize: size,
+        source: source,
+        query: query,
+      );
     } catch (error) {
       debugPrint('SlNewsApiSource(${config.id}): $legacyPath failed ($error)');
       return SlNewsApiPage.empty(page: page, pageSize: size);
@@ -278,7 +291,9 @@ class SlNewsApiSource implements FeedSource {
       );
       return _mapLegacyRow(_rowOf(response.data));
     } catch (error) {
-      debugPrint('SlNewsApiSource(${config.id}): article $digits failed ($error)');
+      debugPrint(
+        'SlNewsApiSource(${config.id}): article $digits failed ($error)',
+      );
       return null;
     }
   }
@@ -383,7 +398,9 @@ class SlNewsApiSource implements FeedSource {
 
     final int total = _integer(meta['total']) ?? articles.length;
     final int responsePage = _integer(meta['page']) ?? page;
-    final int responsePageSize = _clampPageSize(_integer(meta['page_size']) ?? pageSize);
+    final int responsePageSize = _clampPageSize(
+      _integer(meta['page_size']) ?? pageSize,
+    );
     final bool hasMore =
         _boolean(meta['has_more']) ?? responsePage * responsePageSize < total;
 
@@ -490,9 +507,13 @@ class SlNewsApiSource implements FeedSource {
   /// because a silent `now()` would hide a wire-format change.
   DateTime _fallbackDate(Map<String, dynamic> json) {
     final bool hadCandidate =
-        json['published_at'] != null || json['pubDate'] != null || json['createdAt'] != null;
+        json['published_at'] != null ||
+        json['pubDate'] != null ||
+        json['createdAt'] != null;
     if (hadCandidate) {
-      debugPrint('SlNewsApiSource(${config.id}): unparseable date, using now()');
+      debugPrint(
+        'SlNewsApiSource(${config.id}): unparseable date, using now()',
+      );
     }
     return DateTime.now();
   }
@@ -506,7 +527,8 @@ class SlNewsApiSource implements FeedSource {
   static bool _isNumeric(String value) =>
       value.isNotEmpty && int.tryParse(value) != null;
 
-  static bool _present(String? value) => value != null && value.trim().isNotEmpty;
+  static bool _present(String? value) =>
+      value != null && value.trim().isNotEmpty;
 
   static String _normalizeBase(String baseUrl) {
     String working = baseUrl.trim();
@@ -655,7 +677,10 @@ class SlNewsApiSource implements FeedSource {
         buffer.write(' ');
       }
     }
-    final String joined = buffer.toString().trim().replaceAll(RegExp(r'\s+'), '-');
+    final String joined = buffer.toString().trim().replaceAll(
+      RegExp(r'\s+'),
+      '-',
+    );
     return joined;
   }
 
@@ -669,7 +694,9 @@ class SlNewsApiSource implements FeedSource {
     for (final String word in name.split(RegExp(r'\s+'))) {
       final String cleaned = word.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
       if (cleaned.isEmpty) continue;
-      if (words.isNotEmpty && _stopWords.contains(cleaned.toLowerCase())) continue;
+      if (words.isNotEmpty && _stopWords.contains(cleaned.toLowerCase())) {
+        continue;
+      }
       words.add(cleaned);
     }
     if (words.isEmpty) return name.toUpperCase();

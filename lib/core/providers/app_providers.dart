@@ -28,46 +28,67 @@ import '../domain/repositories/weather_repository.dart';
 /// Family providers are intentionally left untyped: Riverpod 3 marks the
 /// concrete family classes `@internal`, so `final x = FutureProvider.family(...)`
 /// is the supported spelling.
-final Provider<PreferencesStore> preferencesStoreProvider = Provider<PreferencesStore>(
-  (Ref ref) => throw UnimplementedError('preferencesStoreProvider must be overridden by AppBootstrap'),
-  name: 'preferencesStore',
-);
+final Provider<PreferencesStore> preferencesStoreProvider =
+    Provider<PreferencesStore>(
+      (Ref ref) => throw UnimplementedError(
+        'preferencesStoreProvider must be overridden by AppBootstrap',
+      ),
+      name: 'preferencesStore',
+    );
 
 final Provider<ArticleCache> articleCacheProvider = Provider<ArticleCache>(
-  (Ref ref) => throw UnimplementedError('articleCacheProvider must be overridden by AppBootstrap'),
+  (Ref ref) => throw UnimplementedError(
+    'articleCacheProvider must be overridden by AppBootstrap',
+  ),
   name: 'articleCache',
 );
 
 final Provider<SeedLoader> seedLoaderProvider = Provider<SeedLoader>(
-  (Ref ref) => throw UnimplementedError('seedLoaderProvider must be overridden by AppBootstrap'),
+  (Ref ref) => throw UnimplementedError(
+    'seedLoaderProvider must be overridden by AppBootstrap',
+  ),
   name: 'seedLoader',
 );
 
 final Provider<ApiClient> apiClientProvider = Provider<ApiClient>(
-  (Ref ref) => throw UnimplementedError('apiClientProvider must be overridden by AppBootstrap'),
+  (Ref ref) => throw UnimplementedError(
+    'apiClientProvider must be overridden by AppBootstrap',
+  ),
   name: 'apiClient',
 );
 
 /// The configured ingest pipeline (RSS + REST + JSON endpoints).
-final Provider<List<FeedSource>> feedSourcesProvider = Provider<List<FeedSource>>(
-  (Ref ref) => throw UnimplementedError('feedSourcesProvider must be overridden by AppBootstrap'),
-  name: 'feedSources',
-);
+final Provider<List<FeedSource>> feedSourcesProvider =
+    Provider<List<FeedSource>>(
+      (Ref ref) => throw UnimplementedError(
+        'feedSourcesProvider must be overridden by AppBootstrap',
+      ),
+      name: 'feedSources',
+    );
 
-final Provider<ArticleRepository> articleRepositoryProvider = Provider<ArticleRepository>(
-  (Ref ref) => throw UnimplementedError('articleRepositoryProvider must be overridden by AppBootstrap'),
-  name: 'articleRepository',
-);
+final Provider<ArticleRepository> articleRepositoryProvider =
+    Provider<ArticleRepository>(
+      (Ref ref) => throw UnimplementedError(
+        'articleRepositoryProvider must be overridden by AppBootstrap',
+      ),
+      name: 'articleRepository',
+    );
 
-final Provider<SportsRepository> sportsRepositoryProvider = Provider<SportsRepository>(
-  (Ref ref) => throw UnimplementedError('sportsRepositoryProvider must be overridden by AppBootstrap'),
-  name: 'sportsRepository',
-);
+final Provider<SportsRepository> sportsRepositoryProvider =
+    Provider<SportsRepository>(
+      (Ref ref) => throw UnimplementedError(
+        'sportsRepositoryProvider must be overridden by AppBootstrap',
+      ),
+      name: 'sportsRepository',
+    );
 
-final Provider<FollowingRepository> followingRepositoryProvider = Provider<FollowingRepository>(
-  (Ref ref) => throw UnimplementedError('followingRepositoryProvider must be overridden by AppBootstrap'),
-  name: 'followingRepository',
-);
+final Provider<FollowingRepository> followingRepositoryProvider =
+    Provider<FollowingRepository>(
+      (Ref ref) => throw UnimplementedError(
+        'followingRepositoryProvider must be overridden by AppBootstrap',
+      ),
+      name: 'followingRepository',
+    );
 
 final Provider<NotificationRepository> notificationRepositoryProvider =
     Provider<NotificationRepository>(
@@ -77,20 +98,28 @@ final Provider<NotificationRepository> notificationRepositoryProvider =
       name: 'notificationRepository',
     );
 
-final Provider<WeatherRepository> weatherRepositoryProvider = Provider<WeatherRepository>(
-  (Ref ref) => throw UnimplementedError('weatherRepositoryProvider must be overridden by AppBootstrap'),
-  name: 'weatherRepository',
-);
+final Provider<WeatherRepository> weatherRepositoryProvider =
+    Provider<WeatherRepository>(
+      (Ref ref) => throw UnimplementedError(
+        'weatherRepositoryProvider must be overridden by AppBootstrap',
+      ),
+      name: 'weatherRepository',
+    );
 
 final Provider<AdRepository> adRepositoryProvider = Provider<AdRepository>(
-  (Ref ref) => throw UnimplementedError('adRepositoryProvider must be overridden by AppBootstrap'),
+  (Ref ref) => throw UnimplementedError(
+    'adRepositoryProvider must be overridden by AppBootstrap',
+  ),
   name: 'adRepository',
 );
 
-final Provider<UserStateRepository> userStateProvider = Provider<UserStateRepository>(
-  (Ref ref) => throw UnimplementedError('userStateProvider must be overridden by AppBootstrap'),
-  name: 'userState',
-);
+final Provider<UserStateRepository> userStateProvider =
+    Provider<UserStateRepository>(
+      (Ref ref) => throw UnimplementedError(
+        'userStateProvider must be overridden by AppBootstrap',
+      ),
+      name: 'userState',
+    );
 
 /// Breaking/staff-picked stories for the For You hero carousel.
 final topStoriesProvider = FutureProvider<List<Article>>(
@@ -100,13 +129,15 @@ final topStoriesProvider = FutureProvider<List<Article>>(
 
 /// Latest stories for a category slug.
 final categoryFeedProvider = FutureProvider.family<List<Article>, String>(
-  (Ref ref, String categoryId) => ref.watch(articleRepositoryProvider).byCategory(categoryId),
+  (Ref ref, String categoryId) =>
+      ref.watch(articleRepositoryProvider).byCategory(categoryId),
   name: 'categoryFeed',
 );
 
 /// Stories for a followed location (`city:freetown`, ...).
 final locationFeedProvider = FutureProvider.family<List<Article>, String>(
-  (Ref ref, String locationId) => ref.watch(articleRepositoryProvider).byLocation(locationId),
+  (Ref ref, String locationId) =>
+      ref.watch(articleRepositoryProvider).byLocation(locationId),
   name: 'locationFeed',
 );
 
@@ -130,19 +161,22 @@ final scoreboardProvider = FutureProvider<ScoreboardSnapshot>(
 
 /// Fixtures for one followed team.
 final teamGamesProvider = FutureProvider.family<List<GameScore>, String>(
-  (Ref ref, String teamId) => ref.watch(sportsRepositoryProvider).gamesForTeam(teamId),
+  (Ref ref, String teamId) =>
+      ref.watch(sportsRepositoryProvider).gamesForTeam(teamId),
   name: 'teamGames',
 );
 
 /// Standings for one league.
 final standingsProvider = FutureProvider.family<List<TeamStanding>, String>(
-  (Ref ref, String leagueId) => ref.watch(sportsRepositoryProvider).standings(leagueId),
+  (Ref ref, String leagueId) =>
+      ref.watch(sportsRepositoryProvider).standings(leagueId),
   name: 'standings',
 );
 
 /// Ad rotation for a placement key (`sports_stream`, `feed`).
 final adUnitsProvider = FutureProvider.family<List<AdUnit>, String>(
-  (Ref ref, String placement) => ref.watch(adRepositoryProvider).units(placement: placement),
+  (Ref ref, String placement) =>
+      ref.watch(adRepositoryProvider).units(placement: placement),
   name: 'adUnits',
 );
 
@@ -178,11 +212,11 @@ final activeLocationProvider = Provider<NewsLocation>((Ref ref) {
 }, name: 'activeLocation');
 
 /// Category selected in the News tab; app-level so it survives tab switches.
-final NotifierProvider<SelectedCategoryController, String> selectedCategoryProvider =
-    NotifierProvider<SelectedCategoryController, String>(
-      SelectedCategoryController.new,
-      name: 'selectedCategory',
-    );
+final NotifierProvider<SelectedCategoryController, String>
+selectedCategoryProvider = NotifierProvider<SelectedCategoryController, String>(
+  SelectedCategoryController.new,
+  name: 'selectedCategory',
+);
 
 class SelectedCategoryController extends Notifier<String> {
   @override

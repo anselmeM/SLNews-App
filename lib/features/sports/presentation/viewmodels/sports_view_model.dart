@@ -35,9 +35,8 @@ class SportsViewModel {
     ScoreboardSnapshot? snapshot,
     FollowingSnapshot? following,
   }) {
-    final List<GameScore> games = <GameScore>[
-      ...?snapshot?.games,
-    ]..sort(compareGames);
+    final List<GameScore> games = <GameScore>[...?snapshot?.games]
+      ..sort(compareGames);
     final List<FollowTarget> followedSports = _followedSports(following);
     return SportsViewModel(
       ordered: List<GameScore>.unmodifiable(games),
@@ -52,7 +51,8 @@ class SportsViewModel {
       results: List<GameScore>.unmodifiable(
         games.where(
           (GameScore game) =>
-              game.status == GameStatus.finalScore || game.status == GameStatus.postponed,
+              game.status == GameStatus.finalScore ||
+              game.status == GameStatus.postponed,
         ),
       ),
       followedSports: followedSports,
@@ -122,7 +122,9 @@ class SportsViewModel {
       // fixtures and live games read forwards.
       final bool newestFirst =
           a.status == GameStatus.finalScore || a.status == GameStatus.postponed;
-      final int byTime = newestFirst ? right.compareTo(left) : left.compareTo(right);
+      final int byTime = newestFirst
+          ? right.compareTo(left)
+          : left.compareTo(right);
       if (byTime != 0) return byTime;
     } else if (left != null) {
       return -1; // A dated fixture outranks an undated one.
@@ -154,7 +156,9 @@ class SportsViewModel {
     if (words.isEmpty) return '?';
     if (words.length == 1) {
       final String word = words.first;
-      return word.substring(0, word.length >= 3 ? 3 : word.length).toUpperCase();
+      return word
+          .substring(0, word.length >= 3 ? 3 : word.length)
+          .toUpperCase();
     }
     final StringBuffer buffer = StringBuffer();
     for (final String word in words.take(3)) {

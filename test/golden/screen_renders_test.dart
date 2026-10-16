@@ -36,11 +36,14 @@ void main() {
     // directory keeps the image pipeline happy so the only thing the renders
     // show is the design system's own placeholder.
     TestWidgetsFlutterBinding.ensureInitialized();
-    final String tempDir = Directory.systemTemp.createTempSync('slnews_render_').path;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (MethodCall call) async => tempDir,
-    );
+    final String tempDir = Directory.systemTemp
+        .createTempSync('slnews_render_')
+        .path;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall call) async => tempDir,
+        );
 
     // Render with the bundled typeface instead of the default test font.
     final FontLoader textLoader = FontLoader('SLNewsSans');
@@ -55,10 +58,11 @@ void main() {
   });
 
   tearDownAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      null,
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          null,
+        );
   });
 
   late ProviderContainer container;
@@ -85,30 +89,41 @@ void main() {
 
   Future<void> capture(WidgetTester tester, String name) async {
     drainPlatformNoise(tester);
-    await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/$name.png'),
+    );
   }
 
-  testWidgets('For You tab renders the hero carousel and streams', (WidgetTester tester) async {
+  testWidgets('For You tab renders the hero carousel and streams', (
+    WidgetTester tester,
+  ) async {
     await pumpApp(tester);
     expect(find.text('Top stories'), findsWidgets);
     await capture(tester, 'for_you');
   });
 
-  testWidgets('News tab renders the category pills, hero and grid', (WidgetTester tester) async {
+  testWidgets('News tab renders the category pills, hero and grid', (
+    WidgetTester tester,
+  ) async {
     await pumpApp(tester);
     container.read(appRouterProvider).go(AppRoutes.news);
     await settle(tester);
     await capture(tester, 'news');
   });
 
-  testWidgets('Sports tab renders the scoreboard and inline ad', (WidgetTester tester) async {
+  testWidgets('Sports tab renders the scoreboard and inline ad', (
+    WidgetTester tester,
+  ) async {
     await pumpApp(tester);
     container.read(appRouterProvider).go(AppRoutes.sports);
     await settle(tester);
     await capture(tester, 'sports');
   });
 
-  testWidgets('Following tab renders subscriptions and alert history', (WidgetTester tester) async {
+  testWidgets('Following tab renders subscriptions and alert history', (
+    WidgetTester tester,
+  ) async {
     await pumpApp(tester);
     container.read(appRouterProvider).go(AppRoutes.following);
     await settle(tester);
@@ -120,15 +135,25 @@ void main() {
   ) async {
     await pumpApp(tester);
 
-    final List<Article> stories = await container.read(articleRepositoryProvider).topStories();
-    expect(stories, isNotEmpty, reason: 'bundled seed content must be available offline');
+    final List<Article> stories = await container
+        .read(articleRepositoryProvider)
+        .topStories();
+    expect(
+      stories,
+      isNotEmpty,
+      reason: 'bundled seed content must be available offline',
+    );
 
-    container.read(appRouterProvider).push(AppRoutes.articleFor(stories.first.id));
+    container
+        .read(appRouterProvider)
+        .push(AppRoutes.articleFor(stories.first.id));
     await settle(tester);
     await capture(tester, 'article');
   });
 
-  testWidgets('Saved stories renders its empty state', (WidgetTester tester) async {
+  testWidgets('Saved stories renders its empty state', (
+    WidgetTester tester,
+  ) async {
     await pumpApp(tester);
     container.read(appRouterProvider).push(AppRoutes.saved);
     await settle(tester);
@@ -186,7 +211,9 @@ Future<SeedLoader> _frozenSeedLoader() async {
               status: game.status,
               awayScore: game.awayScore,
               homeScore: game.homeScore,
-              startsAt: game.startsAt == null ? null : base.add(const Duration(hours: 2)),
+              startsAt: game.startsAt == null
+                  ? null
+                  : base.add(const Duration(hours: 2)),
               periodLabel: game.periodLabel,
               venue: game.venue,
             ),
@@ -210,7 +237,8 @@ Future<SeedLoader> _frozenSeedLoader() async {
       ],
       ads: live.ads,
       weather: <String, WeatherSnapshot>{
-        for (final MapEntry<String, WeatherSnapshot> entry in live.weather.entries)
+        for (final MapEntry<String, WeatherSnapshot> entry
+            in live.weather.entries)
           entry.key: WeatherSnapshot(
             locationLabel: entry.value.locationLabel,
             temperatureC: entry.value.temperatureC,

@@ -27,17 +27,24 @@ class LocalSyncLedger {
 
   /// Change instants per collection, tombstoned rows included.
   Map<String, DateTime> updatedAt(String collection) {
-    final Map<String, dynamic> section = _read()[collection] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final Map<String, dynamic> section =
+        _read()[collection] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
     return <String, DateTime>{
       for (final MapEntry<String, dynamic> entry in section.entries)
-        if (parseSyncTimestamp(entry.value) case final DateTime at) entry.key: at,
+        if (parseSyncTimestamp(entry.value) case final DateTime at)
+          entry.key: at,
     };
   }
 
   /// Ids deleted locally and not yet acknowledged by the server.
   Set<String> deleted(String collection) {
-    final Map<String, dynamic> section = _read()['deleted'] as Map<String, dynamic>? ?? const <String, dynamic>{};
-    final Map<String, dynamic> forCollection = section[collection] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final Map<String, dynamic> section =
+        _read()['deleted'] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
+    final Map<String, dynamic> forCollection =
+        section[collection] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
     return forCollection.keys.toSet();
   }
 
@@ -74,7 +81,10 @@ class LocalSyncLedger {
       rows[id] = iso;
     }
     final Map<String, dynamic> deletedSection = _section(document, 'deleted');
-    final Map<String, dynamic> collectionTombstones = _section(deletedSection, collection);
+    final Map<String, dynamic> collectionTombstones = _section(
+      deletedSection,
+      collection,
+    );
     for (final String id in ids) {
       if (tombstones.contains(id)) {
         collectionTombstones[id] = true;
@@ -100,7 +110,10 @@ class LocalSyncLedger {
     for (final MapEntry<String, DateTime> entry in instants.entries) {
       rows[entry.key] = entry.value.toUtc().toIso8601String();
     }
-    final Map<String, dynamic> collectionTombstones = _section(_section(document, 'deleted'), collection);
+    final Map<String, dynamic> collectionTombstones = _section(
+      _section(document, 'deleted'),
+      collection,
+    );
     for (final String id in tombstones) {
       collectionTombstones[id] = true;
     }
@@ -122,7 +135,8 @@ class LocalSyncLedger {
   DateTime? at(String collection, String id) => updatedAt(collection)[id];
 
   /// True when [id] is locally deleted.
-  bool isDeleted(String collection, String id) => deleted(collection).contains(id);
+  bool isDeleted(String collection, String id) =>
+      deleted(collection).contains(id);
 
   Map<String, dynamic> _read() {
     final String? raw = _store.string(storageKey);
@@ -143,7 +157,10 @@ class LocalSyncLedger {
     await _store.putString(storageKey, jsonEncode(document));
   }
 
-  static Map<String, dynamic> _section(Map<String, dynamic> document, String key) {
+  static Map<String, dynamic> _section(
+    Map<String, dynamic> document,
+    String key,
+  ) {
     final Object? existing = document[key];
     if (existing is Map<String, dynamic>) return existing;
     final Map<String, dynamic> created = <String, dynamic>{};
@@ -151,6 +168,8 @@ class LocalSyncLedger {
     return created;
   }
 
-  static Map<String, dynamic> _tombstonesOf(Map<String, dynamic> document, String collection) =>
-      _section(_section(document, 'deleted'), collection);
+  static Map<String, dynamic> _tombstonesOf(
+    Map<String, dynamic> document,
+    String collection,
+  ) => _section(_section(document, 'deleted'), collection);
 }

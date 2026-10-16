@@ -23,7 +23,8 @@ class ClerkAuthRepository implements AuthRepository, SignInSurface {
   }
 
   final clerk.ClerkAuthState _state;
-  final StreamController<AuthStatus> _statuses = StreamController<AuthStatus>.broadcast();
+  final StreamController<AuthStatus> _statuses =
+      StreamController<AuthStatus>.broadcast();
   AuthStatus _last = AuthStatus.unknown;
 
   /// Creates and initialises the SDK session.
@@ -31,7 +32,9 @@ class ClerkAuthRepository implements AuthRepository, SignInSurface {
   /// Throws if the publishable key is rejected or the Frontend API is
   /// unreachable; `AppBootstrap` treats that as "run without auth" rather than
   /// failing start-up.
-  static Future<ClerkAuthRepository> create({required String publishableKey}) async {
+  static Future<ClerkAuthRepository> create({
+    required String publishableKey,
+  }) async {
     final clerk.ClerkAuthState state = await clerk.ClerkAuthState.create(
       config: clerk.ClerkAuthConfig(publishableKey: publishableKey),
     );
@@ -50,7 +53,8 @@ class ClerkAuthRepository implements AuthRepository, SignInSurface {
   }
 
   @override
-  AuthStatus get status => _state.isSignedIn ? AuthStatus.signedIn : AuthStatus.signedOut;
+  AuthStatus get status =>
+      _state.isSignedIn ? AuthStatus.signedIn : AuthStatus.signedOut;
 
   @override
   AuthUser? get currentUser {
@@ -143,7 +147,8 @@ class _ClerkSignInSurfaceState extends State<_ClerkSignInSurface> {
         }
         return const SizedBox.shrink();
       },
-      signedOutBuilder: (context, authState) => const clerk.ClerkAuthentication(),
+      signedOutBuilder: (context, authState) =>
+          const clerk.ClerkAuthentication(),
     );
   }
 }

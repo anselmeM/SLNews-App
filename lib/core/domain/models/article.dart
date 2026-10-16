@@ -68,7 +68,11 @@ class Article {
   /// Rough reading time derived from the body when the feed did not provide one.
   int get estimatedReadingMinutes {
     if (readingMinutes > 0) return readingMinutes;
-    final int words = bodyHtml.replaceAll(RegExp(r'<[^>]*>'), ' ').trim().split(RegExp(r'\s+')).length;
+    final int words = bodyHtml
+        .replaceAll(RegExp(r'<[^>]*>'), ' ')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .length;
     if (words <= 1) return 1;
     return (words / 220).ceil();
   }
@@ -161,8 +165,16 @@ class Article {
       other.isLive == isLive;
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, publisher, publishedAt, imageUrl, categoryId, isBreaking, isLive);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    publisher,
+    publishedAt,
+    imageUrl,
+    categoryId,
+    isBreaking,
+    isLive,
+  );
 
   @override
   String toString() => 'Article($id, "$title")';

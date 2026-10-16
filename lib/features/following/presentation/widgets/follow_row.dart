@@ -147,7 +147,9 @@ class _LeadingCircle extends StatelessWidget {
         url: imageUrl,
         width: FollowRow.circleSize,
         height: FollowRow.circleSize,
-        borderRadius: const BorderRadius.all(Radius.circular(FollowRow.circleSize / 2)),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(FollowRow.circleSize / 2),
+        ),
         placeholderLabel: AppGlyphs.initials(label),
       );
     }
@@ -158,12 +160,17 @@ class _LeadingCircle extends StatelessWidget {
         width: FollowRow.circleSize,
         height: FollowRow.circleSize,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+        ),
         child: icon != null
             ? Icon(icon, size: 20, color: foregroundColor)
             : Text(
                 initials ?? AppGlyphs.initials(label),
-                style: context.typography.button.copyWith(color: foregroundColor),
+                style: context.typography.button.copyWith(
+                  color: foregroundColor,
+                ),
               ),
       ),
     );

@@ -20,7 +20,9 @@ class SlNewsApp extends ConsumerWidget {
     // The identity provider wraps the app in whatever scope its SDK needs; a
     // key-less build supplies the identity function, so this costs nothing when
     // auth is not configured.
-    final Widget Function(Widget child) authWrapper = ref.watch(authAppWrapperProvider);
+    final Widget Function(Widget child) authWrapper = ref.watch(
+      authAppWrapperProvider,
+    );
 
     return authWrapper(
       MaterialApp.router(

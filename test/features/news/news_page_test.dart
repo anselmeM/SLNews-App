@@ -35,12 +35,15 @@ void main() {
     final ByteData data = ByteData.sublistView(
       File('assets/fonts/Inter-Variable.ttf').readAsBytesSync(),
     );
-    final FontLoader loader = FontLoader('SLNewsSans')..addFont(Future<ByteData>.value(data));
+    final FontLoader loader = FontLoader('SLNewsSans')
+      ..addFont(Future<ByteData>.value(data));
     await loader.load();
   });
 
   group('NewsPage', () {
-    testWidgets('renders the hero headline of the selected category', (WidgetTester tester) async {
+    testWidgets('renders the hero headline of the selected category', (
+      WidgetTester tester,
+    ) async {
       await pumpNewsPage(tester);
 
       expect(find.text(topHeadline), findsOneWidget);
@@ -50,21 +53,24 @@ void main() {
       expect(find.byType(CategoryPillHeader), findsOneWidget);
     });
 
-    testWidgets('tapping the Politics pill swaps the hero to a politics story', (
+    testWidgets(
+      'tapping the Politics pill swaps the hero to a politics story',
+      (WidgetTester tester) async {
+        await pumpNewsPage(tester);
+        expect(find.text(topHeadline), findsOneWidget);
+        expect(find.text(politicsHeadline), findsNothing);
+
+        await tester.tap(find.text('Politics').first);
+        await tester.pumpAndSettle();
+
+        expect(find.text(topHeadline), findsNothing);
+        expect(find.text(politicsHeadline), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders the two-column grid of ArticleGridTiles', (
       WidgetTester tester,
     ) async {
-      await pumpNewsPage(tester);
-      expect(find.text(topHeadline), findsOneWidget);
-      expect(find.text(politicsHeadline), findsNothing);
-
-      await tester.tap(find.text('Politics').first);
-      await tester.pumpAndSettle();
-
-      expect(find.text(topHeadline), findsNothing);
-      expect(find.text(politicsHeadline), findsOneWidget);
-    });
-
-    testWidgets('renders the two-column grid of ArticleGridTiles', (WidgetTester tester) async {
       await pumpNewsPage(tester);
 
       expect(find.byType(ArticleGridTile), findsWidgets);
@@ -89,7 +95,9 @@ void main() {
       );
     });
 
-    testWidgets('inserts one in-stream ad after the third Latest row', (WidgetTester tester) async {
+    testWidgets('inserts one in-stream ad after the third Latest row', (
+      WidgetTester tester,
+    ) async {
       await pumpNewsPage(tester, size: const Size(800, 3200));
 
       expect(find.byType(AdCard), findsOneWidget);
@@ -107,7 +115,11 @@ void main() {
           'top': <Article>[
             fakeArticle(id: 'long-hero', title: kLongHeadline),
             for (int index = 2; index <= 9; index++)
-              fakeArticle(id: 'long-$index', title: kLongHeadline, minutesAgo: index * 10),
+              fakeArticle(
+                id: 'long-$index',
+                title: kLongHeadline,
+                minutesAgo: index * 10,
+              ),
           ],
         },
       );
@@ -154,7 +166,10 @@ Future<void> pumpNewsPage(
         refreshFeedsProvider.overrideWithValue(() async {}),
       ],
       child: MediaQuery(
-        data: MediaQueryData(size: size, textScaler: TextScaler.linear(textScale)),
+        data: MediaQueryData(
+          size: size,
+          textScaler: TextScaler.linear(textScale),
+        ),
         child: MaterialApp(theme: AppTheme.light(), home: const NewsPage()),
       ),
     ),

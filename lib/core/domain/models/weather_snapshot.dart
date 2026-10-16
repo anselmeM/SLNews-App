@@ -42,18 +42,19 @@ class WeatherSnapshot {
     'updatedAt': updatedAt.toIso8601String(),
   };
 
-  factory WeatherSnapshot.fromJson(Map<String, dynamic> json) => WeatherSnapshot(
-    locationLabel: json['locationLabel'] as String,
-    temperatureC: (json['temperatureC'] as num).toInt(),
-    conditionLabel: json['conditionLabel'] as String,
-    glyph: json['glyph'] as String? ?? 'sun',
-    highC: (json['highC'] as num?)?.toInt(),
-    lowC: (json['lowC'] as num?)?.toInt(),
-    humidityPercent: (json['humidityPercent'] as num?)?.toInt(),
-    updatedAt: json['updatedAt'] == null
-        ? DateTime.now()
-        : DateTime.parse(json['updatedAt'] as String),
-  );
+  factory WeatherSnapshot.fromJson(Map<String, dynamic> json) =>
+      WeatherSnapshot(
+        locationLabel: json['locationLabel'] as String,
+        temperatureC: (json['temperatureC'] as num).toInt(),
+        conditionLabel: json['conditionLabel'] as String,
+        glyph: json['glyph'] as String? ?? 'sun',
+        highC: (json['highC'] as num?)?.toInt(),
+        lowC: (json['lowC'] as num?)?.toInt(),
+        humidityPercent: (json['humidityPercent'] as num?)?.toInt(),
+        updatedAt: json['updatedAt'] == null
+            ? DateTime.now()
+            : DateTime.parse(json['updatedAt'] as String),
+      );
 
   /// Used before the first successful weather fetch, so the header never jitters.
   static WeatherSnapshot placeholder(String locationLabel) => WeatherSnapshot(

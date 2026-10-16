@@ -147,7 +147,9 @@ class ApiClient {
       ),
     );
     return ApiResponse(
-      data: responseType == ResponseType.json ? _payload(response) : _text(response),
+      data: responseType == ResponseType.json
+          ? _payload(response)
+          : _text(response),
       statusCode: response.statusCode,
       headers: _responseHeaders(response),
     );
@@ -179,9 +181,10 @@ class ApiClient {
       () async => _dio.post<dynamic>(
         url,
         data: body,
-        options: (await _options(url: url, headers: headers)).copyWith(
-          contentType: Headers.jsonContentType,
-        ),
+        options: (await _options(
+          url: url,
+          headers: headers,
+        )).copyWith(contentType: Headers.jsonContentType),
       ),
     );
     return _payload(response);
@@ -275,7 +278,8 @@ class ApiClient {
 
   Map<String, String> _responseHeaders(Response<dynamic> response) {
     return <String, String>{
-      for (final MapEntry<String, List<String>> entry in response.headers.map.entries)
+      for (final MapEntry<String, List<String>> entry
+          in response.headers.map.entries)
         entry.key.toLowerCase(): entry.value.join(', '),
     };
   }

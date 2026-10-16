@@ -69,10 +69,7 @@ class SyncHarness {
       authTokenProvider: authTokenProvider,
       authTokenHosts: authTokenHosts,
     );
-    source = RemoteSyncSource(
-      config: config ?? testSyncConfig,
-      api: client,
-    );
+    source = RemoteSyncSource(config: config ?? testSyncConfig, api: client);
   }
 
   /// The recording adapter.
@@ -111,13 +108,14 @@ class SyncHarness {
   );
 
   /// Builds a successful response whose body is not valid JSON.
-  static ResponseBody malformed({int statusCode = 200}) => ResponseBody.fromString(
-    '<html>not json</html>',
-    statusCode,
-    headers: <String, List<String>>{
-      'content-type': <String>['text/html'],
-    },
-  );
+  static ResponseBody malformed({int statusCode = 200}) =>
+      ResponseBody.fromString(
+        '<html>not json</html>',
+        statusCode,
+        headers: <String, List<String>>{
+          'content-type': <String>['text/html'],
+        },
+      );
 
   /// Builds an error response carrying a JSON error object.
   static ResponseBody error(
@@ -189,10 +187,7 @@ class FakeSyncApiSource implements SyncApiSource {
     if (failuresRemaining > 0) {
       failuresRemaining -= 1;
       return failWith ??
-          SyncResult.failed(
-            SyncFailure.unavailable('offline'),
-            local: local,
-          );
+          SyncResult.failed(SyncFailure.unavailable('offline'), local: local);
     }
     final SyncResult? scripted = nextResult;
     nextResult = null;
@@ -254,11 +249,7 @@ SyncFollow deletedFollow(
   String targetId, {
   required DateTime updatedAt,
   String kind = 'team',
-}) => SyncFollow.deleted(
-  targetId: targetId,
-  updatedAt: updatedAt,
-  kind: kind,
-);
+}) => SyncFollow.deleted(targetId: targetId, updatedAt: updatedAt, kind: kind);
 
 /// A `GET /sync` response body with every collection overridable.
 Map<String, dynamic> pullEnvelope({

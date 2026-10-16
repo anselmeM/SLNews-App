@@ -3,7 +3,11 @@
 /// Kept as a pure function so it is trivially unit-testable with an injected
 /// `now` and usable from both widgets and tests without a BuildContext.
 abstract final class TimeAgo {
-  static String format(DateTime timestamp, {DateTime? now, bool short = false}) {
+  static String format(
+    DateTime timestamp, {
+    DateTime? now,
+    bool short = false,
+  }) {
     final DateTime reference = now ?? DateTime.now();
     final Duration delta = reference.difference(timestamp);
 

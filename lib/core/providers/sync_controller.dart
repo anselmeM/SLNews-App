@@ -98,7 +98,10 @@ final Provider<LocalSyncLedger> syncLedgerProvider = Provider<LocalSyncLedger>(
 
 /// Coordinates the reader's local state with the mobile sync API.
 final NotifierProvider<SyncController, SyncStatus> syncControllerProvider =
-    NotifierProvider<SyncController, SyncStatus>(SyncController.new, name: 'syncController');
+    NotifierProvider<SyncController, SyncStatus>(
+      SyncController.new,
+      name: 'syncController',
+    );
 
 /// Push coalescing window: a reader tapping "save" on three stories should make
 /// one request, not three.
@@ -112,7 +115,9 @@ class SyncController extends Notifier<SyncStatus> {
   SyncStatus build() {
     ref.onDispose(() => _debounce?.cancel());
     final SyncRepository repository = ref.watch(syncRepositoryProvider);
-    return SyncStatus(phase: repository.isConfigured ? SyncPhase.idle : SyncPhase.disabled);
+    return SyncStatus(
+      phase: repository.isConfigured ? SyncPhase.idle : SyncPhase.disabled,
+    );
   }
 
   /// Merge-on-first-sign-in: push what is here, pull what is there, keep the
@@ -126,7 +131,10 @@ class SyncController extends Notifier<SyncStatus> {
       return;
     }
     if (!ref.read(authControllerProvider).isSignedIn) {
-      state = SyncStatus(phase: SyncPhase.idle, lastSyncedAt: state.lastSyncedAt);
+      state = SyncStatus(
+        phase: SyncPhase.idle,
+        lastSyncedAt: state.lastSyncedAt,
+      );
       return;
     }
 
@@ -168,9 +176,13 @@ class SyncController extends Notifier<SyncStatus> {
     if (!repository.isConfigured) return;
     if (!ref.read(authControllerProvider).isSignedIn) return;
 
-    final SyncState local = await collectLocalState(assumeChangedAt: DateTime.now().toUtc());
+    final SyncState local = await collectLocalState(
+      assumeChangedAt: DateTime.now().toUtc(),
+    );
     final DateTime? since = _lastPushedAt;
-    final SyncState delta = since == null ? local : (local.deltaSince(since) ?? const SyncState.empty());
+    final SyncState delta = since == null
+        ? local
+        : (local.deltaSince(since) ?? const SyncState.empty());
     if (delta.isEmpty) return;
 
     state = state.copyWith(phase: SyncPhase.syncing, clearFailure: true);
@@ -195,7 +207,9 @@ class SyncController extends Notifier<SyncStatus> {
     String id, {
     bool deleted = false,
   }) async {
-    await ref.read(syncLedgerProvider).record(collection, id, DateTime.now().toUtc(), deleted: deleted);
+    await ref
+        .read(syncLedgerProvider)
+        .record(collection, id, DateTime.now().toUtc(), deleted: deleted);
     schedulePush();
   }
 
@@ -204,7 +218,9 @@ class SyncController extends Notifier<SyncStatus> {
   /// Ids without a recorded instant are stamped with [assumeChangedAt]; metadata
   /// is resolved from the article cache and is best-effort by design (the API
   /// only requires a non-empty title, so an evicted article degrades to its id).
-  Future<SyncState> collectLocalState({required DateTime assumeChangedAt}) async {
+  Future<SyncState> collectLocalState({
+    required DateTime assumeChangedAt,
+  }) async {
     final LocalSyncLedger ledger = ref.read(syncLedgerProvider);
     final UserStateRepositoryState local = _localState(ref);
 
@@ -224,7 +240,8 @@ class SyncController extends Notifier<SyncStatus> {
 
     final List<SyncBookmark> bookmarks = <SyncBookmark>[];
     for (final String id in bookmarkIds) {
-      final DateTime at = ledger.at(SyncCollections.bookmarks, id) ?? assumeChangedAt;
+      final DateTime at =
+          ledger.at(SyncCollections.bookmarks, id) ?? assumeChangedAt;
       final bool deleted = ledger.isDeleted(SyncCollections.bookmarks, id);
       if (deleted) {
         bookmarks.add(SyncBookmark.deleted(itemId: id, updatedAt: at));
@@ -252,11 +269,13 @@ class SyncController extends Notifier<SyncStatus> {
         ledger.isDeleted(SyncCollections.reactions, id)
             ? SyncReaction.deleted(
                 itemId: id,
-                updatedAt: ledger.at(SyncCollections.reactions, id) ?? assumeChangedAt,
+                updatedAt:
+                    ledger.at(SyncCollections.reactions, id) ?? assumeChangedAt,
               )
             : SyncReaction(
                 itemId: id,
-                updatedAt: ledger.at(SyncCollections.reactions, id) ?? assumeChangedAt,
+                updatedAt:
+                    ledger.at(SyncCollections.reactions, id) ?? assumeChangedAt,
               ),
     ];
 
@@ -266,18 +285,24 @@ class SyncController extends Notifier<SyncStatus> {
           SyncFollow.deleted(
             targetId: id,
             kind: catalogue[id]?.kind.wireValue ?? 'topic',
-            updatedAt: ledger.at(SyncCollections.follows, id) ?? assumeChangedAt,
+            updatedAt:
+                ledger.at(SyncCollections.follows, id) ?? assumeChangedAt,
           )
         else
           SyncFollow(
             targetId: id,
             kind: catalogue[id]?.kind.wireValue ?? _kindFromId(id),
             label: catalogue[id]?.label ?? id,
-            updatedAt: ledger.at(SyncCollections.follows, id) ?? assumeChangedAt,
+            updatedAt:
+                ledger.at(SyncCollections.follows, id) ?? assumeChangedAt,
           ),
     ];
 
-    return SyncState(bookmarks: bookmarks, reactions: reactions, follows: follows);
+    return SyncState(
+      bookmarks: bookmarks,
+      reactions: reactions,
+      follows: follows,
+    );
   }
 
   /// Makes local storage match [merged].
@@ -295,20 +320,30 @@ class SyncController extends Notifier<SyncStatus> {
       for (final SyncFollow row in merged.activeFollows) row.targetId,
     };
 
-    final BookmarksController bookmarks = ref.read(bookmarksControllerProvider.notifier);
+    final BookmarksController bookmarks = ref.read(
+      bookmarksControllerProvider.notifier,
+    );
     final LikesController likes = ref.read(likesControllerProvider.notifier);
-    final FollowingController following = ref.read(followingControllerProvider.notifier);
+    final FollowingController following = ref.read(
+      followingControllerProvider.notifier,
+    );
 
-    for (final String id in ref.read(bookmarksControllerProvider).difference(desiredBookmarks)) {
+    for (final String id
+        in ref.read(bookmarksControllerProvider).difference(desiredBookmarks)) {
       await bookmarks.toggle(id);
     }
-    for (final String id in desiredBookmarks.difference(ref.read(bookmarksControllerProvider))) {
+    for (final String id in desiredBookmarks.difference(
+      ref.read(bookmarksControllerProvider),
+    )) {
       await bookmarks.toggle(id);
     }
-    for (final String id in ref.read(likesControllerProvider).difference(desiredLikes)) {
+    for (final String id
+        in ref.read(likesControllerProvider).difference(desiredLikes)) {
       await likes.toggle(id);
     }
-    for (final String id in desiredLikes.difference(ref.read(likesControllerProvider))) {
+    for (final String id in desiredLikes.difference(
+      ref.read(likesControllerProvider),
+    )) {
       await likes.toggle(id);
     }
 
@@ -339,7 +374,8 @@ class SyncController extends Notifier<SyncStatus> {
     await ledger.recordBatch(
       SyncCollections.bookmarks,
       <String, DateTime>{
-        for (final SyncBookmark row in merged.bookmarks) row.itemId: row.updatedAt,
+        for (final SyncBookmark row in merged.bookmarks)
+          row.itemId: row.updatedAt,
       },
       tombstones: <String>{
         for (final SyncBookmark row in merged.bookmarks)
@@ -349,7 +385,8 @@ class SyncController extends Notifier<SyncStatus> {
     await ledger.recordBatch(
       SyncCollections.reactions,
       <String, DateTime>{
-        for (final SyncReaction row in merged.reactions) row.itemId: row.updatedAt,
+        for (final SyncReaction row in merged.reactions)
+          row.itemId: row.updatedAt,
       },
       tombstones: <String>{
         for (final SyncReaction row in merged.reactions)
@@ -359,7 +396,8 @@ class SyncController extends Notifier<SyncStatus> {
     await ledger.recordBatch(
       SyncCollections.follows,
       <String, DateTime>{
-        for (final SyncFollow row in merged.follows) row.targetId: row.updatedAt,
+        for (final SyncFollow row in merged.follows)
+          row.targetId: row.updatedAt,
       },
       tombstones: <String>{
         for (final SyncFollow row in merged.follows)
@@ -379,7 +417,9 @@ class SyncController extends Notifier<SyncStatus> {
 
   static UserStateRepositoryState _localState(Ref ref) {
     final data = ref.read(userStateProvider);
-    final FollowingSnapshot following = ref.read(followingRepositoryProvider).load();
+    final FollowingSnapshot following = ref
+        .read(followingRepositoryProvider)
+        .load();
     return UserStateRepositoryState(
       bookmarkedIds: data.bookmarkedIds,
       likedIds: data.likedIds,
@@ -390,7 +430,9 @@ class SyncController extends Notifier<SyncStatus> {
   }
 
   static Map<String, FollowTarget> _followCatalogue(Ref ref) {
-    final FollowingSnapshot snapshot = ref.read(followingRepositoryProvider).load();
+    final FollowingSnapshot snapshot = ref
+        .read(followingRepositoryProvider)
+        .load();
     return <String, FollowTarget>{
       for (final FollowTarget target in <FollowTarget>[
         ...snapshot.followed,

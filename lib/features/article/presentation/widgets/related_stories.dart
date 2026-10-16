@@ -34,7 +34,8 @@ class RelatedStories extends ConsumerWidget {
             thumbnailWidth: 104,
             thumbnailHeight: 96,
             onTap: () => context.openArticle(article.id),
-            onLike: () => ref.read(likesControllerProvider.notifier).toggle(article.id),
+            onLike: () =>
+                ref.read(likesControllerProvider.notifier).toggle(article.id),
             onMore: (ArticleAction action) => ref
                 .read(bookmarksControllerProvider.notifier)
                 .toggle(article.id),

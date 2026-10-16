@@ -10,9 +10,8 @@ import '../../../core/providers/controllers.dart';
 /// Declared here (not in `lib/core/providers/`) because saved stories are owned
 /// by this feature. It deliberately reads local state only: the repository
 /// answers from its cache, so Saved stories works with zero network.
-final FutureProvider<List<Article>> savedStoriesProvider = FutureProvider<List<Article>>((
-  Ref ref,
-) async {
+final FutureProvider<List<Article>>
+savedStoriesProvider = FutureProvider<List<Article>>((Ref ref) async {
   final Set<String> ids = ref.watch(bookmarksControllerProvider);
   if (ids.isEmpty) return const <Article>[];
 
@@ -24,6 +23,8 @@ final FutureProvider<List<Article>> savedStoriesProvider = FutureProvider<List<A
   }
   // A `Set` carries no meaningful display order, so the saved list is always
   // newest-first rather than in the order ids happened to be saved.
-  resolved.sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
+  resolved.sort(
+    (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
+  );
   return resolved;
 }, name: 'savedStories');

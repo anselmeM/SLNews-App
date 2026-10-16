@@ -50,7 +50,11 @@ abstract final class AppGlyphs {
 
   /// Player/team initials drawn when a crest is unavailable.
   static String initials(String label) {
-    final List<String> words = label.trim().split(RegExp(r'\s+')).where((String w) => w.isNotEmpty).toList();
+    final List<String> words = label
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((String w) => w.isNotEmpty)
+        .toList();
     if (words.isEmpty) return '?';
     if (words.length == 1) {
       final String word = words.first;

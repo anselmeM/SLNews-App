@@ -27,10 +27,7 @@ import 'package:flutter/foundation.dart';
 @immutable
 class SyncApiConfig {
   /// Creates a configuration for an explicitly supplied origin.
-  const SyncApiConfig({
-    required this.baseUrl,
-    this.limit = defaultLimit,
-  });
+  const SyncApiConfig({required this.baseUrl, this.limit = defaultLimit});
 
   /// Reads compile-time configuration:
   ///   `--dart-define=SLNEWS_SYNC_URL=…`  (default: [defaultBaseUrl])
@@ -93,9 +90,8 @@ class SyncApiConfig {
   );
 
   /// Clamps [value] into the range the API accepts.
-  static int clampLimit(int value) => value < minLimit
-      ? minLimit
-      : (value > maxLimit ? maxLimit : value);
+  static int clampLimit(int value) =>
+      value < minLimit ? minLimit : (value > maxLimit ? maxLimit : value);
 
   @override
   String toString() =>

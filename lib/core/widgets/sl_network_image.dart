@@ -35,7 +35,9 @@ class SlNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget image = _hasUrl ? _buildRemote(context) : _buildFallback(context);
+    final Widget image = _hasUrl
+        ? _buildRemote(context)
+        : _buildFallback(context);
     if (borderRadius == null) return image;
     return ClipRRect(borderRadius: borderRadius!, child: image);
   }
@@ -50,8 +52,10 @@ class SlNetworkImage extends StatelessWidget {
       fit: fit,
       alignment: alignment,
       fadeInDuration: AppMotion.medium,
-      placeholder: (BuildContext context, String url) => _buildFallback(context),
-      errorWidget: (BuildContext context, String url, Object error) => _buildFallback(context),
+      placeholder: (BuildContext context, String url) =>
+          _buildFallback(context),
+      errorWidget: (BuildContext context, String url, Object error) =>
+          _buildFallback(context),
     );
   }
 
@@ -68,7 +72,8 @@ class SlNetworkImage extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: <Color>[
             base,
-            Color.lerp(base, isDark ? Colors.black : Colors.white, 0.35) ?? base,
+            Color.lerp(base, isDark ? Colors.black : Colors.white, 0.35) ??
+                base,
           ],
         ),
       ),
@@ -81,7 +86,9 @@ class SlNetworkImage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: context.typography.overline.copyWith(color: context.colors.onSurfaceFaint),
+                style: context.typography.overline.copyWith(
+                  color: context.colors.onSurfaceFaint,
+                ),
               ),
             ),
     );

@@ -69,7 +69,9 @@ class SportsFixtureRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.score.copyWith(
-                      color: isLive ? context.colors.live : context.colors.onSurface,
+                      color: isLive
+                          ? context.colors.live
+                          : context.colors.onSurface,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -78,7 +80,9 @@ class SportsFixtureRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.overline.copyWith(
-                      color: isLive ? context.colors.live : context.colors.onSurfaceVariant,
+                      color: isLive
+                          ? context.colors.live
+                          : context.colors.onSurfaceVariant,
                     ),
                   ),
                 ],

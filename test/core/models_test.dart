@@ -21,7 +21,11 @@ Article _article({
   return Article(
     id: id,
     title: 'Stelco layoffs: Ottawa weighs legal action',
-    publisher: const Publisher(id: 'cbc', name: 'CBC News', wordmark: 'CBC NEWS'),
+    publisher: const Publisher(
+      id: 'cbc',
+      name: 'CBC News',
+      wordmark: 'CBC NEWS',
+    ),
     publishedAt: DateTime(2026, 10, 14, 17, 18),
     categoryId: category,
     bodyHtml: body,
@@ -55,23 +59,29 @@ void main() {
     });
 
     test('estimates reading time from the body when the feed omits it', () {
-      final String longBody = '<p>${List<String>.filled(660, 'word').join(' ')}</p>';
+      final String longBody =
+          '<p>${List<String>.filled(660, 'word').join(' ')}</p>';
       expect(_article(body: longBody).estimatedReadingMinutes, 3);
       expect(_article(body: '<p>short</p>').estimatedReadingMinutes, 1);
       expect(_article().copyWith(readingMinutes: 9).estimatedReadingMinutes, 9);
     });
 
-    test('equality is driven by identity plus the fields the feed can change', () {
-      expect(_article(), _article());
-      expect(_article(category: 'sports'), isNot(_article()));
-      expect(_article(id: 'other'), isNot(_article()));
-    });
+    test(
+      'equality is driven by identity plus the fields the feed can change',
+      () {
+        expect(_article(), _article());
+        expect(_article(category: 'sports'), isNot(_article()));
+        expect(_article(id: 'other'), isNot(_article()));
+      },
+    );
   });
 
   group('NewsCategories', () {
     test('exposes a curated, non-empty catalogue with unique ids', () {
       expect(NewsCategories.all, isNotEmpty);
-      final Set<String> ids = NewsCategories.all.map((NewsCategory c) => c.id).toSet();
+      final Set<String> ids = NewsCategories.all
+          .map((NewsCategory c) => c.id)
+          .toSet();
       expect(ids.length, NewsCategories.all.length);
       expect(ids, containsAll(<String>['top', 'politics', 'business']));
     });
@@ -132,13 +142,16 @@ void main() {
       expect(snapshot.followedIds, <String>['team:leone-stars']);
     });
 
-    test('section labels group kinds the way the Following tab renders them', () {
-      expect(FollowKind.team.sectionLabel, 'Sports');
-      expect(FollowKind.league.sectionLabel, 'Sports');
-      expect(FollowKind.location.sectionLabel, 'Locations');
-      expect(FollowKind.topic.sectionLabel, 'Topics');
-      expect(FollowKind.publisher.sectionLabel, 'Publishers');
-    });
+    test(
+      'section labels group kinds the way the Following tab renders them',
+      () {
+        expect(FollowKind.team.sectionLabel, 'Sports');
+        expect(FollowKind.league.sectionLabel, 'Sports');
+        expect(FollowKind.location.sectionLabel, 'Locations');
+        expect(FollowKind.topic.sectionLabel, 'Topics');
+        expect(FollowKind.publisher.sectionLabel, 'Publishers');
+      },
+    );
   });
 
   group('Sports models', () {
@@ -189,7 +202,9 @@ void main() {
         kind: NotificationKind.breaking,
         articleId: 'a1',
       );
-      final NotificationItem restored = NotificationItem.fromJson(item.toJson());
+      final NotificationItem restored = NotificationItem.fromJson(
+        item.toJson(),
+      );
       expect(restored.kind, NotificationKind.breaking);
       expect(restored.articleId, 'a1');
       expect(restored.isRead, isFalse);
@@ -197,12 +212,17 @@ void main() {
       expect(restored.ageLabel, isNotEmpty);
     });
 
-    test('weather placeholder keeps the header stable before the first fetch', () {
-      final WeatherSnapshot snapshot = WeatherSnapshot.placeholder('Freetown');
-      expect(snapshot.locationLabel, 'Freetown');
-      expect(snapshot.compactLabel, contains('°'));
-      expect(snapshot.highC! >= snapshot.temperatureC, isTrue);
-    });
+    test(
+      'weather placeholder keeps the header stable before the first fetch',
+      () {
+        final WeatherSnapshot snapshot = WeatherSnapshot.placeholder(
+          'Freetown',
+        );
+        expect(snapshot.locationLabel, 'Freetown');
+        expect(snapshot.compactLabel, contains('°'));
+        expect(snapshot.highC! >= snapshot.temperatureC, isTrue);
+      },
+    );
   });
 
   group('AdUnit', () {
@@ -229,8 +249,16 @@ void main() {
       expect(AppColors.dark.brightness, Brightness.dark);
       expect(AppColors.of(Brightness.dark).canvas, AppColors.dark.canvas);
       // Cards must stay lighter than the canvas in light mode and darker in dark mode.
-      expect(AppColors.light.surface.computeLuminance() > AppColors.light.canvas.computeLuminance(), isTrue);
-      expect(AppColors.dark.surface.computeLuminance() > AppColors.dark.canvas.computeLuminance(), isTrue);
+      expect(
+        AppColors.light.surface.computeLuminance() >
+            AppColors.light.canvas.computeLuminance(),
+        isTrue,
+      );
+      expect(
+        AppColors.dark.surface.computeLuminance() >
+            AppColors.dark.canvas.computeLuminance(),
+        isTrue,
+      );
     });
 
     test('builds both themes with the SLNews font family', () {

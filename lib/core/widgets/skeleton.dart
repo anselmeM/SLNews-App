@@ -22,7 +22,8 @@ class SkeletonBox extends StatefulWidget {
   State<SkeletonBox> createState() => _SkeletonBoxState();
 }
 
-class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStateMixin {
+class _SkeletonBoxState extends State<SkeletonBox>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
@@ -46,7 +47,9 @@ class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStat
           height: widget.height,
           decoration: BoxDecoration(
             shape: widget.shape,
-            borderRadius: widget.shape == BoxShape.circle ? null : widget.borderRadius,
+            borderRadius: widget.shape == BoxShape.circle
+                ? null
+                : widget.borderRadius,
             color: Color.lerp(base, highlight, _controller.value),
           ),
         );
@@ -62,7 +65,10 @@ class ArticleTileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: context.colors.surface, borderRadius: AppRadius.cardRadius),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: AppRadius.cardRadius,
+      ),
       padding: AppSpacing.card,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +90,11 @@ class ArticleTileSkeleton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.lg),
-          const SkeletonBox(width: 120, height: 120, borderRadius: AppRadius.imageRadius),
+          const SkeletonBox(
+            width: 120,
+            height: 120,
+            borderRadius: AppRadius.imageRadius,
+          ),
         ],
       ),
     );

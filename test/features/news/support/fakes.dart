@@ -61,13 +61,16 @@ Map<String, List<Article>> defaultNewsFixtures() => <String, List<Article>>{
   'top': <Article>[
     fakeArticle(
       id: 'top-hero',
-      title: 'Bo government hospital receives new dialysis machines from partners',
-      summary: 'The donation covers two years of consumables for the renal unit.',
+      title:
+          'Bo government hospital receives new dialysis machines from partners',
+      summary:
+          'The donation covers two years of consumables for the renal unit.',
     ),
     for (int index = 2; index <= 11; index++)
       fakeArticle(
         id: 'top-$index',
-        title: 'Sierra Leone news desk story number $index from the overnight wire',
+        title:
+            'Sierra Leone news desk story number $index from the overnight wire',
         minutesAgo: index * 20,
       ),
   ],
@@ -80,7 +83,8 @@ Map<String, List<Article>> defaultNewsFixtures() => <String, List<Article>>{
     for (int index = 2; index <= 8; index++)
       fakeArticle(
         id: 'politics-$index',
-        title: 'Politics desk follow-up $index on the budget debate in Freetown',
+        title:
+            'Politics desk follow-up $index on the budget debate in Freetown',
         categoryId: 'politics',
         minutesAgo: index * 15,
       ),
@@ -134,7 +138,8 @@ class FakeArticleRepository implements ArticleRepository {
   }
 
   @override
-  Future<List<Article>> search(String query, {int limit = 20}) async => const <Article>[];
+  Future<List<Article>> search(String query, {int limit = 20}) async =>
+      const <Article>[];
 
   @override
   Future<List<Article>> refresh() async {
@@ -157,8 +162,9 @@ class FakeAdRepository implements AdRepository {
   final Map<String, List<AdUnit>> unitsForPlacement;
 
   /// Convenience for the common "one unit in the feed slot" case.
-  factory FakeAdRepository.feed(List<AdUnit> units) =>
-      FakeAdRepository(unitsForPlacement: <String, List<AdUnit>>{'feed': units});
+  factory FakeAdRepository.feed(List<AdUnit> units) => FakeAdRepository(
+    unitsForPlacement: <String, List<AdUnit>>{'feed': units},
+  );
 
   @override
   List<AdUnit> get cachedUnits => const <AdUnit>[];
@@ -231,11 +237,13 @@ class FakeUserStateRepository implements UserStateRepository {
   String get activeLocationId => _activeLocationId;
 
   @override
-  Future<void> setActiveLocationId(String locationId) async => _activeLocationId = locationId;
+  Future<void> setActiveLocationId(String locationId) async =>
+      _activeLocationId = locationId;
 
   @override
   bool get breakingNewsAlertsEnabled => _breakingAlerts;
 
   @override
-  Future<void> setBreakingNewsAlertsEnabled(bool enabled) async => _breakingAlerts = enabled;
+  Future<void> setBreakingNewsAlertsEnabled(bool enabled) async =>
+      _breakingAlerts = enabled;
 }

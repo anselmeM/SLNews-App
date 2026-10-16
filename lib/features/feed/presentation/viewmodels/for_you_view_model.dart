@@ -103,8 +103,12 @@ abstract final class ForYouViewModel {
     // is ordered newest first, so the carousel never depends on the order the
     // repository happened to return.
     final List<Article> heroPool = <Article>[
-      ..._newestFirst(topStories.where((Article article) => article.isBreaking)),
-      ..._newestFirst(topStories.where((Article article) => !article.isBreaking)),
+      ..._newestFirst(
+        topStories.where((Article article) => article.isBreaking),
+      ),
+      ..._newestFirst(
+        topStories.where((Article article) => !article.isBreaking),
+      ),
     ];
     final List<Article> hero = heroPool.take(heroLimit).toList(growable: false);
 
@@ -124,14 +128,17 @@ abstract final class ForYouViewModel {
     // still newest first (the merged order is preserved).
     final List<Article> latestStream = merged
         .where(
-          (Article article) => !heroIds.contains(article.id) && !shown.contains(article.id),
+          (Article article) =>
+              !heroIds.contains(article.id) && !shown.contains(article.id),
         )
         .toList(growable: false);
 
     return ForYouFeed(
       hero: hero,
       stream: <Article>[...localStream, ...latestStream],
-      breakingCount: merged.where((Article article) => article.isBreaking).length,
+      breakingCount: merged
+          .where((Article article) => article.isBreaking)
+          .length,
       activeLocation: activeLocation,
       isOffline: isOffline,
       lastSyncedAt: lastSyncedAt,
@@ -144,11 +151,19 @@ abstract final class ForYouViewModel {
 ///
 /// `null` is deliberately distinct from an empty [ForYouFeed] so the page can
 /// tell "still loading" from "genuinely nothing to show".
-final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((Ref ref) {
-  final String locationId = ref.watch(settingsControllerProvider).activeLocationId;
+final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
+  Ref ref,
+) {
+  final String locationId = ref
+      .watch(settingsControllerProvider)
+      .activeLocationId;
   final AsyncValue<List<Article>> top = ref.watch(topStoriesProvider);
-  final AsyncValue<List<Article>> local = ref.watch(locationFeedProvider(locationId));
-  final AsyncValue<List<Article>> extra = ref.watch(categoryFeedProvider('top'));
+  final AsyncValue<List<Article>> local = ref.watch(
+    locationFeedProvider(locationId),
+  );
+  final AsyncValue<List<Article>> extra = ref.watch(
+    categoryFeedProvider('top'),
+  );
 
   // An error has its own full-screen state on the page; `null` here means the
   // feed is simply not renderable yet.

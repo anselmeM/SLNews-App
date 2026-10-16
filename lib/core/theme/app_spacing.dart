@@ -21,7 +21,10 @@ abstract final class AppSpacing {
   static const EdgeInsets card = EdgeInsets.all(lg);
 
   /// Padding for list rows inside a card group.
-  static const EdgeInsets row = EdgeInsets.symmetric(horizontal: lg, vertical: 14);
+  static const EdgeInsets row = EdgeInsets.symmetric(
+    horizontal: lg,
+    vertical: 14,
+  );
 }
 
 /// Corner radii.
@@ -36,7 +39,9 @@ abstract final class AppRadius {
 
   static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(lg));
   static const BorderRadius imageRadius = BorderRadius.all(Radius.circular(md));
-  static const BorderRadius pillRadius = BorderRadius.all(Radius.circular(pill));
+  static const BorderRadius pillRadius = BorderRadius.all(
+    Radius.circular(pill),
+  );
 }
 
 /// Motion tokens: short, decelerating, never bouncy.

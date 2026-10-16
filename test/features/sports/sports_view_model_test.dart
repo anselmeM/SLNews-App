@@ -21,63 +21,69 @@ void main() {
   );
 
   group('SportsViewModel ordering', () {
-    test('orders live, then scheduled by start time, then finals, then postponed', () {
-      final GameScore live = buildGame(
-        id: 'g-live',
-        status: GameStatus.live,
-        startsAt: oct15,
-        periodLabel: 'Q3 04:12',
-        homeScore: 72,
-        awayScore: 68,
-      );
-      final GameScore scheduledLate = buildGame(id: 'g-sched-late', startsAt: oct16);
-      final GameScore scheduledEarly = buildGame(
-        id: 'g-sched-early',
-        startsAt: DateTime(2026, 10, 15, 20),
-      );
-      final GameScore finalNew = buildGame(
-        id: 'g-final-new',
-        status: GameStatus.finalScore,
-        startsAt: oct14,
-        homeScore: 101,
-        awayScore: 99,
-      );
-      final GameScore finalOld = buildGame(
-        id: 'g-final-old',
-        status: GameStatus.finalScore,
-        startsAt: oct10,
-        homeScore: 90,
-        awayScore: 95,
-      );
-      final GameScore postponed = buildGame(
-        id: 'g-postponed',
-        status: GameStatus.postponed,
-        startsAt: oct14,
-      );
+    test(
+      'orders live, then scheduled by start time, then finals, then postponed',
+      () {
+        final GameScore live = buildGame(
+          id: 'g-live',
+          status: GameStatus.live,
+          startsAt: oct15,
+          periodLabel: 'Q3 04:12',
+          homeScore: 72,
+          awayScore: 68,
+        );
+        final GameScore scheduledLate = buildGame(
+          id: 'g-sched-late',
+          startsAt: oct16,
+        );
+        final GameScore scheduledEarly = buildGame(
+          id: 'g-sched-early',
+          startsAt: DateTime(2026, 10, 15, 20),
+        );
+        final GameScore finalNew = buildGame(
+          id: 'g-final-new',
+          status: GameStatus.finalScore,
+          startsAt: oct14,
+          homeScore: 101,
+          awayScore: 99,
+        );
+        final GameScore finalOld = buildGame(
+          id: 'g-final-old',
+          status: GameStatus.finalScore,
+          startsAt: oct10,
+          homeScore: 90,
+          awayScore: 95,
+        );
+        final GameScore postponed = buildGame(
+          id: 'g-postponed',
+          status: GameStatus.postponed,
+          startsAt: oct14,
+        );
 
-      final SportsViewModel model = SportsViewModel.from(
-        snapshot: snapshotOf(<GameScore>[
-          finalOld,
-          scheduledLate,
-          postponed,
-          live,
-          finalNew,
-          scheduledEarly,
-        ]),
-      );
+        final SportsViewModel model = SportsViewModel.from(
+          snapshot: snapshotOf(<GameScore>[
+            finalOld,
+            scheduledLate,
+            postponed,
+            live,
+            finalNew,
+            scheduledEarly,
+          ]),
+        );
 
-      expect(
-        model.ordered.map((GameScore game) => game.id).toList(),
-        <String>[
-          'g-live',
-          'g-sched-early',
-          'g-sched-late',
-          'g-final-new',
-          'g-final-old',
-          'g-postponed',
-        ],
-      );
-    });
+        expect(
+          model.ordered.map((GameScore game) => game.id).toList(),
+          <String>[
+            'g-live',
+            'g-sched-early',
+            'g-sched-late',
+            'g-final-new',
+            'g-final-old',
+            'g-postponed',
+          ],
+        );
+      },
+    );
 
     test('splits fixtures into live, upcoming and results buckets', () {
       final SportsViewModel model = SportsViewModel.from(
@@ -96,29 +102,40 @@ void main() {
       );
 
       expect(model.live.map((GameScore game) => game.id), <String>['live-1']);
-      expect(model.upcoming.map((GameScore game) => game.id), <String>['sched-1']);
+      expect(model.upcoming.map((GameScore game) => game.id), <String>[
+        'sched-1',
+      ]);
       // Postponed fixtures are neither live nor upcoming, so they sit with the
       // results while still sorting after them.
-      expect(model.results.map((GameScore game) => game.id), <String>['final-1', 'postponed-1']);
+      expect(model.results.map((GameScore game) => game.id), <String>[
+        'final-1',
+        'postponed-1',
+      ]);
       expect(model.hasGames, isTrue);
       expect(model.gameCount, 4);
     });
 
-    test('keeps undated fixtures behind dated ones and reports missing scores', () {
-      final GameScore undated = buildGame(id: 'g-undated');
-      final GameScore dated = buildGame(id: 'g-dated', startsAt: oct16);
+    test(
+      'keeps undated fixtures behind dated ones and reports missing scores',
+      () {
+        final GameScore undated = buildGame(id: 'g-undated');
+        final GameScore dated = buildGame(id: 'g-dated', startsAt: oct16);
 
-      final SportsViewModel model = SportsViewModel.from(
-        snapshot: snapshotOf(<GameScore>[undated, dated]),
-      );
+        final SportsViewModel model = SportsViewModel.from(
+          snapshot: snapshotOf(<GameScore>[undated, dated]),
+        );
 
-      expect(model.ordered.map((GameScore game) => game.id), <String>['g-dated', 'g-undated']);
-      expect(undated.hasScores, isFalse);
-      expect(undated.homeScore, isNull);
-      expect(undated.awayScore, isNull);
-      expect(undated.statusLabel, 'TBC');
-      expect(dated.statusLabel, '8:00PM');
-    });
+        expect(model.ordered.map((GameScore game) => game.id), <String>[
+          'g-dated',
+          'g-undated',
+        ]);
+        expect(undated.hasScores, isFalse);
+        expect(undated.homeScore, isNull);
+        expect(undated.awayScore, isNull);
+        expect(undated.statusLabel, 'TBC');
+        expect(dated.statusLabel, '8:00PM');
+      },
+    );
 
     test('is deterministic when two fixtures tie on status and start time', () {
       final SportsViewModel model = SportsViewModel.from(
@@ -129,7 +146,10 @@ void main() {
       );
 
       // `List.sort` is not stable, so ties fall back to the id.
-      expect(model.ordered.map((GameScore game) => game.id), <String>['a', 'b']);
+      expect(model.ordered.map((GameScore game) => game.id), <String>[
+        'a',
+        'b',
+      ]);
     });
   });
 

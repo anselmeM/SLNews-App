@@ -79,7 +79,11 @@ class OverflowMenuButton extends StatelessWidget {
               height: 44,
               child: Row(
                 children: <Widget>[
-                  Icon(action.icon, size: 18, color: context.colors.onSurfaceVariant),
+                  Icon(
+                    action.icon,
+                    size: 18,
+                    color: context.colors.onSurfaceVariant,
+                  ),
                   const SizedBox(width: AppSpacing.md),
                   Text(action.label, style: context.typography.button),
                 ],

@@ -20,12 +20,13 @@ final Provider<SyncApiConfig> syncApiConfigProvider = Provider<SyncApiConfig>(
 /// Always constructible: when the build has no endpoint the source reports
 /// `isConfigured == false` and neither `pull` nor `push` performs I/O, so the app
 /// behaves exactly like the local-only build it was before sync existed.
-final Provider<SyncRepository> syncRepositoryProvider = Provider<SyncRepository>(
-  (Ref ref) => DefaultSyncRepository(
-    source: RemoteSyncSource(
-      config: ref.watch(syncApiConfigProvider),
-      api: ref.watch(apiClientProvider),
-    ),
-  ),
-  name: 'syncRepository',
-);
+final Provider<SyncRepository> syncRepositoryProvider =
+    Provider<SyncRepository>(
+      (Ref ref) => DefaultSyncRepository(
+        source: RemoteSyncSource(
+          config: ref.watch(syncApiConfigProvider),
+          api: ref.watch(apiClientProvider),
+        ),
+      ),
+      name: 'syncRepository',
+    );

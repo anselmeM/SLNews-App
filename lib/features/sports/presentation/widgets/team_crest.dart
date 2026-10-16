@@ -66,7 +66,9 @@ class TeamCrest extends StatelessWidget {
     // dark disc: white initials on `surfaceMuted` are unreadable.
     final Color? club = parseTeamColour(colourHex);
     final Color background = club ?? context.colors.surfaceInverse;
-    final Color foreground = club == null ? context.colors.onSurfaceInverse : Colors.white;
+    final Color foreground = club == null
+        ? context.colors.onSurfaceInverse
+        : Colors.white;
 
     return Container(
       width: size,

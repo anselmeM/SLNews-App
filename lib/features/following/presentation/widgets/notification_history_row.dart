@@ -63,7 +63,9 @@ class NotificationHistoryRow extends StatelessWidget {
                       item.body,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.typography.body.copyWith(color: context.colors.onSurfaceVariant),
+                      style: context.typography.body.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(item.ageLabel, style: context.typography.meta),
@@ -83,7 +85,9 @@ class NotificationHistoryRow extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: item.isRead ? Colors.transparent : context.colors.primary,
+                        color: item.isRead
+                            ? Colors.transparent
+                            : context.colors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),

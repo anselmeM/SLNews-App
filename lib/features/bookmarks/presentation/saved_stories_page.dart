@@ -54,7 +54,9 @@ class SavedStoriesPage extends ConsumerWidget {
             ),
             error: (Object error, StackTrace stack) => SliverFillRemaining(
               hasScrollBody: false,
-              child: ErrorStateView(onRetry: () => ref.invalidate(savedStoriesProvider)),
+              child: ErrorStateView(
+                onRetry: () => ref.invalidate(savedStoriesProvider),
+              ),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
@@ -74,8 +76,10 @@ class _SavedSliver extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SliverList.separated(
       itemCount: articles.length,
-      separatorBuilder: (BuildContext context, int index) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (BuildContext context, int index) => _SavedRow(article: articles[index]),
+      separatorBuilder: (BuildContext context, int index) =>
+          const SizedBox(height: AppSpacing.md),
+      itemBuilder: (BuildContext context, int index) =>
+          _SavedRow(article: articles[index]),
     );
   }
 }
@@ -98,15 +102,20 @@ class _SavedRow extends ConsumerWidget {
               article: article,
               showThumbnail: false,
               onTap: () => context.push(AppRoutes.articleFor(article.id)),
-              onMore: (ArticleAction action) => handleArticleAction(context, ref, article, action),
+              onMore: (ArticleAction action) =>
+                  handleArticleAction(context, ref, article, action),
             ),
           ),
           IconButton(
             // The messenger is resolved while the context is still synchronous,
             // so the async removal never touches a BuildContext.
-            onPressed: () => _remove(ScaffoldMessenger.of(context), ref, article),
+            onPressed: () =>
+                _remove(ScaffoldMessenger.of(context), ref, article),
             tooltip: 'Remove from saved',
-            icon: Icon(Icons.bookmark_remove_outlined, color: context.colors.onSurfaceVariant),
+            icon: Icon(
+              Icons.bookmark_remove_outlined,
+              color: context.colors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -122,7 +131,9 @@ class _SavedRow extends ConsumerWidget {
     try {
       await ref.read(bookmarksControllerProvider.notifier).toggle(article.id);
     } on Object {
-      messenger.showSnackBar(const SnackBar(content: Text("Couldn't update your saved stories")));
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't update your saved stories")),
+      );
       return;
     }
     messenger

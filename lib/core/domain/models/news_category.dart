@@ -37,7 +37,8 @@ class NewsCategory {
   );
 
   @override
-  bool operator ==(Object other) => other is NewsCategory && other.id == id && other.label == label;
+  bool operator ==(Object other) =>
+      other is NewsCategory && other.id == id && other.label == label;
 
   @override
   int get hashCode => Object.hash(id, label);
@@ -47,8 +48,18 @@ class NewsCategory {
 abstract final class NewsCategories {
   static const List<NewsCategory> all = <NewsCategory>[
     NewsCategory(id: 'top', label: 'Top stories', icon: 'top', isDefault: true),
-    NewsCategory(id: 'politics', label: 'Politics', icon: 'politics', isDefault: true),
-    NewsCategory(id: 'business', label: 'Business', icon: 'business', isDefault: true),
+    NewsCategory(
+      id: 'politics',
+      label: 'Politics',
+      icon: 'politics',
+      isDefault: true,
+    ),
+    NewsCategory(
+      id: 'business',
+      label: 'Business',
+      icon: 'business',
+      isDefault: true,
+    ),
     NewsCategory(id: 'cars', label: 'Cars and Vehicles', icon: 'cars'),
     NewsCategory(id: 'music', label: 'Music', icon: 'music'),
     NewsCategory(id: 'culture', label: 'Culture', icon: 'culture'),
