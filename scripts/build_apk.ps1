@@ -100,7 +100,7 @@ try {
     if (-not $SkipTests) {
         & $flutter analyze
         if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
-        & $flutter test test/core test/data test/features
+        & $flutter test test/core test/data test/features test/sync
         if ($LASTEXITCODE -ne 0) { throw 'flutter test failed' }
     }
 
