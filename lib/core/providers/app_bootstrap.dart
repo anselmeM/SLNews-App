@@ -135,6 +135,8 @@ class AppBootstrap {
       authTokenHosts: <String>{
         if (apiConfig.host.isNotEmpty) apiConfig.host,
         if (syncConfig.isConfigured) syncConfig.host,
+        // The live PWA origin, plus the domains it is expected to move to.
+        'sl-news.vercel.app',
         'slnews.sl',
         'www.slnews.sl',
         'slnews.app',

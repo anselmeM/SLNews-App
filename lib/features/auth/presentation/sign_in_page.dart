@@ -59,7 +59,7 @@ class SignInPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Saved stories, reactions and alerts follow you between this app and slnews.sl.',
+                    'Saved stories, reactions and alerts follow you between this app and the SLNews web app.',
                     style: context.typography.caption,
                   ),
                 ],

@@ -46,7 +46,13 @@ class SyncApiConfig {
 
   /// The PWA origin: the Next.js route handlers that serve `/api/mobile/v1/sync`
   /// are deployed with the web app, so a default build syncs with production.
-  static const String defaultBaseUrl = 'https://slnews.sl';
+  ///
+  /// `slnews.sl` is the intended public domain, but it does not resolve yet
+  /// (checked 2026-10-16), so the default points at the live Vercel origin. A
+  /// release build should pass `--dart-define=SLNEWS_SYNC_URL=` explicitly rather
+  /// than rely on this: a wrong origin degrades to "sync silently does nothing",
+  /// because an unreachable endpoint is never allowed to break the reader.
+  static const String defaultBaseUrl = 'https://sl-news.vercel.app';
 
   /// Rows per collection requested on a pull; the API's own default.
   static const int defaultLimit = 500;

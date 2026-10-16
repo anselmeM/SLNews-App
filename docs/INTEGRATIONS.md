@@ -169,7 +169,12 @@ reference. Sync rows are therefore user-scoped snapshots keyed by the mobile ite
 id — no change to the existing web tables, and `sourceUrl` is already carried for
 the later reconciliation in roadmap phase 5.
 
-Configuration: `--dart-define=SLNEWS_SYNC_URL=<origin>` (default `https://slnews.sl`).
+Configuration: `--dart-define=SLNEWS_SYNC_URL=<origin>`. The default is the live
+Vercel origin **`https://sl-news.vercel.app`** — verified 2026-10-16: `/api/health`
+returns `healthy` and `/api/mobile/v1/sync` answers `401 {"error":"Unauthorized"}`
+for anonymous GET and POST. The intended public domain `slnews.sl` does **not**
+resolve yet, so a release build should pass the origin explicitly rather than
+trust the default: a wrong origin degrades to "sync silently does nothing".
 Signed-out readers keep using device-local storage exactly as before.
 
 ## Roadmap

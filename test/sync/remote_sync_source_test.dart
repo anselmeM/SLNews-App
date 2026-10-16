@@ -46,7 +46,7 @@ void main() {
 
       // No --dart-define is present when this suite runs.
       expect(config.baseUrl, SyncApiConfig.defaultBaseUrl);
-      expect(config.baseUrl, 'https://slnews.sl');
+      expect(config.baseUrl, 'https://sl-news.vercel.app');
       expect(config.isConfigured, isTrue);
       expect(config.limit, SyncApiConfig.defaultLimit);
     });
