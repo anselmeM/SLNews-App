@@ -216,7 +216,13 @@ class RemoteSyncSource implements SyncApiSource {
       final int? status = error.statusCode;
       return switch (status) {
         401 => SyncFailure.unauthorized(error.message),
-        429 => SyncFailure.rateLimited(retryAfter: parseRetryAfter(retryAfter)),
+        429 => SyncFailure.rateLimited(
+          // The header rides on the exception when the failure was thrown, so a
+          // live 429 yields a real back-off and not just "rate limited".
+          retryAfter: parseRetryAfter(
+            retryAfter ?? error.responseHeaders?[retryAfterHeader],
+          ),
+        ),
         // 400 and 413 are the payload's fault: retrying it unchanged cannot
         // succeed, which is exactly what distinguishes them from `unavailable`.
         400 ||

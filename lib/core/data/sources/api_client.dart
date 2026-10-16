@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart';
 /// can degrade to cache/seed content without pattern-matching on Dio internals.
 class ApiException implements Exception {
   /// Creates an exception describing [message].
-  ApiException(this.message, {this.statusCode, this.uri});
+  ApiException(this.message, {this.statusCode, this.uri, this.responseHeaders});
 
   /// Human-readable cause. Never contains credentials.
   final String message;
@@ -19,6 +19,14 @@ class ApiException implements Exception {
 
   /// Requested resource, kept for diagnostics.
   final Uri? uri;
+
+  /// Headers of the failing response, lower-cased, when one arrived.
+  ///
+  /// Protocol hints live in headers, not bodies: the sync client needs
+  /// `Retry-After` to turn a `429` into a concrete back-off, and that value is
+  /// otherwise lost when Dio's `DioException` is converted into this type.
+  /// `null` for timeouts, connection errors and TLS rejections.
+  final Map<String, String>? responseHeaders;
 
   @override
   String toString() => statusCode == null
@@ -298,10 +306,12 @@ class ApiClient {
       case DioExceptionType.badResponse:
         final int status = error.response?.statusCode ?? 0;
         final String reason = error.response?.statusMessage?.trim() ?? '';
+        final Response<dynamic>? response = error.response;
         return ApiException(
           'HTTP $status${reason.isEmpty ? '' : ' $reason'}',
           statusCode: status,
           uri: uri,
+          responseHeaders: response == null ? null : _responseHeaders(response),
         );
       case DioExceptionType.badCertificate:
         return ApiException('TLS certificate rejected', uri: uri);

@@ -105,6 +105,60 @@ void main() {
     },
   );
 
+  test(
+    'keeps response headers on the failure so Retry-After survives the throw',
+    () async {
+      final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith(
+        (RequestOptions options) async => ResponseBody.fromString(
+          '{"error":"slow down"}',
+          429,
+          headers: <String, List<String>>{
+            'content-type': <String>['application/json; charset=utf-8'],
+            'retry-after': <String>['540'],
+          },
+        ),
+      );
+      final ApiClient client = ApiClient(dio: fake.dio);
+
+      await expectLater(
+        client.getJson('https://example.test/api/mobile/v1/sync'),
+        throwsA(
+          isA<ApiException>()
+              .having((ApiException e) => e.statusCode, 'statusCode', 429)
+              .having(
+                (ApiException e) => e.responseHeaders?['retry-after'],
+                'retry-after',
+                '540',
+              ),
+        ),
+      );
+    },
+  );
+
+  test('a timeout carries no response headers', () async {
+    final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith((
+      RequestOptions options,
+    ) async {
+      throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.receiveTimeout,
+        message: 'no response',
+      );
+    });
+    final ApiClient client = ApiClient(dio: fake.dio);
+
+    await expectLater(
+      client.getJson('https://example.test/feed'),
+      throwsA(
+        isA<ApiException>().having(
+          (ApiException e) => e.responseHeaders,
+          'responseHeaders',
+          isNull,
+        ),
+      ),
+    );
+  });
+
   test('maps a timeout to a readable ApiException', () async {
     final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith((
       RequestOptions options,

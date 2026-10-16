@@ -807,6 +807,41 @@ void main() {
       expect(RemoteSyncSource.failureFor(typed), same(typed));
     });
 
+    test('a thrown 429 still yields the Retry-After back-off', () {
+      // `ApiException` carries the response headers, so the thrown path has the
+      // same information as the non-throwing one; before that, a live 429 gave
+      // `SyncRateLimited(retryAfter: null)`.
+      final SyncFailure failure = RemoteSyncSource.failureFor(
+        ApiException(
+          'HTTP 429',
+          statusCode: 429,
+          responseHeaders: const <String, String>{'retry-after': '540'},
+        ),
+      );
+
+      expect(failure, isA<SyncRateLimited>());
+      expect(
+        (failure as SyncRateLimited).retryAfter,
+        const Duration(seconds: 540),
+      );
+    });
+
+    test('an explicit retryAfter argument wins over the exception header', () {
+      final SyncFailure failure = RemoteSyncSource.failureFor(
+        ApiException(
+          'HTTP 429',
+          statusCode: 429,
+          responseHeaders: const <String, String>{'retry-after': '540'},
+        ),
+        retryAfter: '30',
+      );
+
+      expect(
+        (failure as SyncRateLimited).retryAfter,
+        const Duration(seconds: 30),
+      );
+    });
+
     test('failureForResponse keeps the Retry-After hint', () {
       final SyncFailure limited = RemoteSyncSource.failureForResponse(
         const ApiResponse(

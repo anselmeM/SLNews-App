@@ -130,7 +130,7 @@ storage and history UI already exist. Needs Firebase/APNs credentials.
 | T4.1–4.2 sync client, ledger, merge-on-sign-in | done | `lib/core/{domain,data}/sync`, `LocalSyncLedger`, `SyncController` |
 | T4.3–4.5 wiring, account card, token allow-list | done | controllers hook changes; `AccountCard` shows sync state |
 | T4.4 mobile sync tests | done | 90 new tests; `flutter analyze` clean, 354 total |
-| T4.6 precise 429 backoff | open | `ApiException` carries no `cause`, so the `Retry-After` header cannot reach `RemoteSyncSource`; the failure still surfaces as `SyncRateLimited` with a null hint |
+| T4.6 precise 429 backoff | done | `ApiException.responseHeaders` carries `Retry-After`, so the thrown path yields `SyncRateLimited.retryAfter` instead of a null hint (4 tests) |
 | T5 web ↔ mobile content parity | not started | needs `Article.sourceUrl` (owner decision) |
 | T6 mobile push notifications | not started | needs FCM/APNs credentials |
 
