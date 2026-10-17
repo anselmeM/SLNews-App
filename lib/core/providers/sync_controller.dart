@@ -446,9 +446,25 @@ class SyncController extends Notifier<SyncStatus> {
     };
   }
 
+  /// Kind for a followed id the catalogue no longer lists (an older seed, a
+  /// target that was retired). The API accepts a fixed vocabulary
+  /// (`team|league|location|topic|publisher`), so the raw id prefix — which can be
+  /// `city` or `district` — must be mapped rather than forwarded: an unmapped
+  /// prefix is a `400` that rejects the whole push.
   static String _kindFromId(String id) {
     final int separator = id.indexOf(':');
-    return separator > 0 ? id.substring(0, separator) : 'topic';
+    final String prefix = separator > 0 ? id.substring(0, separator) : '';
+    return switch (prefix) {
+      'team' => 'team',
+      'league' || 'competition' => 'league',
+      'city' ||
+      'region' ||
+      'district' ||
+      'province' ||
+      'location' => 'location',
+      'publisher' => 'publisher',
+      _ => 'topic',
+    };
   }
 }
 

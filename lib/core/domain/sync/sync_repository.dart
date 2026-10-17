@@ -50,7 +50,27 @@ final DateTime syncEpoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
 /// Serialises [value] as ISO-8601 UTC with milliseconds — the only timestamp
 /// shape the API accepts (`2026-10-16T05:00:00.000Z`).
-String? syncTimestamp(DateTime? value) => value?.toUtc().toIso8601String();
+///
+/// Dart's `toIso8601String()` appends **six** fractional digits whenever the
+/// instant carries microseconds, which an Android clock routinely does. The
+/// API's validator accepts one to three digits, so an untruncated value is a
+/// `400` on every push and every delta pull — which is how a device showed
+/// "Sync failed — rejected" while the server-side suite passed: that suite builds
+/// its timestamps with JavaScript's `toISOString()`, which is milliseconds.
+String? syncTimestamp(DateTime? value) {
+  if (value == null) return null;
+  final DateTime utc = value.toUtc();
+  if (utc.microsecond == 0) return utc.toIso8601String();
+  return DateTime.utc(
+    utc.year,
+    utc.month,
+    utc.day,
+    utc.hour,
+    utc.minute,
+    utc.second,
+    utc.millisecond,
+  ).toIso8601String();
+}
 
 /// Parses a wire timestamp tolerantly.
 ///
