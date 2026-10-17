@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/models/notification_item.dart';
+import '../../../core/domain/models/notification_preferences.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -92,8 +93,12 @@ class NotificationHistoryPage extends ConsumerWidget {
       ];
     }
 
-    final List<NotificationItem> items =
-        notifications.value ?? const <NotificationItem>[];
+    // Categories switched off in Settings stay out of the history: the same rule
+    // the Following badge uses, so the two surfaces cannot disagree.
+    final List<NotificationItem> items = visibleNotifications(
+      notifications.value ?? const <NotificationItem>[],
+      ref.watch(settingsControllerProvider),
+    );
     if (items.isEmpty) {
       return const <Widget>[
         SliverFillRemaining(

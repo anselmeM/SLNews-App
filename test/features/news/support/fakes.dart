@@ -1,4 +1,4 @@
-import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+﻿import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
 import 'package:slnews_mobile/core/domain/repositories/ad_repository.dart';
@@ -103,7 +103,7 @@ class FakeArticleRepository implements ArticleRepository {
   /// Recorded so a test can assert the requested page size.
   final int topStoryLimit;
 
-  /// Every `byCategory` call, in order — used by the refresh/retry tests.
+  /// Every `byCategory` call, in order â€” used by the refresh/retry tests.
   final List<String> categoryRequests = <String>[];
 
   int refreshCount = 0;
@@ -246,4 +246,37 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async =>
       _breakingAlerts = enabled;
+
+  bool _editorsPicks = false;
+  bool _interactiveContent = false;
+  bool _sportsAlerts = true;
+  bool _weatherForecast = true;
+
+  @override
+  bool get editorsPicksEnabled => _editorsPicks;
+
+  @override
+  Future<void> setEditorsPicksEnabled(bool enabled) async =>
+      _editorsPicks = enabled;
+
+  @override
+  bool get interactiveContentEnabled => _interactiveContent;
+
+  @override
+  Future<void> setInteractiveContentEnabled(bool enabled) async =>
+      _interactiveContent = enabled;
+
+  @override
+  bool get sportsAlertsEnabled => _sportsAlerts;
+
+  @override
+  Future<void> setSportsAlertsEnabled(bool enabled) async =>
+      _sportsAlerts = enabled;
+
+  @override
+  bool get weatherForecastEnabled => _weatherForecast;
+
+  @override
+  Future<void> setWeatherForecastEnabled(bool enabled) async =>
+      _weatherForecast = enabled;
 }

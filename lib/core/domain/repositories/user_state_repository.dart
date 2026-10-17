@@ -33,4 +33,24 @@ abstract interface class UserStateRepository {
   bool get breakingNewsAlertsEnabled;
 
   Future<void> setBreakingNewsAlertsEnabled(bool enabled);
+
+  /// "Editor's picks" notifications.
+  bool get editorsPicksEnabled;
+
+  Future<void> setEditorsPicksEnabled(bool enabled);
+
+  /// "Interactive content" notifications.
+  bool get interactiveContentEnabled;
+
+  Future<void> setInteractiveContentEnabled(bool enabled);
+
+  /// Alerts for followed teams, leagues and scores.
+  bool get sportsAlertsEnabled;
+
+  Future<void> setSportsAlertsEnabled(bool enabled);
+
+  /// Whether the feeds show the weather row.
+  bool get weatherForecastEnabled;
+
+  Future<void> setWeatherForecastEnabled(bool enabled);
 }

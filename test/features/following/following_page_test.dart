@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
@@ -19,6 +19,7 @@ void main() {
     container = ProviderContainer(
       overrides: [
         followingRepositoryProvider.overrideWithValue(fixture.following),
+        userStateProvider.overrideWithValue(fixture.userState),
         notificationRepositoryProvider.overrideWithValue(fixture.notifications),
       ],
     );
@@ -77,7 +78,7 @@ void main() {
     expect(find.text('Locations'), findsOneWidget);
     expect(find.text('Freetown'), findsOneWidget);
 
-    // Section 3: "Most popular with users" — only the *location* suggestions.
+    // Section 3: "Most popular with users" â€” only the *location* suggestions.
     expect(find.text('Most popular with users'), findsOneWidget);
     expect(find.text('Koidu'), findsOneWidget);
     expect(find.text('Kenema'), findsOneWidget);

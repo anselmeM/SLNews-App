@@ -1,4 +1,4 @@
-import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+﻿import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
@@ -12,7 +12,7 @@ import 'package:slnews_mobile/core/domain/repositories/user_state_repository.dar
 /// Hand-written in-memory doubles for the Sports tab.
 ///
 /// `test/support/fakes.dart` does not exist in this checkout, so the Sports
-/// tests own the small set of fakes they need (CONTRACT §7). Everything is
+/// tests own the small set of fakes they need (CONTRACT Â§7). Everything is
 /// synchronous state behind `Future`-returning interfaces: enough to drive the
 /// real providers without touching Hive, dio or the file system.
 
@@ -34,7 +34,7 @@ class FakeSportsRepository implements SportsRepository {
   final ScoreboardSnapshot _scoreboard;
   final Map<String, List<GameScore>> _gamesByTeam;
 
-  /// When set, [scoreboard] throws it — used for the degraded-state tests.
+  /// When set, [scoreboard] throws it â€” used for the degraded-state tests.
   final Object? error;
 
   @override
@@ -61,7 +61,7 @@ class FakeArticleRepository implements ArticleRepository {
     this.lastSyncedAt,
   }) : feeds = feeds ?? <String, List<Article>>{};
 
-  /// Category slug → stories.
+  /// Category slug â†’ stories.
   final Map<String, List<Article>> feeds;
 
   @override
@@ -198,6 +198,30 @@ class FakeUserStateRepository implements UserStateRepository {
 
   @override
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {}
+
+  @override
+  bool get editorsPicksEnabled => false;
+
+  @override
+  Future<void> setEditorsPicksEnabled(bool enabled) async {}
+
+  @override
+  bool get interactiveContentEnabled => false;
+
+  @override
+  Future<void> setInteractiveContentEnabled(bool enabled) async {}
+
+  @override
+  bool get sportsAlertsEnabled => true;
+
+  @override
+  Future<void> setSportsAlertsEnabled(bool enabled) async {}
+
+  @override
+  bool get weatherForecastEnabled => true;
+
+  @override
+  Future<void> setWeatherForecastEnabled(bool enabled) async {}
 }
 
 /// Convenience builders shared by the Sports tests.

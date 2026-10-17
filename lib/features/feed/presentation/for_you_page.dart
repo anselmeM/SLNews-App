@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/repositories/article_repository.dart';
 import '../../../core/providers/app_providers.dart';
@@ -32,9 +33,8 @@ class ForYouPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ForYouFeed? feed = ref.watch(forYouFeedProvider);
     final AsyncValue<List<Article>> topStories = ref.watch(topStoriesProvider);
-    final String locationId = ref
-        .watch(settingsControllerProvider)
-        .activeLocationId;
+    final AppSettings settings = ref.watch(settingsControllerProvider);
+    final String locationId = settings.activeLocationId;
     final AsyncValue<List<Article>> localStories = ref.watch(
       locationFeedProvider(locationId),
     );
@@ -91,6 +91,9 @@ class ForYouPage extends ConsumerWidget {
               child: WeatherAlertHeader(
                 location: feed.activeLocation,
                 hasBreaking: feed.hasBreaking,
+                // "Show weather forecast" in Settings hides the chip; a
+                // breaking story still gets its tag.
+                showWeather: settings.weatherForecastEnabled,
               ),
             ),
           ),

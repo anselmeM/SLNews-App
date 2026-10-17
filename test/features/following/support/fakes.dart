@@ -16,6 +16,25 @@ import 'package:slnews_mobile/core/domain/repositories/notification_repository.d
 import 'package:slnews_mobile/features/following/presentation/following_page.dart';
 import 'package:slnews_mobile/features/following/presentation/notification_history_page.dart';
 
+// The settings provider (read by Following and the history for the notification
+// category switches) needs a user state repository; reuse the feed feature's
+// fake rather than keeping a fourth copy of the same in-memory implementation.
+import '../../feed/support/fakes.dart' show FakeUserStateRepository;
+
+/// A fixed time-of-day anchor so the seeded alerts carry stable date headers.
+///
+/// `DateTime.now().subtract(...)` looked deterministic but was not: a run just
+/// after midnight turned "12 minutes ago" into yesterday and the "Today" header
+/// assertion failed. Landing the seeds at fixed clock times keeps the grouping
+/// ("Today" / "Yesterday") true whenever the suite runs.
+DateTime _todayAt(int hour, int minute) {
+  final DateTime now = DateTime.now();
+  return DateTime(now.year, now.month, now.day, hour, minute);
+}
+
+DateTime _yesterdayAt(int hour, int minute) =>
+    _todayAt(hour, minute).subtract(const Duration(days: 1));
+
 /// A follow target that is followed state-side, with the catalogue entry the
 /// page renders for it.
 class _Entry {
@@ -161,7 +180,8 @@ class InMemoryNotificationRepository implements NotificationRepository {
 /// Seeded catalogue + alert fixtures shared by the widget tests.
 class FollowingTestFixture {
   FollowingTestFixture()
-    : following = InMemoryFollowingRepository(
+    : userState = FakeUserStateRepository(),
+      following = InMemoryFollowingRepository(
         followed: <FollowTarget>[lakers, freetown, politics],
         suggested: <FollowTarget>[koidu, kenema, nationalNews],
       ),
@@ -170,7 +190,7 @@ class FollowingTestFixture {
           id: 'n1',
           title: 'Breaking: Sierra Leone budget passed',
           body: 'Parliament approved the 2027 budget late on Tuesday evening.',
-          receivedAt: DateTime.now().subtract(const Duration(minutes: 12)),
+          receivedAt: _todayAt(9, 15),
           kind: NotificationKind.breaking,
           articleId: 'article-1',
         ),
@@ -178,16 +198,14 @@ class FollowingTestFixture {
           id: 'n2',
           title: 'Lakers win again',
           body: 'A 112-104 road win keeps the Lakers top of the Western Conference.',
-          receivedAt: DateTime.now().subtract(const Duration(hours: 3)),
+          receivedAt: _todayAt(7, 30),
           kind: NotificationKind.followedTeam,
         ),
         NotificationItem(
           id: 'n3',
           title: 'Freetown weather alert',
           body: 'Heavy rain expected across the Western Area this weekend.',
-          receivedAt: DateTime.now().subtract(
-            const Duration(days: 1, hours: 2),
-          ),
+          receivedAt: _yesterdayAt(18, 0),
           kind: NotificationKind.system,
           isRead: true,
         ),
@@ -195,6 +213,10 @@ class FollowingTestFixture {
 
   final InMemoryFollowingRepository following;
   final InMemoryNotificationRepository notifications;
+
+  /// Backing store for `settingsControllerProvider`, which Following and the
+  /// notification history read for the category switches.
+  final FakeUserStateRepository userState;
 
   /// Followed team crest (no image → initials circle).
   static const FollowTarget lakers = FollowTarget(

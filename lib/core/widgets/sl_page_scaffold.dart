@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'overflow_menu_button.dart';
+import 'page_menu_button.dart';
 
 /// Standard page chrome for the four tab roots.
 ///
@@ -76,18 +77,23 @@ class SlPageScaffold extends StatelessWidget {
                     : const SizedBox.shrink()),
           actions: <Widget>[
             ...actions,
+            // Two menu shapes, because the reference app uses both: pages that
+            // need story-level actions pass `onOverflowSelected` (the article
+            // menu), every other page gets the page menu — Settings and Notices.
             if (showOverflow)
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: OverflowMenuButton(
-                  size: 22,
-                  items: const <ArticleAction>[
-                    ArticleAction.bookmark,
-                    ArticleAction.hide,
-                    ArticleAction.report,
-                  ],
-                  onSelected: onOverflowSelected,
-                ),
+                child: onOverflowSelected != null
+                    ? OverflowMenuButton(
+                        size: 22,
+                        items: const <ArticleAction>[
+                          ArticleAction.bookmark,
+                          ArticleAction.hide,
+                          ArticleAction.report,
+                        ],
+                        onSelected: onOverflowSelected,
+                      )
+                    : const PageMenuButton(),
               ),
           ],
           bottom: bottom,

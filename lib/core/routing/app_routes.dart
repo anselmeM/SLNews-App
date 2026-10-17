@@ -15,6 +15,10 @@ abstract final class AppRoutes {
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
+  /// Reader settings, pushed above the shell like the reference screen (which
+  /// hides the bottom navigation).
+  static const String settings = '/settings';
+
   /// Notification history, nested inside the Following tab so the bottom
   /// navigation bar stays visible.
   static const String notificationHistory = '/following/notifications';
@@ -24,6 +28,7 @@ abstract final class AppRoutes {
 
   static const String articleName = 'article';
   static const String savedName = 'saved';
+  static const String settingsName = 'settings';
 }
 
 /// Named route identifiers used by `go_router`.
@@ -35,5 +40,6 @@ abstract final class RouteNames {
   static const String article = 'article';
   static const String saved = 'saved';
   static const String signIn = 'sign_in';
+  static const String settings = 'settings';
   static const String notificationHistory = 'following_notifications';
 }

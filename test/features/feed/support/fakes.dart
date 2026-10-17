@@ -1,4 +1,4 @@
-import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+﻿import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/domain/models/notification_item.dart';
@@ -201,6 +201,34 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async =>
       breakingNewsAlertsEnabled = enabled;
+
+  @override
+  bool editorsPicksEnabled = false;
+
+  @override
+  Future<void> setEditorsPicksEnabled(bool enabled) async =>
+      editorsPicksEnabled = enabled;
+
+  @override
+  bool interactiveContentEnabled = false;
+
+  @override
+  Future<void> setInteractiveContentEnabled(bool enabled) async =>
+      interactiveContentEnabled = enabled;
+
+  @override
+  bool sportsAlertsEnabled = true;
+
+  @override
+  Future<void> setSportsAlertsEnabled(bool enabled) async =>
+      sportsAlertsEnabled = enabled;
+
+  @override
+  bool weatherForecastEnabled = true;
+
+  @override
+  Future<void> setWeatherForecastEnabled(bool enabled) async =>
+      weatherForecastEnabled = enabled;
 }
 
 /// Deterministic weather; `throwOnCurrent` exercises the header fallback.

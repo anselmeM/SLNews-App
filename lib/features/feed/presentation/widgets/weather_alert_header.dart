@@ -20,6 +20,7 @@ class WeatherAlertHeader extends ConsumerWidget {
     super.key,
     required this.location,
     this.hasBreaking = false,
+    this.showWeather = true,
   });
 
   /// Active location, resolved by the view model so the label is stable even
@@ -29,8 +30,14 @@ class WeatherAlertHeader extends ConsumerWidget {
   /// Draws the red `BREAKING` tag when any story in the feed is breaking.
   final bool hasBreaking;
 
+  /// Reader preference: "Show weather forecast". When false the temperature chip
+  /// disappears while the breaking tag keeps working.
+  final bool showWeather;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!showWeather && !hasBreaking) return const SizedBox.shrink();
+
     final AsyncValue<WeatherSnapshot> weather = ref.watch(
       activeWeatherProvider,
     );
@@ -38,10 +45,12 @@ class WeatherAlertHeader extends ConsumerWidget {
         weather.value ?? WeatherSnapshot.placeholder(location.label);
 
     return Semantics(
-      button: true,
-      label: 'Weather for ${snapshot.locationLabel}. Change location.',
+      button: showWeather,
+      label: showWeather
+          ? 'Weather for ${snapshot.locationLabel}. Change location.'
+          : 'Breaking news',
       child: InkWell(
-        onTap: () => openLocationPicker(context, ref),
+        onTap: showWeather ? () => openLocationPicker(context, ref) : null,
         borderRadius: AppRadius.pillRadius,
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -51,27 +60,29 @@ class WeatherAlertHeader extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(
-                AppGlyphs.weather(snapshot.glyph),
-                size: 18,
-                color: context.colors.onSurface,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              // Flexible + ellipsis keeps the chip inside a 320pt screen and at
-              // large text scales instead of overflowing the header row.
-              Flexible(
-                child: Text(
-                  '${snapshot.temperatureC}° ${snapshot.locationLabel}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.meta.copyWith(
-                    color: context.colors.onSurface,
-                    fontWeight: FontWeight.w600,
+              if (showWeather) ...<Widget>[
+                Icon(
+                  AppGlyphs.weather(snapshot.glyph),
+                  size: 18,
+                  color: context.colors.onSurface,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                // Flexible + ellipsis keeps the chip inside a 320pt screen and at
+                // large text scales instead of overflowing the header row.
+                Flexible(
+                  child: Text(
+                    '${snapshot.temperatureC}° ${snapshot.locationLabel}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.meta.copyWith(
+                      color: context.colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
+              ],
               if (hasBreaking) ...<Widget>[
-                const SizedBox(width: AppSpacing.sm),
+                if (showWeather) const SizedBox(width: AppSpacing.sm),
                 const _BreakingTag(),
               ],
             ],

@@ -18,12 +18,20 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String textScaleKey = 'settings.textScale';
   static const String activeLocationKey = 'settings.activeLocation';
   static const String breakingAlertsKey = 'settings.breakingAlerts';
+  static const String editorsPicksKey = 'settings.editorsPicks';
+  static const String interactiveContentKey = 'settings.interactiveContent';
+  static const String sportsAlertsKey = 'settings.sportsAlerts';
+  static const String weatherForecastKey = 'settings.weatherForecast';
 
   /// Defaults applied when a key has never been written.
   static const String defaultThemeMode = 'system';
   static const double defaultTextScale = 1.0;
   static const String defaultActiveLocationId = 'city:freetown';
   static const bool defaultBreakingAlerts = true;
+  static const bool defaultEditorsPicks = false;
+  static const bool defaultInteractiveContent = false;
+  static const bool defaultSportsAlerts = true;
+  static const bool defaultWeatherForecast = true;
 
   final PreferencesStore _store;
 
@@ -77,6 +85,38 @@ class DefaultUserStateRepository implements UserStateRepository {
   @override
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) =>
       _store.putBool(breakingAlertsKey, enabled);
+
+  @override
+  bool get editorsPicksEnabled =>
+      _store.boolean(editorsPicksKey) ?? defaultEditorsPicks;
+
+  @override
+  Future<void> setEditorsPicksEnabled(bool enabled) =>
+      _store.putBool(editorsPicksKey, enabled);
+
+  @override
+  bool get interactiveContentEnabled =>
+      _store.boolean(interactiveContentKey) ?? defaultInteractiveContent;
+
+  @override
+  Future<void> setInteractiveContentEnabled(bool enabled) =>
+      _store.putBool(interactiveContentKey, enabled);
+
+  @override
+  bool get sportsAlertsEnabled =>
+      _store.boolean(sportsAlertsKey) ?? defaultSportsAlerts;
+
+  @override
+  Future<void> setSportsAlertsEnabled(bool enabled) =>
+      _store.putBool(sportsAlertsKey, enabled);
+
+  @override
+  bool get weatherForecastEnabled =>
+      _store.boolean(weatherForecastKey) ?? defaultWeatherForecast;
+
+  @override
+  Future<void> setWeatherForecastEnabled(bool enabled) =>
+      _store.putBool(weatherForecastKey, enabled);
 
   Future<void> _toggle(String key, String id) async {
     // `stringSet` hands back a fresh, growable copy of the stored list.

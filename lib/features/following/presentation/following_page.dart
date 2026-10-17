@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/domain/models/notification_item.dart';
+import '../../../core/domain/models/notification_preferences.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -36,10 +38,16 @@ class FollowingPage extends ConsumerWidget {
     final AsyncValue<List<NotificationItem>> notifications = ref.watch(
       notificationsControllerProvider,
     );
+    final AppSettings settings = ref.watch(settingsControllerProvider);
 
     final FollowingViewModel viewModel = FollowingViewModel(
       snapshot: snapshot,
-      notifications: notifications.value ?? const <NotificationItem>[],
+      // Categories the reader switched off in Settings are hidden here too, so
+      // the badge cannot advertise alerts the history page will not show.
+      notifications: visibleNotifications(
+        notifications.value ?? const <NotificationItem>[],
+        settings,
+      ),
       hasError: snapshot is AsyncError<FollowingSnapshot>,
       isLoading: notifications.isLoading,
     );

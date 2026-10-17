@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/notification_item.dart';
@@ -24,6 +24,7 @@ void main() {
       overrides: [
         notificationRepositoryProvider.overrideWithValue(repository),
         followingRepositoryProvider.overrideWithValue(fixture.following),
+        userStateProvider.overrideWithValue(fixture.userState),
       ],
     );
     return container;
@@ -37,6 +38,7 @@ void main() {
         // The test router's initial location is the nested history route, but
         // `FollowingPage` still mounts as the parent branch page.
         followingRepositoryProvider.overrideWithValue(fixture.following),
+        userStateProvider.overrideWithValue(fixture.userState),
       ],
     );
   });

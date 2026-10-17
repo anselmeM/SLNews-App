@@ -26,6 +26,10 @@ class SettingsController extends Notifier<AppSettings> {
       textScale: repository.textScale,
       activeLocationId: repository.activeLocationId,
       breakingNewsAlertsEnabled: repository.breakingNewsAlertsEnabled,
+      editorsPicksEnabled: repository.editorsPicksEnabled,
+      interactiveContentEnabled: repository.interactiveContentEnabled,
+      sportsAlertsEnabled: repository.sportsAlertsEnabled,
+      weatherForecastEnabled: repository.weatherForecastEnabled,
     );
   }
 
@@ -52,6 +56,26 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setBreakingNewsAlertsEnabled(enabled);
     state = state.copyWith(breakingNewsAlertsEnabled: enabled);
+  }
+
+  Future<void> setEditorsPicksEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setEditorsPicksEnabled(enabled);
+    state = state.copyWith(editorsPicksEnabled: enabled);
+  }
+
+  Future<void> setInteractiveContentEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setInteractiveContentEnabled(enabled);
+    state = state.copyWith(interactiveContentEnabled: enabled);
+  }
+
+  Future<void> setSportsAlertsEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setSportsAlertsEnabled(enabled);
+    state = state.copyWith(sportsAlertsEnabled: enabled);
+  }
+
+  Future<void> setWeatherForecastEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setWeatherForecastEnabled(enabled);
+    state = state.copyWith(weatherForecastEnabled: enabled);
   }
 }
 

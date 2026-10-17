@@ -35,6 +35,10 @@ class AppSettings {
     this.textScale = 1,
     this.activeLocationId = 'city:freetown',
     this.breakingNewsAlertsEnabled = true,
+    this.editorsPicksEnabled = false,
+    this.interactiveContentEnabled = false,
+    this.sportsAlertsEnabled = true,
+    this.weatherForecastEnabled = true,
   });
 
   final AppThemeMode themeMode;
@@ -44,6 +48,22 @@ class AppSettings {
 
   final String activeLocationId;
   final bool breakingNewsAlertsEnabled;
+
+  /// Notification categories the reader can switch on or off.
+  ///
+  /// Defaults follow the reference screen: breaking news and sports alerts on,
+  /// editor's picks and interactive content off. `interactiveContentEnabled` is
+  /// persisted for the category the API does not produce yet, so enabling it is
+  /// a real preference and not a lost toggle.
+  final bool editorsPicksEnabled;
+  final bool interactiveContentEnabled;
+  final bool sportsAlertsEnabled;
+
+  /// When false the weather row is hidden from the feeds.
+  final bool weatherForecastEnabled;
+
+  /// Language and region shown on the settings screen. The app ships one locale.
+  static const String languageRegion = 'English (Sierra Leone)';
 
   /// Steps the reader's `aA` control walks through.
   static const List<double> textScaleSteps = <double>[0.9, 1, 1.15, 1.3, 1.5];
@@ -60,6 +80,10 @@ class AppSettings {
     double? textScale,
     String? activeLocationId,
     bool? breakingNewsAlertsEnabled,
+    bool? editorsPicksEnabled,
+    bool? interactiveContentEnabled,
+    bool? sportsAlertsEnabled,
+    bool? weatherForecastEnabled,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -67,6 +91,12 @@ class AppSettings {
       activeLocationId: activeLocationId ?? this.activeLocationId,
       breakingNewsAlertsEnabled:
           breakingNewsAlertsEnabled ?? this.breakingNewsAlertsEnabled,
+      editorsPicksEnabled: editorsPicksEnabled ?? this.editorsPicksEnabled,
+      interactiveContentEnabled:
+          interactiveContentEnabled ?? this.interactiveContentEnabled,
+      sportsAlertsEnabled: sportsAlertsEnabled ?? this.sportsAlertsEnabled,
+      weatherForecastEnabled:
+          weatherForecastEnabled ?? this.weatherForecastEnabled,
     );
   }
 
@@ -76,7 +106,11 @@ class AppSettings {
       other.themeMode == themeMode &&
       other.textScale == textScale &&
       other.activeLocationId == activeLocationId &&
-      other.breakingNewsAlertsEnabled == breakingNewsAlertsEnabled;
+      other.breakingNewsAlertsEnabled == breakingNewsAlertsEnabled &&
+      other.editorsPicksEnabled == editorsPicksEnabled &&
+      other.interactiveContentEnabled == interactiveContentEnabled &&
+      other.sportsAlertsEnabled == sportsAlertsEnabled &&
+      other.weatherForecastEnabled == weatherForecastEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -84,5 +118,9 @@ class AppSettings {
     textScale,
     activeLocationId,
     breakingNewsAlertsEnabled,
+    editorsPicksEnabled,
+    interactiveContentEnabled,
+    sportsAlertsEnabled,
+    weatherForecastEnabled,
   );
 }

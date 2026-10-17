@@ -1,3 +1,11 @@
+﻿/// The clock relative labels are measured against.
+///
+/// A seam rather than an injected dependency: [TimeAgo] is reached from plain
+/// getters on models (`article.relativeAge`) that have no `Ref`, and the golden
+/// renders must be able to freeze "now" or every screen with an age label drifts
+/// a little further from its golden each day. Production never assigns it.
+DateTime Function() appNow = () => DateTime.now();
+
 /// Formats a [DateTime] as a short relative age ("2 hours ago").
 ///
 /// Kept as a pure function so it is trivially unit-testable with an injected
@@ -8,7 +16,7 @@ abstract final class TimeAgo {
     DateTime? now,
     bool short = false,
   }) {
-    final DateTime reference = now ?? DateTime.now();
+    final DateTime reference = now ?? appNow();
     final Duration delta = reference.difference(timestamp);
 
     if (delta.inMinutes < 1) {
@@ -76,7 +84,7 @@ extension DateTimeLabels on DateTime {
 
   /// "Today" / "Yesterday" / "10/16" label used by the scoreboard headers.
   String get shortDateLabel {
-    final DateTime now = DateTime.now();
+    final DateTime now = appNow();
     final DateTime today = DateTime(now.year, now.month, now.day);
     final DateTime self = DateTime(year, month, day);
     final int diff = today.difference(self).inDays;

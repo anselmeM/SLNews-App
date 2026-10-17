@@ -9,6 +9,7 @@ import '../../features/feed/presentation/for_you_page.dart';
 import '../../features/following/presentation/following_page.dart';
 import '../../features/following/presentation/notification_history_page.dart';
 import '../../features/news/presentation/news_page.dart';
+import '../../features/settings/presentation/settings_page.dart';
 import '../../features/sports/presentation/sports_page.dart';
 import '../shell/app_shell.dart';
 import 'app_routes.dart';
@@ -112,6 +113,13 @@ GoRouter createAppRouter() {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) =>
             const SignInPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        name: RouteNames.settings,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) =>
+            const SettingsPage(),
       ),
     ],
   );

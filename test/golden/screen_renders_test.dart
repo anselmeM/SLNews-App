@@ -15,6 +15,7 @@ import 'package:slnews_mobile/core/providers/app_bootstrap.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/routing/app_router.dart';
 import 'package:slnews_mobile/core/routing/app_routes.dart';
+import 'package:slnews_mobile/core/utils/time_ago.dart';
 
 /// End-to-end screen renders.
 ///
@@ -26,10 +27,25 @@ import 'package:slnews_mobile/core/routing/app_routes.dart';
 ///     flutter test test/golden --update-goldens     # regenerate
 ///     flutter test test/golden                      # compare
 ///
-/// Every timestamp is pinned (see [_frozenSeedLoader]) so renders are stable.
+/// Every timestamp is pinned (see [_frozenSeedLoader]) **and** the clock the
+/// relative labels read is frozen too: "2 hours ago" measured against the real
+/// clock drifted the pixels further from the golden with every passing day.
 /// CI runs the functional suites (`test/core`, `test/data`, `test/features`) and
 /// skips these, because pixel output also depends on the host renderer.
 void main() {
+  /// Two and a half hours after [_frozenSeedLoader]'s base instant, so the age
+  /// labels read naturally ("2 hours ago") instead of all collapsing to "just
+  /// now" while staying perfectly deterministic.
+  final DateTime goldenNow = DateTime(2026, 10, 15, 11, 30);
+
+  setUp(() {
+    appNow = () => goldenNow;
+  });
+
+  tearDown(() {
+    appNow = () => DateTime.now();
+  });
+
   setUpAll(() async {
     // `cached_network_image` needs a cache directory and a database, neither of
     // which exists under `flutter test`. Pointing path_provider at a real temp
@@ -158,6 +174,15 @@ void main() {
     container.read(appRouterProvider).push(AppRoutes.saved);
     await settle(tester);
     await capture(tester, 'saved');
+  });
+
+  testWidgets('Settings renders the grouped preference cards', (
+    WidgetTester tester,
+  ) async {
+    await pumpApp(tester);
+    container.read(appRouterProvider).push(AppRoutes.settings);
+    await settle(tester);
+    await capture(tester, 'settings');
   });
 }
 
