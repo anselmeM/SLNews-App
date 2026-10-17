@@ -19,8 +19,8 @@
     Overrides the base URL (default: $env:SLNEWS_API_URL or the deployed host).
 
 .EXAMPLE
-    pwsh -File scripts/smoke_api.ps1
-    pwsh -File scripts/smoke_api.ps1 -BaseUrl http://localhost:3000
+    powershell -NoProfile -File scripts/smoke_api.ps1
+    powershell -NoProfile -File scripts/smoke_api.ps1 -BaseUrl http://localhost:3000
 #>
 [CmdletBinding()]
 param(

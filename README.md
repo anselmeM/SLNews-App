@@ -55,10 +55,11 @@ Requirements: Flutter 3.47+ and, for Android, JDK 17 plus the Android SDK.
 
 ```powershell
 # Windows / PowerShell — analyze, test, build, checksum, copy to build/dist
-pwsh -File scripts/build_apk.ps1
+# Works on Windows PowerShell 5.1 (what a stock Windows box has) and on 7.
+powershell -NoProfile -File scripts/build_apk.ps1
 
 # one APK per ABI (~15 MB each instead of ~43 MB)
-pwsh -File scripts/build_apk.ps1 -SplitPerAbi
+powershell -NoProfile -File scripts/build_apk.ps1 -SplitPerAbi
 ```
 
 ```bash

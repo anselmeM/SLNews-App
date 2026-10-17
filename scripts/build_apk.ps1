@@ -23,9 +23,13 @@
     CLERK_PUBLISHABLE_KEY; values passed here win.
 
 .EXAMPLE
-    pwsh -File scripts/build_apk.ps1
-    pwsh -File scripts/build_apk.ps1 -SplitPerAbi -OutDir dist
-    pwsh -File scripts/build_apk.ps1 -DartDefine 'SLNEWS_API_KEY=abc123'
+    powershell -NoProfile -File scripts/build_apk.ps1
+    powershell -NoProfile -File scripts/build_apk.ps1 -SplitPerAbi -OutDir dist
+    powershell -NoProfile -File scripts/build_apk.ps1 -DartDefine 'SLNEWS_API_KEY=abc123'
+
+.NOTES
+    Runs on Windows PowerShell 5.1 as well as PowerShell 7, so `powershell -File`
+    and `pwsh -File` both work.
 #>
 [CmdletBinding()]
 param(
@@ -40,7 +44,10 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 try {
     # --- Resolve the Flutter SDK -------------------------------------------------
-    $flutter = (Get-Command flutter -ErrorAction SilentlyContinue)?.Source
+    # No `?.` here: this must also parse under Windows PowerShell 5.1, which is
+    # what a stock Windows box has (PowerShell 7 is not installed by default).
+    $flutterCommand = Get-Command flutter -ErrorAction SilentlyContinue
+    $flutter = if ($flutterCommand) { $flutterCommand.Source } else { $null }
     if (-not $flutter) {
         $candidates = @(
             'C:\Users\amotc\flutter\flutter\bin\flutter.bat',
