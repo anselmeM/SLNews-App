@@ -12,7 +12,10 @@ import 'page_menu_button.dart';
 ///   title rendered in the scroll content (For You, News).
 /// * [brandMark] null — the page title itself is the large app-bar title
 ///   (Sports, Following).
-class SlPageScaffold extends StatelessWidget {
+///
+/// It also owns the reference screen's circular "back to top" button, which
+/// appears once the reader has scrolled past the first screenful.
+class SlPageScaffold extends StatefulWidget {
   const SlPageScaffold({
     super.key,
     required this.title,
@@ -26,6 +29,7 @@ class SlPageScaffold extends StatelessWidget {
     this.onRefresh,
     this.floatingActionButton,
     this.showTitleInAppBar = true,
+    this.showScrollToTop = true,
   });
 
   final String title;
@@ -51,11 +55,58 @@ class SlPageScaffold extends StatelessWidget {
   /// When false the title is omitted from the app bar (the content renders it).
   final bool showTitleInAppBar;
 
-  bool get _hasBrandMark => brandMark != null && brandMark!.isNotEmpty;
+  /// Shows the back-to-top affordance once [scrollToTopThreshold] is passed.
+  final bool showScrollToTop;
+
+  /// Distance scrolled before the back-to-top button appears.
+  static const double scrollToTopThreshold = 700;
+
+  @override
+  State<SlPageScaffold> createState() => _SlPageScaffoldState();
+}
+
+class _SlPageScaffoldState extends State<SlPageScaffold> {
+  final ScrollController _controller = ScrollController();
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onScroll);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final bool visible =
+        _controller.hasClients &&
+        _controller.offset > SlPageScaffold.scrollToTopThreshold;
+    if (visible != _showScrollToTop) setState(() => _showScrollToTop = visible);
+  }
+
+  Future<void> _scrollToTop() async {
+    if (!_controller.hasClients) return;
+    await _controller.animateTo(
+      0,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  bool get _hasBrandMark {
+    final String? mark = widget.brandMark;
+    return mark != null && mark.isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
     final Widget content = CustomScrollView(
+      controller: _controller,
       slivers: <Widget>[
         SliverAppBar(
           pinned: true,
@@ -69,21 +120,21 @@ class SlPageScaffold extends StatelessWidget {
           titleSpacing: AppSpacing.lg,
           title: _hasBrandMark
               ? Text(
-                  brandMark!,
+                  widget.brandMark!,
                   style: context.typography.groupTitle.copyWith(fontSize: 21),
                 )
-              : (showTitleInAppBar
-                    ? Text(title, style: context.typography.screenTitle)
+              : (widget.showTitleInAppBar
+                    ? Text(widget.title, style: context.typography.screenTitle)
                     : const SizedBox.shrink()),
           actions: <Widget>[
-            ...actions,
+            ...widget.actions,
             // Two menu shapes, because the reference app uses both: pages that
             // need story-level actions pass `onOverflowSelected` (the article
             // menu), every other page gets the page menu — Settings and Notices.
-            if (showOverflow)
+            if (widget.showOverflow)
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: onOverflowSelected != null
+                child: widget.onOverflowSelected != null
                     ? OverflowMenuButton(
                         size: 22,
                         items: const <ArticleAction>[
@@ -91,27 +142,67 @@ class SlPageScaffold extends StatelessWidget {
                           ArticleAction.hide,
                           ArticleAction.report,
                         ],
-                        onSelected: onOverflowSelected,
+                        onSelected: widget.onOverflowSelected,
                       )
                     : const PageMenuButton(),
               ),
           ],
-          bottom: bottom,
+          bottom: widget.bottom,
         ),
-        if (body != null)
-          SliverFillRemaining(hasScrollBody: false, child: body!)
+        if (widget.body != null)
+          SliverFillRemaining(hasScrollBody: false, child: widget.body!)
         else
-          ...slivers,
+          ...widget.slivers,
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
       ],
     );
 
+    final Widget? fab =
+        widget.floatingActionButton ??
+        (widget.showScrollToTop && _showScrollToTop
+            ? _ScrollToTopButton(onPressed: _scrollToTop)
+            : null);
+
     return Scaffold(
       backgroundColor: context.colors.canvas,
-      body: onRefresh == null
+      body: widget.onRefresh == null
           ? content
-          : RefreshIndicator(onRefresh: onRefresh!, child: content),
-      floatingActionButton: floatingActionButton,
+          : RefreshIndicator(onRefresh: widget.onRefresh!, child: content),
+      floatingActionButton: fab,
+    );
+  }
+}
+
+/// Circular white "back to top" button from the reference feed.
+class _ScrollToTopButton extends StatelessWidget {
+  const _ScrollToTopButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Back to top',
+      child: Material(
+        color: context.colors.surface,
+        shape: const CircleBorder(),
+        elevation: 2,
+        shadowColor: Colors.black26,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(
+              Icons.keyboard_arrow_up,
+              size: 26,
+              color: context.colors.onSurface,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

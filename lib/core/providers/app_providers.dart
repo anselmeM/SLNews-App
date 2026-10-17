@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/local/article_cache.dart';
 import '../data/local/preferences_store.dart';
 import '../data/seed/seed_loader.dart';
+import '../data/seed/video_seed.dart';
 import '../data/sources/api_client.dart';
 import '../data/sources/feed_source.dart';
+import '../data/sources/sl_news_video_source.dart';
 import '../domain/models/ad_unit.dart';
 import '../domain/models/article.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
 import '../domain/models/sports_models.dart';
+import '../domain/models/video_moment.dart';
 import '../domain/models/weather_snapshot.dart';
 import '../domain/repositories/ad_repository.dart';
 import '../domain/repositories/article_repository.dart';
@@ -224,3 +227,30 @@ class SelectedCategoryController extends Notifier<String> {
 
   void select(String categoryId) => state = categoryId;
 }
+
+/// Reads the "Video moments" rail from the scraper API.
+///
+/// `null` when the build has no key; [videoMomentsProvider] then serves the
+/// bundled rotation. AppBootstrap overrides this once it has an ApiClient.
+final Provider<SlNewsVideoSource?> slNewsVideoSourceProvider =
+    Provider<SlNewsVideoSource?>((Ref ref) => null, name: 'slNewsVideoSource');
+
+/// Video moments for the For You rail: live entries when the API answers with
+/// any, the bundled rotation otherwise. Never throws, so the rail is either
+/// populated or absent and the page never shows an error for it.
+final FutureProvider<List<VideoMoment>> videoMomentsProvider =
+    FutureProvider<List<VideoMoment>>((Ref ref) async {
+      final SlNewsVideoSource? source = ref.watch(slNewsVideoSourceProvider);
+      if (source != null) {
+        final List<VideoMoment> live = await source.latest(limit: 8);
+        if (live.isNotEmpty) return live;
+      }
+      return SlVideos.all;
+    }, name: 'videoMoments');
+
+/// Ads rotated into the For You feed, one per section break.
+final FutureProvider<List<AdUnit>> forYouAdsProvider =
+    FutureProvider<List<AdUnit>>(
+      (Ref ref) => ref.watch(adRepositoryProvider).units(placement: 'for_you'),
+      name: 'forYouAds',
+    );

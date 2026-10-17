@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 // `Override` lives in the misc entrypoint of Riverpod 3.
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
@@ -16,6 +17,7 @@ List<Override> feedTestOverrides({
   required FakeArticleRepository articles,
   FakeUserStateRepository? userState,
   FakeWeatherRepository? weather,
+  List<AdUnit> ads = const <AdUnit>[],
 }) {
   return <Override>[
     articleRepositoryProvider.overrideWithValue(articles),
@@ -28,7 +30,7 @@ List<Override> feedTestOverrides({
     notificationRepositoryProvider.overrideWithValue(
       FakeNotificationRepository(),
     ),
-    adRepositoryProvider.overrideWithValue(FakeAdRepository()),
+    adRepositoryProvider.overrideWithValue(FakeAdRepository(rotation: ads)),
     // Pull-to-refresh is a platform concern; stubbing it keeps the tests off
     // the network entirely.
     refreshFeedsProvider.overrideWithValue(() async {}),

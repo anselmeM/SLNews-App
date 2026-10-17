@@ -9,6 +9,7 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.title,
+    this.subtitle,
     this.onTap,
     this.trailing,
     this.padding = const EdgeInsets.fromLTRB(
@@ -21,6 +22,9 @@ class SectionHeader extends StatelessWidget {
   });
 
   final String title;
+
+  /// Supporting line under the title, e.g. "Based on your interests".
+  final String? subtitle;
 
   /// When set, the whole header (and chevron) becomes tappable.
   final VoidCallback? onTap;
@@ -41,21 +45,45 @@ class SectionHeader extends StatelessWidget {
     final Widget row = Row(
       children: <Widget>[
         Flexible(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: style,
+                    ),
+                  ),
+                  if (onTap != null) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    Icon(
+                      Icons.chevron_right,
+                      size: compact ? 22 : 26,
+                      color: context.colors.onSurface,
+                    ),
+                  ],
+                ],
+              ),
+              if (subtitle != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.caption.copyWith(
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-        if (onTap != null) ...<Widget>[
-          const SizedBox(width: AppSpacing.xs),
-          Icon(
-            Icons.chevron_right,
-            size: compact ? 22 : 26,
-            color: context.colors.onSurface,
-          ),
-        ],
         const Spacer(),
         ?trailing,
       ],

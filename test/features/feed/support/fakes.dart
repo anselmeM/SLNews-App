@@ -326,10 +326,14 @@ class FakeNotificationRepository implements NotificationRepository {
 
 /// Empty ad rotation double.
 class FakeAdRepository implements AdRepository {
-  @override
-  Future<List<AdUnit>> units({String placement = 'default'}) async =>
-      const <AdUnit>[];
+  FakeAdRepository({this.rotation = const <AdUnit>[]});
+
+  /// Units returned for every placement; empty means "no ad to show".
+  final List<AdUnit> rotation;
 
   @override
-  List<AdUnit> get cachedUnits => const <AdUnit>[];
+  Future<List<AdUnit>> units({String placement = 'default'}) async => rotation;
+
+  @override
+  List<AdUnit> get cachedUnits => rotation;
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -17,6 +17,7 @@ import '../data/seed/seed_loader.dart';
 import '../data/sources/api_client.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/sl_news_api_source.dart';
+import '../data/sources/sl_news_video_source.dart';
 import '../data/sync/sync_api_config.dart';
 import '../domain/repositories/ad_repository.dart';
 import '../domain/repositories/article_repository.dart';
@@ -120,7 +121,7 @@ class AppBootstrap {
     final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment();
 
     // Reader-state sync (bookmarks, likes, follows) lives on the PWA origin, so
-    // its host must be allow-listed for the session token too — otherwise every
+    // its host must be allow-listed for the session token too â€” otherwise every
     // sync call would be anonymous and answer 401.
     final SyncApiConfig syncConfig = SyncApiConfig.fromEnvironment();
 
@@ -216,6 +217,13 @@ class AppBootstrap {
           weatherRepositoryProvider.overrideWithValue(weatherRepository),
           userStateProvider.overrideWithValue(userStateRepository),
           adRepositoryProvider.overrideWithValue(adRepository),
+          // The video rail shares the scraper configuration; when the build has
+          // no key it stays null and the bundled rotation is used instead.
+          slNewsVideoSourceProvider.overrideWithValue(
+            apiConfig.isConfigured
+                ? SlNewsVideoSource(apiConfig, client)
+                : null,
+          ),
           // Keep the provider and the composition root on the same configuration
           // (and URL host allow-list), so a test or a staging build overrides one
           // place and everything follows.
@@ -247,7 +255,7 @@ class AppBootstrap {
   /// Builds the Clerk session when `CLERK_PUBLISHABLE_KEY` is configured.
   ///
   /// Returns `null` (app runs anonymously) when the key is absent, rejected, or
-  /// the Frontend API cannot be reached — start-up must not depend on identity.
+  /// the Frontend API cannot be reached â€” start-up must not depend on identity.
   static Future<ClerkAuthRepository?> _createAuth() async {
     const String key = String.fromEnvironment('CLERK_PUBLISHABLE_KEY');
     if (key.trim().isEmpty) {

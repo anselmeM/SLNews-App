@@ -1,14 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
+import '../../../core/domain/models/video_moment.dart';
 import '../../../core/domain/repositories/article_repository.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/ad_card.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/overflow_menu_button.dart';
 import '../../../core/widgets/section_header.dart';
@@ -17,15 +22,17 @@ import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/top_stories_carousel.dart';
+import 'widgets/video_moments_rail.dart';
 import 'widgets/weather_alert_header.dart';
 import 'viewmodels/for_you_view_model.dart';
 
-/// Tab 1 — the personalised "Top stories" feed.
+/// Tab 1 â€” the personalised "Top stories" feed.
 ///
 /// Reconstructs the reference screen top to bottom: offline banner, weather and
-/// breaking strip on the title row, the paged hero carousel, the local stream
-/// and finally the latest/other stream. All ordering, merging and de-duplication
-/// lives in [ForYouViewModel] so this file only maps data to slivers.
+/// breaking strip on the title row, the paged hero carousel, the local stream,
+/// then the reference rails â€” Latest, an ad, Video moments, Picks for you, a
+/// second ad and Your next read. All ordering, merging and de-duplication lives
+/// in [ForYouViewModel] so this file only maps data to slivers.
 class ForYouPage extends ConsumerWidget {
   const ForYouPage({super.key});
 
@@ -38,6 +45,12 @@ class ForYouPage extends ConsumerWidget {
     final AsyncValue<List<Article>> localStories = ref.watch(
       locationFeedProvider(locationId),
     );
+    // Both rails degrade to "absent" rather than erroring the page: video
+    // moments fall back to the bundled rotation, ads may be empty.
+    final List<VideoMoment> videos =
+        ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
+    final List<AdUnit> ads =
+        ref.watch(forYouAdsProvider).value ?? const <AdUnit>[];
     final _OfflineStatus offline = _readOffline(ref);
 
     final Widget content;
@@ -63,6 +76,8 @@ class ForYouPage extends ConsumerWidget {
       content = _FeedSliver(
         feed: feed,
         localStories: localStories.value ?? const <Article>[],
+        videos: videos,
+        ads: ads,
       );
     }
 
@@ -130,12 +145,25 @@ _OfflineStatus _readOffline(WidgetRef ref) {
   }
 }
 
-/// The populated feed, split into the carousel, the local stream and the rest.
+/// The populated feed: carousel, local stream, then the reference screen's
+/// rails â€” Latest, ad, Video moments, Picks for you, Your next read â€” with a
+/// "More â€¦" link on the rails that lead somewhere.
 class _FeedSliver extends ConsumerWidget {
-  const _FeedSliver({required this.feed, required this.localStories});
+  const _FeedSliver({
+    required this.feed,
+    required this.localStories,
+    required this.videos,
+    required this.ads,
+  });
 
   final ForYouFeed feed;
   final List<Article> localStories;
+  final List<VideoMoment> videos;
+  final List<AdUnit> ads;
+
+  /// Stories per rail. Four keeps every rail visible above the bottom bar on a
+  /// 640dp-tall phone instead of turning the page into one long list.
+  static const int railSize = 4;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -145,9 +173,25 @@ class _FeedSliver extends ConsumerWidget {
     final List<Article> localStream = feed.stream
         .where((Article article) => localIds.contains(article.id))
         .toList(growable: false);
-    final List<Article> latestStream = feed.stream
+    // Rails partition the remaining stories so the same headline never appears
+    // twice on one screen.
+    final List<Article> rest = feed.stream
         .where((Article article) => !localIds.contains(article.id))
         .toList(growable: false);
+    final List<Article> latestStream = rest
+        .take(railSize)
+        .toList(growable: false);
+    final List<Article> picks = rest
+        .skip(railSize)
+        .take(railSize)
+        .toList(growable: false);
+    final List<Article> nextRead = rest
+        .skip(railSize * 2)
+        .take(railSize)
+        .toList(growable: false);
+
+    final AdUnit? leadAd = ads.isNotEmpty ? ads.first : null;
+    final AdUnit? secondAd = ads.length > 1 ? ads[1] : null;
 
     return SliverMainAxisGroup(
       slivers: <Widget>[
@@ -165,10 +209,136 @@ class _FeedSliver extends ConsumerWidget {
           _ArticleTileSliver(articles: localStream),
         ],
         if (latestStream.isNotEmpty) ...<Widget>[
-          const SliverToBoxAdapter(child: SectionHeader(title: 'Latest')),
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Latest',
+              onTap: () => context.go(AppRoutes.news),
+              trailing: const _MoreLabel(),
+            ),
+          ),
           _ArticleTileSliver(articles: latestStream),
         ],
+        if (leadAd != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
+              child: AdCard(
+                unit: leadAd,
+                onCtaPressed: () => _openAd(context, leadAd),
+                onOpened: (AdUnit unit) => _openAd(context, unit),
+              ),
+            ),
+          ),
+        if (videos.isNotEmpty) ...<Widget>[
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Video moments',
+              subtitle: "See what's new",
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: VideoMomentsRail(
+              videos: videos,
+              onOpen: (VideoMoment video) => _openVideo(context, video),
+            ),
+          ),
+        ],
+        if (picks.isNotEmpty) ...<Widget>[
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Picks for you',
+              subtitle: 'Articles you might enjoy',
+              onTap: () => context.go(AppRoutes.news),
+              trailing: const _MoreLabel(),
+            ),
+          ),
+          _ArticleTileSliver(articles: picks),
+        ],
+        if (secondAd != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
+              child: AdCard(
+                unit: secondAd,
+                onCtaPressed: () => _openAd(context, secondAd),
+                onOpened: (AdUnit unit) => _openAd(context, unit),
+              ),
+            ),
+          ),
+        if (nextRead.isNotEmpty) ...<Widget>[
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Your next read',
+              subtitle: 'Based on your interests',
+            ),
+          ),
+          _ArticleTileSliver(articles: nextRead),
+        ],
       ],
+    );
+  }
+
+  /// Ads open their landing page when one is configured; the seed rotation has
+  /// none, so the tap says so instead of doing nothing.
+  Future<void> _openAd(BuildContext context, AdUnit unit) async {
+    final String? target = unit.targetUrl;
+    if (target == null || target.trim().isEmpty) {
+      _snack(context, '${unit.advertiser}: ${unit.ctaLabel}');
+      return;
+    }
+    final bool opened = await launchUrl(
+      Uri.parse(target),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && context.mounted) {
+      _snack(context, 'Could not open the ad');
+    }
+  }
+
+  Future<void> _openVideo(BuildContext context, VideoMoment video) async {
+    if (video.url.trim().isEmpty) {
+      _snack(context, 'This video has no playback link yet');
+      return;
+    }
+    final bool opened = await launchUrl(
+      Uri.parse(video.url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && context.mounted) {
+      _snack(context, 'Could not open the video');
+    }
+  }
+
+  void _snack(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+/// The small "More" affordance the reference puts beside a rail that continues
+/// on another screen; the chevron itself comes from [SectionHeader].
+class _MoreLabel extends StatelessWidget {
+  const _MoreLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'More',
+      style: context.typography.meta.copyWith(
+        color: context.colors.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
