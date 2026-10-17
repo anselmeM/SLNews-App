@@ -100,8 +100,8 @@ class SettingsPage extends ConsumerWidget {
                     SettingsSwitchRow(
                       title: 'Interactive content',
                       subtitle:
-                          'Get notified whenever new content for you to engage '
-                          'with is available.',
+                          'Show interactive cards such as market prices and '
+                          'exchange rates.',
                       value: settings.interactiveContentEnabled,
                       onChanged: controller.setInteractiveContentEnabled,
                     ),

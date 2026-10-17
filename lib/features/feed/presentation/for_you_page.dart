@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
+import '../../../core/domain/models/market_snapshot.dart';
 import '../../../core/domain/models/video_moment.dart';
 import '../../../core/domain/repositories/article_repository.dart';
 import '../../../core/providers/app_providers.dart';
@@ -20,6 +21,8 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../markets/presentation/widgets/market_rates_card.dart';
+import '../../markets/presentation/widgets/markets_sheet.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/top_stories_carousel.dart';
 import 'widgets/video_moments_rail.dart';
@@ -51,6 +54,9 @@ class ForYouPage extends ConsumerWidget {
         ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
     final List<AdUnit> ads =
         ref.watch(forYouAdsProvider).value ?? const <AdUnit>[];
+    // Interactive content: the Markets card only exists when the reader turned
+    // that category on in Settings.
+    final MarketSnapshot? markets = ref.watch(marketSnapshotProvider).value;
     final _OfflineStatus offline = _readOffline(ref);
 
     final Widget content;
@@ -78,6 +84,8 @@ class ForYouPage extends ConsumerWidget {
         localStories: localStories.value ?? const <Article>[],
         videos: videos,
         ads: ads,
+        markets: markets,
+        showMarkets: settings.interactiveContentEnabled,
       );
     }
 
@@ -154,12 +162,16 @@ class _FeedSliver extends ConsumerWidget {
     required this.localStories,
     required this.videos,
     required this.ads,
+    required this.markets,
+    required this.showMarkets,
   });
 
   final ForYouFeed feed;
   final List<Article> localStories;
   final List<VideoMoment> videos;
   final List<AdUnit> ads;
+  final MarketSnapshot? markets;
+  final bool showMarkets;
 
   /// Stories per rail. Four keeps every rail visible above the bottom bar on a
   /// 640dp-tall phone instead of turning the page into one long list.
@@ -248,6 +260,21 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
         ],
+        if (showMarkets)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
+              child: MarketRatesCard(
+                snapshot: markets,
+                onOpen: () => showMarketsSheet(context, snapshot: markets),
+              ),
+            ),
+          ),
         if (picks.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             child: SectionHeader(
