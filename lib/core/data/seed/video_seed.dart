@@ -1,4 +1,4 @@
-﻿import '../../domain/models/video_moment.dart';
+import '../../domain/models/video_moment.dart';
 
 /// Offline "Video moments" rotation.
 ///

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/domain/models/video_moment.dart';
 import '../../../../core/theme/app_spacing.dart';

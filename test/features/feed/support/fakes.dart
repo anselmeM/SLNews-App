@@ -1,4 +1,4 @@
-﻿import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/domain/models/notification_item.dart';

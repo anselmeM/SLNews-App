@@ -4,6 +4,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'overflow_menu_button.dart';
 import 'page_menu_button.dart';
+import 'scroll_to_top_button.dart';
 
 /// Standard page chrome for the four tab roots.
 ///
@@ -59,7 +60,7 @@ class SlPageScaffold extends StatefulWidget {
   final bool showScrollToTop;
 
   /// Distance scrolled before the back-to-top button appears.
-  static const double scrollToTopThreshold = 700;
+  static const double scrollToTopThreshold = ScrollToTopButton.threshold;
 
   @override
   State<SlPageScaffold> createState() => _SlPageScaffoldState();
@@ -160,7 +161,7 @@ class _SlPageScaffoldState extends State<SlPageScaffold> {
     final Widget? fab =
         widget.floatingActionButton ??
         (widget.showScrollToTop && _showScrollToTop
-            ? _ScrollToTopButton(onPressed: _scrollToTop)
+            ? ScrollToTopButton(onPressed: _scrollToTop)
             : null);
 
     return Scaffold(
@@ -169,40 +170,6 @@ class _SlPageScaffoldState extends State<SlPageScaffold> {
           ? content
           : RefreshIndicator(onRefresh: widget.onRefresh!, child: content),
       floatingActionButton: fab,
-    );
-  }
-}
-
-/// Circular white "back to top" button from the reference feed.
-class _ScrollToTopButton extends StatelessWidget {
-  const _ScrollToTopButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Back to top',
-      child: Material(
-        color: context.colors.surface,
-        shape: const CircleBorder(),
-        elevation: 2,
-        shadowColor: Colors.black26,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Icon(
-              Icons.keyboard_arrow_up,
-              size: 26,
-              color: context.colors.onSurface,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

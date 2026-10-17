@@ -34,7 +34,7 @@ class ArticleHeader extends StatelessWidget {
           children: <Widget>[
             Flexible(
               child: Text(
-                article.publishedAt.absoluteLabel,
+                article.publishedAt.absoluteLabelWithZone,
                 style: context.typography.meta.copyWith(
                   color: context.colors.onSurfaceFaint,
                 ),

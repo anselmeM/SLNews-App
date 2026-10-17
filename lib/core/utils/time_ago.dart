@@ -1,4 +1,6 @@
-﻿/// The clock relative labels are measured against.
+import 'package:flutter/foundation.dart';
+
+/// The clock relative labels are measured against.
 ///
 /// A seam rather than an injected dependency: [TimeAgo] is reached from plain
 /// getters on models (`article.relativeAge`) that have no `Ref`, and the golden
@@ -46,6 +48,47 @@ abstract final class TimeAgo {
     return short ? '${y}y' : '$y year${y == 1 ? '' : 's'} ago';
   }
 
+  /// Abbreviation for the device's time zone, e.g. "EDT".
+  ///
+  /// Flutter exposes whatever the OS reports: Android/ICU say "EDT", Windows
+  /// says "Eastern Daylight Time". Long names are reduced to their initials so
+  /// the byline stays short everywhere, and an offset form is the fallback when
+  /// the platform name is unusable.
+  static String get localZoneLabel {
+    final DateTime now = DateTime.now();
+    return zoneLabelFor(now.timeZoneName, now.timeZoneOffset);
+  }
+
+  /// Pure form of [localZoneLabel], separated so the rules are testable without
+  /// depending on the machine's zone.
+  @visibleForTesting
+  static String zoneLabelFor(String platformName, Duration offset) {
+    final String name = platformName.trim();
+    if (name.isEmpty) return _offsetLabel(offset);
+    if (name.toLowerCase() == 'coordinated universal time') return 'UTC';
+    if (name.length <= 5 && !name.contains(' ')) return name.toUpperCase();
+
+    final List<String> words = name
+        .split(RegExp(r'\s+'))
+        .where((String word) => word.isNotEmpty)
+        .toList(growable: false);
+    if (words.length >= 2 &&
+        words.every((String word) => word[0] == word[0].toUpperCase())) {
+      return words.map((String word) => word[0]).join().toUpperCase();
+    }
+    return _offsetLabel(offset);
+  }
+
+  static String _offsetLabel(Duration offset) {
+    final int hours = offset.inHours;
+    final String sign = hours < 0 ? '-' : '+';
+    final String hourText = hours.abs().toString().padLeft(2, '0');
+    final int minutes = offset.inMinutes.abs() % 60;
+    return minutes == 0
+        ? 'UTC$sign$hourText'
+        : 'UTC$sign$hourText:${minutes.toString().padLeft(2, '0')}';
+  }
+
   /// Absolute label used by the article reader: "Oct 14, 2026 5:18 pm EDT".
   static String absolute(DateTime timestamp, {String? timeZoneLabel}) {
     final DateTime local = timestamp.toLocal();
@@ -81,6 +124,12 @@ extension DateTimeLabels on DateTime {
   String get shortRelativeLabel => TimeAgo.format(this, short: true);
 
   String get absoluteLabel => TimeAgo.absolute(this);
+
+  /// "Oct 16, 2026 7:30 pm EDT" — the reader's byline line, zone included.
+  String get absoluteLabelWithZone {
+    final String zone = TimeAgo.localZoneLabel;
+    return TimeAgo.absolute(this, timeZoneLabel: zone.isEmpty ? null : zone);
+  }
 
   /// "Today" / "Yesterday" / "10/16" label used by the scoreboard headers.
   String get shortDateLabel {

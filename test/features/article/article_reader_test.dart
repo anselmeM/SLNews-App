@@ -26,8 +26,12 @@ void main() {
         categoryId: 'politics',
       );
 
-  Future<void> pumpReader(WidgetTester tester, Article article) async {
-    await useTallSurface(tester, size: const Size(390, 2400));
+  Future<void> pumpReader(
+    WidgetTester tester,
+    Article article, {
+    Size surface = const Size(390, 2400),
+  }) async {
+    await useTallSurface(tester, size: surface);
     final GoRouter router = GoRouter(
       initialLocation: '/article/${article.id}',
       routes: <RouteBase>[
@@ -74,10 +78,16 @@ void main() {
     await pumpReader(tester, article);
 
     expect(find.text('By Amara Bangura'), findsOneWidget);
+    final String zone = TimeAgo.localZoneLabel;
     expect(
-      find.text(TimeAgo.absolute(article.publishedAt)),
+      find.text(
+        TimeAgo.absolute(
+          article.publishedAt,
+          timeZoneLabel: zone.isEmpty ? null : zone,
+        ),
+      ),
       findsOneWidget,
-      reason: 'the reference puts an absolute date and time under the byline',
+      reason: 'the reference puts an absolute date/time (and zone) under the byline',
     );
     expect(find.textContaining('min read'), findsOneWidget);
   });
@@ -139,4 +149,90 @@ void main() {
       );
     },
   );
+
+  testWidgets('the byline carries the device time-zone abbreviation', (
+    WidgetTester tester,
+  ) async {
+    final Article article = story();
+    await pumpReader(tester, article);
+
+    final String zone = TimeAgo.localZoneLabel;
+    expect(
+      find.text(
+        TimeAgo.absolute(
+          article.publishedAt,
+          timeZoneLabel: zone.isEmpty ? null : zone,
+        ),
+      ),
+      findsOneWidget,
+      reason: 'the reference reads "Oct 16, 2026 7:30 pm EDT"',
+    );
+  });
+
+  testWidgets('the reader offers back-to-top after scrolling', (
+    WidgetTester tester,
+  ) async {
+    final Article long = Article(
+      id: 'long-1',
+      title: 'A long read about the budget',
+      summary: 'Summary',
+      bodyHtml: List<String>.generate(
+        24,
+        (int index) => '<p>Paragraph $index of a long story.</p>',
+      ).join(),
+      publisher: testPublisher,
+      publishedAt: DateTime.utc(2026, 10, 16, 19, 30),
+      categoryId: 'politics',
+    );
+
+    await pumpReader(tester, long, surface: const Size(390, 844));
+    expect(find.byIcon(Icons.keyboard_arrow_up), findsNothing);
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.keyboard_arrow_up), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_up));
+    await tester.pumpAndSettle();
+    expect(
+      find.byIcon(Icons.keyboard_arrow_up),
+      findsNothing,
+      reason: 'the button hides again at the top of the story',
+    );
+  });
+
+  group('time-zone label', () {
+    test('reduces platform names to an abbreviation', () {
+      expect(
+        TimeAgo.zoneLabelFor(
+          'Eastern Daylight Time',
+          const Duration(hours: -4),
+        ),
+        'EDT',
+      );
+      expect(
+        TimeAgo.zoneLabelFor(
+          'India Standard Time',
+          const Duration(hours: 5, minutes: 30),
+        ),
+        'IST',
+      );
+      expect(TimeAgo.zoneLabelFor('CET', const Duration(hours: 1)), 'CET');
+      expect(
+        TimeAgo.zoneLabelFor('Coordinated Universal Time', Duration.zero),
+        'UTC',
+      );
+    });
+
+    test('falls back to the offset when the name is unusable', () {
+      expect(TimeAgo.zoneLabelFor('', const Duration(hours: -5)), 'UTC-05');
+      expect(
+        TimeAgo.zoneLabelFor(
+          'lowercase zone',
+          const Duration(hours: 5, minutes: 30),
+        ),
+        'UTC+05:30',
+      );
+    });
+  });
 }
