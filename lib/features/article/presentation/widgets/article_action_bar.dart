@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +10,7 @@ import '../../../../core/providers/controllers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/follow_chip.dart';
+import 'translate_sheet.dart';
 import '../../../../core/widgets/like_button.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
 import '../article_page.dart';
@@ -113,6 +114,25 @@ class ArticleActionBar extends ConsumerWidget {
                       .read(likesControllerProvider.notifier)
                       .toggle(article.id),
                 ),
+                Semantics(
+                  button: true,
+                  label: 'Translate story',
+                  child: Tooltip(
+                    message: 'Translate story',
+                    child: InkResponse(
+                      radius: 24,
+                      onTap: () => openTranslation(context, article),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        child: Icon(
+                          Icons.translate,
+                          size: 21,
+                          color: context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 InkResponse(
                   radius: 24,
                   onTap: () => _share(context),
@@ -171,7 +191,7 @@ class ArticleActionBar extends ConsumerWidget {
         await _openSource(context);
       case ArticleAction.hide:
       case ArticleAction.report:
-        _snack(context, 'Thanks — this helps us improve your feed');
+        _snack(context, 'Thanks â€” this helps us improve your feed');
     }
   }
 

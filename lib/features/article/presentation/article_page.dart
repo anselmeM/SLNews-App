@@ -9,6 +9,7 @@ import '../../../core/providers/controllers.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/html_content.dart';
+import '../../../core/widgets/publisher_mark.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_action_bar.dart';
 import 'widgets/article_header.dart';
@@ -17,9 +18,10 @@ import 'widgets/related_stories.dart';
 
 /// The dedicated article reader (`/article/:id`).
 ///
-/// Layout follows the CBC-style reference screen: publisher attribution and
-/// headline at the top, hero media with caption, then the body, finished by the
-/// persistent floating action bar (follow publisher, like, `aA`, share, menu).
+/// Layout follows the CBC-style reference screen: the outlet's wordmark in the
+/// bar, attribution and headline at the top, hero media with caption, then the
+/// body, finished by the persistent floating action bar (follow publisher, `aA`,
+/// like, translate, share, menu).
 class ArticlePage extends ConsumerWidget {
   const ArticlePage({super.key, required this.articleId});
 
@@ -90,11 +92,14 @@ class _ReaderBody extends ConsumerWidget {
             tooltip: 'Back',
             onPressed: () => context.pop(),
           ),
-          title: Text(
-            article.publisher.mark,
-            style: context.typography.meta.copyWith(
-              color: context.colors.onSurfaceVariant,
-            ),
+          // The reference reader puts the outlet's own wordmark in the bar,
+          // not a plain text name: PublisherMark draws the logo when the outlet
+          // has one and its brand wordmark otherwise.
+          title: PublisherMark(
+            publisher: article.publisher,
+            logoHeight: 18,
+            maxWidth: 130,
+            color: context.colors.onSurfaceVariant,
           ),
           centerTitle: true,
           actions: <Widget>[

@@ -12,7 +12,7 @@ import 'package:slnews_mobile/core/domain/repositories/user_state_repository.dar
 /// Hand-written in-memory doubles for the Sports tab.
 ///
 /// `test/support/fakes.dart` does not exist in this checkout, so the Sports
-/// tests own the small set of fakes they need (CONTRACT Â§7). Everything is
+/// tests own the small set of fakes they need (CONTRACT §7). Everything is
 /// synchronous state behind `Future`-returning interfaces: enough to drive the
 /// real providers without touching Hive, dio or the file system.
 
