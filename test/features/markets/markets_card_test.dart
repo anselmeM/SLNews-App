@@ -168,7 +168,7 @@ void main() {
     expect(find.text('Market is closed'), findsOneWidget);
   });
 
-  testWidgets('tapping the card opens the Stocks page', (
+  testWidgets('tapping the card slides the Stocks panel up', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester, interactiveContent: true);
@@ -176,7 +176,9 @@ void main() {
     await tester.tap(find.text('Nasdaq Comp'));
     await tester.pumpAndSettle();
 
-    expect(find.text('stocks page'), findsOneWidget);
+    // The panel's own filter tabs are unique to the StocksPage in this tree.
+    expect(find.text('Top gain'), findsOneWidget);
+    expect(find.text('Most active'), findsOneWidget);
   });
 
   test('a cached FX board is served when the rates service is down', () async {

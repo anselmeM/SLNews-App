@@ -15,20 +15,17 @@ the capabilities a news app is expected to have regardless of that reference.
 
 ## Part A — Gaps against the video
 
-### A1. "Top stories" pushed page with a hero-photo header — P0, M
+### A1. "Top stories" pushed page with a hero-photo header — **shipped**, M
 *(seen: 11 s, 19 s, 21 s, 42 s)*
 
-The reference pushes a **dedicated Top stories screen**: a back chevron, the section
-title over a full-width photo that scrolls under the bar, then tiles, an inline ad, a
-back-to-top button and a `More top stories ›` link at the end.
+Shipped as `/top_stories` + `TopStoriesSectionPage`: a collapsing SliverAppBar with the
+lead photo, scrim and section title, back chevron, story tiles, a `More top stories ›`
+link and a floating back-to-top once scrolled. The For You title now pushes it (it used
+to jump to the News tab), so the header behaves like a "see all". A new `section.png`
+app-level golden renders it.
 
-Current: `/news` is a tab page (category pills, 420 pt hero, "More in X" grid) and the
-For You header chevron navigates there. There is **no pushed section screen**, so the
-feed's main depth control lands on a different-looking surface.
-
-Needs: a `/section/:id` route with a collapsing image header, the article list for that
-section, ads, back-to-top, and the end-of-group link (A2). Reuses existing tile/ad
-widgets; the new work is the header and routing.
+Still open: generic `/section/:id` pages for the other categories, and an inline ad in
+this list (the reference shows one).
 
 ### A2. End-of-group "More … stories ›" links — **shipped for feed groups**, S
 *(seen: 19 s "More top stories", 45 s "More NHL stories" / "More sports stories",
@@ -86,13 +83,12 @@ fixtures for the first followed team. `standingsProvider` exists but has **no UI
 tapping a team, league or game shows a snackbar — there are **no league, team or game
 detail pages**.
 
-### A8. Stocks opened as a panel over the feed — P3, S
+### A8. Stocks opened as a panel over the feed — **shipped**, S
 *(seen: 47 s)*
 
-The reference slides the Stocks board up over the feed; SLNews pushes a full page.
-
-Current: `/stocks` page with filter tabs, sparklines and attribution. Behaviourally
-equivalent; only the presentation differs. Do this with a modal route when convenient.
+Both For You entry points (header chevron and card) now slide the board up as a modal
+panel over the feed, matching the reference; the `/stocks` route remains for deep links
+and tests.
 
 ### A9. Reader: publisher page vs native text — P2, S (decision, not dev)
 *(seen: 1.9 s)*
@@ -219,13 +215,13 @@ are needed to *operate* the app; the app side only needs to consume those overri
 
 ## Part C — Suggested order
 
-**Quick wins (each S, mostly independent)**
-1. Saved-stories entry point — the `/saved` route exists but nothing navigates to it.
-2. Global offline banner + "updated x ago" on all tabs.
-3. Article body caching for offline reading.
-4. Reading progress bar.
-5. "More … stories ›" links (A2) and the extra "More for you" rail (A12).
-6. Video card badges (A10) and Stocks as a modal (A8).
+**Quick wins — done in this pass**
+1. ~~Saved-stories entry point~~ (`4572183`).
+2. ~~Global offline banner + "updated x ago" on all tabs~~ (`4572183`).
+3. ~~Article body caching~~ — verified already working; regression tests added (`566d8bd`).
+4. ~~Reading progress bar~~ (`1398437`).
+5. ~~"More … stories ›" links (A2)~~ (`abc101f`); the extra "More for you" rail (A12) remains.
+6. ~~Video card badges (A10)~~ (`2e51e6e`) and ~~Stocks as a panel (A8)~~ (batch 3).
 
 **Then (one to two weeks)**
 7. Search v1 (B1): route, entry point, debounced query, results, recents.
@@ -256,7 +252,9 @@ are needed to *operate* the app; the app side only needs to consume those overri
 | Reading progress bar in the reader | `1398437` |
 | "More … stories ›" group links (For You local rail, Sports card) | `abc101f` |
 | Video cards: outlet monogram badge + clip length when supplied | `2e51e6e` |
-| Search v1 (kebab entry, `/search`, debounce, grouped results, recents) | batch 2 |
+| Search v1 (kebab entry, `/search`, debounce, grouped results, recents) | `53d6ce1` |
+| Pushed Top stories section with photo header + `section.png` golden | `3f9f35c` |
+| Stocks as a slid-up panel from For You | batch 3 |
 
 ## Appendix 2 — Already matching the reference
 

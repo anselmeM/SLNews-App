@@ -23,6 +23,7 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
+import '../../markets/presentation/stocks_page.dart';
 import '../../markets/presentation/widgets/stocks_card.dart';
 import 'widgets/sport_spotlight_card.dart';
 import 'widgets/top_stories_carousel.dart';
@@ -132,6 +133,22 @@ class ForYouPage extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Slides the Stocks board up over the feed, as the reference does, instead of
+/// pushing a full page. Deep links still reach `/stocks` directly.
+Future<void> _openStocksPanel(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: context.colors.canvas,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    builder: (BuildContext sheetContext) => const StocksPage(),
+  );
 }
 
 /// The populated feed: carousel, local stream, then the reference screen's
@@ -300,7 +317,7 @@ class _FeedSliver extends ConsumerWidget {
             child: SectionHeader(
               title: 'Stocks',
               subtitle: board.isOpen ? 'Markets today' : 'Market closed',
-              onTap: () => context.push(AppRoutes.stocks),
+              onTap: () => _openStocksPanel(context),
               trailing: const _MoreLabel(),
             ),
           ),
@@ -309,7 +326,7 @@ class _FeedSliver extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: StocksCard(
                 board: board,
-                onOpen: () => context.push(AppRoutes.stocks),
+                onOpen: () => _openStocksPanel(context),
               ),
             ),
           ),
