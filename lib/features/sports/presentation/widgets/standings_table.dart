@@ -141,6 +141,10 @@ class _StandingRow extends StatelessWidget {
     );
 
     if (onTap == null) return row;
-    return InkWell(onTap: onTap, child: row);
+    return Semantics(
+      button: true,
+      label: '${standing.rank}. ${standing.team.name}, ${standing.record}',
+      child: InkWell(onTap: onTap, child: row),
+    );
   }
 }

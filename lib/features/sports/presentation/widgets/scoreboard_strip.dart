@@ -72,14 +72,19 @@ class ScoreboardStrip extends ConsumerWidget {
                   padding: const EdgeInsets.only(right: AppSpacing.md),
                   child: SizedBox(
                     width: cardWidth,
-                    child: GestureDetector(
-                      onTap: () => context.push(
-                        AppRoutes.leagueFor(
-                          SportsLinks.leagueIdForLabel(game.leagueLabel),
+                    child: Semantics(
+                      button: true,
+                      label:
+                          '${game.leagueLabel}: ${game.away.code} at ${game.home.code}',
+                      child: GestureDetector(
+                        onTap: () => context.push(
+                          AppRoutes.leagueFor(
+                            SportsLinks.leagueIdForLabel(game.leagueLabel),
+                          ),
+                          extra: game.leagueLabel,
                         ),
-                        extra: game.leagueLabel,
+                        child: ScoreCard(game: game),
                       ),
-                      child: ScoreCard(game: game),
                     ),
                   ),
                 ),

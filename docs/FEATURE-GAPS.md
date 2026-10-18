@@ -199,11 +199,17 @@ the first open.
   and rights review are a product/legal gap, not just code.
 - Report flow exists; authoring side and response process do not.
 
-### B8. Accessibility and localisation — P1, M
-- English-only strings, no `l10n`/ARB files, no RTL support; Krio, Mende, Temne and French
-  are the languages a Sierra Leonean product would consider.
-- Screen-reader labels exist in places but there is no full TalkBack/VoiceOver audit;
-  dynamic type at 200 % and contrast have not been verified; reduce-motion is implemented.
+### B8. Accessibility and localisation — **first pass shipped**, M
+
+Shipped: semantic labels on the new surfaces (topic mosaic cards announce "Open …",
+standings rows announce rank/team/record, score cards announce the fixture as a button),
+decorative images are excluded from the semantics tree while content images can be
+labelled, and a 200 %-text-scale regression test covers the settings screen. Reduce-motion
+was already implemented via `AppMotion`.
+
+Remaining: English-only strings and no `l10n`/ARB scaffolding or RTL; Krio, Mende, Temne
+and French are the languages a Sierra Leonean product would consider. A full
+TalkBack/VoiceOver pass over every screen, plus contrast verification, is still to do.
 
 ### B9. Monetisation — P2, L
 No real ad SDK (in-house cards only), no sponsored-content model, no membership/support

@@ -80,66 +80,71 @@ class _TopicCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasImage = item.imageUrl?.trim().isNotEmpty ?? false;
-    return Material(
-      color: context.colors.surfaceInverse,
-      borderRadius: AppRadius.cardRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            if (hasImage)
-              SlNetworkImage(url: item.imageUrl, placeholderLabel: item.label)
-            else
-              Center(
-                child: Icon(
-                  _topicIcon(item.icon),
-                  size: 32,
-                  color: context.colors.onSurfaceInverse,
+    return Semantics(
+      container: true,
+      button: true,
+      label: 'Open ${item.label}',
+      child: Material(
+        color: context.colors.surfaceInverse,
+        borderRadius: AppRadius.cardRadius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              if (hasImage)
+                SlNetworkImage(url: item.imageUrl, placeholderLabel: item.label)
+              else
+                Center(
+                  child: Icon(
+                    _topicIcon(item.icon),
+                    size: 32,
+                    color: context.colors.onSurfaceInverse,
+                  ),
+                ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[Color(0x00000000), Color(0xB3000000)],
+                    stops: <double>[0.35, 1],
+                  ),
                 ),
               ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[Color(0x00000000), Color(0xB3000000)],
-                  stops: <double>[0.35, 1],
+              Positioned(
+                left: AppSpacing.sm,
+                right: AppSpacing.sm,
+                bottom: AppSpacing.sm,
+                child: Text(
+                  item.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.groupTitle.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              left: AppSpacing.sm,
-              right: AppSpacing.sm,
-              bottom: AppSpacing.sm,
-              child: Text(
-                item.label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.groupTitle.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+              Positioned(
+                top: AppSpacing.xs,
+                right: AppSpacing.xs,
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
+                  decoration: const BoxDecoration(
+                    color: Color(0x66000000),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              top: AppSpacing.xs,
-              right: AppSpacing.xs,
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.xxs),
-                decoration: const BoxDecoration(
-                  color: Color(0x66000000),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chevron_right,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

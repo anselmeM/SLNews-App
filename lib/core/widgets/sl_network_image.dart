@@ -19,6 +19,7 @@ class SlNetworkImage extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.borderRadius,
     this.placeholderLabel,
+    this.semanticLabel,
     this.alignment = Alignment.center,
   });
 
@@ -31,6 +32,10 @@ class SlNetworkImage extends StatelessWidget {
   /// Short mark drawn on the fallback block, usually the outlet wordmark.
   final String? placeholderLabel;
 
+  /// Description for screen readers; when null the image is decorative and
+  /// excluded from the semantics tree (the surrounding tile names the story).
+  final String? semanticLabel;
+
   final Alignment alignment;
 
   @override
@@ -38,8 +43,14 @@ class SlNetworkImage extends StatelessWidget {
     final Widget image = _hasUrl
         ? _buildRemote(context)
         : _buildFallback(context);
-    if (borderRadius == null) return image;
-    return ClipRRect(borderRadius: borderRadius!, child: image);
+    final Widget result = borderRadius == null
+        ? image
+        : ClipRRect(borderRadius: borderRadius!, child: image);
+    final String? label = semanticLabel?.trim();
+    if (label == null || label.isEmpty) {
+      return ExcludeSemantics(child: result);
+    }
+    return Semantics(image: true, label: label, child: result);
   }
 
   bool get _hasUrl => url != null && url!.trim().isNotEmpty;
