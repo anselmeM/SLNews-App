@@ -16,6 +16,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/ad_card.dart';
 import '../../../core/widgets/article_tile.dart';
+import '../../../core/widgets/more_stories_link.dart';
 import '../../../core/widgets/overflow_menu_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
@@ -208,6 +209,12 @@ class _FeedSliver extends ConsumerWidget {
             child: SectionHeader(title: 'From ${feed.activeLocation.label}'),
           ),
           _ArticleTileSliver(articles: localStream),
+          SliverToBoxAdapter(
+            child: MoreStoriesLink(
+              label: 'More ${feed.activeLocation.label} stories',
+              onPressed: () => context.go(AppRoutes.news),
+            ),
+          ),
         ],
         if (latestStream.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
@@ -277,6 +284,12 @@ class _FeedSliver extends ConsumerWidget {
                 game: games.first,
                 onTap: () => context.go(AppRoutes.sports),
               ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: MoreStoriesLink(
+              label: 'More sports stories',
+              onPressed: () => context.go(AppRoutes.sports),
             ),
           ),
         ],
