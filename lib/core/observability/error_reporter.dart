@@ -29,3 +29,14 @@ Future<void> sendTestEvent() async {
   if (!SentrySettings.fromEnvironment().isEnabled) return;
   await Sentry.captureMessage('SLNews test event', level: SentryLevel.info);
 }
+
+/// Throws and captures a deliberate exception, the workflow Sentry's Flutter guide
+/// recommends for verifying a project end to end.
+Future<void> sendTestException() async {
+  if (!SentrySettings.fromEnvironment().isEnabled) return;
+  try {
+    throw StateError('This is test exception');
+  } catch (error, stackTrace) {
+    await Sentry.captureException(error, stackTrace: stackTrace);
+  }
+}

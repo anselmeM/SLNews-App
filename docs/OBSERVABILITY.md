@@ -72,8 +72,10 @@ here.
 ## Verifying a report
 
 1. Build with the DSN: `$env:SENTRY_DSN='…'; powershell -File scripts/build_apk.ps1`.
-2. In a **debug** build, Settings → About shows **Send test event** (only when reporting
-   is enabled). Tap it — a message event appears in the project's Issues within seconds.
+2. In a **debug** build, Settings → About shows two actions (only when reporting is
+   enabled): **Send test event** posts a message, and **Send test exception** throws and
+   captures `StateError('This is test exception')` — the same check Sentry's Flutter guide
+   recommends. Both appear in the project's Issues within seconds.
 3. Or use the real path: the bootstrap error screen calls `reportError`, and uncaught Dart
    errors go through Sentry's handlers automatically.
 

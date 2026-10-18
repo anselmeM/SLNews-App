@@ -200,6 +200,21 @@ class SettingsPage extends ConsumerWidget {
                           }
                         },
                       ),
+                    if (kDebugMode &&
+                        SentrySettings.fromEnvironment().isEnabled)
+                      SettingsValueRow(
+                        title: 'Send test exception',
+                        subtitle: "Captures a deliberate exception, as Sentry's guide suggests.",
+                        onTap: () async {
+                          await sendTestException();
+                          if (context.mounted) {
+                            _showSnack(
+                              context,
+                              'Test exception sent to Sentry.',
+                            );
+                          }
+                        },
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xxl),
