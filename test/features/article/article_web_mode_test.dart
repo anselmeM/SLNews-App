@@ -100,7 +100,7 @@ void main() {
       );
 
       expect(script, contains('colorScheme="dark"'));
-      expect(script, contains('readingProgress'));
+      expect(script, contains('SlnewsProgress'));
       expect(script, contains('slnews-reader-style'));
     });
 

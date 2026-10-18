@@ -61,7 +61,7 @@ abstract final class ArticleWebMode {
   /// It sets the root font size so relative page typography follows the app's
   /// `aA` setting (the mechanism the reference app demonstrates), constrains
   /// media to the viewport, and reports scroll progress back through the
-  /// `readingProgress` handler.
+  /// `SlnewsProgress` JavaScript channel.
   static String typographyScript({
     required double textScale,
     required bool dark,
@@ -83,8 +83,8 @@ abstract final class ArticleWebMode {
       'window.addEventListener("scroll",function(){',
       'var d=h.scrollHeight-h.clientHeight;',
       'var p=d>0?h.scrollTop/d:0;',
-      'if(window.flutter_inappwebview){',
-      'window.flutter_inappwebview.callHandler("readingProgress",Math.min(1,Math.max(0,p)));}',
+      'if(window.SlnewsProgress){',
+      'window.SlnewsProgress.postMessage(String(Math.min(1,Math.max(0,p))));}',
       '},{passive:true});}',
       '})();',
     ].join();

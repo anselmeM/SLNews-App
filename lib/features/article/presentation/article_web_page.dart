@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
@@ -77,12 +77,14 @@ class _WebReader extends ConsumerStatefulWidget {
 }
 
 class _WebReaderState extends ConsumerState<_WebReader> {
-  InAppWebViewController? _controller;
+  /// Created lazily while the page can actually load: a widget test (or an
+  /// offline device) never instantiates the platform WebView.
+  WebViewController? _controller;
   double _progress = 0;
   bool _loading = true;
   bool _failed = false;
 
-  /// Incremented on retry so the WebView is recreated from scratch.
+  /// Incremented on retry so a fresh controller and page load start over.
   int _attempt = 0;
 
   Article get _article => widget.article;
@@ -102,13 +104,17 @@ class _WebReaderState extends ConsumerState<_WebReader> {
       (double? previous, double next) => _applyTypography(),
     );
 
+    final WebViewController? controller = showWeb
+        ? (_controller ??= _createController())
+        : null;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) return;
-        final InAppWebViewController? controller = _controller;
-        if (controller != null && await controller.canGoBack()) {
-          await controller.goBack();
+        final WebViewController? web = _controller;
+        if (web != null && await web.canGoBack()) {
+          await web.goBack();
           return;
         }
         _pop();
@@ -117,38 +123,10 @@ class _WebReaderState extends ConsumerState<_WebReader> {
         backgroundColor: Colors.black,
         body: Stack(
           children: <Widget>[
-            if (showWeb)
+            if (controller != null)
               Positioned.fill(
-                child: KeyedSubtree(
-                  key: ValueKey<int>(_attempt),
-                  child: InAppWebView(
-                    initialUrlRequest: URLRequest(
-                      url: WebUri(_article.sourceUrl!),
-                    ),
-                    initialSettings: InAppWebViewSettings(
-                      javaScriptEnabled: true,
-                      // Publisher pages run their own trackers; keep no
-                      // persistent cookies or cache for them.
-                      incognito: true,
-                      transparentBackground: true,
-                      allowFileAccess: false,
-                      allowContentAccess: false,
-                      supportZoom: false,
-                      mediaPlaybackRequiresUserGesture: true,
-                      allowsBackForwardNavigationGestures: true,
-                      useShouldOverrideUrlLoading: true,
-                    ),
-                    onWebViewCreated: _onWebViewCreated,
-                    onLoadStop: _onLoadStop,
-                    onProgressChanged: (_, int progress) {
-                      if (!mounted) return;
-                      setState(() => _loading = progress < 100);
-                    },
-                    onReceivedError: _onReceivedError,
-                    onReceivedHttpError: _onReceivedHttpError,
-                    shouldOverrideUrlLoading: _onNavigate,
-                  ),
-                ),
+                key: ValueKey<int>(_attempt),
+                child: WebViewWidget(controller: controller),
               ),
             if (!showWeb)
               Positioned.fill(
@@ -156,7 +134,7 @@ class _WebReaderState extends ConsumerState<_WebReader> {
                   article: _article,
                   offline: offline.isOffline,
                   missingLink: !hasSource,
-                  onReadHere: () => context.pop(),
+                  onReadHere: _pop,
                   onRetry: _retry,
                 ),
               ),
@@ -171,7 +149,7 @@ class _WebReaderState extends ConsumerState<_WebReader> {
                   article: _article,
                   canGoBack: showWeb,
                   onBack: _onBack,
-                  onReadHere: () => context.pop(),
+                  onReadHere: _pop,
                   onReload: _retry,
                 ),
               ),
@@ -197,50 +175,55 @@ class _WebReaderState extends ConsumerState<_WebReader> {
     );
   }
 
-  Future<void> _onWebViewCreated(InAppWebViewController controller) async {
-    _controller = controller;
-    controller.addJavaScriptHandler(
-      handlerName: 'readingProgress',
-      callback: (List<dynamic> args) {
-        final double value = args.isEmpty
-            ? 0
-            : (args.first as num).toDouble().clamp(0.0, 1.0);
-        if (mounted && (value - _progress).abs() > 0.004) {
-          setState(() => _progress = value);
-        }
-        return null;
-      },
-    );
+  WebViewController _createController() {
+    final String sourceUrl = _article.sourceUrl!;
+    return WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.black)
+      ..addJavaScriptChannel(
+        _progressChannel,
+        onMessageReceived: _onProgressMessage,
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            if (!mounted) return;
+            setState(() => _loading = progress < 100);
+          },
+          onPageFinished: (String _) async {
+            await _applyTypography();
+            if (mounted) setState(() => _loading = false);
+          },
+          onWebResourceError: _onWebResourceError,
+          onNavigationRequest: _onNavigationRequest,
+        ),
+      )
+      ..loadRequest(Uri.parse(sourceUrl));
   }
 
-  Future<void> _onLoadStop(
-    InAppWebViewController controller,
-    WebUri? url,
-  ) async {
-    await _applyTypography();
-    if (mounted) setState(() => _loading = false);
+  void _onProgressMessage(JavaScriptMessage message) {
+    final double value = (double.tryParse(message.message) ?? 0).clamp(0, 1);
+    if (mounted && (value - _progress).abs() > 0.004) {
+      setState(() => _progress = value);
+    }
   }
 
   Future<void> _applyTypography() async {
-    final InAppWebViewController? controller = _controller;
+    final WebViewController? controller = _controller;
     if (controller == null) return;
     final double scale = ref.read(settingsControllerProvider).textScale;
     final bool dark = Theme.of(context).brightness == Brightness.dark;
     try {
-      await controller.evaluateJavascript(
-        source: ArticleWebMode.typographyScript(textScale: scale, dark: dark),
+      await controller.runJavaScript(
+        ArticleWebMode.typographyScript(textScale: scale, dark: dark),
       );
     } catch (error) {
       reportError(error, where: 'article-webview-typography');
     }
   }
 
-  void _onReceivedError(
-    InAppWebViewController controller,
-    WebResourceRequest request,
-    WebResourceError error,
-  ) {
-    if (request.isForMainFrame != true) return;
+  void _onWebResourceError(WebResourceError error) {
+    if (error.isForMainFrame == false) return;
     reportError(
       StateError('Original page failed: ${error.description}'),
       where: 'article-webview',
@@ -248,48 +231,32 @@ class _WebReaderState extends ConsumerState<_WebReader> {
     if (mounted) setState(() => _failed = true);
   }
 
-  void _onReceivedHttpError(
-    InAppWebViewController controller,
-    WebResourceRequest request,
-    WebResourceResponse response,
-  ) {
-    if (request.isForMainFrame != true) return;
-    if ((response.statusCode ?? 0) < 400) return;
-    reportError(
-      StateError('Original page answered HTTP ${response.statusCode}'),
-      where: 'article-webview',
-    );
-    if (mounted) setState(() => _failed = true);
-  }
-
-  Future<NavigationActionPolicy> _onNavigate(
-    InAppWebViewController controller,
-    NavigationAction action,
+  Future<NavigationDecision> _onNavigationRequest(
+    NavigationRequest request,
   ) async {
     final Uri? articleUri = Uri.tryParse(_article.sourceUrl ?? '');
-    final WebUri? target = action.request.url;
+    final Uri? target = Uri.tryParse(request.url);
     if (articleUri == null || target == null) {
-      return NavigationActionPolicy.CANCEL;
+      return NavigationDecision.prevent;
     }
 
-    final Uri uri = Uri.parse(target.toString());
-    switch (ArticleWebMode.linkAction(target: uri, article: articleUri)) {
+    switch (ArticleWebMode.linkAction(target: target, article: articleUri)) {
       case ArticleLinkAction.allowInPage:
-        return NavigationActionPolicy.ALLOW;
+        return NavigationDecision.navigate;
       case ArticleLinkAction.block:
-        return NavigationActionPolicy.CANCEL;
+        return NavigationDecision.prevent;
       case ArticleLinkAction.openExternally:
         try {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await launchUrl(target, mode: LaunchMode.externalApplication);
         } catch (error) {
           reportError(error, where: 'article-webview-link');
         }
-        return NavigationActionPolicy.CANCEL;
+        return NavigationDecision.prevent;
     }
   }
 
   Future<void> _onBack() async {
-    final InAppWebViewController? controller = _controller;
+    final WebViewController? controller = _controller;
     if (controller != null && await controller.canGoBack()) {
       await controller.goBack();
       return;
@@ -305,12 +272,15 @@ class _WebReaderState extends ConsumerState<_WebReader> {
   void _retry() {
     if (!mounted) return;
     setState(() {
+      _controller = null;
       _failed = false;
       _loading = true;
       _progress = 0;
       _attempt++;
     });
   }
+
+  static const String _progressChannel = 'SlnewsProgress';
 }
 
 /// Dark gradient behind the top bar so white controls stay legible over any page.
