@@ -1,0 +1,205 @@
+# Getting SLNews to the Play Store
+
+Assessment date: 18 October 2026 · repo `SLNews-Mobile` at `7918fe1` · app version
+`1.0.0+1` · package `com.slnews.mobile`.
+
+**Short answer: the app is code-launchable, but it is not submission-ready.** About
+5–7 working days of engineering (most of which I can do) plus owner decisions on
+licensing, privacy policy and accounts. Realistic first-submission date: **2–4 weeks**,
+depending on whether your Play account is personal (adds a mandatory 14-day closed
+test) or organisation.
+
+| Area | Ready | Why |
+| --- | --- | --- |
+| Core product (reading, offline, search, sections, reel, stocks, sports) | **~90 %** | see `docs/FEATURE-GAPS.md` for the remaining reference gaps |
+| Android release config | **~75 %** | package id, target SDK 36, 16 KB pages, signing all good; icon, splash, AAB build and versioning missing |
+| Play policy & compliance | **~20 %** | no privacy policy, no account deletion, data-safety/content-rating answers undecided |
+| Store listing & assets | **~10 %** | default Flutter icon, no feature graphic, screenshots, description or copy |
+| Monitoring & QA | **~35 %** | no crash reporting or analytics; no on-device matrix run |
+
+---
+
+## 1. What is already store-ready (verified, not assumed)
+
+Checked against the built release APK and the Gradle config on `7918fe1`:
+
+- **Package id** `com.slnews.mobile` — good, permanent, not `com.example`.
+- **Target SDK 36** (Android 16) and compileSdk 36 — meets Play's current API-level rule
+  for new submissions; no deadline risk this cycle.
+- **minSdk 24** — sensible for Sierra Leone's device fleet.
+- **16 KB page-size alignment** — `zipalign -c -P 16` passes on the release APK, so the
+  Play 16 KB requirement is already satisfied.
+- **Signing** — release keystore wired through `android/key.properties` (git-ignored),
+  keystore present locally, same key already used for the APKs, and a
+  `ANDROID_KEYSTORE_BASE64` secret exists in CI. Certificate: `CN=SLNews`.
+- **Permissions** — only `INTERNET`, `ACCESS_NETWORK_STATE` plus Clerk's biometric/
+  credential permissions (`USE_BIOMETRIC`, `USE_CREDENTIALS`, `USE_FINGERPRINT`,
+  `CREDENTIAL_MANAGER_SET_ORIGIN`). No location, camera, contacts or storage access,
+  which keeps the data-safety form short.
+- **CI** — `.github/workflows/build-apk.yml` formats, analyzes, tests and builds an APK on
+  every push.
+- **Offline behaviour** — bundles seed content and a Hive cache, so the app opens and
+  reads with no network; useful for the low-connectivity market this is built for.
+- **Dark mode, text-size setting, reduce-motion** — already implemented.
+
+## 2. Hard blockers — must be done before you can submit
+
+### B1. Launcher icon and splash are still the Flutter defaults — S (I can do)
+`mipmap-*/ic_launcher.png` are the template icons (2–8 KB) and there is **no adaptive
+icon** (`mipmap-anydpi-v26` is absent), so the launcher will show a legacy square. The
+splash is the stock white `launch_background.xml`. Needs: foreground/background adaptive
+icon at 5 densities, monochrome layer for Android 13 themed icons, Play **512×512** icon,
+and a branded splash. Design input: confirm the mark/wordmark (the app already draws an
+"SLNews" wordmark).
+
+### B2. Privacy policy + terms — **legal text, owner**
+The app creates accounts (Clerk) and stores reading state; Play requires a **privacy
+policy URL** in the listing and inside the app. Needs: policy text covering what is
+collected (email, likes/bookmarks/following, device tokens when push lands, crash logs
+when added), how to delete it, third parties (Clerk, Render backend, Yahoo Finance,
+Open ER API, RSS publishers), retention, and contact. Terms of use should state that
+SLNews aggregates third-party reporting and is not the publisher.
+
+### B3. Account deletion — **Play policy requirement**, M (I can implement, backend deploy)
+Because the app lets users create an account, Play requires **both** an in-app deletion
+path and a web page where a deletion can be requested without installing the app. The app
+currently has sign-in and no way to delete. Needs: `DELETE /api/mobile/v1/account`
+(backend, cascade over synced rows + Clerk user deletion), an in-app "Delete account"
+flow in Settings → account, and a hosted deletion-request URL.
+
+### B4. Content rights for aggregated reporting — **biggest non-technical blocker**, owner
+The feed mixes RSS/scraped headlines, images, bylines and publisher **wordmarks** from
+Awoko, SLBC, Politico, Concord, Telegraph and others. Play's Intellectual Property and
+Misrepresentation policies, and ordinary copyright law, make "we aggregate whatever the
+RSS gives us" a risk for both rejection and DMCA takedowns. Needs one of:
+written permission / partnership with each publisher, publisher-supplied feeds under
+terms, a licence-based source (e.g. a wire service), or a switch to owned/CC content for
+launch. Publisher logos in `PublisherMark` need the same permission. This decision gates
+the listing claims and possibly the app itself.
+
+### B5. Crash reporting + release monitoring — M (needs a vendor account)
+Zero crash or error telemetry today. For a launch, at minimum: crash/ANR reporting
+(Sentry, Firebase Crashlytics or equivalent), a release-health dashboard, and either
+analytics or an explicit decision to ship without it. The Play pre-launch report also
+needs the app to survive its automated crawl, which is easier to fix with telemetry.
+
+### B6. Play Console account, verification and testing track — owner, calendar time
+- Developer account (**US$25 one-off**), identity verification (ID + address; an
+  **organisation** account needs a D-U-N-S number and a longer lead time).
+- If the account is **personal** and was created recently, Play requires a **closed test
+  with at least 12 testers for 14 continuous days** before production access. That alone
+  sets a ~2-week floor. Organisation accounts skip this gate.
+- Play App Signing enrolment (upload key = the current keystore; Google holds the app
+  signing key).
+
+### B7. Release engineering — S (I can do)
+- Build an **Android App Bundle** (`flutter build appbundle`); CI currently produces an
+  APK only. Add an AAB job and upload the `.aab` (Play rejects APKs for new apps).
+- **Version discipline**: `versionCode` is 1; every upload needs a higher one. Add a
+  bump script / documented release procedure (`1.0.0+1` → `1.0.0+2` for the first store
+  build after the test track).
+- Optionally `--obfuscate --split-debug-info` + upload the mapping file (not required,
+  but it is free crash-quality).
+
+### B8. Store declarations you must fill — owner, ~1 hour in Play Console
+- **Data safety**: email (account), user IDs, likes/bookmarks/following, diagnostics if
+  crash reporting is added; no location/camera/contacts. Declare encryption in transit.
+- **Content rating** (IARC questionnaire) — news with violence/crime usually lands Teen.
+- **Target audience** — 13+ / not designed for children.
+- **Ads** — declare **yes**: the feed carries backend-served sponsored cards (labelled
+  "Ad"), even though there is no third-party ad SDK.
+- **App access** — sign-in is optional, so most content is anonymous; still provide a
+  demo account in case review wants to see synced features.
+- **Financial content** — the Stocks board shows market data; Play's financial-services
+  policy expects display-only, attributed data with a "not investment advice" note.
+  Yahoo attribution needs a visible link, not just text.
+- **Encryption/export** self-classification (HTTPS only).
+
+### B9. Store listing assets and copy — S/M (screenshots I can generate)
+- **Icon 512×512** (32-bit PNG, no alpha in the Play icon), **feature graphic 1024×500**
+  (required), at least **2 phone screenshots** (we can render 1080×1920+ from the golden
+  harness — For You, reader, reel, stocks, search).
+- Title (30 chars), short description (80), full description (4000), category
+  (News & Magazines), tags, contact email, website, privacy URL.
+- The listing must not imply SLNews is the publisher of aggregated stories (B4).
+
+### B10. Alert: the app currently has **no push notifications**
+Not a Play requirement, but a news app without breaking-news push will be judged on it,
+and every competitor has it. The backend already sends FCM and has
+`/api/mobile/v1/devices`; the app needs a Firebase project, `google-services.json`, an
+APNs key for iOS later, permission priming, token registration and notification → article
+deep links. ~2–3 days including the priming card. Decide: launch without push (ok, but
+weaker) or add it (recommended before wider launch).
+
+### B11. HTTPS deep links are declared but not verified
+The manifest sets `android:autoVerify="false"` and there is no `assetlinks.json`; shared
+`https://slnews.app/article/<id>` links will not open the app. Custom scheme
+`slnews://article/<id>` works. Fixing it needs the domain under your control plus a
+served `assetlinks.json`. Not a submission blocker; a launch-quality item.
+
+## 3. Should fix before launch (quality, not gates)
+
+- **Low-end device pass**: test on a 2 GB RAM, Android 9–12 phone on 3G — the app is
+  built for that market but has only been exercised on the desktop test harness and
+  goldens.
+- **Cold start and jank**: measure first frame and feed scroll on said device.
+- **AAB size**: 65 MB APK is three ABIs in one file; an AAB will download roughly
+  25–30 MB per device. Still large for metered data — consider trimming assets and
+  checking image cache sizes.
+- **Accessibility**: TalkBack labels, 200 % text scale, contrast — partially covered.
+- **Empty/error states on a dead network**: For You has the offline banner now; verify
+  every tab and the reader.
+- **Pre-launch report**: let Play's automated crawl run on the internal track and clear
+  its crashes/warnings before production.
+
+## 4. Recommended sequence
+
+**Week 1 — engineering (me) + owner decisions**
+1. Icon set, adaptive icon, splash, Play icon (needs your mark).
+2. AAB build + CI job + version-bump procedure.
+3. Privacy/terms screens wired (needs the policy text/URLs).
+4. Account deletion: backend endpoint + in-app flow (needs backend deploy access).
+5. Screenshots and feature graphic rendered from goldens.
+6. Deep links: `assetlinks.json` once the domain is settled.
+7. Owner: open Play Console, start verification, decide content licensing, pick crash
+   vendor and get its DSN.
+
+**Week 2 — integration and internal testing**
+8. Crash reporting wired and verified with a forced error; release health on.
+9. Internal track upload; fix pre-launch report findings; low-end device pass.
+10. Data safety, content rating, ads and app-access declarations filled.
+
+**Week 3–4 — testing track to production**
+11. If personal account: 12-tester closed test for 14 days (calendar-bound, cannot be
+    compressed).
+12. Staged rollout 10 % → 50 % → 100 % with crash-free rate monitored.
+13. Soft launch in Sierra Leone first; expand after a stable week.
+
+## 5. Definition of done (launch gate)
+
+- [ ] Adaptive + legacy icons, branded splash, Play 512 icon and 1024×500 feature graphic
+- [ ] AAB built from CI, signed with the upload key, versionCode incremented, mapping
+      archived if obfuscated
+- [ ] Privacy policy and terms URLs live; linked in-app and in the listing
+- [ ] In-app account deletion works end to end; public deletion-request URL live
+- [ ] Content licensing/partnership decision documented; publisher logos cleared
+- [ ] Crash reporting live; a forced crash appears in the dashboard; release health on
+- [ ] Data safety, content rating, ads, target audience, app access, export answers filled
+- [ ] ≥ 2 phone screenshots, title/short/full description, category, contact email
+- [ ] Financial-data disclaimer and Yahoo attribution link visible
+- [ ] Internal track: zero crashes in the pre-launch report; low-end device pass documented
+- [ ] Closed test (if required) completed with the required tester count and days
+- [ ] Staged rollout plan and rollback procedure written
+
+## 6. Risks
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Aggregated RSS content without permission | Rejection or later takedown, legal exposure | B4 decision before listing; attribute and link out; pursue publisher agreements |
+| Publisher wordmarks/logos | Trademark complaint | Permission, or neutral publisher names until cleared |
+| Privacy policy missing/incorrect | Submission rejected | Legal text matched to the actual data flow (Clerk, backend, no analytics) |
+| No account deletion | Policy rejection | B3, in-app + web |
+| Ads declared wrongly | Policy strike | Declare yes; keep the "Ad" label; no third-party SDK yet |
+| Financial data framed as advice | Policy review | Display-only, attributed, disclaimer |
+| Low-end performance | Bad first reviews in the target market | Device matrix pass, image caching, size trims |
+| Personal Play account closed-test gate | Two-week delay | Start it the day the AAB is stable |
