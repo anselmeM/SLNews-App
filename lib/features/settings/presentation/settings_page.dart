@@ -30,6 +30,12 @@ import 'widgets/settings_card.dart';
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
+  /// The About verification actions appear in debug builds, or in a release build
+  /// explicitly compiled with `--dart-define=SENTRY_VERIFY=true` for a store-pipeline
+  /// check. Reporting still has to be configured and enabled on top of that.
+  static const bool _showSentryChecks =
+      kDebugMode || bool.fromEnvironment('SENTRY_VERIFY');
+
   /// Mirrors `version:` in pubspec.yaml; the app has no package-info dependency.
   static const String appVersion = '1.0.0';
 
@@ -186,9 +192,10 @@ class SettingsPage extends ConsumerWidget {
                       value: location.label,
                       showChevron: false,
                     ),
-                    // Verification affordance: only a debug build with reporting
-                    // enabled shows it, so release stays clean.
-                    if (kDebugMode &&
+                    // Verification affordances: debug builds with reporting show
+                    // them; a release build can opt in with
+                    // --dart-define=SENTRY_VERIFY=true for store-pipeline checks.
+                    if (_showSentryChecks &&
                         SentrySettings.fromEnvironment().isEnabled)
                       SettingsValueRow(
                         title: 'Send test event',
@@ -200,7 +207,7 @@ class SettingsPage extends ConsumerWidget {
                           }
                         },
                       ),
-                    if (kDebugMode &&
+                    if (_showSentryChecks &&
                         SentrySettings.fromEnvironment().isEnabled)
                       SettingsValueRow(
                         title: 'Send test exception',
