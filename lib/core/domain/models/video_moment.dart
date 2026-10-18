@@ -17,6 +17,7 @@ class VideoMoment {
     this.summary,
     this.category,
     this.publishedAt,
+    this.duration,
   });
 
   /// Stable identity for keys and de-duplication.
@@ -37,6 +38,11 @@ class VideoMoment {
   final String? category;
   final DateTime? publishedAt;
 
+  /// Clip length when the payload carries one (`duration_seconds`, or a
+  /// "m:ss" `duration` string). Many rows have none, and the card shows no
+  /// badge rather than inventing a time.
+  final Duration? duration;
+
   /// Tolerates both the versioned payload and a seed entry.
   ///
   /// Unknown or missing fields degrade instead of throwing: one malformed row
@@ -52,6 +58,9 @@ class VideoMoment {
       summary: _string(json['summary'] ?? json['description']),
       category: _string(json['category']),
       publishedAt: _date(json['published_at'] ?? json['publishedAt']),
+      duration: _duration(
+        json['duration_seconds'] ?? json['durationSeconds'] ?? json['duration'],
+      ),
     );
   }
 
@@ -64,10 +73,37 @@ class VideoMoment {
     'summary': summary,
     'category': category,
     'published_at': publishedAt?.toUtc().toIso8601String(),
+    'duration_seconds': duration?.inSeconds,
   };
 
   static String? _string(Object? value) {
     if (value is String && value.trim().isNotEmpty) return value.trim();
+    return null;
+  }
+
+  static Duration? _duration(Object? value) {
+    if (value is num) {
+      final int seconds = value.round();
+      return seconds > 0 ? Duration(seconds: seconds) : null;
+    }
+    if (value is String) {
+      final String raw = value.trim();
+      if (raw.isEmpty) return null;
+      final int? asSeconds = int.tryParse(raw);
+      if (asSeconds != null) {
+        return asSeconds > 0 ? Duration(seconds: asSeconds) : null;
+      }
+      // "1:05" or "1:02:03"
+      final List<String> parts = raw.split(':');
+      if (parts.every((String part) => int.tryParse(part) != null)) {
+        int total = 0;
+        for (final String part in parts) {
+          total = total * 60 + int.parse(part);
+        }
+        return total > 0 ? Duration(seconds: total) : null;
+      }
+      return null;
+    }
     return null;
   }
 

@@ -104,12 +104,27 @@ class VideoMomentCard extends StatelessWidget {
                       const SizedBox(height: AppSpacing.sm),
                       Row(
                         children: <Widget>[
-                          const Icon(
-                            Icons.videocam_outlined,
-                            size: 13,
-                            color: Color(0xE6FFFFFF),
+                          // The reference puts the outlet's mark here rather than a
+                          // generic camera glyph; a monogram disc stands in for the
+                          // logo the payload does not carry.
+                          Container(
+                            width: 18,
+                            height: 18,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              color: Color(0xF2FFFFFF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              _initial(video.source),
+                              style: context.typography.caption.copyWith(
+                                color: Colors.black,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: AppSpacing.xxs),
+                          const SizedBox(width: AppSpacing.xs),
                           Flexible(
                             child: Text(
                               video.source,
@@ -121,6 +136,16 @@ class VideoMomentCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (video.duration != null) ...<Widget>[
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              durationLabel(video.duration!),
+                              style: context.typography.caption.copyWith(
+                                color: const Color(0xB3FFFFFF),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -133,4 +158,23 @@ class VideoMomentCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// First letter of the outlet name, for the monogram disc.
+String _initial(String source) {
+  final String trimmed = source.trim();
+  return trimmed.isEmpty ? 'S' : trimmed.substring(0, 1).toUpperCase();
+}
+
+/// "1:05" / "1:02:03" - the shape a clip length reads in.
+@visibleForTesting
+String durationLabel(Duration duration) {
+  final int minutes = duration.inMinutes;
+  final int seconds = duration.inSeconds % 60;
+  if (minutes >= 60) {
+    final int hours = minutes ~/ 60;
+    final int rest = minutes % 60;
+    return '$hours:${rest.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
