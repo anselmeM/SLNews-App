@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/article/presentation/article_page.dart';
+import '../../features/article/presentation/article_web_page.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
@@ -102,6 +103,14 @@ GoRouter createAppRouter() {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) {
           return ArticlePage(articleId: state.pathParameters['id'] ?? '');
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.article}/:id/original',
+        name: RouteNames.articleOriginal,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) {
+          return ArticleWebPage(articleId: state.pathParameters['id'] ?? '');
         },
       ),
       GoRoute(

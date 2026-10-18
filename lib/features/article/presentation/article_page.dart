@@ -6,6 +6,7 @@ import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/theme/app_typography.dart';
@@ -163,6 +164,14 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
               ),
               centerTitle: true,
               actions: <Widget>[
+                if (article.sourceUrl != null && article.sourceUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.public),
+                    tooltip: 'Read original',
+                    onPressed: () => context.push(
+                      '${AppRoutes.articleFor(article.id)}/original',
+                    ),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.bookmark_border),
                   tooltip: 'Save story',

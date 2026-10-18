@@ -285,4 +285,20 @@ void main() {
     addTearDown(controller.dispose);
     expect(readingProgressFor(controller), 0);
   });
+
+  testWidgets('offers Read original when the story has a source link', (
+    WidgetTester tester,
+  ) async {
+    await pumpReader(tester, story());
+
+    expect(find.byTooltip('Read original'), findsOneWidget);
+  });
+
+  testWidgets('hides Read original when the story has no source link', (
+    WidgetTester tester,
+  ) async {
+    await pumpReader(tester, story(sourceUrl: null));
+
+    expect(find.byTooltip('Read original'), findsNothing);
+  });
 }

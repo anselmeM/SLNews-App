@@ -53,6 +53,7 @@ abstract final class RouteNames {
   static const String sports = 'sports';
   static const String following = 'following';
   static const String article = 'article';
+  static const String articleOriginal = 'article_original';
   static const String saved = 'saved';
   static const String signIn = 'sign_in';
   static const String settings = 'settings';

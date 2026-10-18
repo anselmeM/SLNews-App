@@ -46,6 +46,9 @@ identifier.
   advertisers.
 - Crash reports go to Sentry with IP storage disabled and no account/user identifier
   attached; they contain no reading history and no article content. See `/privacy`.
+- Read original opens the publisher's page in an in-app browser view with ephemeral
+  cookies and no persistent cache. While that page is open the publisher's own tracking
+  applies under its own policy; none of it is available to SLNews.
 
 ### When push notifications ship, add
 

@@ -90,19 +90,20 @@ Both For You entry points (header chevron and card) now slide the board up as a 
 panel over the feed, matching the reference; the `/stocks` route remains for deep links
 and tests.
 
-### A9. Reader: publisher page vs native text — P2, S (decision, not dev)
+### A9. Reader: publisher page vs native text — **shipped as a second mode**, M
 *(seen: 1.9 s)*
 
 Samsung renders the **publisher's own page** (note the site's blue bar, hamburger and
 search) inside its reader, with a 4-item floating bar: Follow (publisher avatar), like,
 `aA`, menu.
 
-Current: native reader (section label, wordmark, headline, byline, `Published:` line,
-body, tags, related stories) with 6 actions; translate opens Google Translate externally.
-
-Trade-off: the native reader is the reason offline reading and text-size control work.
-Recommendation: keep native, and close the functional gap with B3 items (in-app
-translation, reading progress) rather than embedding publisher pages.
+Shipped: the native reader stays the default, and its toolbar gains **Read original**
+(`/article/:id/original`). That route loads the publisher page in an embedded
+`flutter_inappwebview` with an overlay back/publisher/Reader header, the reading-progress
+hairline, the same floating action bar, and `aA` re-injecting the root font size through
+JavaScript. Same-publisher links stay in the page, external links leave through the
+platform, and offline / missing-link / blocked pages fall back to the native reader.
+Cookies and cache are ephemeral (`incognito: true`).
 
 ### A10. Video-moment card badges — **shipped**, S
 *(seen: 26–32 s)*

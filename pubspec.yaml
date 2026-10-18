@@ -1,4 +1,4 @@
-﻿name: slnews_mobile
+name: slnews_mobile
 description: "SLNews - Sierra Leone news aggregation app (Flutter, iOS + Android)."
 publish_to: 'none' # Private application; never published to pub.dev.
 
@@ -50,6 +50,7 @@ dependencies:
   webview_flutter: ^4.14.1
   share_plus: ^13.3.1
   sentry_flutter: 10.1.0
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:

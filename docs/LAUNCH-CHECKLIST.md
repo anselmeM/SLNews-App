@@ -120,7 +120,10 @@ temporary mailbox cover. Everything else on this list is independent of the doma
       `store/play/captures/`, rerun `python tools/generate_store_assets.py`.
 - [ ] **D9. Pre-launch report** — review Play's automated crawl findings; fix crashes and
       warnings before production.
-- [ ] **D10. Financial disclaimer** — Stocks footer/reader shows attributable data and the
+- [ ] **D10. Read original pass** — a story opens the publisher page in-app, `aA` changes
+      the page's text size, external links leave the app, back walks page history, and
+      airplane mode shows the native-reader fallback.
+- [ ] **D11. Financial disclaimer** — Stocks footer/reader shows attributable data and the
       "not investment advice" wording is reachable in Terms.
 
 ---
