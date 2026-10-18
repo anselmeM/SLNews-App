@@ -280,4 +280,31 @@ void main() {
       },
     );
   });
+
+  test('serves the cached body through byId while sources are down', () async {
+    final InMemoryArticleCache cache = InMemoryArticleCache();
+    final OfflineFirstArticleRepository online = build(
+      sources: <FeedSource>[
+        FakeFeedSource(
+          config: config('a'),
+          articles: <Article>[
+            article('a-1', bodyHtml: '<p>Cached paragraph survives.</p>'),
+          ],
+        ),
+      ],
+      cache: cache,
+    );
+    await online.refresh();
+
+    final OfflineFirstArticleRepository offline = build(
+      sources: <FeedSource>[
+        FakeFeedSource(config: config('b'), error: ApiException('down')),
+      ],
+      cache: cache,
+    );
+
+    final Article? story = await offline.byId('a-1');
+    expect(story, isNotNull);
+    expect(story!.bodyHtml, contains('Cached paragraph survives'));
+  });
 }

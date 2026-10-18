@@ -157,10 +157,14 @@ Missing pieces: permission priming + OS request (Android 13 `POST_NOTIFICATIONS`
 - Long-press/selection beyond default; internal handling of links inside article bodies.
 
 ### B4. Offline and data — P1, M
-- **Article bodies are not cached**: only feeds and the bundled seed are, so an offline
-  tap on a card shows a skeleton or fails. Cache the parsed body per article.
-- Offline banner only on For You; other tabs fail silently — add a global offline state
-  plus "last updated" timestamps everywhere.
+- Article bodies **do** travel with the cached `Article` JSON (`bodyHtml` is part of the
+  model and of `Article.toJson`), so a story that was in a cached scope reads offline —
+  verified by `article_cache_test` and `offline_first_article_repository_test`. What is
+  still missing: a story **never cached** (a deep link to an item outside the last rails)
+  has no body because `byId` has no network fallback, and there is no per-article
+  on-demand cache or stale-body refresh.
+- Offline banner now renders on all four tabs (was For You only); "last updated"
+  timestamps appear inside the banner.
 - Data-saver image quality, video autoplay on Wi-Fi only, cache/storage screen with
   "clear images".
 - Background refresh (e.g. WorkManager) so the feed is warm before the user opens it.
@@ -245,6 +249,9 @@ are needed to *operate* the app; the app side only needs to consume those overri
 | Reader meta block (section label, `Published:` line) | `308088a` |
 | Micro-animation layer (press, entrance, springs, page fades) | `3f20b81` |
 | For You sections rail (Video moments, Picks, Next read, ads) | earlier |
+| Saved-stories entry point in the page menu (the route was unreachable) | `4572183` |
+| Offline banner on all four tabs via `SlPageScaffold` | `4572183` |
+| Offline article bodies verified end to end (cache carries the body) | verified |
 
 ## Appendix 2 — Already matching the reference
 

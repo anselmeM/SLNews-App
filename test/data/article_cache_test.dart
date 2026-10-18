@@ -155,4 +155,17 @@ void main() {
       expect(cache.keys(), isEmpty);
     });
   });
+
+  test('keeps the article body so a cached story reads offline', () async {
+    final InMemoryArticleCache cache = InMemoryArticleCache();
+    await cache.init();
+
+    await cache.write('all', <Article>[
+      article('with-body', bodyHtml: '<p>The full report, paragraph one.</p>'),
+    ]);
+
+    final Article restored = cache.read('all').single;
+    expect(restored.bodyHtml, contains('paragraph one'));
+    expect(restored.estimatedReadingMinutes, greaterThanOrEqualTo(1));
+  });
 }
