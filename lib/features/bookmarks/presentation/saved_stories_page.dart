@@ -38,6 +38,27 @@ class SavedStoriesPage extends ConsumerWidget {
             titleSpacing: 0,
             title: Text('Saved stories', style: context.typography.screenTitle),
           ),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.download_done, size: 18),
+                  SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'Saved stories are kept on this device and stay readable offline.',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           saved.when(
             data: (List<Article> articles) => articles.isEmpty
                 ? const SliverFillRemaining(

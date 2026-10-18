@@ -162,19 +162,18 @@ Missing pieces: permission priming + OS request (Android 13 `POST_NOTIFICATIONS`
 - Font family choice, brightness control inside the reader, image lightbox and captions.
 - Long-press/selection beyond default; internal handling of links inside article bodies.
 
-### B4. Offline and data — P1, M
-- Article bodies **do** travel with the cached `Article` JSON (`bodyHtml` is part of the
-  model and of `Article.toJson`), so a story that was in a cached scope reads offline —
-  verified by `article_cache_test` and `offline_first_article_repository_test`. What is
-  still missing: a story **never cached** (a deep link to an item outside the last rails)
-  has no body because `byId` has no network fallback, and there is no per-article
-  on-demand cache or stale-body refresh.
-- Offline banner now renders on all four tabs (was For You only); "last updated"
-  timestamps appear inside the banner.
-- Data-saver image quality, video autoplay on Wi-Fi only, cache/storage screen with
-  "clear images".
-- Background refresh (e.g. WorkManager) so the feed is warm before the user opens it.
+### B4. Offline and data — **first pass shipped**, M
+*(partly done)*
 
+Shipped: article bodies already travelled with the cached `Article` JSON, so cached
+stories read offline. Now a **story that was never cached** (a deep link outside the
+rails) is resolved on demand through the single-article endpoint and written to the cache,
+so the next offline open of that link has a body. The Saved stories screen states plainly
+that saved stories are kept on the device and stay readable offline.
+
+Remaining: data-saver image quality, Wi-Fi-only video autoplay, a cache/storage screen
+with "clear images", and background refresh (WorkManager) so the feed is warm ahead of
+the first open.
 ### B5. Platform integration — P1, M
 - **Android home-screen widget** (A5) and app shortcuts ("Search", "Saved").
 - **Verified App Links / Universal Links**: the manifest declares `slnews://article/<id>`

@@ -27,10 +27,14 @@ class OfflineFirstArticleRepository implements ArticleRepository {
     required SeedLoader seedLoader,
     ApiClient? client,
     Duration cacheTtl = const Duration(minutes: 10),
+    Future<Article?> Function(String id)? fetchById,
   }) : _sources = List<FeedSource>.unmodifiable(sources),
        _articleCache = cache,
        _seeds = seedLoader,
-       _ttl = cacheTtl;
+       _ttl = cacheTtl,
+       // Private field, so the named parameter cannot be an initializing formal.
+       // ignore: prefer_initializing_formals
+       _fetchById = fetchById;
 
   /// Cache key holding the merged feed from the last successful refresh.
   static const String allCacheKey = 'all';
@@ -43,6 +47,9 @@ class OfflineFirstArticleRepository implements ArticleRepository {
 
   final List<FeedSource> _sources;
   final ArticleCache _articleCache;
+
+  /// Optional single-story endpoint for deep links outside the feed (B4).
+  final Future<Article?> Function(String id)? _fetchById;
   final SeedLoader _seeds;
   final Duration _ttl;
 
@@ -137,6 +144,24 @@ class OfflineFirstArticleRepository implements ArticleRepository {
     // A deep link can name a seeded story that is no longer in the merged feed.
     for (final Article article in await _seed()) {
       if (article.id == id) return article;
+    }
+    // Last resort: fetch that one story and cache it, so the next offline open
+    // of the same deep link has a body to read.
+    final Future<Article?> Function(String id)? fetcher = _fetchById;
+    if (fetcher != null) {
+      try {
+        final Article? fetched = await fetcher(id).timeout(sourceTimeout);
+        if (fetched != null) {
+          final List<Article> merged = _merge(_memory, <Article>[fetched]);
+          _memory = merged;
+          await _articleCache.write(allCacheKey, merged);
+          return fetched;
+        }
+      } catch (error) {
+        debugPrint(
+          'OfflineFirstArticleRepository: byId fetch failed for "$id": $error',
+        );
+      }
     }
     return null;
   }

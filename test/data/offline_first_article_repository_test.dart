@@ -307,4 +307,62 @@ void main() {
     expect(story, isNotNull);
     expect(story!.bodyHtml, contains('Cached paragraph survives'));
   });
+
+  group('byId on-demand fetch (B4)', () {
+    test(
+      'fetches an uncached story, caches it, then serves it offline',
+      () async {
+        final InMemoryArticleCache cache = InMemoryArticleCache();
+        final Article target = article('deep-link-1');
+        int calls = 0;
+
+        final OfflineFirstArticleRepository online =
+            OfflineFirstArticleRepository(
+              sources: const <FeedSource>[],
+              cache: cache,
+              seedLoader: InMemorySeedLoader(SeedData.empty),
+              fetchById: (String id) async {
+                calls++;
+                return id == target.id ? target : null;
+              },
+            );
+
+        expect((await online.byId('deep-link-1'))?.id, 'deep-link-1');
+        expect(calls, 1);
+        expect(
+          cache.read('all').map((Article a) => a.id),
+          contains('deep-link-1'),
+          reason: 'the fetched story is cached for the next offline open',
+        );
+
+        // A later run with no fetcher and no network still resolves it from cache.
+        final OfflineFirstArticleRepository offline =
+            OfflineFirstArticleRepository(
+              sources: const <FeedSource>[],
+              cache: cache,
+              seedLoader: InMemorySeedLoader(SeedData.empty),
+            );
+        expect((await offline.byId('deep-link-1'))?.id, 'deep-link-1');
+      },
+    );
+
+    test('a failed or empty fetch leaves byId null without throwing', () async {
+      final OfflineFirstArticleRepository failing =
+          OfflineFirstArticleRepository(
+            sources: const <FeedSource>[],
+            cache: InMemoryArticleCache(),
+            seedLoader: InMemorySeedLoader(SeedData.empty),
+            fetchById: (String id) async => throw ApiException('down'),
+          );
+      expect(await failing.byId('missing'), isNull);
+
+      final OfflineFirstArticleRepository empty = OfflineFirstArticleRepository(
+        sources: const <FeedSource>[],
+        cache: InMemoryArticleCache(),
+        seedLoader: InMemorySeedLoader(SeedData.empty),
+        fetchById: (String id) async => null,
+      );
+      expect(await empty.byId('missing'), isNull);
+    });
+  });
 }

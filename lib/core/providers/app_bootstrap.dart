@@ -151,10 +151,12 @@ class AppBootstrap {
       },
     );
     final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();
+    final SlNewsApiSource? apiSource = apiConfig.isConfigured
+        ? SlNewsApiSource(config: apiConfig, client: client)
+        : null;
     final List<FeedSource> sources = <FeedSource>[
       ...OutletRegistry.buildSources(client),
-      if (apiConfig.isConfigured)
-        SlNewsApiSource(config: apiConfig, client: client),
+      ?apiSource,
     ];
     debugPrint(
       'SLNews: ingest sources=${sources.length} '
@@ -171,6 +173,8 @@ class AppBootstrap {
           cache: cache,
           seedLoader: seedLoader,
           client: client,
+          // Deep links outside the current feed resolve, then cache.
+          fetchById: apiSource?.articleById,
         );
     final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
       seedLoader: seedLoader,
