@@ -61,3 +61,6 @@ test/golden/failures/
 sentry-wizard.exe
 
 sentry.properties
+
+# Gradle problem reports (generated)# android/build/
+android/build/
