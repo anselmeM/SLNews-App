@@ -33,12 +33,14 @@ temporary mailbox cover. Everything else on this list is independent of the doma
 
 ## B. Blockers — must be finished before the **internal-testing upload**
 
-- [ ] **1. Settings → About: Privacy policy and Terms of use rows.**
-      Open the live URLs in the browser. *Owner: me (app).* Evidence: row test + manual tap.
-- [ ] **2. Settings → SLNews account → Delete account.**
-      Destructive confirmation, calls the live endpoint, clears local user state, signs
-      out, keeps the account on failure. *Owner: me (app).* Evidence: widget tests +
-      one real account deleted end-to-end against production.
+- [x] **1. Settings → About: Privacy policy and Terms of use rows.**
+      Open the live URLs externally. *Owner: me (app).* Evidence: `legal_and_deletion_test`
+      asserts both rows and that each opens its URL.
+- [x] **2. Settings → SLNews account → Delete account.**
+      Destructive confirmation, calls `DELETE /api/mobile/v1/account`, signs out, and keeps
+      the account on any failure (ApiException or unexpected). *Owner: me (app).* Evidence:
+      widget tests (confirm, cancel, success, server failure); one real deletion still to be
+      done from an internal build with a live session.
 - [ ] **3. Reachable contact address.**
       The pages currently publish `privacy@slnews.sl` / `contact@slnews.sl`, which do **not
       receive mail yet**. Either create the mailbox now, or temporarily point the pages and

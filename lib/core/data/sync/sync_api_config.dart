@@ -89,6 +89,9 @@ class SyncApiConfig {
   /// Full URL of the sync endpoint, e.g. `https://slnews.sl/api/mobile/v1/sync`.
   String get endpoint => '${_normalize(baseUrl)}$syncPath';
 
+  /// Full URL of the account-deletion endpoint.
+  String get accountEndpoint => '${_normalize(baseUrl)}$accountPath';
+
   /// Copy of this configuration with the given fields replaced.
   SyncApiConfig copyWith({String? baseUrl, int? limit}) => SyncApiConfig(
     baseUrl: baseUrl ?? this.baseUrl,
@@ -117,4 +120,7 @@ class SyncApiConfig {
 
   /// Path of the batched GET (delta pull) and POST (batched push).
   static const String syncPath = '$apiPath/sync';
+
+  /// Path of the account-deletion endpoint (`DELETE`).
+  static const String accountPath = '$apiPath/account';
 }

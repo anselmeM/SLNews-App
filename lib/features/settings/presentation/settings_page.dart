@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/legal_links.dart';
+import '../../../core/data/sources/api_client.dart';
 import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/providers/sync_repository_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -78,6 +81,14 @@ class SettingsPage extends ConsumerWidget {
                           : 'Not signed in — tap to sign in',
                       onTap: () => context.push(AppRoutes.signIn),
                     ),
+                    if (auth.isSignedIn &&
+                        ref.watch(syncApiConfigProvider).isConfigured)
+                      SettingsValueRow(
+                        title: 'Delete account',
+                        subtitle: 'Remove your account and the reading state synced for it.',
+                        titleColor: context.colors.live,
+                        onTap: () => _confirmAccountDeletion(context, ref),
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -154,6 +165,14 @@ class SettingsPage extends ConsumerWidget {
                 const SettingsSectionLabel('About'),
                 SettingsCard(
                   children: <Widget>[
+                    SettingsValueRow(
+                      title: 'Privacy policy',
+                      onTap: () => _openLegal(context, ref, LegalLinks.privacy),
+                    ),
+                    SettingsValueRow(
+                      title: 'Terms of use',
+                      onTap: () => _openLegal(context, ref, LegalLinks.terms),
+                    ),
                     const SettingsValueRow(
                       title: 'App version',
                       value: appVersion,
@@ -181,6 +200,76 @@ class SettingsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openLegal(
+    BuildContext context,
+    WidgetRef ref,
+    String url,
+  ) async {
+    final bool opened = await ref.read(externalUrlOpenerProvider)(url);
+    if (!opened && context.mounted) {
+      _showSnack(context, 'Could not open the link.');
+    }
+  }
+
+  /// Confirms, deletes server-side, then signs out.
+  ///
+  /// The confirmation is a dialog rather than a switch because the action is
+  /// irreversible; the failure path keeps the account and says so, so the reader
+  /// never believes data was deleted when the server refused.
+  Future<void> _confirmAccountDeletion(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Delete your SLNews account?'),
+        content: const Text(
+          'This removes your account and the saved stories, likes and follows '
+          'synced for it. It cannot be undone. Content cached on this phone '
+          'stays until you clear the app data or uninstall it.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: dialogContext.colors.live,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete account'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(accountDeletionServiceProvider).deleteAccount();
+      await ref.read(authControllerProvider.notifier).signOut();
+      if (context.mounted) _showSnack(context, 'Your account was deleted.');
+    } on ApiException catch (error) {
+      if (context.mounted) {
+        _showSnack(context, 'Could not delete your account. ${error.message}');
+      }
+    } catch (error) {
+      // Any other failure must still keep the account and tell the reader.
+      if (context.mounted) {
+        _showSnack(
+          context,
+          'Could not delete your account. Please try again or contact support.',
+        );
+      }
+    }
+  }
+
+  void _showSnack(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   static NewsLocation _activeLocation(String id) {

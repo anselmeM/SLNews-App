@@ -4,6 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/sign_in_surface.dart';
+import '../../features/auth/data/account_deletion_service.dart';
+import 'app_providers.dart';
+import 'sync_repository_provider.dart';
 import '../domain/auth/auth_repository.dart';
 
 export '../auth/sign_in_surface.dart';
@@ -40,6 +43,16 @@ final Provider<Widget Function(Widget child)> authAppWrapperProvider =
       (Ref ref) =>
           (Widget child) => child,
       name: 'authAppWrapper',
+    );
+
+/// Deletes the signed-in reader's account on the backend.
+final Provider<AccountDeletionService> accountDeletionServiceProvider =
+    Provider<AccountDeletionService>(
+      (Ref ref) => AccountDeletionService(
+        config: ref.watch(syncApiConfigProvider),
+        api: ref.watch(apiClientProvider),
+      ),
+      name: 'accountDeletion',
     );
 
 /// Session state for widgets.

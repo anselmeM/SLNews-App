@@ -151,6 +151,7 @@ class SettingsValueRow extends StatelessWidget {
     this.subtitle,
     this.value,
     this.valueColor,
+    this.titleColor,
     this.onTap,
     this.showChevron = true,
   });
@@ -161,6 +162,9 @@ class SettingsValueRow extends StatelessWidget {
   /// Right-hand text, e.g. "English (Sierra Leone)".
   final String? value;
   final Color? valueColor;
+
+  /// Overrides the title colour, e.g. the destructive "Delete account" row.
+  final Color? titleColor;
   final VoidCallback? onTap;
   final bool showChevron;
 
