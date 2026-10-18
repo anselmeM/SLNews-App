@@ -248,7 +248,7 @@ class FakeUserStateRepository implements UserStateRepository {
       _breakingAlerts = enabled;
 
   bool _editorsPicks = false;
-  bool _interactiveContent = false;
+  bool _interactiveContent = true;
   bool _sportsAlerts = true;
   bool _weatherForecast = true;
 

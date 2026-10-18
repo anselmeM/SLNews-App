@@ -7,6 +7,7 @@ import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/market_snapshot.dart';
+import '../../../core/domain/models/sports_models.dart';
 import '../../../core/domain/models/video_moment.dart';
 import '../../../core/domain/repositories/article_repository.dart';
 import '../../../core/providers/app_providers.dart';
@@ -21,9 +22,10 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
-import '../../markets/presentation/widgets/market_rates_card.dart';
 import '../../markets/presentation/widgets/markets_sheet.dart';
 import 'widgets/article_actions.dart';
+import 'widgets/sports_carousel.dart';
+import 'widgets/stocks_carousel.dart';
 import 'widgets/top_stories_carousel.dart';
 import 'widgets/video_moments_rail.dart';
 import 'widgets/weather_alert_header.dart';
@@ -54,9 +56,12 @@ class ForYouPage extends ConsumerWidget {
         ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
     final List<AdUnit> ads =
         ref.watch(forYouAdsProvider).value ?? const <AdUnit>[];
-    // Interactive content: the Markets card only exists when the reader turned
-    // that category on in Settings.
+    // Interactive content: the Stocks section only exists when the reader turned
+    // that category on in Settings (on by default, as the reference shows the
+    // finance card without being asked).
     final MarketSnapshot? markets = ref.watch(marketSnapshotProvider).value;
+    final List<GameScore> games =
+        ref.watch(scoreboardProvider).value?.games ?? const <GameScore>[];
     final _OfflineStatus offline = _readOffline(ref);
 
     final Widget content;
@@ -86,6 +91,7 @@ class ForYouPage extends ConsumerWidget {
         ads: ads,
         markets: markets,
         showMarkets: settings.interactiveContentEnabled,
+        games: games,
       );
     }
 
@@ -164,6 +170,7 @@ class _FeedSliver extends ConsumerWidget {
     required this.ads,
     required this.markets,
     required this.showMarkets,
+    required this.games,
   });
 
   final ForYouFeed feed;
@@ -172,6 +179,7 @@ class _FeedSliver extends ConsumerWidget {
   final List<AdUnit> ads;
   final MarketSnapshot? markets;
   final bool showMarkets;
+  final List<GameScore> games;
 
   /// Stories per rail. Four keeps every rail visible above the bottom bar on a
   /// 640dp-tall phone instead of turning the page into one long list.
@@ -179,6 +187,9 @@ class _FeedSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Local so the null check promotes inside the sliver list.
+    final MarketSnapshot? board = markets;
+
     final Set<String> localIds = <String>{
       for (final Article article in localStories) article.id,
     };
@@ -260,21 +271,41 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
         ],
-        if (showMarkets)
+        // Sports and Stocks repeat the lead carousel's behaviour: a snap-to-card
+        // pager with dots, and a header chevron that opens the full surface.
+        if (games.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: MarketRatesCard(
-                snapshot: markets,
-                onOpen: () => showMarketsSheet(context, snapshot: markets),
-              ),
+            child: SectionHeader(
+              title: 'Sports',
+              subtitle: 'Scores and fixtures',
+              onTap: () => context.go(AppRoutes.sports),
+              trailing: const _MoreLabel(),
             ),
           ),
+          SliverToBoxAdapter(
+            child: SportsCarousel(
+              games: games,
+              onOpen: (GameScore _) => context.go(AppRoutes.sports),
+            ),
+          ),
+        ],
+        if (showMarkets && board != null && !board.isEmpty) ...<Widget>[
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Stocks',
+              subtitle: 'Markets today',
+              onTap: () => showMarketsSheet(context, snapshot: board),
+              trailing: const _MoreLabel(),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: StocksCarousel(
+              rates: board.board,
+              onOpen: (MarketRate _) =>
+                  showMarketsSheet(context, snapshot: board),
+            ),
+          ),
+        ],
         if (picks.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             child: SectionHeader(

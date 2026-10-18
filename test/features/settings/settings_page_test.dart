@@ -121,7 +121,9 @@ void main() {
 
     expect(switchValue(tester, 'Breaking news'), isTrue);
     expect(switchValue(tester, "Editor's picks"), isFalse);
-    expect(switchValue(tester, 'Interactive content'), isFalse);
+    // On by default: the reference feed shows its finance section without being
+    // asked, and the switch hides it.
+    expect(switchValue(tester, 'Interactive content'), isTrue);
     expect(switchValue(tester, 'Sports'), isTrue);
     expect(switchValue(tester, 'Show weather forecast'), isTrue);
   });

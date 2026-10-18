@@ -36,7 +36,7 @@ class AppSettings {
     this.activeLocationId = 'city:freetown',
     this.breakingNewsAlertsEnabled = true,
     this.editorsPicksEnabled = false,
-    this.interactiveContentEnabled = false,
+    this.interactiveContentEnabled = true,
     this.sportsAlertsEnabled = true,
     this.weatherForecastEnabled = true,
   });

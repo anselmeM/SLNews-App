@@ -91,48 +91,47 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the Markets card is absent unless interactive content is on', (
+  testWidgets('the Stocks section is absent unless interactive content is on', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester, interactiveContent: false);
 
-    expect(find.text('Markets'), findsNothing);
-    expect(find.text('Interactive'), findsNothing);
+    expect(find.text('Stocks'), findsNothing);
+    expect(find.text('Sierra Leone (new leone)'), findsNothing);
   });
 
-  testWidgets('the card shows the leone board when the switch is on', (
+  testWidgets('the Stocks section quotes the board when the switch is on', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester, interactiveContent: true);
 
-    expect(find.text('Markets'), findsOneWidget);
-    expect(find.text('Interactive'), findsOneWidget);
-    expect(find.text('Leone (SLE)'), findsOneWidget);
-    expect(find.text('24.36'), findsOneWidget);
-    expect(find.text('Pound'), findsOneWidget);
-    expect(find.text('0.7508'), findsOneWidget);
+    expect(find.text('Stocks'), findsOneWidget);
+    expect(find.text('Markets today'), findsOneWidget);
+    // The leone pair leads the board, as it does in the markets sheet.
+    expect(find.text('Sierra Leone (new leone)'), findsOneWidget);
+    expect(find.text('Le 24.36'), findsOneWidget);
+    expect(find.text('SLE'), findsOneWidget);
   });
 
-  testWidgets('tapping the card opens the full board', (
+  testWidgets('the header chevron opens the full board', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester, interactiveContent: true);
 
-    await tester.tap(find.text('Markets'));
+    await tester.tap(find.text('Stocks'));
     await tester.pumpAndSettle();
 
-    // The card behind the sheet shows the same caption; the sheet adds the rows.
-    expect(find.textContaining('1 USD buys'), findsWidgets);
-    expect(find.text('Sierra Leone (new leone)'), findsOneWidget);
+    expect(find.textContaining('1 USD buys'), findsOneWidget);
+    expect(find.text('Sierra Leone (new leone)'), findsWidgets);
     expect(find.text('British pound'), findsOneWidget);
     expect(find.textContaining('Indicative wholesale rates'), findsOneWidget);
   });
 
-  testWidgets('the switch off keeps the page free of the module', (
+  testWidgets('the switch off keeps the page free of the section', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester, interactiveContent: false);
-    expect(find.textContaining('1 USD buys'), findsNothing);
+    expect(find.text('Stocks'), findsNothing);
   });
 
   test('a cached board is served when the rates service is down', () async {

@@ -212,7 +212,7 @@ class FakeUserStateRepository implements UserStateRepository {
       editorsPicksEnabled = enabled;
 
   @override
-  bool interactiveContentEnabled = false;
+  bool interactiveContentEnabled = true;
 
   @override
   Future<void> setInteractiveContentEnabled(bool enabled) async =>

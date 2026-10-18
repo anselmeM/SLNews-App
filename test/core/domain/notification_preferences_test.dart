@@ -10,7 +10,7 @@ void main() {
   test('defaults match the reference screen', () {
     expect(defaults.breakingNewsAlertsEnabled, isTrue);
     expect(defaults.editorsPicksEnabled, isFalse);
-    expect(defaults.interactiveContentEnabled, isFalse);
+    expect(defaults.interactiveContentEnabled, isTrue);
     expect(defaults.sportsAlertsEnabled, isTrue);
     expect(defaults.weatherForecastEnabled, isTrue);
   });
