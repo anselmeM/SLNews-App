@@ -99,6 +99,22 @@ abstract final class TimeAgo {
     return '$month ${local.day}, ${local.year} ${_hour12(local.hour)}:$minute $period$suffix';
   }
 
+  /// Publication line in the reference's wording:
+  /// "Published: October 17, 2026 at 7:47 p.m. EDT".
+  ///
+  /// The reader spells the month out and uses dotted meridiem markers, which is
+  /// what the Samsung News article header does; [absolute] stays the compact form
+  /// for lists and cards.
+  static String published(DateTime timestamp, {String? timeZoneLabel}) {
+    final DateTime local = timestamp.toLocal();
+    final String month = _monthsLong[local.month - 1];
+    final String minute = local.minute.toString().padLeft(2, '0');
+    final String period = local.hour < 12 ? 'a.m.' : 'p.m.';
+    final String suffix = timeZoneLabel == null ? '' : ' $timeZoneLabel';
+    return 'Published: $month ${local.day}, ${local.year} at '
+        '${_hour12(local.hour)}:$minute $period$suffix';
+  }
+
   static const List<String> _months = <String>[
     'Jan',
     'Feb',
@@ -114,6 +130,21 @@ abstract final class TimeAgo {
     'Dec',
   ];
 
+  static const List<String> _monthsLong = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   static String _hour12(int hour24) => '${hour24 % 12 == 0 ? 12 : hour24 % 12}';
 }
 
@@ -125,10 +156,16 @@ extension DateTimeLabels on DateTime {
 
   String get absoluteLabel => TimeAgo.absolute(this);
 
-  /// "Oct 16, 2026 7:30 pm EDT" — the reader's byline line, zone included.
+  /// "Oct 16, 2026 7:30 pm EDT" — the compact line used by cards and lists.
   String get absoluteLabelWithZone {
     final String zone = TimeAgo.localZoneLabel;
     return TimeAgo.absolute(this, timeZoneLabel: zone.isEmpty ? null : zone);
+  }
+
+  /// "Published: October 16, 2026 at 7:30 p.m. EDT" — the reader's byline line.
+  String get publishedLabelWithZone {
+    final String zone = TimeAgo.localZoneLabel;
+    return TimeAgo.published(this, timeZoneLabel: zone.isEmpty ? null : zone);
   }
 
   /// "Today" / "Yesterday" / "10/16" label used by the scoreboard headers.

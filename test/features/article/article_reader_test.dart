@@ -81,15 +81,18 @@ void main() {
     final String zone = TimeAgo.localZoneLabel;
     expect(
       find.text(
-        TimeAgo.absolute(
+        TimeAgo.published(
           article.publishedAt,
           timeZoneLabel: zone.isEmpty ? null : zone,
         ),
       ),
       findsOneWidget,
-      reason: 'the reference puts an absolute date/time (and zone) under the byline',
+      reason:
+          'the reference prints "Published: October 16, 2026 at 7:30 p.m. EDT"',
     );
     expect(find.textContaining('min read'), findsOneWidget);
+    // Section eyebrow above the wordmark, in the reference's red.
+    expect(find.text('Politics'), findsOneWidget);
   });
 
   testWidgets('the floating bar offers translate and lists languages', (
@@ -159,7 +162,7 @@ void main() {
     final String zone = TimeAgo.localZoneLabel;
     expect(
       find.text(
-        TimeAgo.absolute(
+        TimeAgo.published(
           article.publishedAt,
           timeZoneLabel: zone.isEmpty ? null : zone,
         ),

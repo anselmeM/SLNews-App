@@ -136,4 +136,28 @@ void main() {
       expect(DateTime(2026, 10, 16, 12, 0).clockLabel, '12:00PM');
     });
   });
+
+  group('published', () {
+    test('spells the month out and uses dotted meridiem markers', () {
+      expect(
+        TimeAgo.published(DateTime(2026, 10, 17, 19, 47), timeZoneLabel: 'EDT'),
+        'Published: October 17, 2026 at 7:47 p.m. EDT',
+      );
+      expect(
+        TimeAgo.published(DateTime(2026, 1, 3, 0, 5), timeZoneLabel: 'GMT'),
+        'Published: January 3, 2026 at 12:05 a.m. GMT',
+      );
+      expect(
+        TimeAgo.published(DateTime(2026, 6, 9, 12, 0), timeZoneLabel: 'UTC'),
+        'Published: June 9, 2026 at 12:00 p.m. UTC',
+      );
+    });
+
+    test('omits the zone when the platform gives none', () {
+      expect(
+        TimeAgo.published(DateTime(2026, 12, 31, 23, 59)),
+        'Published: December 31, 2026 at 11:59 p.m.',
+      );
+    });
+  });
 }
