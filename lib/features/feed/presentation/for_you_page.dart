@@ -122,7 +122,9 @@ class ForYouPage extends ConsumerWidget {
           SliverToBoxAdapter(
             child: SlPageTitle(
               title: 'Top stories',
-              onTap: () => context.go(AppRoutes.news),
+              // The reference opens a pushed section screen with a photo
+              // header; the News tab is a separate destination.
+              onTap: () => context.push(AppRoutes.topStories),
             ),
           ),
         ],

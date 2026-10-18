@@ -21,6 +21,9 @@ abstract final class AppRoutes {
   /// Query surface for stories and videos.
   static const String search = '/search';
 
+  /// Pushed "Top stories" section with a photo header.
+  static const String topStories = '/top_stories';
+
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
@@ -55,6 +58,7 @@ abstract final class RouteNames {
   static const String settings = 'settings';
   static const String stocks = 'stocks';
   static const String search = 'search';
+  static const String topStories = 'top_stories';
   static const String notificationHistory = 'following_notifications';
   static const String video = 'video';
 }

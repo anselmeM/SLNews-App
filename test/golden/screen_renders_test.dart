@@ -128,6 +128,15 @@ void main() {
     await capture(tester, 'news');
   });
 
+  testWidgets('Top stories section renders the photo header and list', (
+    WidgetTester tester,
+  ) async {
+    await pumpApp(tester);
+    container.read(appRouterProvider).go(AppRoutes.topStories);
+    await settle(tester);
+    await capture(tester, 'section');
+  });
+
   testWidgets('Sports tab renders the scoreboard and inline ad', (
     WidgetTester tester,
   ) async {
