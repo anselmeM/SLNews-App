@@ -56,3 +56,6 @@ app.*.map.json
 
 # Golden-test failure artefacts are regenerated locally on every miss.
 test/golden/failures/
+
+# Local Sentry setup wizard download (86 MB, never committed)
+sentry-wizard.exe
