@@ -24,6 +24,7 @@ import 'viewmodels/sports_view_model.dart';
 import 'widgets/followed_teams_row.dart';
 import 'widgets/scoreboard_strip.dart';
 import 'widgets/sports_fixture_row.dart';
+import 'widgets/standings_table.dart';
 
 /// Tab 3 — Sports.
 ///
@@ -111,10 +112,26 @@ class SportsPage extends ConsumerWidget {
         SliverToBoxAdapter(
           child: FollowedTeamsRow(
             targets: viewModel.followedSports,
-            onTap: (FollowTarget _) => context.go(AppRoutes.following),
+            onTap: (FollowTarget target) {
+              switch (target.kind) {
+                case FollowKind.team:
+                  context.push(
+                    AppRoutes.teamFor(target.id),
+                    extra: target.label,
+                  );
+                case FollowKind.league:
+                  context.push(
+                    AppRoutes.leagueFor(target.id),
+                    extra: target.label,
+                  );
+                default:
+                  context.go(AppRoutes.following);
+              }
+            },
             onEmptyTap: () => context.go(AppRoutes.following),
           ),
         ),
+        ..._standingsSlivers(context, ref, viewModel.followedSports),
         if (ad != null) _adSliver(context, ad),
         SliverToBoxAdapter(
           child: SectionHeader(title: viewModel.newsSectionTitle),
@@ -123,9 +140,68 @@ class SportsPage extends ConsumerWidget {
         SliverToBoxAdapter(
           child: SectionHeader(title: viewModel.fixturesSectionTitle),
         ),
-        ..._fixtureSlivers(context, ref, fixtures, fixtureTeamId),
+        ..._fixtureSlivers(
+          context,
+          ref,
+          fixtures,
+          fixtureTeamId,
+          viewModel.heroTeam?.label,
+        ),
       ],
     );
+  }
+
+  /// A compact league table for the first followed league, linking to its page.
+  List<Widget> _standingsSlivers(
+    BuildContext context,
+    WidgetRef ref,
+    List<FollowTarget> followed,
+  ) {
+    FollowTarget? league;
+    for (final FollowTarget target in followed) {
+      if (target.kind == FollowKind.league) {
+        league = target;
+        break;
+      }
+    }
+    if (league == null) return const <Widget>[];
+
+    final AsyncValue<List<TeamStanding>> standings = ref.watch(
+      standingsProvider(league.id),
+    );
+    return <Widget>[
+      SliverToBoxAdapter(
+        child: SectionHeader(
+          title: 'Standings',
+          onTap: () => context.push(
+            AppRoutes.leagueFor(league!.id),
+            extra: league.label,
+          ),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: standings.when(
+            data: (List<TeamStanding> rows) => rows.isEmpty
+                ? const SizedBox.shrink()
+                : StandingsTable(
+                    rows: rows,
+                    maxRows: 5,
+                    onTeamTap: (TeamStanding row) => context.push(
+                      AppRoutes.teamFor(row.team.id),
+                      extra: row.team.name,
+                    ),
+                  ),
+            loading: () => const SkeletonBox(
+              height: 160,
+              borderRadius: AppRadius.cardRadius,
+            ),
+            error: (Object error, StackTrace stack) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+    ];
   }
 
   /// Exactly one native-style inline unit, embedded in the stream right after
@@ -221,6 +297,7 @@ class SportsPage extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<GameScore>>? fixtures,
     String? teamId,
+    String? teamLabel,
   ) {
     if (teamId == null || fixtures == null) {
       return <Widget>[
@@ -248,9 +325,9 @@ class SportsPage extends ConsumerWidget {
                   ),
                   child: SportsFixtureRow(
                     game: game,
-                    onTap: () => _showSnack(
-                      context,
-                      '${game.away.name} v ${game.home.name} · ${game.statusLabel}',
+                    onTap: () => context.push(
+                      AppRoutes.teamFor(game.home.id),
+                      extra: game.home.name,
                     ),
                   ),
                 ),

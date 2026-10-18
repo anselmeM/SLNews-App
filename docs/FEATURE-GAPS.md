@@ -75,18 +75,22 @@ promo, and a full-bleed brand "spotlight" with a colour field and a story beneat
 Current: one generic `AdCard` (image, label, CTA). Needs two or three more ad layouts in
 the same rotation model.
 
-### A7. Sports depth — P1, L
+### A7. Sports depth — **shipped (first pass)**, L
 *(seen: 34 s, 39.9 s, 43.7 s, 45.6 s)*
 
 The reference has the colour-washed scoreboard, followed teams, league-grouped story
 lists with per-league "More … stories" links, inline ads and (implied by the grouping)
 **league and team surfaces**.
 
-Current: scoreboard strip + the new spotlight card + followed-teams row + one news list +
-fixtures for the first followed team. `standingsProvider` exists but has **no UI**;
-tapping a team, league or game shows a snackbar — there are **no league, team or game
-detail pages**.
+Shipped: league pages (`/sports/league/:id`) with a standings table, that competition's
+fixtures and its stories; team pages (`/sports/team/:id`) with a follow chip, fixtures
+and results, and best-effort team stories; a compact standings table on the Sports tab
+for the first followed league; and real navigation from followed-team/league chips, the
+scoreboard strip and fixtures. `SportsLinks` maps fixture labels ("Sierra Leone Premier
+League") to standings ids (`spl`) so the two vocabularies cannot drift.
 
+Remaining for a later pass: grouped per-league story rails with "More" links, game detail
+pages, and richer team stats.
 ### A8. Stocks opened as a panel over the feed — **shipped**, S
 *(seen: 47 s)*
 

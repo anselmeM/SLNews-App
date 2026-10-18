@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/domain/models/sports_models.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../domain/sports_links.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -68,7 +72,15 @@ class ScoreboardStrip extends ConsumerWidget {
                   padding: const EdgeInsets.only(right: AppSpacing.md),
                   child: SizedBox(
                     width: cardWidth,
-                    child: ScoreCard(game: game),
+                    child: GestureDetector(
+                      onTap: () => context.push(
+                        AppRoutes.leagueFor(
+                          SportsLinks.leagueIdForLabel(game.leagueLabel),
+                        ),
+                        extra: game.leagueLabel,
+                      ),
+                      child: ScoreCard(game: game),
+                    ),
                   ),
                 ),
             ],

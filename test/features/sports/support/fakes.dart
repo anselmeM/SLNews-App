@@ -21,8 +21,10 @@ class FakeSportsRepository implements SportsRepository {
   FakeSportsRepository({
     ScoreboardSnapshot? scoreboard,
     Map<String, List<GameScore>>? gamesByTeam,
+    Map<String, List<TeamStanding>>? standingsByLeague,
     this.error,
-  }) : _scoreboard =
+  }) : _standingsByLeague = standingsByLeague ?? <String, List<TeamStanding>>{},
+       _scoreboard =
            scoreboard ??
            ScoreboardSnapshot(
              games: const <GameScore>[],
@@ -33,6 +35,7 @@ class FakeSportsRepository implements SportsRepository {
 
   final ScoreboardSnapshot _scoreboard;
   final Map<String, List<GameScore>> _gamesByTeam;
+  final Map<String, List<TeamStanding>> _standingsByLeague;
 
   /// When set, [scoreboard] throws it â€” used for the degraded-state tests.
   final Object? error;
@@ -50,7 +53,7 @@ class FakeSportsRepository implements SportsRepository {
 
   @override
   Future<List<TeamStanding>> standings(String leagueId) async =>
-      const <TeamStanding>[];
+      _standingsByLeague[leagueId] ?? const <TeamStanding>[];
 }
 
 /// An [ArticleRepository] serving literal per-category lists.

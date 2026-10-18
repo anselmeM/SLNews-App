@@ -34,12 +34,24 @@ abstract final class AppRoutes {
   /// hides the bottom navigation).
   static const String settings = '/settings';
 
+  /// Pushed league surface (`/sports/league/:id`): standings, fixtures, stories.
+  static const String league = '/sports/league';
+
+  /// Pushed team surface (`/sports/team/:id`): follow, fixtures, stories.
+  static const String team = '/sports/team';
+
   /// Notification history, nested inside the Following tab so the bottom
   /// navigation bar stays visible.
   static const String notificationHistory = '/following/notifications';
 
   /// `/article/:id` for a given story.
   static String articleFor(String id) => '$article/$id';
+
+  /// `/sports/league/:id` for a competition.
+  static String leagueFor(String id) => '$league/${Uri.encodeComponent(id)}';
+
+  /// `/sports/team/:id` for a club or national side.
+  static String teamFor(String id) => '$team/${Uri.encodeComponent(id)}';
 
   /// `/section/:id` for a topic or category.
   static String sectionFor(String id) => '$section/${Uri.encodeComponent(id)}';
@@ -67,6 +79,8 @@ abstract final class RouteNames {
   static const String search = 'search';
   static const String topStories = 'top_stories';
   static const String section = 'section';
+  static const String league = 'league';
+  static const String team = 'team';
   static const String notificationHistory = 'following_notifications';
   static const String video = 'video';
 }
