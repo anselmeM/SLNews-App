@@ -13,6 +13,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/video_embed.dart';
 import '../../../core/widgets/sl_network_image.dart';
+import '../../../core/utils/motion.dart';
 
 /// Full-screen reel of "Video moments", opened from the feed rail.
 ///
@@ -253,30 +254,42 @@ class _ReelPage extends StatelessWidget {
                   onTap: onTogglePause,
                   child: const SizedBox.expand(),
                 ),
-              if (paused)
-                // Tapping the play control must resume too: it sits directly over
-                // the centre of the clip, and the text inside it would otherwise
-                // swallow the tap instead of passing it to the play/pause layer.
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onTogglePause,
-                  child: const Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Color(0x59000000),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.lg),
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 44,
-                        ),
-                      ),
-                    ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !paused,
+                  child: AnimatedSwitcher(
+                    duration: motionDuration(context, AppMotion.fast),
+                    child: paused
+                        // Tapping the play control must resume too: it sits over
+                        // the centre of the clip, so it gets its own tap target
+                        // instead of passing the event to the layer below.
+                        ? GestureDetector(
+                            key: const ValueKey<String>('reel-paused'),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: onTogglePause,
+                            child: const Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Color(0x59000000),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(AppSpacing.lg),
+                                  child: Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 44,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(
+                            key: ValueKey<String>('reel-playing'),
+                          ),
                   ),
                 ),
+              ),
               Positioned(
                 top: MediaQuery.paddingOf(context).top + AppSpacing.xs,
                 left: AppSpacing.xs,

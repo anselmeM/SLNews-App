@@ -4,6 +4,7 @@ import '../../../../core/domain/models/market_snapshot.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'paged_carousel.dart';
+import '../../../../core/widgets/pressable_ink_well.dart';
 
 /// "Stocks" section of the For You feed: the day's quotes, one card per pair.
 ///
@@ -55,7 +56,7 @@ class _QuoteCard extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       label: '${rate.info.name}, ${rate.formatted} per US dollar',
-      child: InkWell(
+      child: PressableInkWell(
         onTap: onTap,
         borderRadius: AppRadius.cardRadius,
         child: DecoratedBox(

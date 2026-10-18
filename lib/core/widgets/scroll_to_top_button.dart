@@ -1,6 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../theme/app_typography.dart';
+import 'fade_slide_in.dart';
+import 'pressable_ink_well.dart';
 
 /// Circular white "back to top" control from the reference reader/feed.
 ///
@@ -16,24 +18,29 @@ class ScrollToTopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Back to top',
-      child: Material(
-        color: context.colors.surface,
-        shape: const CircleBorder(),
-        elevation: 2,
-        shadowColor: Colors.black26,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Icon(
-              Icons.keyboard_arrow_up,
-              size: 26,
-              color: context.colors.onSurface,
+    // The button is inserted into the tree when the reader scrolls far enough;
+    // this makes that arrival a rise instead of a pop.
+    return FadeSlideIn(
+      offset: 6,
+      child: Semantics(
+        button: true,
+        label: 'Back to top',
+        child: Material(
+          color: context.colors.surface,
+          shape: const CircleBorder(),
+          elevation: 2,
+          shadowColor: Colors.black26,
+          child: PressableInkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Icon(
+                Icons.keyboard_arrow_up,
+                size: 26,
+                color: context.colors.onSurface,
+              ),
             ),
           ),
         ),

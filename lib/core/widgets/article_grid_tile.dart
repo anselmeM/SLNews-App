@@ -5,6 +5,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'overflow_menu_button.dart';
 import 'publisher_mark.dart';
+import 'pressable_ink_well.dart';
 import 'sl_network_image.dart';
 
 /// Vertical card used by the two-column sub-category grid in the News tab.
@@ -42,7 +43,7 @@ class ArticleGridTile extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: AppRadius.cardRadius,
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
+        child: PressableInkWell(
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

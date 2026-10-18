@@ -7,6 +7,7 @@ import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/html_content.dart';
 import '../../../core/widgets/publisher_mark.dart';
@@ -59,7 +60,12 @@ class ArticlePage extends ConsumerWidget {
       ),
       bottomNavigationBar: article.value == null
           ? null
-          : ArticleActionBar(article: article.value!),
+          : FadeSlideIn(
+              // Rises the short distance from the edge, once, when the reader
+              // has something to act on.
+              offset: -10,
+              child: ArticleActionBar(article: article.value!),
+            ),
     );
   }
 }

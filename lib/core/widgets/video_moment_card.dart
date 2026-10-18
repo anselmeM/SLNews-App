@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/models/video_moment.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'pressable_ink_well.dart';
 import 'sl_network_image.dart';
 
 /// Portrait video card used by the "Video moments" rail.
@@ -29,7 +30,7 @@ class VideoMomentCard extends StatelessWidget {
     return Semantics(
       button: true,
       label: '${video.title}. ${video.source}. Video.',
-      child: InkWell(
+      child: PressableInkWell(
         onTap: onTap,
         borderRadius: AppRadius.cardRadius,
         child: ClipRRect(

@@ -4,6 +4,8 @@ import '../domain/models/news_category.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'app_glyphs.dart';
+import 'pressable_ink_well.dart';
+import '../utils/motion.dart';
 
 /// A single category filter pill.
 ///
@@ -36,43 +38,54 @@ class CategoryPill extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      child: Material(
-        color: background,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.pillRadius),
-        child: InkWell(
-          onTap: onTap,
+      child: AnimatedContainer(
+        // Selecting a pill cross-fades between the light and inverse fills
+        // instead of swapping them abruptly; the tap also dips the pill.
+        duration: motionDuration(context, AppMotion.fast),
+        curve: AppMotion.standard,
+        decoration: BoxDecoration(
+          color: background,
           borderRadius: AppRadius.pillRadius,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + 2,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                if (icon != null) ...<Widget>[
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected
-                          ? foreground
-                          : context.colors.surfaceMuted,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppRadius.pillRadius,
+          clipBehavior: Clip.antiAlias,
+          child: PressableInkWell(
+            onTap: onTap,
+            borderRadius: AppRadius.pillRadius,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm + 2,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (icon != null) ...<Widget>[
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: selected
+                            ? foreground
+                            : context.colors.surfaceMuted,
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 15,
+                        color: selected ? background : context.colors.onSurface,
+                      ),
                     ),
-                    child: Icon(
-                      icon,
-                      size: 15,
-                      color: selected ? background : context.colors.onSurface,
-                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  Text(
+                    label,
+                    style: context.typography.chip.copyWith(color: foreground),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
                 ],
-                Text(
-                  label,
-                  style: context.typography.chip.copyWith(color: foreground),
-                ),
-              ],
+              ),
             ),
           ),
         ),

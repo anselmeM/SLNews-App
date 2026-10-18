@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/page_dots.dart';
+import '../../../../core/widgets/fade_slide_in.dart';
 
 /// A snap-to-card horizontal carousel with page dots underneath.
 ///
@@ -49,27 +50,29 @@ class _PagedCarouselState extends State<PagedCarousel> {
   Widget build(BuildContext context) {
     if (widget.itemCount == 0) return const SizedBox.shrink();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        SizedBox(
-          height: widget.height,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: widget.itemCount,
-            onPageChanged: (int page) => setState(() => _page = page),
-            itemBuilder: (BuildContext context, int index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: widget.itemBuilder(context, index),
+    return FadeSlideIn(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          SizedBox(
+            height: widget.height,
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: widget.itemCount,
+              onPageChanged: (int page) => setState(() => _page = page),
+              itemBuilder: (BuildContext context, int index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                child: widget.itemBuilder(context, index),
+              ),
             ),
           ),
-        ),
-        if (widget.showDots && widget.itemCount > 1)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.md),
-            child: PageDots(count: widget.itemCount, index: _page),
-          ),
-      ],
+          if (widget.showDots && widget.itemCount > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: PageDots(count: widget.itemCount, index: _page),
+            ),
+        ],
+      ),
     );
   }
 }

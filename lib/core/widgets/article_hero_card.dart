@@ -6,6 +6,7 @@ import '../theme/app_typography.dart';
 import 'like_button.dart';
 import 'overflow_menu_button.dart';
 import 'publisher_mark.dart';
+import 'pressable_ink_well.dart';
 import 'sl_network_image.dart';
 
 /// Full-bleed featured card used by the For You carousel and category heroes.
@@ -48,7 +49,7 @@ class ArticleHeroCard extends StatelessWidget {
           color: context.colors.surface,
           borderRadius: AppRadius.cardRadius,
           clipBehavior: Clip.antiAlias,
-          child: InkWell(
+          child: PressableInkWell(
             onTap: onTap,
             child: SizedBox(
               height: height,

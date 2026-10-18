@@ -66,7 +66,7 @@ class _TopStoriesCarouselState extends ConsumerState<TopStoriesCarousel> {
             onPageChanged: (int page) => setState(() => _page = page),
             itemBuilder: (BuildContext context, int index) {
               final Article article = articles[index];
-              return Padding(
+              final Widget card = Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                 child: ArticleHeroCard(
                   article: article,
@@ -79,6 +79,24 @@ class _TopStoriesCarouselState extends ConsumerState<TopStoriesCarousel> {
                   onMore: (ArticleAction action) =>
                       handleArticleAction(context, ref, article, action),
                 ),
+              );
+              // Neighbours sit slightly smaller and dimmer, so a swipe reads as
+              // motion rather than a jump cut.
+              return AnimatedBuilder(
+                animation: _controller,
+                builder: (BuildContext context, Widget? child) {
+                  double distance = 0;
+                  if (_controller.hasClients &&
+                      _controller.position.haveDimensions) {
+                    final double page = _controller.page ?? _page.toDouble();
+                    distance = (page - index).abs().clamp(0.0, 1.0);
+                  }
+                  return Transform.scale(
+                    scale: 1 - distance * 0.05,
+                    child: Opacity(opacity: 1 - distance * 0.35, child: child),
+                  );
+                },
+                child: card,
               );
             },
           ),

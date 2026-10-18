@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'pressable_ink_well.dart';
 
 /// Outlined "Follow" / filled "Following" pill used across the following
 /// sections, the sports teams list and article publisher attribution.
@@ -40,7 +41,7 @@ class FollowChip extends StatelessWidget {
           borderRadius: AppRadius.pillRadius,
           side: BorderSide(color: border),
         ),
-        child: InkWell(
+        child: PressableInkWell(
           onTap: onPressed,
           borderRadius: AppRadius.pillRadius,
           child: Padding(

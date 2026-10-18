@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/time_ago.dart';
 import 'paged_carousel.dart';
+import '../../../../core/widgets/pressable_ink_well.dart';
 
 /// "Sports" section of the For You feed: live and upcoming fixtures, one card
 /// per game, swipeable with the same snap-to-card behaviour as the lead stories.
@@ -76,7 +77,7 @@ class _FixtureCard extends StatelessWidget {
       button: onTap != null,
       label:
           '${game.away.name} versus ${game.home.name}, ${fixtureStatusLabel(game)}',
-      child: InkWell(
+      child: PressableInkWell(
         onTap: onTap,
         borderRadius: AppRadius.cardRadius,
         child: DecoratedBox(

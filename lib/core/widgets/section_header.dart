@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'fade_slide_in.dart';
+import 'pressable_ink_well.dart';
 
 /// Section header with the reference UI's trailing chevron, e.g.
 /// "Top stories ›", "Cars and Vehicles ›", "Following ›".
@@ -94,12 +96,18 @@ class SectionHeader extends StatelessWidget {
       ],
     );
 
+    // Headers assemble with their rail instead of popping in, and the whole
+    // row dips when the chevron is tapped.
     if (onTap == null) {
-      return Padding(padding: padding, child: row);
+      return FadeSlideIn(
+        child: Padding(padding: padding, child: row),
+      );
     }
-    return InkWell(
-      onTap: onTap,
-      child: Padding(padding: padding, child: row),
+    return FadeSlideIn(
+      child: PressableInkWell(
+        onTap: onTap,
+        child: Padding(padding: padding, child: row),
+      ),
     );
   }
 }
