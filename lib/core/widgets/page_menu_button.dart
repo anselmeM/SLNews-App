@@ -7,18 +7,22 @@ import '../theme/app_typography.dart';
 
 /// Entries in the page-level kebab menu.
 ///
-/// The reference screen puts two destinations there — Settings and Notices — as
-/// opposed to the story-level actions a card's menu offers.
+/// The reference screen puts destinations there — Settings and Notices — as
+/// opposed to the story-level actions a card's menu offers. Saved stories sits
+/// first because the route already existed with no way to reach it.
 enum PageMenuAction {
+  saved,
   settings,
   notices;
 
   String get label => switch (this) {
+    PageMenuAction.saved => 'Saved stories',
     PageMenuAction.settings => 'Settings',
     PageMenuAction.notices => 'Notices',
   };
 
   IconData get icon => switch (this) {
+    PageMenuAction.saved => Icons.bookmark_outline,
     PageMenuAction.settings => Icons.settings_outlined,
     PageMenuAction.notices => Icons.notifications_none,
   };
@@ -48,6 +52,8 @@ class PageMenuButton extends StatelessWidget {
   /// Navigates for [action]; exposed so a host can reuse the default routing.
   static void openDefault(BuildContext context, PageMenuAction action) {
     switch (action) {
+      case PageMenuAction.saved:
+        context.push(AppRoutes.saved);
       case PageMenuAction.settings:
         context.push(AppRoutes.settings);
       case PageMenuAction.notices:

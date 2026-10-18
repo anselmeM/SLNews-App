@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/widgets/page_menu_button.dart';
 
-/// The page-level kebab menu from the reference screen: Settings and Notices.
+/// The page-level kebab menu: Saved stories (the route needs an entry point),
+/// Settings and Notices.
 void main() {
   GoRouter router() => GoRouter(
     initialLocation: '/',
@@ -17,6 +18,11 @@ void main() {
             actions: const <Widget>[PageMenuButton()],
           ),
         ),
+      ),
+      GoRoute(
+        path: '/saved',
+        builder: (BuildContext context, GoRouterState state) =>
+            const Scaffold(body: Text('saved screen')),
       ),
       GoRoute(
         path: '/settings',
@@ -38,11 +44,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('offers Settings and Notices', (WidgetTester tester) async {
+  testWidgets('offers Saved stories, Settings and Notices', (
+    WidgetTester tester,
+  ) async {
     await pumpMenu(tester);
 
+    expect(find.text('Saved stories'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('Notices'), findsOneWidget);
+  });
+
+  testWidgets('Saved stories opens the saved list', (
+    WidgetTester tester,
+  ) async {
+    await pumpMenu(tester);
+    await tester.tap(find.text('Saved stories'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('saved screen'), findsOneWidget);
   });
 
   testWidgets('Settings opens the settings screen', (

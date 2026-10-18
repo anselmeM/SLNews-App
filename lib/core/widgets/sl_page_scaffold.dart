@@ -5,6 +5,11 @@ import '../theme/app_typography.dart';
 import 'overflow_menu_button.dart';
 import 'page_menu_button.dart';
 import 'scroll_to_top_button.dart';
+import 'state_views.dart';
+
+import '../providers/offline_status.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Standard page chrome for the four tab roots.
 ///
@@ -16,7 +21,7 @@ import 'scroll_to_top_button.dart';
 ///
 /// It also owns the reference screen's circular "back to top" button, which
 /// appears once the reader has scrolled past the first screenful.
-class SlPageScaffold extends StatefulWidget {
+class SlPageScaffold extends ConsumerStatefulWidget {
   const SlPageScaffold({
     super.key,
     required this.title,
@@ -31,6 +36,7 @@ class SlPageScaffold extends StatefulWidget {
     this.floatingActionButton,
     this.showTitleInAppBar = true,
     this.showScrollToTop = true,
+    this.showOfflineBanner = true,
   });
 
   final String title;
@@ -59,14 +65,17 @@ class SlPageScaffold extends StatefulWidget {
   /// Shows the back-to-top affordance once [scrollToTopThreshold] is passed.
   final bool showScrollToTop;
 
+  /// Shows the "offline - showing saved stories" banner above the content.
+  final bool showOfflineBanner;
+
   /// Distance scrolled before the back-to-top button appears.
   static const double scrollToTopThreshold = ScrollToTopButton.threshold;
 
   @override
-  State<SlPageScaffold> createState() => _SlPageScaffoldState();
+  ConsumerState<SlPageScaffold> createState() => _SlPageScaffoldState();
 }
 
-class _SlPageScaffoldState extends State<SlPageScaffold> {
+class _SlPageScaffoldState extends ConsumerState<SlPageScaffold> {
   final ScrollController _controller = ScrollController();
   bool _showScrollToTop = false;
 
@@ -106,6 +115,9 @@ class _SlPageScaffoldState extends State<SlPageScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final OfflineStatus offline = widget.showOfflineBanner
+        ? readOfflineStatus(ref)
+        : const OfflineStatus(isOffline: false);
     final Widget content = CustomScrollView(
       controller: _controller,
       slivers: <Widget>[
@@ -150,6 +162,13 @@ class _SlPageScaffoldState extends State<SlPageScaffold> {
           ],
           bottom: widget.bottom,
         ),
+        if (offline.isOffline)
+          SliverToBoxAdapter(
+            child: OfflineBanner(
+              isOffline: true,
+              lastSyncedAt: offline.lastSyncedAt,
+            ),
+          ),
         if (widget.body != null)
           SliverFillRemaining(hasScrollBody: false, child: widget.body!)
         else

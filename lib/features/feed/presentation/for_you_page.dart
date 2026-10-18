@@ -9,7 +9,6 @@ import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/index_quote.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/domain/models/video_moment.dart';
-import '../../../core/domain/repositories/article_repository.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
@@ -62,7 +61,6 @@ class ForYouPage extends ConsumerWidget {
     final IndexBoard? indexBoard = ref.watch(indexBoardProvider).value;
     final List<GameScore> games =
         ref.watch(scoreboardProvider).value?.games ?? const <GameScore>[];
-    final _OfflineStatus offline = _readOffline(ref);
 
     final Widget content;
     if (feed == null) {
@@ -100,12 +98,6 @@ class ForYouPage extends ConsumerWidget {
       brandMark: 'SLNews',
       onRefresh: ref.watch(refreshFeedsProvider),
       slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: OfflineBanner(
-            isOffline: offline.isOffline,
-            lastSyncedAt: offline.lastSyncedAt,
-          ),
-        ),
         if (feed != null) ...<Widget>[
           // The weather/alert header is its own row above the title: on the
           // reference screen the title never competes with it for width.
@@ -136,26 +128,6 @@ class ForYouPage extends ConsumerWidget {
         content,
       ],
     );
-  }
-}
-
-/// Sync state of the article repository, read defensively so a bare
-/// `ProviderScope` (widget test) cannot fail the page build.
-class _OfflineStatus {
-  const _OfflineStatus(this.isOffline, this.lastSyncedAt);
-
-  final bool isOffline;
-  final DateTime? lastSyncedAt;
-}
-
-_OfflineStatus _readOffline(WidgetRef ref) {
-  try {
-    // `read`, not `watch`: the banner must not rebuild on every repository
-    // change, and the value is already re-read whenever the feed resolves.
-    final ArticleRepository repository = ref.read(articleRepositoryProvider);
-    return _OfflineStatus(repository.isOffline, repository.lastSyncedAt);
-  } on UnimplementedError {
-    return const _OfflineStatus(false, null);
   }
 }
 
