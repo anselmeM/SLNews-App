@@ -53,3 +53,6 @@ app.*.map.json
 .env.local
 .env.*.local
 *.env.local
+
+# Golden-test failure artefacts are regenerated locally on every miss.
+test/golden/failures/
