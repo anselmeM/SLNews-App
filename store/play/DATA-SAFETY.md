@@ -29,7 +29,7 @@ today.
 
 - Data is encrypted in transit: **Yes**.
 - Users can request that data be deleted: **Yes** — in-app path plus
-  https://slnews.app/delete-account.
+  https://sl-news.vercel.app/delete-account.
 - Independent security review: **No**.
 - Committed to Play Families policy: **No** (not directed to children).
 

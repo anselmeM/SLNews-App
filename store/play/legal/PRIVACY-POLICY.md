@@ -1,8 +1,8 @@
 # SLNews — Privacy Policy (Android app)
 
-**Last updated:** {{EFFECTIVE DATE}}
+**Last updated:** October 2026
 **Applies to:** the SLNews Android application (`com.slnews.mobile`) and, where
-stated, the SLNews website at https://slnews.app.
+stated, the SLNews website at https://sl-news.vercel.app.
 
 > Draft for owner review. Filled-in facts come from the shipped code: Clerk for
 > sign-in, the SLNews API/backend (Vercel + Neon) for sync, and no analytics, ad or
@@ -16,7 +16,7 @@ For the purposes of data-protection law, the controller of your personal data is
 **{{LEGAL ENTITY / OWNER NAME}}**, based in Sierra Leone.
 
 Contact for anything in this policy, including deletion and access requests:
-**{{CONTACT EMAIL}}**.
+**privacy@slnews.sl**.
 
 ## 2. What this policy covers
 
@@ -98,8 +98,8 @@ advertiser's site opens in your browser and its own privacy policy applies.
 ## 8. Your choices and rights
 
 - **Delete your account and synced data** in the app: Settings → SLNews account →
-  Delete account. If you cannot sign in, use https://slnews.app/delete-account or
-  email **{{CONTACT EMAIL}}**.
+  Delete account. If you cannot sign in, use https://sl-news.vercel.app/delete-account or
+  email **privacy@slnews.sl**.
 - **Access or export** your data: email us and we will send the account data we hold.
 - **Correct** your name or email: Settings → SLNews account, or email us.
 - **Use the app without an account:** you can read, search, save and like locally;
@@ -133,4 +133,4 @@ app before they take effect.
 
 **{{LEGAL ENTITY / OWNER NAME}}**
 Sierra Leone
-Email: **{{CONTACT EMAIL}}**
+Email: **privacy@slnews.sl**

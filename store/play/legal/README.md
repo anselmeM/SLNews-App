@@ -1,7 +1,13 @@
 # Legal pack — drafts and how to publish them
 
-Drafts written against the shipped app, plus what to do with the pages the
-`SLNews` backend already serves.
+**Status:** the pages now exist in the backend, rewritten app-first in
+`anselmeM/SLNews` PR #108 (`/privacy`, `/terms`, `/delete-account`) and the deletion
+endpoint is implemented there (`DELETE /api/mobile/v1/account`). Merge + deploy that PR
+to make them live. The drafts below remain the reviewed text of record until then.
+
+The files here were written against the shipped app. The `SLNews` backend serves the
+published copies, so edit them there once PR #108 lands — these are the source for
+review, not a second live policy.
 
 | File | Purpose |
 | --- | --- |
@@ -17,11 +23,11 @@ clauses.
 
 | Placeholder | Where | Notes |
 | --- | --- | --- |
-| `{{EFFECTIVE DATE}}` | privacy, terms | the date they go live |
+| `October 2026` | privacy, terms | the date they go live |
 | `{{LEGAL ENTITY / OWNER NAME}}` | privacy §1, §12; terms §15 | person or company that will be the controller |
-| `{{CONTACT EMAIL}}` | both documents, deletion page | must be monitored; `privacy@slnews.app` if the domain is yours |
+| `privacy@slnews.sl` | both documents, deletion page | must be monitored; `privacy@slnews.app` if the domain is yours |
 | `{{DEMO ACCOUNT EMAIL}}` / `{{DEMO ACCOUNT PASSWORD}}` | DATA-SAFETY.md §5 | create a throwaway account for Play review |
-| Domain | URLs throughout | drafts assume `https://slnews.app`; confirm it is the canonical site (`NEXT_PUBLIC_SITE_URL`) |
+| Domain | URLs throughout | drafts assume `https://sl-news.vercel.app`; confirm it is the canonical site (`NEXT_PUBLIC_SITE_URL`) |
 
 ## Merge plan for the existing backend pages
 
@@ -52,7 +58,7 @@ inconsistent with its own policy. Recommended fix (**option A**):
    the Play deletion requirement).
 
 **Option B**, if you would rather not touch the web copy: publish the app policy at
-`https://slnews.app/privacy/mobile` and use that URL in Play. Cleaner separation, but
+`https://sl-news.vercel.app/privacy/mobile` and use that URL in Play. Cleaner separation, but
 two policies to keep in sync.
 
 Publishing also needs the account-deletion endpoint: Play requires the deletion path

@@ -32,8 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep links: slnews://article/<id> and https://slnews.app/article/<id>.
-                 The Flutter router maps them to /article/:id. -->
+            <!-- Deep links: slnews://article/<id> (custom scheme, works today) and an
+                 HTTPS App Link for slnews.sl once that domain resolves and serves
+                 /.well-known/assetlinks.json with the Play app-signing fingerprint.
+                 The Flutter router maps both to /article/:id. -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>

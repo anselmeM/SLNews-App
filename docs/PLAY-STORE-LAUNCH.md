@@ -13,7 +13,7 @@ test) or organisation.
 | --- | --- | --- |
 | Core product (reading, offline, search, sections, reel, stocks, sports) | **~90 %** | see `docs/FEATURE-GAPS.md` for the remaining reference gaps |
 | Android release config | **~90 %** | package id, target SDK 36, 16 KB pages, signing, adaptive icon, splash, AAB build and version bump all in place |
-| Play policy & compliance | **~45 %** | privacy/terms, data-safety pack and deletion-page copy drafted; account deletion not implemented and the pages are not published yet |
+| Play policy & compliance | **~60 %** | legal pages + deletion endpoint implemented in backend PR #108; app deletion flow and deploy remain |
 | Store listing & assets | **~75 %** | icon, feature graphic, 7 reference-style screenshots, 1350x800 promo and all listing copy drafted; final device captures and owner approval outstanding |
 | Monitoring & QA | **~35 %** | no crash reporting or analytics; no on-device matrix run |
 
@@ -55,26 +55,26 @@ bundle (`res/mipmap-anydpi-v26/ic_launcher.xml`, foreground/monochrome layers,
 The mark is "**SL.**" — Inter ExtraBold letters with the brand blue dot. Confirm it, or
 change the brand constants at the top of the generator and rerun.
 
-### B2. Privacy policy + terms — **drafted**, needs review, hosting and in-app links
-Drafts in `store/play/legal/`: `PRIVACY-POLICY.md` (app-accurate: Clerk account data,
-synced reading state, provider list, no analytics/ads SDK, no location), `TERMS-OF-USE.md`
-(aggregation, IP, market-data disclaimer, liability, Sierra Leone law) and
-`DELETE-ACCOUNT.md` (public page copy + required backend behaviour).
+### B2. Privacy policy + terms — **implemented in the backend**, needs merge, deploy and in-app links
+The legal pages are now **app-first in the backend** (`anselmeM/SLNews` PR #108):
+`/privacy` describes the Flutter apps first and scopes AdSense/Meta Pixel/web-push to
+"the website (web only)"; `/terms` covers accounts, aggregation/IP and market data;
+`/delete-account` is new. The reviewed text lives in `store/play/legal/` until the PR
+merges, after which the backend pages are the source of truth.
 
-Important discovery: the backend already serves `/privacy` and `/terms`, but they claim
-a Meta Pixel and anonymous usage analytics — true for the website, **false for the app**.
-The merge plan (`store/play/legal/README.md`) scopes those statements to the web, adds an
-Android section, and adds `/delete-account`.
+Live URLs (site is `sl-news.vercel.app`; `slnews.sl` is the intended custom domain but
+does not resolve yet):
+`https://sl-news.vercel.app/privacy`, `/terms`, `/delete-account`.
 
-Remaining: owner fills `{{LEGAL ENTITY}}`, `{{CONTACT EMAIL}}`, effective date; legal
-review; publish the updated pages; add Privacy/Terms/Delete rows to Settings.
+Remaining: merge + deploy PR #108; legal review of the text; fill the legal entity name;
+add Privacy/Terms/Delete rows in the app's Settings; switch URLs to `slnews.sl` once DNS
+is live.
 
-### B3. Account deletion — **Play policy requirement**, M (I can implement, backend deploy)
-Because the app lets users create an account, Play requires **both** an in-app deletion
-path and a web page where a deletion can be requested without installing the app. The app
-currently has sign-in and no way to delete. Needs: `DELETE /api/mobile/v1/account`
-(backend, cascade over synced rows + Clerk user deletion), an in-app "Delete account"
-flow in Settings → account, and a hosted deletion-request URL.
+### B3. Account deletion — **backend implemented** (app flow next), M
+`DELETE /api/mobile/v1/account` and the public `/delete-account` page are implemented in
+backend PR #108 (rows first, then the Clerk identity; 401/429/502/503 contract; six route
+tests). Remaining: the app-side flow — Settings → SLNews account → Delete account, with a
+destructive confirmation, local state clearing and sign-out.
 
 ### B4. Content rights for aggregated reporting — **biggest non-technical blocker**, owner
 The feed mixes RSS/scraped headlines, images, bylines and publisher **wordmarks** from
@@ -162,7 +162,8 @@ weaker) or add it (recommended before wider launch).
 
 ### B11. HTTPS deep links are declared but not verified
 The manifest sets `android:autoVerify="false"` and there is no `assetlinks.json`; shared
-`https://slnews.app/article/<id>` links will not open the app. Custom scheme
+`https://slnews.sl/article/<id>` links will not open the app (the domain does not resolve
+and no `assetlinks.json` is served). Custom scheme
 `slnews://article/<id>` works. Fixing it needs the domain under your control plus a
 served `assetlinks.json`. Not a submission blocker; a launch-quality item.
 
@@ -210,8 +211,8 @@ served `assetlinks.json`. Not a submission blocker; a launch-quality item.
 - [~] AAB script and CI job in place, first bundle built and signature-verified; still
       to do: bump versionCode (currently 1) before the store upload, enrol in Play App
       Signing, archive mapping if obfuscation is enabled
-- [~] Privacy/terms and deletion-page copy drafted (`store/play/legal/`); must be
-      reviewed, published at slnews.app, and linked from Settings before submitting
+- [~] Privacy/terms/delete-account implemented in backend PR #108; merge + deploy, legal
+      review, and in-app Settings links remain
 - [ ] In-app account deletion works end to end; public deletion-request URL live
 - [ ] Content licensing/partnership decision documented; publisher logos cleared
 - [ ] Crash reporting live; a forced crash appears in the dashboard; release health on

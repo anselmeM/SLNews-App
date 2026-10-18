@@ -142,11 +142,12 @@ class AppBootstrap {
       authTokenHosts: <String>{
         if (apiConfig.host.isNotEmpty) apiConfig.host,
         if (syncConfig.isConfigured) syncConfig.host,
-        // The live PWA origin, plus the domains it is expected to move to.
+        // The live site origin, plus the custom domain it is expected to move to.
+        // Session tokens are never attached to `slnews.app`: that domain is not ours
+        // and is not part of the deep-link plan.
         'sl-news.vercel.app',
         'slnews.sl',
         'www.slnews.sl',
-        'slnews.app',
       },
     );
     final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();

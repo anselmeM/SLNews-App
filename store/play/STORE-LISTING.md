@@ -72,13 +72,13 @@ ABOUT CONTENT
 SLNews is an aggregator: headlines and summaries come from third-party publishers and
 remain their property. Each story links to the original source. We do not claim to be
 the publisher of that reporting, and publisher names and marks are used only to
-identify the source. If you are a rights holder, contact us at {{CONTACT EMAIL}}.
+identify the source. If you are a rights holder, contact us at privacy@slnews.sl.
 
 We do not sell your data. The app has no advertising or analytics tracking SDKs.
 
-Questions or feedback: {{CONTACT EMAIL}}
-Privacy: https://slnews.app/privacy
-Terms: https://slnews.app/terms
+Questions or feedback: privacy@slnews.sl
+Privacy: https://sl-news.vercel.app/privacy
+Terms: https://sl-news.vercel.app/terms
 ```
 
 Character count: ~2,450 — well under 4,000.
@@ -93,7 +93,7 @@ First release of SLNews.
 • Search, save, like and follow what matters to you
 • Dark mode, adjustable text size and reduce-motion support
 
-Tell us what to improve: {{CONTACT EMAIL}}
+Tell us what to improve: privacy@slnews.sl
 ```
 
 ## Listing metadata
@@ -102,10 +102,10 @@ Tell us what to improve: {{CONTACT EMAIL}}
 | --- | --- |
 | Category | News & Magazines |
 | Tags | news, Sierra Leone, Africa, sports, business |
-| Contact email | `{{CONTACT EMAIL}}` |
-| Website | https://slnews.app |
-| Privacy policy | https://slnews.app/privacy |
-| Account deletion | https://slnews.app/delete-account |
+| Contact email | `contact@slnews.sl` |
+| Website | https://sl-news.vercel.app |
+| Privacy policy | https://sl-news.vercel.app/privacy |
+| Account deletion | https://sl-news.vercel.app/delete-account |
 | Ads | Yes — sponsored cards, labelled "Ad" |
 | Content rating | Teen / 13+ (news with real-world violence references) |
 | Countries | Start with Sierra Leone; expand after a stable week |

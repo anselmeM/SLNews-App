@@ -1,6 +1,6 @@
 # Delete your SLNews account
 
-Public page copy for `https://slnews.app/delete-account`, and the behaviour the app
+Public page copy for `https://sl-news.vercel.app/delete-account`, and the behaviour the app
 and backend must implement to support it. Play requires **both** an in-app deletion
 path and a web page that works without installing the app, because the app lets people
 create accounts.
@@ -20,7 +20,7 @@ is free and does not require you to keep the app installed.
 **In the app:** open SLNews → Settings (the ⋮ menu) → **SLNews account** → **Delete
 account** → confirm. You will be signed out immediately.
 
-**Without the app:** email **{{CONTACT EMAIL}}** from the address you signed up with
+**Without the app:** email **privacy@slnews.sl** from the address you signed up with
 and ask us to delete your SLNews account. If you cannot email from that address, tell
 us the address and we will verify another way before deleting.
 
@@ -45,8 +45,8 @@ is complete.
 **Changed your mind?** Deletion cannot be undone; you can create a new account later,
 but saved stories, likes and follows from the deleted account cannot be restored.
 
-Questions: **{{CONTACT EMAIL}}** · [Privacy Policy](https://slnews.app/privacy) ·
-[Terms of Use](https://slnews.app/terms)
+Questions: **privacy@slnews.sl** · [Privacy Policy](https://sl-news.vercel.app/privacy) ·
+[Terms of Use](https://sl-news.vercel.app/terms)
 
 ---
 

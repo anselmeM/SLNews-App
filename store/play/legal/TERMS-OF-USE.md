@@ -1,8 +1,8 @@
 # SLNews — Terms of Use (Android app)
 
-**Last updated:** {{EFFECTIVE DATE}}
+**Last updated:** October 2026
 **Applies to:** the SLNews Android application (`com.slnews.mobile`) and the SLNews
-website at https://slnews.app.
+website at https://sl-news.vercel.app.
 
 > Draft for owner review. Placeholders in `{{ }}` are listed in
 > [README.md](README.md#placeholders-to-fill).
@@ -24,7 +24,7 @@ is not an endorsement of it.
 - Publisher names, logos and article content belong to their owners and are used to
   identify the source.
 - If you are a rights holder and believe something is used incorrectly, contact
-  **{{CONTACT EMAIL}}** and we will review it promptly.
+  **contact@slnews.sl** and we will review it promptly.
 
 ## 3. Your account
 
@@ -34,7 +34,7 @@ is not an endorsement of it.
 - Keep your sign-in credentials secure; you are responsible for activity under your
   account.
 - You may delete your account at any time (Settings → SLNews account → Delete
-  account, or https://slnews.app/delete-account).
+  account, or https://sl-news.vercel.app/delete-account).
 - We may suspend or remove accounts that abuse the service or break these terms.
 
 ## 4. Acceptable use
@@ -118,4 +118,4 @@ after a change means you accept the updated terms.
 
 **{{LEGAL ENTITY / OWNER NAME}}**
 Sierra Leone
-Email: **{{CONTACT EMAIL}}**
+Email: **contact@slnews.sl**
