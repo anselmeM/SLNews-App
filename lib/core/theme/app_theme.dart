@@ -62,6 +62,16 @@ abstract final class AppTheme {
         margin: EdgeInsets.zero,
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.cardRadius),
       ),
+      // Menus sit on the page surface, not on Material 3's tinted container:
+      // the reference keeps the kebab menu the same white as the app bar, and the
+      // M3 default (`surfaceContainer`) reads as grey beside it.
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.cardRadius),
+        textStyle: typography.button,
+      ),
       dividerTheme: DividerThemeData(
         color: colors.divider,
         thickness: 1,
