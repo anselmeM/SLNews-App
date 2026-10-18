@@ -55,12 +55,11 @@ bundle (`res/mipmap-anydpi-v26/ic_launcher.xml`, foreground/monochrome layers,
 The mark is "**SL.**" — Inter ExtraBold letters with the brand blue dot. Confirm it, or
 change the brand constants at the top of the generator and rerun.
 
-### B2. Privacy policy + terms — **implemented in the backend**, needs merge, deploy and in-app links
-The legal pages are now **app-first in the backend** (`anselmeM/SLNews` PR #108):
-`/privacy` describes the Flutter apps first and scopes AdSense/Meta Pixel/web-push to
-"the website (web only)"; `/terms` covers accounts, aggregation/IP and market data;
-`/delete-account` is new. The reviewed text lives in `store/play/legal/` until the PR
-merges, after which the backend pages are the source of truth.
+### B2. Privacy policy + terms — **live** (in-app links remain)
+The legal pages are **app-first and live** (`anselmeM/SLNews` PR #108, merged
+`a6b1734`): `/privacy` describes the Flutter apps first and scopes AdSense/Meta
+Pixel/web-push to "the website (web only)"; `/terms` covers accounts, aggregation/IP
+and market data; `/delete-account` is new. Verified in production on 2026-10-18.
 
 Live URLs (site is `sl-news.vercel.app`; `slnews.sl` is the intended custom domain but
 does not resolve yet):
@@ -70,11 +69,12 @@ Remaining: merge + deploy PR #108; legal review of the text; fill the legal enti
 add Privacy/Terms/Delete rows in the app's Settings; switch URLs to `slnews.sl` once DNS
 is live.
 
-### B3. Account deletion — **backend implemented** (app flow next), M
-`DELETE /api/mobile/v1/account` and the public `/delete-account` page are implemented in
-backend PR #108 (rows first, then the Clerk identity; 401/429/502/503 contract; six route
-tests). Remaining: the app-side flow — Settings → SLNews account → Delete account, with a
-destructive confirmation, local state clearing and sign-out.
+### B3. Account deletion — **backend live**, app flow next, M
+`DELETE /api/mobile/v1/account` and `/delete-account` are live (rows first, then the
+Clerk identity; 401/429/502/503 contract; six route tests; unauthenticated DELETE
+verified as `401 {"error":"Unauthorized"}` in production). Remaining: the app-side flow
+— Settings → SLNews account → Delete account, with a destructive confirmation, local
+state clearing and sign-out — plus the in-app Privacy/Terms rows.
 
 ### B4. Content rights for aggregated reporting — **biggest non-technical blocker**, owner
 The feed mixes RSS/scraped headlines, images, bylines and publisher **wordmarks** from
@@ -211,8 +211,8 @@ served `assetlinks.json`. Not a submission blocker; a launch-quality item.
 - [~] AAB script and CI job in place, first bundle built and signature-verified; still
       to do: bump versionCode (currently 1) before the store upload, enrol in Play App
       Signing, archive mapping if obfuscation is enabled
-- [~] Privacy/terms/delete-account implemented in backend PR #108; merge + deploy, legal
-      review, and in-app Settings links remain
+- [~] Privacy/terms/delete-account are live at sl-news.vercel.app; legal review, in-app
+      Settings links and the in-app deletion flow remain
 - [ ] In-app account deletion works end to end; public deletion-request URL live
 - [ ] Content licensing/partnership decision documented; publisher logos cleared
 - [ ] Crash reporting live; a forced crash appears in the dashboard; release health on

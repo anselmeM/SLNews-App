@@ -1,9 +1,17 @@
 # Legal pack — drafts and how to publish them
 
-**Status:** the pages now exist in the backend, rewritten app-first in
-`anselmeM/SLNews` PR #108 (`/privacy`, `/terms`, `/delete-account`) and the deletion
-endpoint is implemented there (`DELETE /api/mobile/v1/account`). Merge + deploy that PR
-to make them live. The drafts below remain the reviewed text of record until then.
+**Status:** live. The pages were rewritten app-first in `anselmeM/SLNews` PR #108
+(merged as `a6b1734`) and deployed. Verified in production on 2026-10-18:
+
+- https://sl-news.vercel.app/privacy (app section present)
+- https://sl-news.vercel.app/terms (aggregation + market disclaimer)
+- https://sl-news.vercel.app/delete-account (new)
+- `DELETE https://sl-news.vercel.app/api/mobile/v1/account` → `401 {"error":"Unauthorized"}`
+  without a session
+
+The backend pages are now the published copies; these drafts are the reviewed text of
+record. `slnews.sl` remains the intended custom domain but does not resolve yet — use
+the `sl-news.vercel.app` URLs in Play Console until DNS is live.
 
 The files here were written against the shipped app. The `SLNews` backend serves the
 published copies, so edit them there once PR #108 lands — these are the source for
