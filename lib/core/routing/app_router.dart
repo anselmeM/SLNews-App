@@ -11,6 +11,7 @@ import '../../features/following/presentation/notification_history_page.dart';
 import '../../features/news/presentation/news_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/sports/presentation/sports_page.dart';
+import '../../features/video/presentation/video_reel_page.dart';
 import '../shell/app_shell.dart';
 import 'app_routes.dart';
 
@@ -113,6 +114,13 @@ GoRouter createAppRouter() {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) =>
             const SignInPage(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.video}/:id',
+        name: RouteNames.video,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) =>
+            VideoReelRoute(videoId: state.pathParameters['id'] ?? ''),
       ),
       GoRoute(
         path: AppRoutes.settings,

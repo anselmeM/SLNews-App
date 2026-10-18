@@ -332,18 +332,10 @@ class _FeedSliver extends ConsumerWidget {
     }
   }
 
-  Future<void> _openVideo(BuildContext context, VideoMoment video) async {
-    if (video.url.trim().isEmpty) {
-      _snack(context, 'This video has no playback link yet');
-      return;
-    }
-    final bool opened = await launchUrl(
-      Uri.parse(video.url),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && context.mounted) {
-      _snack(context, 'Could not open the video');
-    }
+  void _openVideo(BuildContext context, VideoMoment video) {
+    // In-app reel: handing the clip to the system browser left the app and broke
+    // the reference's watch-then-swipe flow.
+    context.push(AppRoutes.videoFor(video.id));
   }
 
   void _snack(BuildContext context, String message) {

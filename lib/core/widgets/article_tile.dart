@@ -87,7 +87,7 @@ class ArticleTile extends StatelessWidget {
                       ),
                       Row(
                         children: <Widget>[
-                          Flexible(
+                          Expanded(
                             child: Text(
                               article.relativeAge,
                               maxLines: 1,
@@ -95,7 +95,6 @@ class ArticleTile extends StatelessWidget {
                               style: context.typography.meta,
                             ),
                           ),
-                          const Spacer(),
                           LikeButton(
                             isLiked: isLiked,
                             onPressed: onLike,

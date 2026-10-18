@@ -44,7 +44,10 @@ class SectionHeader extends StatelessWidget {
         : context.typography.sectionTitle;
     final Widget row = Row(
       children: <Widget>[
-        Flexible(
+        // `Expanded`, not `Flexible` + `Spacer`: a Spacer is itself flexible, so
+        // it took half the row and the title was laid out in what was left —
+        // which is why "More in Top stories" came out as "More in Top st…".
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -55,7 +58,7 @@ class SectionHeader extends StatelessWidget {
                   Flexible(
                     child: Text(
                       title,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: style,
                     ),
@@ -74,7 +77,7 @@ class SectionHeader extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   subtitle!,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: context.typography.caption.copyWith(
                     color: context.colors.onSurfaceVariant,
@@ -84,8 +87,10 @@ class SectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        const Spacer(),
-        ?trailing,
+        if (trailing != null) ...<Widget>[
+          const SizedBox(width: AppSpacing.sm),
+          trailing!,
+        ],
       ],
     );
 

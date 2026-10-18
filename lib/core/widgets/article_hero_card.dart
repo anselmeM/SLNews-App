@@ -108,22 +108,32 @@ class ArticleHeroCard extends StatelessWidget {
                         const SizedBox(height: AppSpacing.md),
                         Row(
                           children: <Widget>[
-                            if (showPublisherMark)
-                              Flexible(
-                                child: PublisherMark(
-                                  publisher: article.publisher,
-                                  color: const Color(0xE6FFFFFF),
-                                  logoHeight: 16,
-                                ),
-                              ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              '· ${article.relativeAge}',
-                              style: context.typography.meta.copyWith(
-                                color: const Color(0xCCFFFFFF),
+                            // The attribution owns what the actions do not use.
+                            // A Spacer here would be flexible too, and the two
+                            // would split the row: that is what turned a long
+                            // outlet name into "SIERRA L…".
+                            Expanded(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  if (showPublisherMark)
+                                    Flexible(
+                                      child: PublisherMark(
+                                        publisher: article.publisher,
+                                        color: const Color(0xE6FFFFFF),
+                                        logoHeight: 16,
+                                      ),
+                                    ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    '· ${article.relativeAge}',
+                                    style: context.typography.meta.copyWith(
+                                      color: const Color(0xCCFFFFFF),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const Spacer(),
                             LikeButton(
                               isLiked: isLiked,
                               onPressed: onLike,

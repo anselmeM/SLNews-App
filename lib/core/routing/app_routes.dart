@@ -12,6 +12,9 @@ abstract final class AppRoutes {
   static const String article = '/article';
   static const String saved = '/saved';
 
+  /// Full-screen video reel, pushed above the shell like the reader.
+  static const String video = '/video';
+
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
@@ -25,6 +28,9 @@ abstract final class AppRoutes {
 
   /// `/article/:id` for a given story.
   static String articleFor(String id) => '$article/$id';
+
+  /// `/video/:id` for the reel, starting on that moment.
+  static String videoFor(String id) => '$video/${Uri.encodeComponent(id)}';
 
   static const String articleName = 'article';
   static const String savedName = 'saved';
@@ -42,4 +48,5 @@ abstract final class RouteNames {
   static const String signIn = 'sign_in';
   static const String settings = 'settings';
   static const String notificationHistory = 'following_notifications';
+  static const String video = 'video';
 }

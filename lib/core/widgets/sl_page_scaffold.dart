@@ -207,7 +207,7 @@ class SlPageTitle extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.screenTitle,
                   ),
