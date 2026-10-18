@@ -115,19 +115,25 @@ class AppBootstrap {
     await preferences.init();
     await cache.init();
 
+    // Identity is optional too; a rejected key or an unreachable Frontend API
+    // must never stop the reader from opening the app. It is created before the
+    // scraper configuration because a build that ships no static key relies on
+    // the session token this provides.
+    final ClerkAuthRepository? auth = await _createAuth();
+
     // The aggregated Sierra Leone feed from the SLNews scraper API is an optional
-    // extra source: without a key it is absent entirely, so a build with no
-    // configuration behaves exactly like the RSS + seed app.
-    final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment();
+    // extra source. It is enabled by a static key embedded at build time, or - in
+    // a build that ships no secret - by the Clerk session token a signed-in
+    // reader can mint. With neither, it stays absent and such a build behaves
+    // exactly like the RSS + seed app.
+    final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment(
+      sessionTokenAvailable: auth != null,
+    );
 
     // Reader-state sync (bookmarks, likes, follows) lives on the PWA origin, so
     // its host must be allow-listed for the session token too â€” otherwise every
     // sync call would be anonymous and answer 401.
     final SyncApiConfig syncConfig = SyncApiConfig.fromEnvironment();
-
-    // Identity is optional too; a rejected key or an unreachable Frontend API
-    // must never stop the reader from opening the app.
-    final ClerkAuthRepository? auth = await _createAuth();
 
     final ApiClient client = ApiClient(
       authTokenProvider: auth?.sessionToken,
@@ -151,7 +157,8 @@ class AppBootstrap {
     ];
     debugPrint(
       'SLNews: ingest sources=${sources.length} '
-      '(scraper API ${apiConfig.isConfigured ? 'enabled on ${apiConfig.host}' : 'disabled - no SLNEWS_API_KEY'}), '
+      '(scraper API ${apiConfig.isConfigured ? 'enabled on ${apiConfig.host} via '
+                '${apiConfig.apiKey.trim().isEmpty ? 'Clerk session' : 'embedded key'}' : 'disabled - no key and no identity'}), '
       'identity ${auth == null ? 'disabled' : 'Clerk'}',
     );
 

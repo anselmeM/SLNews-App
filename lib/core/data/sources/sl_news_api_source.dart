@@ -9,15 +9,24 @@ import 'wire_date.dart';
 
 /// Where the SLNews scraper API lives and how to authenticate to it.
 ///
-/// The key is supplied at build time (`--dart-define=SLNEWS_API_KEY=…`) and is
-/// never rendered: an unconfigured build keeps every method a no-op so a
-/// developer without a key still gets a working app.
+/// Two credentials are accepted by the deployed service: a static API key (which
+/// is embedded in the build and therefore extractable from the APK) and a Clerk
+/// session token (minted after sign-in, never stored in the binary). The client
+/// this source shares already attaches the session token to allow-listed hosts,
+/// so a signed-in reader authenticates with a credential that is not shipped
+/// inside the app; the static key remains supported for builds and environments
+/// that have no identity configured.
 @immutable
 class SlNewsApiConfig {
   /// Creates a configuration for an explicitly supplied host and key.
+  ///
+  /// [sessionTokenAvailable] says whether the app can mint a session token at
+  /// all (i.e. an identity is configured); it lets the source run without a
+  /// static key instead of disabling itself.
   const SlNewsApiConfig({
     required this.baseUrl,
     required this.apiKey,
+    this.sessionTokenAvailable = false,
     this.pageSize = 20,
     this.preferVersioned = true,
     this.timeout = const Duration(seconds: 10),
@@ -25,9 +34,11 @@ class SlNewsApiConfig {
 
   /// Reads compile-time configuration:
   ///   `--dart-define=SLNEWS_API_URL=…`      (default: the deployed Render host)
-  ///   `--dart-define=SLNEWS_API_KEY=…`      (default: empty → source disabled)
+  ///   `--dart-define=SLNEWS_API_KEY=…`      (default: empty → key-less, tokens only)
   ///   `--dart-define=SLNEWS_API_PAGE_SIZE=…`
-  factory SlNewsApiConfig.fromEnvironment() {
+  factory SlNewsApiConfig.fromEnvironment({
+    bool sessionTokenAvailable = false,
+  }) {
     const String url = String.fromEnvironment(
       'SLNEWS_API_URL',
       defaultValue: defaultBaseUrl,
@@ -37,6 +48,7 @@ class SlNewsApiConfig {
     return SlNewsApiConfig(
       baseUrl: url,
       apiKey: key,
+      sessionTokenAvailable: sessionTokenAvailable,
       pageSize: _clampPageSize(
         int.tryParse(rawPageSize.trim()) ?? defaultPageSize,
       ),
@@ -60,7 +72,14 @@ class SlNewsApiConfig {
   final String baseUrl;
 
   /// Bearer token for every authenticated endpoint. Never logged.
+  ///
+  /// Empty in a build that relies on the Clerk session token instead; the
+  /// shared client attaches that token per request, so nothing has to be
+  /// embedded in the APK.
   final String apiKey;
+
+  /// Whether an identity is configured, so a session token can be supplied.
+  final bool sessionTokenAvailable;
 
   /// Default number of stories per page.
   final int pageSize;
@@ -71,20 +90,27 @@ class SlNewsApiConfig {
   /// Per-request budget for the injected [ApiClient].
   final Duration timeout;
 
-  /// True only when both a base URL and a non-empty key are present.
+  /// True when the scraper can be reached and authenticated somehow: either a
+  /// static key is embedded, or the reader can sign in for a session token.
+  ///
+  /// A configured source without either credential would only ever receive 401s,
+  /// which is why this gate exists rather than checking [apiKey] alone.
   bool get isConfigured =>
-      baseUrl.trim().isNotEmpty && apiKey.trim().isNotEmpty;
+      baseUrl.trim().isNotEmpty &&
+      (apiKey.trim().isNotEmpty || sessionTokenAvailable);
 
   /// Copy of this configuration with the given fields replaced.
   SlNewsApiConfig copyWith({
     String? baseUrl,
     String? apiKey,
+    bool? sessionTokenAvailable,
     int? pageSize,
     bool? preferVersioned,
     Duration? timeout,
   }) => SlNewsApiConfig(
     baseUrl: baseUrl ?? this.baseUrl,
     apiKey: apiKey ?? this.apiKey,
+    sessionTokenAvailable: sessionTokenAvailable ?? this.sessionTokenAvailable,
     pageSize: pageSize == null ? this.pageSize : _clampPageSize(pageSize),
     preferVersioned: preferVersioned ?? this.preferVersioned,
     timeout: timeout ?? this.timeout,
@@ -518,9 +544,16 @@ class SlNewsApiSource implements FeedSource {
     return DateTime.now();
   }
 
-  Map<String, String> _authHeaders() => <String, String>{
-    'Authorization': 'Bearer ${_apiConfig.apiKey}',
-  };
+  /// Static credential, when this build carries one.
+  ///
+  /// Blank in a signed-in-only build: the shared [ApiClient] then attaches the
+  /// reader's session token, which it is allowed to send to this host, and the
+  /// request goes out with no embedded secret at all.
+  Map<String, String> _authHeaders() {
+    final String key = _apiConfig.apiKey.trim();
+    if (key.isEmpty) return const <String, String>{};
+    return <String, String>{'Authorization': 'Bearer $key'};
+  }
 
   String _base() => _normalizeBase(_apiConfig.baseUrl);
 

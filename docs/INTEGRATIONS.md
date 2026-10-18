@@ -35,12 +35,19 @@ falls back from when the network is unavailable.
 
 - Article ids are namespaced `slnews-api:<row id>` so scraper rows can never
   collide with RSS ids (which are hashes of canonical URLs).
-- Requests go through `ApiClient`, which attaches `Authorization: Bearer <key>`
-  from `defaultHeaders` and can additionally attach a per-request session token
-  (`authTokenProvider`) once the reader signs in.
-- **Disabled without a key.** `SlNewsApiConfig.isConfigured` is false when
-  `SLNEWS_API_KEY` is empty, in which case the source issues no HTTP at all and
-  the app serves RSS + bundled seed content exactly as before.
+- Two credentials are accepted by the deployed service: a static API key and a
+  Clerk session JWT. Requests go through `ApiClient`, which attaches the session
+  token to this host whenever the reader is signed in (`authTokenProvider` +
+  `authTokenHosts`), so a shipped build can authenticate with a short-lived token
+  instead of a key embedded in the binary.
+- **Enabled by either credential.** `SlNewsApiConfig.isConfigured` is true when
+  `SLNEWS_API_KEY` is non-empty *or* an identity is configured
+  (`sessionTokenAvailable`), because the scraper accepts a session token as the
+  alternative. With neither, the source issues no HTTP at all and the app serves
+  RSS + bundled seed content exactly as before.
+- **The session token wins** when both are present: `ApiClient` overwrites the
+  `Authorization` header for allow-listed hosts, so a build that carries a key and
+  a signed-in reader still sends the reader's token.
 
 ### Configuration
 
@@ -48,29 +55,31 @@ Nothing is hard-coded or committed. Values come from `--dart-define` (or a local
 git-ignored `.env.local` used by the helper scripts):
 
 ```powershell
-flutter run `
-  --dart-define=SLNEWS_API_KEY=$env:SLNEWS_API_KEY
+# a build that embeds no scraper secret: sign-in supplies the credential
+flutter run --dart-define=CLERK_PUBLISHABLE_KEY=$env:CLERK_PUBLISHABLE_KEY
 ```
 
 ```powershell
-# release build with the API enabled
+# keyed build (still supported, e.g. for a signed-out demo)
 .\scripts\build_apk.ps1 -DartDefine @('SLNEWS_API_KEY=...', 'CLERK_PUBLISHABLE_KEY=pk_...')
 ```
 
 | Name | Default | Purpose |
 | --- | --- | --- |
 | `SLNEWS_API_URL` | the Render host | base URL, for a self-hosted instance |
-| `SLNEWS_API_KEY` | empty (**feature off**) | bearer key; lives in Render's `API_KEY` env var |
+| `SLNEWS_API_KEY` | empty (**token-only mode**) | optional static bearer key; lives in Render's `API_KEY` env var |
 | `SLNEWS_API_PAGE_SIZE` | `20` | page size (1–100) |
-| `CLERK_PUBLISHABLE_KEY` | empty (**auth off**) | Clerk publishable key |
+| `CLERK_PUBLISHABLE_KEY` | empty (**auth off**) | Clerk publishable key; enables the sign-in credential |
 
 ### Security note
 
-A static bearer key embedded in a mobile binary is extractable. That is an
-acceptable trade-off while the key only gates *public* headline metadata, but if
-the API is ever monetised the mobile client should exchange a Clerk JWT for a
-short-lived token through a backend that holds the real key, or the scraper
-should verify Clerk JWTs directly.
+A static bearer key embedded in a mobile binary is extractable — an earlier build
+of this app shipped one, and it can be pulled straight out of `libapp.so`. The
+release profile therefore ships **no** key: signed-in readers present a Clerk
+session JWT, which the scraper verifies with `CLERK_SECRET_KEY` (see
+`SLNewsAPIScapper#8`). The trade-off is that a signed-out reader gets RSS + seed
+content only, because the scraper source refuses unauthenticated calls. A keyed
+build remains possible for demos, but it should not be distributed.
 
 ### Verifying it
 

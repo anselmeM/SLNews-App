@@ -51,12 +51,19 @@ class Harness {
     Future<ResponseBody> Function(RequestOptions) responder, {
     SlNewsApiConfig? config,
     Map<String, String> defaultHeaders = const <String, String>{},
+    Future<String?> Function()? authTokenProvider,
+    Set<String> authTokenHosts = const <String>{'api.test'},
   }) : adapter = RecordingAdapter(responder),
        _config =
            config ??
            const SlNewsApiConfig(baseUrl: testBaseUrl, apiKey: testApiKey) {
     final Dio dio = Dio()..httpClientAdapter = adapter;
-    client = ApiClient(dio: dio, defaultHeaders: defaultHeaders);
+    client = ApiClient(
+      dio: dio,
+      defaultHeaders: defaultHeaders,
+      authTokenProvider: authTokenProvider,
+      authTokenHosts: authTokenHosts,
+    );
     source = SlNewsApiSource(config: _config, client: client);
   }
 
@@ -838,6 +845,84 @@ void main() {
 
       expect(blank.id, 'publisher:unknown');
       expect(blank.name, isNotEmpty);
+    });
+  });
+
+  group('Clerk session tokens', () {
+    const SlNewsApiConfig keyless = SlNewsApiConfig(
+      baseUrl: testBaseUrl,
+      apiKey: '',
+      sessionTokenAvailable: true,
+    );
+    const SlNewsApiConfig keylessNoIdentity = SlNewsApiConfig(
+      baseUrl: testBaseUrl,
+      apiKey: '',
+    );
+
+    test(
+      'a build without an embedded key is configured when identity exists',
+      () {
+        expect(keyless.isConfigured, isTrue);
+        expect(keylessNoIdentity.isConfigured, isFalse);
+        expect(keyless.copyWith(apiKey: 'next').apiKey, 'next');
+        expect(
+          keyless.copyWith(sessionTokenAvailable: false).isConfigured,
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'the session token authenticates the request when no key is embedded',
+      () async {
+        final Harness harness = Harness(
+          (RequestOptions options) async => Harness.json(v1Envelope()),
+          config: keyless,
+          authTokenProvider: () async => 'session-jwt',
+        );
+
+        await harness.source.fetchPage();
+
+        expect(harness.headerAt(0, 'authorization'), 'Bearer session-jwt');
+      },
+    );
+
+    test('the session token wins over an embedded key', () async {
+      final Harness harness = Harness(
+        (RequestOptions options) async => Harness.json(v1Envelope()),
+        authTokenProvider: () async => 'session-jwt',
+      );
+
+      await harness.source.fetchPage();
+
+      expect(
+        harness.headerAt(0, 'authorization'),
+        'Bearer session-jwt',
+        reason: 'the reader credential is preferred over the shipped one',
+      );
+    });
+
+    test('signed out, an embedded key still authenticates', () async {
+      final Harness harness = Harness(
+        (RequestOptions options) async => Harness.json(v1Envelope()),
+        authTokenProvider: () async => null,
+      );
+
+      await harness.source.fetchPage();
+
+      expect(harness.headerAt(0, 'authorization'), 'Bearer $testApiKey');
+    });
+
+    test('a keyless build signed out sends no bearer header at all', () async {
+      final Harness harness = Harness(
+        (RequestOptions options) async => Harness.json(v1Envelope()),
+        config: keyless,
+        authTokenProvider: () async => null,
+      );
+
+      await harness.source.fetchPage();
+
+      expect(harness.headerAt(0, 'authorization'), isNull);
     });
   });
 }

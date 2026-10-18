@@ -97,7 +97,7 @@ try {
         Write-Host "  define  : $name=$shown"
     }
     if ($defineArgs.Count -eq 0) {
-        Write-Warning 'No --dart-define values: the scraper API and Clerk will be disabled in this build.'
+        Write-Warning 'No --dart-define values: no identity and no scraper key, so the scraper API and sign-in are disabled in this build.'
     }
 
     # --- Gates -------------------------------------------------------------------

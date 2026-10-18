@@ -108,7 +108,9 @@ its URL is verified.
 The **SLNews scraper API** (`SLNewsAPIScapper`, deployed on Render) is wired in as
 a first-class aggregate source, and **Clerk** provides identity behind an
 `AuthRepository` contract. Both are optional and off unless configured:
-`SLNEWS_API_KEY` enables the API, `CLERK_PUBLISHABLE_KEY` enables sign-in. See
+`CLERK_PUBLISHABLE_KEY` enables sign-in *and* the API (signed-in readers present a
+session token, so the release build embeds no scraper key); a static
+`SLNEWS_API_KEY` remains supported for keyed builds. See
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 Account-scoped sync of bookmarks, likes and follows is specified in
