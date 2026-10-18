@@ -26,6 +26,8 @@ import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/sports_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
 import '../domain/repositories/weather_repository.dart';
+import '../data/sources/index_quote_source.dart';
+import '../domain/models/index_quote.dart';
 
 /// Infrastructure providers.
 ///
@@ -317,3 +319,53 @@ MarketSnapshot? _cachedBoard(PreferencesStore? store) {
   }
   return null;
 }
+
+/// Reads the Stocks index board (keyless chart endpoint, cached).
+final Provider<IndexQuoteSource> indexQuoteSourceProvider =
+    Provider<IndexQuoteSource>(
+      (Ref ref) => IndexQuoteSource(ref.watch(apiClientProvider)),
+      name: 'indexQuoteSource',
+    );
+
+/// Preference key holding the last index board we managed to read.
+const String indexBoardCacheKey = 'stocks.lastBoard';
+
+/// The board for the Stocks section and page: fresh quotes when the service
+/// answers, otherwise the last board we saw, otherwise `null` (the section then
+/// hides instead of inventing numbers).
+final FutureProvider<IndexBoard?> indexBoardProvider =
+    FutureProvider<IndexBoard?>((Ref ref) async {
+      PreferencesStore? store;
+      try {
+        store = ref.watch(preferencesStoreProvider);
+      } on UnimplementedError {
+        store = null;
+      }
+
+      IndexBoard? cached;
+      final String? raw = store?.string(indexBoardCacheKey);
+      if (raw != null && raw.isNotEmpty) {
+        try {
+          final Object? decoded = jsonDecode(raw);
+          if (decoded is Map) {
+            cached = IndexBoard.fromJson(<String, dynamic>{
+              for (final MapEntry<Object?, Object?> entry in decoded.entries)
+                '${entry.key}': entry.value,
+            });
+          }
+        } catch (error) {
+          debugPrint('indexBoard: cached board unreadable ($error)');
+        }
+      }
+
+      final IndexBoard? fresh = await ref
+          .watch(indexQuoteSourceProvider)
+          .fetch();
+      if (fresh != null) {
+        if (store != null) {
+          await store.putString(indexBoardCacheKey, jsonEncode(fresh.toJson()));
+        }
+        return fresh;
+      }
+      return cached;
+    }, name: 'indexBoard');

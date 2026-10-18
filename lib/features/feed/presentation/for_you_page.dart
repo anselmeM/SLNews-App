@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/article.dart';
-import '../../../core/domain/models/market_snapshot.dart';
+import '../../../core/domain/models/index_quote.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/domain/models/video_moment.dart';
 import '../../../core/domain/repositories/article_repository.dart';
@@ -22,11 +22,11 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
-import '../../markets/presentation/widgets/markets_sheet.dart';
 import 'widgets/article_actions.dart';
-import 'widgets/sports_carousel.dart';
-import 'widgets/stocks_carousel.dart';
+import '../../markets/presentation/widgets/stocks_card.dart';
+import 'widgets/sport_spotlight_card.dart';
 import 'widgets/top_stories_carousel.dart';
+import 'widgets/trending_now.dart';
 import 'widgets/video_moments_rail.dart';
 import 'widgets/weather_alert_header.dart';
 import 'viewmodels/for_you_view_model.dart';
@@ -56,10 +56,10 @@ class ForYouPage extends ConsumerWidget {
         ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
     final List<AdUnit> ads =
         ref.watch(forYouAdsProvider).value ?? const <AdUnit>[];
-    // Interactive content: the Stocks section only exists when the reader turned
+    // Interactive content: the Stocks board only exists when the reader turned
     // that category on in Settings (on by default, as the reference shows the
     // finance card without being asked).
-    final MarketSnapshot? markets = ref.watch(marketSnapshotProvider).value;
+    final IndexBoard? indexBoard = ref.watch(indexBoardProvider).value;
     final List<GameScore> games =
         ref.watch(scoreboardProvider).value?.games ?? const <GameScore>[];
     final _OfflineStatus offline = _readOffline(ref);
@@ -89,7 +89,7 @@ class ForYouPage extends ConsumerWidget {
         localStories: localStories.value ?? const <Article>[],
         videos: videos,
         ads: ads,
-        markets: markets,
+        indexBoard: indexBoard,
         showMarkets: settings.interactiveContentEnabled,
         games: games,
       );
@@ -168,7 +168,7 @@ class _FeedSliver extends ConsumerWidget {
     required this.localStories,
     required this.videos,
     required this.ads,
-    required this.markets,
+    required this.indexBoard,
     required this.showMarkets,
     required this.games,
   });
@@ -177,7 +177,7 @@ class _FeedSliver extends ConsumerWidget {
   final List<Article> localStories;
   final List<VideoMoment> videos;
   final List<AdUnit> ads;
-  final MarketSnapshot? markets;
+  final IndexBoard? indexBoard;
   final bool showMarkets;
   final List<GameScore> games;
 
@@ -188,7 +188,7 @@ class _FeedSliver extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Local so the null check promotes inside the sliver list.
-    final MarketSnapshot? board = markets;
+    final IndexBoard? board = indexBoard;
 
     final Set<String> localIds = <String>{
       for (final Article article in localStories) article.id,
@@ -212,6 +212,12 @@ class _FeedSliver extends ConsumerWidget {
         .skip(railSize * 2)
         .take(railSize)
         .toList(growable: false);
+
+    // "Trending now" ranks only what the rails did not already show, so the same
+    // headline never appears twice on one screen.
+    final List<Article> trending = trendingArticles(
+      rest.skip(railSize * 3).toList(growable: false),
+    );
 
     final AdUnit? leadAd = ads.isNotEmpty ? ads.first : null;
     final AdUnit? secondAd = ads.length > 1 ? ads[1] : null;
@@ -271,8 +277,18 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
         ],
-        // Sports and Stocks repeat the lead carousel's behaviour: a snap-to-card
-        // pager with dots, and a header chevron that opens the full surface.
+        // Reference order: Trending now, then the Sports scoreboard card, then
+        // the Stocks board. Each header chevron opens the full surface.
+        if (trending.isNotEmpty) ...<Widget>[
+          const SliverToBoxAdapter(child: SectionHeader(title: 'Trending now')),
+          SliverToBoxAdapter(
+            child: TrendingNow(
+              articles: trending,
+              onOpen: (Article article) =>
+                  context.push(AppRoutes.articleFor(article.id)),
+            ),
+          ),
+        ],
         if (games.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             child: SectionHeader(
@@ -283,9 +299,12 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: SportsCarousel(
-              games: games,
-              onOpen: (GameScore _) => context.go(AppRoutes.sports),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: SportSpotlightCard(
+                game: games.first,
+                onTap: () => context.go(AppRoutes.sports),
+              ),
             ),
           ),
         ],
@@ -293,16 +312,18 @@ class _FeedSliver extends ConsumerWidget {
           SliverToBoxAdapter(
             child: SectionHeader(
               title: 'Stocks',
-              subtitle: 'Markets today',
-              onTap: () => showMarketsSheet(context, snapshot: board),
+              subtitle: board.isOpen ? 'Markets today' : 'Market closed',
+              onTap: () => context.push(AppRoutes.stocks),
               trailing: const _MoreLabel(),
             ),
           ),
           SliverToBoxAdapter(
-            child: StocksCarousel(
-              rates: board.board,
-              onOpen: (MarketRate _) =>
-                  showMarketsSheet(context, snapshot: board),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: StocksCard(
+                board: board,
+                onOpen: () => context.push(AppRoutes.stocks),
+              ),
             ),
           ),
         ],

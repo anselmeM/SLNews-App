@@ -15,6 +15,9 @@ abstract final class AppRoutes {
   /// Full-screen video reel, pushed above the shell like the reader.
   static const String video = '/video';
 
+  /// Full Stocks board behind the For You finance card.
+  static const String stocks = '/stocks';
+
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
@@ -47,6 +50,7 @@ abstract final class RouteNames {
   static const String saved = 'saved';
   static const String signIn = 'sign_in';
   static const String settings = 'settings';
+  static const String stocks = 'stocks';
   static const String notificationHistory = 'following_notifications';
   static const String video = 'video';
 }

@@ -28,6 +28,8 @@ class AppColors {
     required this.skeletonHighlight,
     required this.overlayScrim,
     required this.live,
+    required this.trendUp,
+    required this.trendDown,
   });
 
   final Brightness brightness;
@@ -78,6 +80,10 @@ class AppColors {
   /// "LIVE" / breaking marker.
   final Color live;
 
+  /// Positive market move (green) and negative move (red).
+  final Color trendUp;
+  final Color trendDown;
+
   static const AppColors light = AppColors(
     brightness: Brightness.light,
     canvas: Color(0xFFF1F1F1),
@@ -97,6 +103,8 @@ class AppColors {
     skeletonHighlight: Color(0xFFF5F5F5),
     overlayScrim: Color(0x99000000),
     live: Color(0xFFE03B3B),
+    trendUp: Color(0xFF17864B),
+    trendDown: Color(0xFFC62828),
   );
 
   static const AppColors dark = AppColors(
@@ -118,6 +126,8 @@ class AppColors {
     skeletonHighlight: Color(0xFF303030),
     overlayScrim: Color(0xB3000000),
     live: Color(0xFFFF6B6B),
+    trendUp: Color(0xFF4ADE80),
+    trendDown: Color(0xFFF87171),
   );
 
   static AppColors of(Brightness brightness) =>

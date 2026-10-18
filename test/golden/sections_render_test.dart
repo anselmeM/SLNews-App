@@ -3,18 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:slnews_mobile/core/domain/models/market_snapshot.dart';
+import 'package:slnews_mobile/core/domain/models/index_quote.dart';
 import 'package:slnews_mobile/core/domain/models/sports_models.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/widgets/section_header.dart';
-import 'package:slnews_mobile/features/feed/presentation/widgets/sports_carousel.dart';
-import 'package:slnews_mobile/features/feed/presentation/widgets/stocks_carousel.dart';
+import 'package:slnews_mobile/features/feed/presentation/widgets/sport_spotlight_card.dart';
+import 'package:slnews_mobile/features/markets/presentation/widgets/stocks_card.dart';
 
 /// Visual reference for the two service sections added to For You.
 ///
 /// The app-level renders in `screen_renders_test.dart` capture the top of each
-/// tab, and the Sports/Stocks sections sit below the fold there; this file
-/// captures them on their own so a layout change is reviewed as an image.
+/// tab, and the Sports/Stocks cards sit below the fold there; this file captures
+/// them on their own so a layout change is reviewed as an image.
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,45 +36,63 @@ void main() {
     await iconLoader.load();
   });
 
-  testWidgets('Sports and Stocks sections render as paged cards', (
+  testWidgets('Sports and Stocks sections render their boards', (
     WidgetTester tester,
   ) async {
-    tester.view.physicalSize = const Size(390 * 3, 760 * 3);
+    tester.view.physicalSize = const Size(390 * 3, 780 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final List<GameScore> games = <GameScore>[
-      GameScore(
-        id: 'g1',
-        leagueLabel: 'Sierra Leone Premier League',
-        away: const Team(id: 't1', name: 'Bo Rangers', code: 'BOR'),
-        home: const Team(id: 't2', name: 'East End Lions', code: 'EEL'),
-        status: GameStatus.live,
-        awayScore: 1,
-        homeScore: 2,
-        periodLabel: '72 min',
-        venue: 'Bo Stadium',
-      ),
-      GameScore(
-        id: 'g2',
-        leagueLabel: 'Sierra Leone Premier League',
-        away: const Team(id: 't3', name: 'Mighty Blackpool', code: 'MIG'),
-        home: const Team(id: 't4', name: 'FC Kallon', code: 'KAL'),
-        status: GameStatus.scheduled,
-        startsAt: DateTime(2026, 10, 15, 16, 30),
-      ),
-    ];
+    final GameScore game = GameScore(
+      id: 'g1',
+      leagueLabel: 'NBA',
+      away: const Team(id: 't1', name: 'Denver Nuggets', code: 'DEN'),
+      home: const Team(id: 't2', name: 'Los Angeles Lakers', code: 'LAL'),
+      status: GameStatus.live,
+      awayScore: 62,
+      homeScore: 55,
+      periodLabel: 'Q2 - 00.0',
+      venue: 'Ball Arena',
+    );
 
-    final MarketSnapshot board = MarketSnapshot(
-      base: 'USD',
-      rates: const <String, double>{
-        'SLE': 24.357927,
-        'SLL': 24357.92723,
-        'GBP': 0.750839,
-        'EUR': 0.889517,
-      },
-      updatedAt: DateTime(2026, 10, 15, 9),
-      source: 'open.er-api.com',
+    final IndexBoard board = IndexBoard(
+      quotes: const <IndexQuote>[
+        IndexQuote(
+          symbol: '^IXIC',
+          name: 'Nasdaq Comp',
+          subtitle: 'NASDAQ Composite',
+          price: 26140.03,
+          changePercent: -3.94,
+          sparkline: <double>[26800, 26620, 26410, 26290, 26140],
+        ),
+        IndexQuote(
+          symbol: '^RUT',
+          name: 'Russell 2000',
+          subtitle: 'Russell 2000 Index',
+          price: 2721.37,
+          changePercent: -1.66,
+          sparkline: <double>[2790, 2760, 2740, 2721],
+        ),
+        IndexQuote(
+          symbol: '^DJI',
+          name: 'Dow Jones',
+          subtitle: 'Dow Jones Industrial Average',
+          price: 52002.40,
+          changePercent: -0.36,
+          sparkline: <double>[52300, 52200, 52100, 52002],
+        ),
+        IndexQuote(
+          symbol: '^GSPTSE',
+          name: 'TSX Comp',
+          subtitle: 'S&P/TSX Composite index',
+          price: 36176.55,
+          changePercent: 0.10,
+          sparkline: <double>[36100, 36130, 36160, 36176],
+        ),
+      ],
+      updatedAt: DateTime.utc(2026, 10, 15, 20),
+      sourceLabel: 'yahoo/finance',
+      isOpen: false,
     );
 
     await tester.pumpWidget(
@@ -82,14 +100,21 @@ void main() {
         theme: AppTheme.light(),
         home: Scaffold(
           body: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             children: <Widget>[
               const SectionHeader(
                 title: 'Sports',
                 subtitle: 'Scores and fixtures',
               ),
-              SportsCarousel(games: games),
-              const SectionHeader(title: 'Stocks', subtitle: 'Markets today'),
-              StocksCarousel(rates: board.board),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SportSpotlightCard(game: game),
+              ),
+              const SectionHeader(title: 'Stocks', subtitle: 'Market closed'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: StocksCard(board: board),
+              ),
             ],
           ),
         ),
