@@ -34,6 +34,15 @@ if (-not $flutter) {
 }
 if (-not $flutter) { throw 'flutter was not found on PATH and the fallback path is missing.' }
 
+# Resolve the SDK's own dart next to flutter: bare `dart` is not on PATH inside
+# this script's child process, which made the first run fail at the format gate.
+$dart = Join-Path (Split-Path -Parent $flutter) 'dart.bat'
+if (-not (Test-Path $dart)) {
+    $dartCommand = Get-Command dart -ErrorAction SilentlyContinue
+    if (-not $dartCommand) { throw 'dart was not found next to flutter.' }
+    $dart = $dartCommand.Source
+}
+
 if (-not (Test-Path (Join-Path $root 'android\key.properties'))) {
     throw 'android/key.properties is missing: the bundle would be debug-signed and Play would reject it. Run scripts/create_keystore.ps1 first.'
 }
@@ -50,7 +59,7 @@ Write-Host "Building SLNews $versionName ($versionCode)" -ForegroundColor Cyan
 if (-not $SkipTests) {
     Write-Host 'Formatting check...' -ForegroundColor Cyan
     & $flutter pub get | Out-Null
-    & dart format --output=none --set-exit-if-changed lib test
+    & $dart format --output=none --set-exit-if-changed lib test
     if ($LASTEXITCODE -ne 0) { throw 'dart format found unformatted files.' }
 
     Write-Host 'Analyzing...' -ForegroundColor Cyan

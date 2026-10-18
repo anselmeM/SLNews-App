@@ -1,6 +1,6 @@
 # Final pre-launch checklist — Android / Play Store
 
-Last updated: 18 October 2026 · repo `SLNews-Mobile` at `df577ae` · version `1.0.0+1`
+Last updated: 18 October 2026 · repo `SLNews-Mobile` at `b2d113d` · version `1.0.0+2`
 Companion documents: [PLAY-STORE-LAUNCH.md](PLAY-STORE-LAUNCH.md) (assessment),
 [store/play/STORE-LISTING.md](../store/play/STORE-LISTING.md) (copy),
 [store/play/DATA-SAFETY.md](../store/play/DATA-SAFETY.md) (console answers),
@@ -20,7 +20,7 @@ temporary mailbox cover. Everything else on this list is independent of the doma
 | targetSdk/compileSdk 36, minSdk 24 | `aapt2 dump badging` |
 | 16 KB page-size alignment | `zipalign -c -P 16` passes |
 | Release signing from `android/key.properties` (`CN=SLNews`) | APK + AAB signature verified |
-| Play-ready AAB builds | `scripts/build_aab.ps1` → `SLNews-1.0.0-1.aab`, 62.4 MB |
+| Play-ready AAB builds | `scripts/build_aab.ps1` → `SLNews-1.0.0-2.aab`, 62.4 MB, signature verified |
 | CI builds the bundle with the keystore secret | `.github/workflows/build-aab.yml` |
 | Launcher icon, adaptive + monochrome layers, splash | generated + verified inside the bundle |
 | 486 tests, 9 golden renders, analyzer clean | `flutter test`, `flutter analyze` |
@@ -60,12 +60,11 @@ temporary mailbox cover. Everything else on this list is independent of the doma
       in the privacy policy and add Diagnostics to the Data-safety answers. *Owner: you
       (account) + me (integration).* Recommended before production, optional before
       internal testing.
-- [ ] **7. Version bump for the store build.**
-      Run `scripts/bump_version.ps1 -Version 1.0.0` (auto-increments `+1` → `+2`) before the
-      upload that follows internal testing; every Play upload needs a new code. *Owner: me.*
-- [ ] **8. Rebuild the AAB after 1–2.**
-      `powershell -NoProfile -File scripts/build_aab.ps1` and confirm signature + size.
-      *Owner: me.*
+- [x] **7. Version bump for the store build.** `1.0.0+1` → `1.0.0+2` via
+      `scripts/bump_version.ps1`. *Owner: me.*
+- [x] **8. Rebuild the AAB after 1–2.** `SLNews-1.0.0-2.aab` — 62.4 MB, signature verified,
+      16 KB alignment inherited from the build. A matching device APK was also built
+      (`app-release.apk`, 65.7 MB). *Owner: me.*
 
 ---
 
@@ -162,6 +161,6 @@ only when B5–B8, C3, C5–C10 and **all of D** are checked, with the addresses
 | --- | --- | --- |
 | Internal testing live | you | ⬜ |
 | Production review submitted | you | ⬜ |
-| Engineering blockers B1, B2, B7, B8 | me | ⬜ |
+| Engineering blockers B1, B2, B7, B8 | me | ✅ |
 | Rights decision B5 | you | ⬜ |
 | Crash reporting B6 | both | ⬜ (recommended) |
