@@ -59,3 +59,5 @@ test/golden/failures/
 
 # Local Sentry setup wizard download (86 MB, never committed)
 sentry-wizard.exe
+
+sentry.properties

@@ -1,7 +1,9 @@
 # Observability — crash and error reporting
 
-Status: **code wired, waiting for a Sentry project + DSN**. Until a DSN is supplied the
-app runs exactly as before (no SDK initialised, no network calls).
+Status: **project created (`firstmiledevs/slnews-mobile`, id `4512278655139840`), DSN and
+project toggles pending.** Until a DSN is supplied the app runs exactly as before (no SDK
+initialised, no network calls). The wizard writes its release-upload token to
+`sentry.properties`, which is gitignored; that file is not needed by the app.
 
 The backend is already instrumented: `SLNews` uses `@sentry/nextjs`
 (`sentry.server.config.ts`, `sentry.edge.config.ts`, `tracesSampleRate: 0.1`, enabled
@@ -48,11 +50,12 @@ project and separates them by platform. Recommended:
 | `slnews-flutter` | Flutter/Dart | Android now, iOS later |
 | `slnews` (existing) | Next.js | website + API (already instrumented) |
 
-Steps in the Sentry UI:
+The project already exists (created by the Flutter wizard), so only the DSN and the
+project toggles remain:
 
-1. **Projects → Create Project**, platform **Flutter**, name **slnews-flutter**, team
-   that owns the app.
-2. Copy the DSN from **Settings → Client Keys (DSN)**.
+1. Open **Project Settings → Client Keys (DSN)**: https://firstmiledevs.sentry.io/settings/projects/slnews-mobile/keys/
+   and copy the DSN.
+2. Paste it into the `SENTRY_DSN` build environment (CI secret + local `$env:SENTRY_DSN`).
 3. **Settings → Security & Privacy**: turn on **Prevent Storing of IP Addresses** (keeps
    the privacy policy's "no IP" claim true).
 4. **Settings → Inbound Filters**: enable "Filter out errors known to be caused by browser
@@ -62,8 +65,9 @@ Steps in the Sentry UI:
    Dart stack traces are readable. Native symbolication comes from Play/Android automatic
    mapping; add `sentry-cli` symbol upload later only if obfuscation is enabled.
 
-If you would rather create it from here, an auth token with `org:read` + `project:admin`
-(or org owner) lets me create the project, fetch the DSN and wire CI in one pass.
+The wizard's own token is scoped for release uploads only (the API answers 403 for
+project metadata), which is why the DSN has to be copied from the UI rather than fetched
+here.
 
 ## Verifying a report
 
