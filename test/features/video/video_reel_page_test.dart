@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Riverpod 3 keeps `Override` out of the main entrypoint.
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/video_moment.dart';
+import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/utils/video_embed.dart';
 import 'package:slnews_mobile/features/video/presentation/video_reel_page.dart';
 
-/// The full-screen reel: one clip per vertical page, the whole caption visible,
-/// and playback in-app (the web view is replaced by a stub in tests).
+import '../feed/support/fakes.dart';
+
+/// The full-screen reel, laid out like the reference: full-bleed clip, back
+/// chevron, action rail (mute / full screen / like), publisher badge, and a white
+/// caption strip with a segmented position indicator.
 void main() {
   List<VideoMoment> reels() => <VideoMoment>[
     VideoMoment(
@@ -28,31 +35,37 @@ void main() {
     ),
   ];
 
-  /// Pushes the reel from a host page so the close button has something to pop.
+  /// Pushes the reel from a host page so the back button has something to pop.
   Future<void> pumpReel(
     WidgetTester tester, {
     String videoId = 'video:first',
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: Builder(
-            builder: (BuildContext context) => TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) => VideoReelPage(
-                    videos: reels(),
-                    videoId: videoId,
-                    // Platform views cannot run in widget tests.
-                    playerBuilder: (
-                      BuildContext context,
-                      VideoPlayback playback,
-                    ) => const ColoredBox(color: Colors.black12),
+      ProviderScope(
+        overrides: <Override>[
+          userStateProvider.overrideWithValue(FakeUserStateRepository()),
+          videoMomentsProvider.overrideWith((Ref ref) async => reels()),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => VideoReelPage(
+                      videos: reels(),
+                      videoId: videoId,
+                      // Platform views cannot run in widget tests.
+                      playerBuilder: (
+                        BuildContext context,
+                        VideoPlayback playback,
+                      ) => const ColoredBox(color: Colors.black12),
+                    ),
                   ),
                 ),
+                child: const Text('open reel'),
               ),
-              child: const Text('open reel'),
             ),
           ),
         ),
@@ -62,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('starts on the tapped clip and shows its whole caption', (
+  testWidgets('shows the caption strip, publisher badge and position', (
     WidgetTester tester,
   ) async {
     await pumpReel(tester);
@@ -72,12 +85,55 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('SLBC Sports'), findsOneWidget);
-    expect(find.text('1/2'), findsOneWidget);
-    // The rail card clipped long captions; the reel has room for all of it.
-    final Text title = tester.widget<Text>(
-      find.text('Leone Stars step up training ahead of the AFCON qualifier'),
+    final ReelSegments segments = tester.widget<ReelSegments>(
+      find.byType(ReelSegments),
     );
-    expect(title.maxLines, isNull);
+    expect(segments.position, 1);
+    expect(segments.total, 2);
+  });
+
+  testWidgets('the rail offers mute, full screen and like', (
+    WidgetTester tester,
+  ) async {
+    await pumpReel(tester);
+
+    expect(find.byIcon(Icons.volume_up), findsOneWidget);
+    expect(find.byIcon(Icons.open_in_full), findsOneWidget);
+    expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
+  });
+
+  testWidgets('mute toggles from the rail', (WidgetTester tester) async {
+    await pumpReel(tester);
+
+    await tester.tap(find.byIcon(Icons.volume_up));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.volume_off), findsOneWidget);
+  });
+
+  testWidgets('like toggles and fills the thumb', (WidgetTester tester) async {
+    await pumpReel(tester);
+
+    await tester.tap(find.byIcon(Icons.thumb_up_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.thumb_up), findsOneWidget);
+  });
+
+  testWidgets('tapping the clip pauses it and shows the play control', (
+    WidgetTester tester,
+  ) async {
+    await pumpReel(tester);
+
+    await tester.tap(find.byType(PageView));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+
+    await tester.tap(find.byType(PageView));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
   });
 
   testWidgets('swiping up advances to the next clip', (
@@ -88,11 +144,11 @@ void main() {
     await tester.drag(find.byType(PageView), const Offset(0, -700));
     await tester.pumpAndSettle();
 
-    expect(find.text('2/2'), findsOneWidget);
     expect(
       find.text('Freetown residents assess damage after overnight flooding'),
       findsOneWidget,
     );
+    expect(tester.widget<ReelSegments>(find.byType(ReelSegments)).position, 2);
   });
 
   testWidgets('opens on a later clip when the reel is given its id', (
@@ -100,7 +156,7 @@ void main() {
   ) async {
     await pumpReel(tester, videoId: 'video:second');
 
-    expect(find.text('2/2'), findsOneWidget);
+    expect(tester.widget<ReelSegments>(find.byType(ReelSegments)).position, 2);
   });
 
   testWidgets('an unknown id starts at the top instead of failing', (
@@ -108,13 +164,13 @@ void main() {
   ) async {
     await pumpReel(tester, videoId: 'video:missing');
 
-    expect(find.text('1/2'), findsOneWidget);
+    expect(tester.widget<ReelSegments>(find.byType(ReelSegments)).position, 1);
   });
 
-  testWidgets('closing the reel pops the route', (WidgetTester tester) async {
+  testWidgets('the back chevron leaves the reel', (WidgetTester tester) async {
     await pumpReel(tester);
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
     await tester.pumpAndSettle();
 
     expect(find.byType(VideoReelPage), findsNothing);
