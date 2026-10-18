@@ -14,6 +14,7 @@ import '../../../core/widgets/publisher_mark.dart';
 import '../../../core/widgets/scroll_to_top_button.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_action_bar.dart';
+import 'widgets/reading_progress_bar.dart';
 import 'widgets/article_header.dart';
 import 'widgets/article_hero_media.dart';
 import 'widgets/related_stories.dart';
@@ -82,6 +83,7 @@ class _ReaderBody extends ConsumerStatefulWidget {
 class _ReaderBodyState extends ConsumerState<_ReaderBody> {
   final ScrollController _controller = ScrollController();
   bool _showToTop = false;
+  double _progress = 0;
 
   @override
   void initState() {
@@ -100,7 +102,15 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
     final bool visible =
         _controller.hasClients &&
         _controller.offset > ScrollToTopButton.threshold;
-    if (visible != _showToTop) setState(() => _showToTop = visible);
+    final double progress = readingProgressFor(_controller);
+    // Only rebuild when the hairline actually moves by a visible amount.
+    final bool progressChanged = (progress - _progress).abs() > 0.005;
+    if (visible != _showToTop || progressChanged) {
+      setState(() {
+        _showToTop = visible;
+        _progress = progress;
+      });
+    }
   }
 
   Future<void> _backToTop() async {
@@ -221,6 +231,12 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
               ),
             ),
           ],
+        ),
+        Positioned(
+          top: MediaQuery.paddingOf(context).top + kToolbarHeight,
+          left: 0,
+          right: 0,
+          child: ReadingProgressBar(progress: _progress),
         ),
         if (_showToTop)
           Positioned(

@@ -7,6 +7,7 @@ import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/utils/time_ago.dart';
 import 'package:slnews_mobile/core/widgets/publisher_mark.dart';
 import 'package:slnews_mobile/features/article/presentation/article_page.dart';
+import 'package:slnews_mobile/features/article/presentation/widgets/reading_progress_bar.dart';
 import 'package:slnews_mobile/features/article/presentation/widgets/translate_sheet.dart';
 
 import '../feed/support/fakes.dart';
@@ -237,5 +238,51 @@ void main() {
         'UTC+05:30',
       );
     });
+  });
+
+  testWidgets('the progress bar tracks how far the story has been read', (
+    WidgetTester tester,
+  ) async {
+    // A long body on a phone-height surface, so the reader actually scrolls: a
+    // tall test surface would make the article fit and the progress stay at 0.
+    final Article long = Article(
+      id: 'long-story',
+      title: 'A long report',
+      publisher: testPublisher,
+      publishedAt: DateTime.utc(2026, 10, 16, 18),
+      categoryId: 'politics',
+      bodyHtml: List<String>.generate(
+        24,
+        (int index) => '<p>Paragraph $index of the long report body.</p>',
+      ).join(),
+    );
+    await pumpReader(tester, long, surface: const Size(390, 800));
+
+    expect(find.byType(ReadingProgressBar), findsOneWidget);
+    expect(
+      tester
+          .widget<ReadingProgressBar>(find.byType(ReadingProgressBar))
+          .progress,
+      0,
+      reason: 'nothing is read until the reader scrolls',
+    );
+
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+
+    final double progress = tester
+        .widget<ReadingProgressBar>(find.byType(ReadingProgressBar))
+        .progress;
+    expect(progress, greaterThan(0));
+    expect(progress, lessThanOrEqualTo(1));
+  });
+
+  test('progress is zero before the controller is attached', () {
+    final ScrollController controller = ScrollController();
+    addTearDown(controller.dispose);
+    expect(readingProgressFor(controller), 0);
   });
 }
