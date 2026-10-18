@@ -71,8 +71,20 @@ if (-not $SkipTests) {
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 }
 
+# Crash reporting is configuration: pass the DSN when the environment has one,
+# and always stamp the release so Sentry can group by version.
+$defineArgs = @()
+if ($env:SENTRY_DSN) {
+    $defineArgs += '--dart-define=SENTRY_DSN=' + $env:SENTRY_DSN
+    Write-Host '  sentry  : DSN set, crash reporting enabled' -ForegroundColor Cyan
+} else {
+    Write-Warning 'SENTRY_DSN is not set: this bundle ships without crash reporting.'
+}
+if ($env:SENTRY_ENV) { $defineArgs += '--dart-define=SENTRY_ENV=' + $env:SENTRY_ENV }
+$defineArgs += '--dart-define=SLNEWS_RELEASE=slnews-mobile@' + $version
+
 Write-Host 'Building app bundle...' -ForegroundColor Cyan
-& $flutter build appbundle --release
+& $flutter build appbundle --release @defineArgs
 if ($LASTEXITCODE -ne 0) { throw 'flutter build appbundle failed.' }
 
 $built = Join-Path $root 'build\app\outputs\bundle\release\app-release.aab'

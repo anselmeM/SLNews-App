@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/legal_links.dart';
 import '../../../core/data/sources/api_client.dart';
 import '../../../core/domain/auth/auth_repository.dart';
+import '../../../core/observability/error_reporter.dart';
+import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/auth_providers.dart';
@@ -183,6 +186,20 @@ class SettingsPage extends ConsumerWidget {
                       value: location.label,
                       showChevron: false,
                     ),
+                    // Verification affordance: only a debug build with reporting
+                    // enabled shows it, so release stays clean.
+                    if (kDebugMode &&
+                        SentrySettings.fromEnvironment().isEnabled)
+                      SettingsValueRow(
+                        title: 'Send test event',
+                        subtitle: 'Sends one message event so the Sentry project can be verified.',
+                        onTap: () async {
+                          await sendTestEvent();
+                          if (context.mounted) {
+                            _showSnack(context, 'Test event sent to Sentry.');
+                          }
+                        },
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xxl),

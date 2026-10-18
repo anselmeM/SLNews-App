@@ -17,6 +17,7 @@ jobs:
       # APK workflow does.
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,7 +60,14 @@ jobs:
           exit 1
 
       - name: Build app bundle
-        run: flutter build appbundle --release
+        run: |
+          DEFINES=""
+          if [ -n "$SENTRY_DSN" ]; then
+            DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+          else
+            echo "::warning::SENTRY_DSN is not set; building without crash reporting"
+          fi
+          flutter build appbundle --release $DEFINES
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4

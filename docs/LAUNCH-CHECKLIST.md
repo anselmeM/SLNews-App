@@ -54,12 +54,14 @@ temporary mailbox cover. Everything else on this list is independent of the doma
       basis. Decide before public launch: written permission / partner feeds / licensed
       wire / owned content, or an explicit accepted-risk note. *Owner: you. This is the
       single largest post-launch risk (IP complaint or takedown).*
-- [ ] **6. Crash reporting.**
-      No telemetry exists. Play does not require it, but launching blind is unwise. Pick
-      Sentry or Firebase Crashlytics, give me the DSN/Google config, and I wire it, name it
-      in the privacy policy and add Diagnostics to the Data-safety answers. *Owner: you
-      (account) + me (integration).* Recommended before production, optional before
-      internal testing.
+- [~] **6. Crash reporting (Sentry).**
+      Code is wired: `sentry_flutter` initialises only when `SENTRY_DSN` is present,
+      reports uncaught errors plus a bootstrap failure, samples traces at 5 %, sends no
+      PII/IP/screenshots, and the build scripts + CI pass the DSN. Remaining: create the
+      `slnews-flutter` project (or hand me a Sentry auth token), put the DSN in the CI
+      secret and local env, disable IP storage, update `/privacy` + Data-safety for
+      diagnostics, and verify with the debug "Send test event" row. *Owner: you (project)
+      + me (wiring/policy).* See [OBSERVABILITY.md](OBSERVABILITY.md).
 - [x] **7. Version bump for the store build.** `1.0.0+1` → `1.0.0+2` via
       `scripts/bump_version.ps1`. *Owner: me.*
 - [x] **8. Rebuild the AAB after 1–2.** `SLNews-1.0.0-2.aab` — 62.4 MB, signature verified,

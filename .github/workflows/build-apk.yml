@@ -15,6 +15,7 @@ jobs:
     # keystore is routed through env and the step tests env instead.
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,7 +57,12 @@ jobs:
             "${{ secrets.ANDROID_KEY_ALIAS }}" > android/key.properties
 
       - name: Build release APK
-        run: flutter build apk --release --split-per-abi
+        run: |
+          DEFINES=""
+          if [ -n "$SENTRY_DSN" ]; then
+            DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+          fi
+          flutter build apk --release --split-per-abi $DEFINES
 
       - name: Checksums
         run: sha256sum build/app/outputs/flutter-apk/*.apk
