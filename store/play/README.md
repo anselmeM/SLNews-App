@@ -20,8 +20,20 @@ python tools/generate_store_assets.py
 | `icon-512.png` | App icon | 512×512, 32-bit PNG, no alpha |
 | `feature-graphic-1024x500.png` | Feature graphic | 1024×500 |
 | `screenshots/phone-01…07-*.png` | Phone screenshots | 1080×1920 |
+| `promo-panels-1350x800.png` | Not a Play field — landscape promo sheet for web/social | 1350×800 |
 
 Screenshots cover: For You, News, Sports, reader, Top stories section, search, Following.
+
+## Visual language
+
+Follows the Samsung News reference the owner supplied: alternating full-bleed black
+and light backgrounds, one large headline per screen, a framed device mockup that
+runs off the bottom edge, and a brand lockup on the landscape art. The phone frame,
+status band and shadow are drawn by the generator, so the same treatment applies to
+real captures the moment they are dropped into `captures/`.
+
+Remote images in our test captures render as the design-system placeholder; layout,
+type and copy are real. Replace with device captures before submitting.
 
 ## Regenerating the Android assets
 

@@ -126,8 +126,11 @@ needs the app to survive its automated crawl, which is easier to fix with teleme
 Generated into `store/play/` (see its README):
 - `icon-512.png` — 512×512 RGB, no alpha.
 - `feature-graphic-1024x500.png` — typographic, brand blue accent, abstract feed bars.
-- `screenshots/phone-01…07-*.png` — 1080×1920, captioned: For You, News, Sports,
-  reader, Top stories, search, Following.
+- `screenshots/phone-01…07-*.png` — 1080×1920, reference-style: alternating black and
+  light fields, one headline per screen, framed device running off the bottom edge.
+  Covers For You, News, Sports, reader, Top stories, search, Following.
+- `promo-panels-1350x800.png` — three-panel landscape sheet for web/social (not a
+  Play field).
 
 Capture source: `test/store/screenshot_capture_test.dart` (opt-in via
 `SLNEWS_STORE_CAPTURES=1`) renders the real app and scrolls past the offline banner.
