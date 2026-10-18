@@ -13,8 +13,8 @@ test) or organisation.
 | --- | --- | --- |
 | Core product (reading, offline, search, sections, reel, stocks, sports) | **~90 %** | see `docs/FEATURE-GAPS.md` for the remaining reference gaps |
 | Android release config | **~90 %** | package id, target SDK 36, 16 KB pages, signing, adaptive icon, splash, AAB build and version bump all in place |
-| Play policy & compliance | **~20 %** | no privacy policy, no account deletion, data-safety/content-rating answers undecided |
-| Store listing & assets | **~55 %** | icon 512, feature graphic and 7 phone screenshots generated; description copy and final device captures outstanding |
+| Play policy & compliance | **~45 %** | privacy/terms, data-safety pack and deletion-page copy drafted; account deletion not implemented and the pages are not published yet |
+| Store listing & assets | **~75 %** | icon, feature graphic, 7 reference-style screenshots, 1350x800 promo and all listing copy drafted; final device captures and owner approval outstanding |
 | Monitoring & QA | **~35 %** | no crash reporting or analytics; no on-device matrix run |
 
 ---
@@ -55,13 +55,19 @@ bundle (`res/mipmap-anydpi-v26/ic_launcher.xml`, foreground/monochrome layers,
 The mark is "**SL.**" — Inter ExtraBold letters with the brand blue dot. Confirm it, or
 change the brand constants at the top of the generator and rerun.
 
-### B2. Privacy policy + terms — **legal text, owner**
-The app creates accounts (Clerk) and stores reading state; Play requires a **privacy
-policy URL** in the listing and inside the app. Needs: policy text covering what is
-collected (email, likes/bookmarks/following, device tokens when push lands, crash logs
-when added), how to delete it, third parties (Clerk, Render backend, Yahoo Finance,
-Open ER API, RSS publishers), retention, and contact. Terms of use should state that
-SLNews aggregates third-party reporting and is not the publisher.
+### B2. Privacy policy + terms — **drafted**, needs review, hosting and in-app links
+Drafts in `store/play/legal/`: `PRIVACY-POLICY.md` (app-accurate: Clerk account data,
+synced reading state, provider list, no analytics/ads SDK, no location), `TERMS-OF-USE.md`
+(aggregation, IP, market-data disclaimer, liability, Sierra Leone law) and
+`DELETE-ACCOUNT.md` (public page copy + required backend behaviour).
+
+Important discovery: the backend already serves `/privacy` and `/terms`, but they claim
+a Meta Pixel and anonymous usage analytics — true for the website, **false for the app**.
+The merge plan (`store/play/legal/README.md`) scopes those statements to the web, adds an
+Android section, and adds `/delete-account`.
+
+Remaining: owner fills `{{LEGAL ENTITY}}`, `{{CONTACT EMAIL}}`, effective date; legal
+review; publish the updated pages; add Privacy/Terms/Delete rows to Settings.
 
 ### B3. Account deletion — **Play policy requirement**, M (I can implement, backend deploy)
 Because the app lets users create an account, Play requires **both** an in-app deletion
@@ -108,7 +114,7 @@ needs the app to survive its automated crawl, which is easier to fix with teleme
   use it, the next must be +2).
 - Optional: `--obfuscate --split-debug-info` + mapping upload for better crash reports.
 
-### B8. Store declarations you must fill — owner, ~1 hour in Play Console
+### B8. Store declarations — **answer sheet drafted**, owner pastes into Play Console
 - **Data safety**: email (account), user IDs, likes/bookmarks/following, diagnostics if
   crash reporting is added; no location/camera/contacts. Declare encryption in transit.
 - **Content rating** (IARC questionnaire) — news with violence/crime usually lands Teen.
@@ -122,7 +128,7 @@ needs the app to survive its automated crawl, which is easier to fix with teleme
   Yahoo attribution needs a visible link, not just text.
 - **Encryption/export** self-classification (HTTPS only).
 
-### B9. Store listing assets — **images done, copy outstanding**
+### B9. Store listing — **images and copy done**
 Generated into `store/play/` (see its README):
 - `icon-512.png` — 512×512 RGB, no alpha.
 - `feature-graphic-1024x500.png` — typographic, brand blue accent, abstract feed bars.
@@ -138,9 +144,13 @@ Remote images are placeholders under `flutter test`, so **final listing screensh
 be captured on a device** and dropped into `store/play/captures/` before rerunning
 `python tools/generate_store_assets.py`.
 
-Still needed: title (30), short description (80), full description (4000), category
-(News & Magazines), tags, contact email, website, privacy URL. The listing must not imply
-SLNews publishes the aggregated stories (B4).
+Copy is drafted in `store/play/STORE-LISTING.md`: title, short description, full
+description (~2,450 chars), What's new, category/tags, screenshot order and captions, plus
+copy guardrails (no "official", no publisher-impersonation claims, no promise of
+notifications before push ships).
+
+Still needed: owner approval, `{{CONTACT EMAIL}}`/website confirmation, real-device
+captures, and the final paste into Play Console.
 
 ### B10. Alert: the app currently has **no push notifications**
 Not a Play requirement, but a news app without breaking-news push will be judged on it,
@@ -200,11 +210,13 @@ served `assetlinks.json`. Not a submission blocker; a launch-quality item.
 - [~] AAB script and CI job in place, first bundle built and signature-verified; still
       to do: bump versionCode (currently 1) before the store upload, enrol in Play App
       Signing, archive mapping if obfuscation is enabled
-- [ ] Privacy policy and terms URLs live; linked in-app and in the listing
+- [~] Privacy/terms and deletion-page copy drafted (`store/play/legal/`); must be
+      reviewed, published at slnews.app, and linked from Settings before submitting
 - [ ] In-app account deletion works end to end; public deletion-request URL live
 - [ ] Content licensing/partnership decision documented; publisher logos cleared
 - [ ] Crash reporting live; a forced crash appears in the dashboard; release health on
-- [ ] Data safety, content rating, ads, target audience, app access, export answers filled
+- [~] Data-safety / content-rating / ads / target-audience / app-access / export answers
+      prepared in `store/play/DATA-SAFETY.md`; owner pastes them into Play Console
 - [~] Seven generated screenshots exist; replace with real-device captures, and write
       title/short/full description, category, contact email
 - [ ] Financial-data disclaimer and Yahoo attribution link visible
