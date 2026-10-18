@@ -11,17 +11,20 @@ import '../theme/app_typography.dart';
 /// opposed to the story-level actions a card's menu offers. Saved stories sits
 /// first because the route already existed with no way to reach it.
 enum PageMenuAction {
+  search,
   saved,
   settings,
   notices;
 
   String get label => switch (this) {
+    PageMenuAction.search => 'Search',
     PageMenuAction.saved => 'Saved stories',
     PageMenuAction.settings => 'Settings',
     PageMenuAction.notices => 'Notices',
   };
 
   IconData get icon => switch (this) {
+    PageMenuAction.search => Icons.search,
     PageMenuAction.saved => Icons.bookmark_outline,
     PageMenuAction.settings => Icons.settings_outlined,
     PageMenuAction.notices => Icons.notifications_none,
@@ -52,6 +55,8 @@ class PageMenuButton extends StatelessWidget {
   /// Navigates for [action]; exposed so a host can reuse the default routing.
   static void openDefault(BuildContext context, PageMenuAction action) {
     switch (action) {
+      case PageMenuAction.search:
+        context.push(AppRoutes.search);
       case PageMenuAction.saved:
         context.push(AppRoutes.saved);
       case PageMenuAction.settings:

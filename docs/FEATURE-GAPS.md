@@ -30,7 +30,7 @@ Needs: a `/section/:id` route with a collapsing image header, the article list f
 section, ads, back-to-top, and the end-of-group link (A2). Reuses existing tile/ad
 widgets; the new work is the header and routing.
 
-### A2. End-of-group "More … stories ›" links — P1, S
+### A2. End-of-group "More … stories ›" links — **shipped for feed groups**, S
 *(seen: 19 s "More top stories", 45 s "More NHL stories" / "More sports stories",
 58 s "More Ottawa stories")*
 
@@ -108,7 +108,7 @@ Trade-off: the native reader is the reason offline reading and text-size control
 Recommendation: keep native, and close the functional gap with B3 items (in-app
 translation, reading progress) rather than embedding publisher pages.
 
-### A10. Video-moment card badges — P2, S
+### A10. Video-moment card badges — **shipped**, S
 *(seen: 26–32 s)*
 
 Cards carry the **outlet's logo badge** over the thumbnail and a play glyph; the reference
@@ -130,13 +130,14 @@ time (the embedded player's own controls are not exposed).
 
 ## Part B — What a news app needs that SLNews is missing
 
-### B1. Search — P0, L (biggest product gap)
-There is **no search UI anywhere**: `searchResultsProvider` and
-`ArticleRepository.search()` exist, but no route, entry point, field, results screen,
-recents or suggestions. A news app without search cannot answer "what did it say about
-X". Needs: entry from the top bar / kebab, debounce, results grouped by stories, videos
-and topics, recent searches, suggestions from followed topics, empty/no-result states,
-voice input (optional), and later personalisation.
+### B1. Search — P0 → **v1 shipped**, L
+Search v1 now exists: entry from the page kebab (`PageMenuAction.search`), `/search`
+route, autofocused field, 250 ms debounce, results grouped into **Stories** and
+**Videos**, persisted **recent searches** with clear, and honest empty/no-result/error
+states. `search_page_test` covers each path.
+
+Still open for a v2: suggestions from followed topics, search-as-you-type ranking and
+relevance (the repository does a substring match), voice input, and author/topic results.
 
 ### B2. Push notifications (mobile side) — P0, M+L
 The backend already has FCM sending (`SLNews/src/lib/push/fcm.ts`) and the device
@@ -252,6 +253,10 @@ are needed to *operate* the app; the app side only needs to consume those overri
 | Saved-stories entry point in the page menu (the route was unreachable) | `4572183` |
 | Offline banner on all four tabs via `SlPageScaffold` | `4572183` |
 | Offline article bodies verified end to end (cache carries the body) | verified |
+| Reading progress bar in the reader | `1398437` |
+| "More … stories ›" group links (For You local rail, Sports card) | `abc101f` |
+| Video cards: outlet monogram badge + clip length when supplied | `2e51e6e` |
+| Search v1 (kebab entry, `/search`, debounce, grouped results, recents) | batch 2 |
 
 ## Appendix 2 — Already matching the reference
 

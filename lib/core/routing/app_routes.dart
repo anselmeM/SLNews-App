@@ -18,6 +18,9 @@ abstract final class AppRoutes {
   /// Full Stocks board behind the For You finance card.
   static const String stocks = '/stocks';
 
+  /// Query surface for stories and videos.
+  static const String search = '/search';
+
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
@@ -51,6 +54,7 @@ abstract final class RouteNames {
   static const String signIn = 'sign_in';
   static const String settings = 'settings';
   static const String stocks = 'stocks';
+  static const String search = 'search';
   static const String notificationHistory = 'following_notifications';
   static const String video = 'video';
 }

@@ -20,6 +20,11 @@ void main() {
         ),
       ),
       GoRoute(
+        path: '/search',
+        builder: (BuildContext context, GoRouterState state) =>
+            const Scaffold(body: Text('search screen')),
+      ),
+      GoRoute(
         path: '/saved',
         builder: (BuildContext context, GoRouterState state) =>
             const Scaffold(body: Text('saved screen')),
@@ -44,14 +49,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('offers Saved stories, Settings and Notices', (
+  testWidgets('offers Search, Saved stories, Settings and Notices', (
     WidgetTester tester,
   ) async {
     await pumpMenu(tester);
 
+    expect(find.text('Search'), findsOneWidget);
     expect(find.text('Saved stories'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('Notices'), findsOneWidget);
+  });
+
+  testWidgets('Search opens the search screen', (WidgetTester tester) async {
+    await pumpMenu(tester);
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('search screen'), findsOneWidget);
   });
 
   testWidgets('Saved stories opens the saved list', (

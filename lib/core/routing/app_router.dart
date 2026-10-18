@@ -15,6 +15,7 @@ import '../../features/video/presentation/video_reel_page.dart';
 import '../shell/app_shell.dart';
 import 'app_routes.dart';
 import '../../features/markets/presentation/stocks_page.dart';
+import '../../features/search/presentation/search_page.dart';
 
 /// The app router: a stateful shell with four persistent branches plus the
 /// reader and saved-stories routes pushed above the navigation bar.
@@ -122,6 +123,13 @@ GoRouter createAppRouter() {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) =>
             VideoReelRoute(videoId: state.pathParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: AppRoutes.search,
+        name: RouteNames.search,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) =>
+            const SearchPage(),
       ),
       GoRoute(
         path: AppRoutes.stocks,
