@@ -1,5 +1,7 @@
 # Play Store listing assets
 
+Launch gates live in [../../docs/LAUNCH-CHECKLIST.md](../../docs/LAUNCH-CHECKLIST.md).
+
 Everything the Play Console asks for, generated from one script so a brand tweak is
 a rerun rather than a dozen hand-edited PNGs.
 

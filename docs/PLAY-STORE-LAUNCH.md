@@ -1,5 +1,7 @@
 # Getting SLNews to the Play Store
 
+**Execution checklist:** [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — the ordered, owner-tagged gates to work through before upload and production.
+
 Assessment date: 18 October 2026 · repo `SLNews-Mobile` at `7918fe1` · app version
 `1.0.0+1` · package `com.slnews.mobile`.
 
