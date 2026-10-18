@@ -8,6 +8,7 @@ import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/widgets/ad_card.dart';
 import 'package:slnews_mobile/core/widgets/article_tile.dart';
+import 'package:slnews_mobile/core/widgets/section_header.dart';
 import 'package:slnews_mobile/core/widgets/video_moment_card.dart';
 import 'package:slnews_mobile/features/feed/presentation/for_you_page.dart';
 import 'package:slnews_mobile/features/feed/presentation/widgets/weather_alert_header.dart';
@@ -299,6 +300,19 @@ void main() {
     expect(find.byType(AdCard), findsOneWidget);
     expect(find.text('Ultimate Shopping Spree'), findsOneWidget);
     expect(find.text('Ad'), findsWidgets, reason: 'sponsored must be labelled');
+  });
+
+  testWidgets('shows the Following topic mosaic', (WidgetTester tester) async {
+    await pumpForYou(
+      tester,
+      surface: const Size(390, 6200),
+      articles: railRepository(),
+    );
+
+    expect(find.widgetWithText(SectionHeader, 'Following'), findsOneWidget);
+    // Categories with no story image still render a readable fallback card.
+    expect(find.text('Cars and Vehicles'), findsOneWidget);
+    expect(find.text('Music'), findsOneWidget);
   });
 
   testWidgets('the More affordance opens the News tab', (

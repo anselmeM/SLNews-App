@@ -24,6 +24,9 @@ abstract final class AppRoutes {
   /// Pushed "Top stories" section with a photo header.
   static const String topStories = '/top_stories';
 
+  /// Pushed topic/category section (`/section/:id`), same layout as Top stories.
+  static const String section = '/section';
+
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
@@ -37,6 +40,9 @@ abstract final class AppRoutes {
 
   /// `/article/:id` for a given story.
   static String articleFor(String id) => '$article/$id';
+
+  /// `/section/:id` for a topic or category.
+  static String sectionFor(String id) => '$section/${Uri.encodeComponent(id)}';
 
   /// `/video/:id` for the reel, starting on that moment.
   static String videoFor(String id) => '$video/${Uri.encodeComponent(id)}';
@@ -60,6 +66,7 @@ abstract final class RouteNames {
   static const String stocks = 'stocks';
   static const String search = 'search';
   static const String topStories = 'top_stories';
+  static const String section = 'section';
   static const String notificationHistory = 'following_notifications';
   static const String video = 'video';
 }

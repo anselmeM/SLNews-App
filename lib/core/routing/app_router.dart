@@ -135,6 +135,21 @@ GoRouter createAppRouter() {
             VideoReelRoute(videoId: state.pathParameters['id'] ?? ''),
       ),
       GoRoute(
+        path: '${AppRoutes.section}/:id',
+        name: RouteNames.section,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) {
+          final String id = state.pathParameters['id'] ?? '';
+          final Object? extra = state.extra;
+          return TopStoriesSectionPage(
+            categoryId: id,
+            title: extra is String && extra.trim().isNotEmpty
+                ? extra
+                : TopStoriesSectionPage.titleFromId(id),
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.topStories,
         name: RouteNames.topStories,
         parentNavigatorKey: _rootNavigatorKey,

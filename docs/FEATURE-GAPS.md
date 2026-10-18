@@ -35,15 +35,19 @@ Groups end with a right-aligned link into the full list. Current: only the top-o
 `SectionHeader` chevron exists. Needs one shared widget and placement at group ends
 (For You local rail, Sports leagues, section pages).
 
-### A3. Following mosaic on the feed — P1, M
+### A3. Following mosaic on the feed — **shipped**, M
 *(seen: 55 s)*
 
 The reference shows a `Following ›` header followed by a two-column mosaic of
 **image topic cards** (Cars and Vehicles, Music, Culture, Lifestyle …), tapping through
 to the Following surface.
 
-Current: the Following tab lists groups as compact rows/chips; For You has no Following
-section at all. Needs an image-backed topic grid widget plus a For You rail.
+Shipped on For You: a `TopicMosaic` two-column grid after the Latest group, four cards
+from the curated category set (an image from that category's first story, a dark
+fallback card with a category glyph, and a white label with a chevron). Tapping a card
+pushes the photo-header section page at `/section/:categoryId`, whose "More …" link
+continues to the News tab. The Following tab keeps its management rows, which is the
+honest division of labour: discovery on the feed, management on Following.
 
 ### A4. Notification permission prompt — P0 once push exists, M
 *(seen: 3.8 s)*

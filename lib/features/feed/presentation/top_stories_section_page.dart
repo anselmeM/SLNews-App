@@ -20,7 +20,32 @@ import '../../../core/widgets/state_views.dart';
 /// Tapping the For You title lands here instead of jumping to the News tab, which
 /// is what makes the header chevron behave like a "see all" on the reference.
 class TopStoriesSectionPage extends ConsumerStatefulWidget {
-  const TopStoriesSectionPage({super.key});
+  const TopStoriesSectionPage({
+    super.key,
+    this.categoryId,
+    this.title = 'Top stories',
+  });
+
+  /// When set, the page lists that category's stories instead of Top stories.
+  final String? categoryId;
+
+  /// Header title; also used by the "More …" link at the end of the list.
+  final String title;
+
+  /// Readable title for a section id, used when a deep link carries no label.
+  static String titleFromId(String id) {
+    final String raw = id.contains(':') ? id.split(':').last : id;
+    final String spaced = raw.replaceAll(RegExp(r'[-_]'), ' ');
+    if (spaced.isEmpty) return 'Section';
+    return spaced
+        .split(' ')
+        .where((String word) => word.isNotEmpty)
+        .map(
+          (String word) =>
+              '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
 
   @override
   ConsumerState<TopStoriesSectionPage> createState() =>
@@ -62,7 +87,9 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<List<Article>> stories = ref.watch(topStoriesProvider);
+    final AsyncValue<List<Article>> stories = widget.categoryId == null
+        ? ref.watch(topStoriesProvider)
+        : ref.watch(categoryFeedProvider(widget.categoryId!));
     final List<Article> articles = stories.value ?? const <Article>[];
     final Article? hero = articles.isEmpty ? null : articles.first;
 
@@ -87,7 +114,7 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.parallax,
-                  background: _SectionHero(article: hero),
+                  background: _SectionHero(article: hero, title: widget.title),
                 ),
               ),
               if (stories.hasError)
@@ -101,6 +128,16 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
                 const SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(child: CircularProgressIndicator()),
+                )
+              else if (articles.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: EmptyStateView(
+                    title: 'No stories yet',
+                    message:
+                        'Nothing has been published in ${widget.title} yet.',
+                    icon: Icons.article_outlined,
+                  ),
                 )
               else ...<Widget>[
                 SliverPadding(
@@ -126,7 +163,9 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
                 ),
                 SliverToBoxAdapter(
                   child: MoreStoriesLink(
-                    label: 'More top stories',
+                    label: widget.categoryId == null
+                        ? 'More top stories'
+                        : 'More ${widget.title} stories',
                     onPressed: () => context.go(AppRoutes.news),
                   ),
                 ),
@@ -151,9 +190,10 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
 
 /// Photo, scrim and section title for the collapsing header.
 class _SectionHero extends StatelessWidget {
-  const _SectionHero({required this.article});
+  const _SectionHero({required this.article, required this.title});
 
   final Article? article;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +227,7 @@ class _SectionHero extends StatelessWidget {
           right: AppSpacing.lg,
           bottom: AppSpacing.md,
           child: Text(
-            'Top stories',
+            title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.typography.sectionTitle.copyWith(

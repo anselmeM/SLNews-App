@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';
+import '../../../core/domain/models/news_category.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/index_quote.dart';
 import '../../../core/domain/models/sports_models.dart';
@@ -27,6 +28,7 @@ import '../../markets/presentation/stocks_page.dart';
 import '../../markets/presentation/widgets/stocks_card.dart';
 import 'widgets/sport_spotlight_card.dart';
 import 'widgets/top_stories_carousel.dart';
+import 'widgets/topic_mosaic.dart';
 import 'widgets/trending_now.dart';
 import 'widgets/video_moments_rail.dart';
 import 'widgets/weather_alert_header.dart';
@@ -177,6 +179,45 @@ class _FeedSliver extends ConsumerWidget {
   /// 640dp-tall phone instead of turning the page into one long list.
   static const int railSize = 4;
 
+  /// Four topic cards for the "Following" rail: the categories that have a
+  /// usable story image first, so the mosaic never shows empty blocks above
+  /// categories that do. Labels come from the curated category set.
+  static List<TopicMosaicItem> _mosaicItems(
+    ForYouFeed feed,
+    List<Article> localStories,
+  ) {
+    final List<Article> all = <Article>[...feed.stream, ...localStories];
+    final List<TopicMosaicItem> items = <TopicMosaicItem>[];
+    for (final NewsCategory category in NewsCategories.all) {
+      if (category.id == 'top') continue;
+      String? imageUrl;
+      for (final Article article in all) {
+        final String? image = article.imageUrl?.trim();
+        if (article.categoryId == category.id &&
+            image != null &&
+            image.isNotEmpty) {
+          imageUrl = image;
+          break;
+        }
+      }
+      items.add(
+        TopicMosaicItem(
+          id: category.id,
+          label: category.label,
+          icon: category.icon,
+          imageUrl: imageUrl,
+        ),
+      );
+    }
+    items.sort((TopicMosaicItem a, TopicMosaicItem b) {
+      final bool aHas = a.imageUrl != null;
+      final bool bHas = b.imageUrl != null;
+      if (aHas == bHas) return 0;
+      return aHas ? -1 : 1;
+    });
+    return items;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Local so the null check promotes inside the sliver list.
@@ -244,6 +285,28 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
           _ArticleTileSliver(articles: latestStream),
+        ],
+        if (_mosaicItems(feed, localStories).isNotEmpty) ...<Widget>[
+          SliverToBoxAdapter(
+            // "Following â€º" in the reference: the chevron comes from onTap, and
+            // no "More" label, so the rail reads as a doorway rather than a list.
+            child: SectionHeader(
+              title: 'Following',
+              onTap: () => context.go(AppRoutes.following),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: TopicMosaic(
+                items: _mosaicItems(feed, localStories),
+                onOpen: (TopicMosaicItem item) => context.push(
+                  AppRoutes.sectionFor(item.id),
+                  extra: item.label,
+                ),
+              ),
+            ),
+          ),
         ],
         if (leadAd != null)
           SliverToBoxAdapter(
