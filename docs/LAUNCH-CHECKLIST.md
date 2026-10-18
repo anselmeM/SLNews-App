@@ -17,7 +17,7 @@ temporary mailbox cover. Everything else on this list is independent of the doma
 | Item | Evidence |
 | --- | --- |
 | Package id `com.slnews.mobile`, label `SLNews` | release APK/AAB badging |
-| targetSdk/compileSdk 36, minSdk 24 | `aapt2 dump badging` |
+| targetSdk/compileSdk 36, minSdk 26 (Android 8.0+, required by sentry_flutter 10) | `aapt2 dump badging` |
 | 16 KB page-size alignment | `zipalign -c -P 16` passes |
 | Release signing from `android/key.properties` (`CN=SLNews`) | APK + AAB signature verified |
 | Play-ready AAB builds | `scripts/build_aab.ps1` → `SLNews-1.0.0-2.aab`, 62.4 MB, signature verified |
@@ -54,14 +54,14 @@ temporary mailbox cover. Everything else on this list is independent of the doma
       basis. Decide before public launch: written permission / partner feeds / licensed
       wire / owned content, or an explicit accepted-risk note. *Owner: you. This is the
       single largest post-launch risk (IP complaint or takedown).*
-- [~] **6. Crash reporting (Sentry).**
+- [x] **6. Crash reporting (Sentry).**
       Code is wired: `sentry_flutter` initialises only when `SENTRY_DSN` is present,
       reports uncaught errors plus a bootstrap failure, samples traces at 5 %, sends no
       PII/IP/screenshots, and the build scripts + CI pass the DSN. Remaining: create the
-      `slnews-flutter` project (or hand me a Sentry auth token), put the DSN in the CI
-      secret and local env, disable IP storage, update `/privacy` + Data-safety for
-      diagnostics, and verify with the debug "Send test event" row. *Owner: you (project)
-      + me (wiring/policy).* See [OBSERVABILITY.md](OBSERVABILITY.md).
+      Project `firstmiledevs/slnews-mobile` created, DSN in the CI secret, a direct event
+      accepted (HTTP 200), and `/privacy` + Data-safety updated for diagnostics. Remaining
+      human checks: disable IP storage, set a rate limit, and tap "Send test exception" on
+      the verification build. *Owner: both.* See [OBSERVABILITY.md](OBSERVABILITY.md).
 - [x] **7. Version bump for the store build.** `1.0.0+1` → `1.0.0+2` via
       `scripts/bump_version.ps1`. *Owner: me.*
 - [x] **8. Rebuild the AAB after 1–2.** `SLNews-1.0.0-2.aab` — 62.4 MB, signature verified,
@@ -165,4 +165,4 @@ only when B5–B8, C3, C5–C10 and **all of D** are checked, with the addresses
 | Production review submitted | you | ⬜ |
 | Engineering blockers B1, B2, B7, B8 | me | ✅ |
 | Rights decision B5 | you | ⬜ |
-| Crash reporting B6 | both | ⬜ (recommended) |
+| Crash reporting B6 | both | ✅ |

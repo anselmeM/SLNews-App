@@ -1,8 +1,10 @@
 # Play Console declarations — answer sheet
 
 Copy these answers into Play Console. They describe the **Android app as built**
-(`com.slnews.mobile`, version 1.0.0+1), not the website: the app has no analytics,
-advertising or crash-reporting SDK, and no advertising identifier.
+(`com.slnews.mobile`, version 1.0.0+2), not the website: the app has no analytics or
+advertising SDK and no advertising identifier. It does send **crash diagnostics to
+Sentry** (added for the launch build), configured without IP storage, account
+identifiers, content or screenshots.
 
 > Draft for owner review. Placeholders in `{{ }}` are listed in
 > [legal/README.md](legal/README.md#placeholders-to-fill).
@@ -19,11 +21,13 @@ Only account data, and only when the person chooses to sign in.
 | Personal info | Name | Yes | No | Yes | Account management | Yes |
 | Personal info | User IDs | Yes | No | Yes | Account management, app functionality (sync) | Yes |
 | App activity | Other in-app actions (saved stories, likes, follows) | Yes | No | Yes | App functionality (sync across devices) | Yes |
+| Diagnostics | Crash logs (stack trace, device model, OS version, app version) | Yes | No | No — automatic when the app crashes | App functionality (diagnostics, fixing crashes) | Yes — 90-day retention at Sentry |
+| Diagnostics | Other app performance data (5 % sampled traces: app start, navigation, network timings) | Yes | No | No | App functionality (diagnostics) | Yes |
 
 Everything else: **not collected**. No location, no financial info, no health, no
 messages, no photos or videos, no audio, no files, no contacts, no calendar, no web
-browsing history, no app interactions analytics, no crash logs, no device or other IDs
-today.
+browsing history, no app-interaction analytics, no device or other IDs, no advertising
+identifier.
 
 **Security practices**
 
@@ -40,13 +44,14 @@ today.
 - Sign-in is handled by Clerk; the app stores only the resulting session on device.
 - Sponsored cards are served by our own backend; no ad SDK and no data sharing with
   advertisers.
+- Crash reports go to Sentry with IP storage disabled and no account/user identifier
+  attached; they contain no reading history and no article content. See `/privacy`.
 
 ### When push notifications ship, add
 
 - **Device or other IDs → Device or other IDs**: collected, optional (only when
   notifications are enabled), purpose "App functionality (notifications)", deletion yes.
-- **Diagnostics → Crash logs** only if a crash-reporting SDK is added, with its
-  vendor named in the privacy policy.
+- Diagnostics → Crash logs is already declared above (Sentry), so nothing to add here.
 
 ## 2. App content → Ads
 

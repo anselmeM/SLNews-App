@@ -33,7 +33,10 @@ android {
         applicationId = "com.slnews.mobile"
         // Sierra Leone's mobile fleet is dominated by Android 8+ devices, and
         // Hive/sqflite both need API 23+.
-        minSdk = maxOf(flutter.minSdkVersion, 23)
+        // 26 (Android 8.0) is the floor of sentry_flutter 10's Android SDK. The app used
+        // 24 until crash reporting was added; Android 8+ covers the overwhelming majority
+        // of active devices and Play requires targetSdk 36 anyway.
+        minSdk = maxOf(flutter.minSdkVersion, 26)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

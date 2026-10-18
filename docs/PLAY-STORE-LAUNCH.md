@@ -28,7 +28,7 @@ Checked against the built release APK and the Gradle config on `7918fe1`:
 - **Package id** `com.slnews.mobile` — good, permanent, not `com.example`.
 - **Target SDK 36** (Android 16) and compileSdk 36 — meets Play's current API-level rule
   for new submissions; no deadline risk this cycle.
-- **minSdk 24** — sensible for Sierra Leone's device fleet.
+- **minSdk 26 (Android 8.0 — required by sentry_flutter 10)** — sensible for Sierra Leone's device fleet.
 - **16 KB page-size alignment** — `zipalign -c -P 16` passes on the release APK, so the
   Play 16 KB requirement is already satisfied.
 - **Signing** — release keystore wired through `android/key.properties` (git-ignored),

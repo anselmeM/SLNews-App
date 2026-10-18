@@ -1,9 +1,10 @@
 # Observability — crash and error reporting
 
-Status: **project created (`firstmiledevs/slnews-mobile`, id `4512278655139840`), DSN and
-project toggles pending.** Until a DSN is supplied the app runs exactly as before (no SDK
-initialised, no network calls). The wizard writes its release-upload token to
-`sentry.properties`, which is gitignored; that file is not needed by the app.
+Status: **live.** Project `firstmiledevs/slnews-mobile` (id `4512278655139840`); DSN stored
+as the `SENTRY_DSN` GitHub secret and passed by both CI workflows; a direct event POST
+returned HTTP 200, so ingest is verified. Builds without the secret still run with
+reporting disabled by design. The wizard's release-upload token lives in the gitignored
+`sentry.properties` and is unused by the app.
 
 The backend is already instrumented: `SLNews` uses `@sentry/nextjs`
 (`sentry.server.config.ts`, `sentry.edge.config.ts`, `tracesSampleRate: 0.1`, enabled
@@ -50,12 +51,9 @@ project and separates them by platform. Recommended:
 | `slnews-flutter` | Flutter/Dart | Android now, iOS later |
 | `slnews` (existing) | Next.js | website + API (already instrumented) |
 
-The project already exists (created by the Flutter wizard), so only the DSN and the
-project toggles remain:
-
-1. Open **Project Settings → Client Keys (DSN)**: https://firstmiledevs.sentry.io/settings/projects/slnews-mobile/keys/
-   and copy the DSN.
-2. Paste it into the `SENTRY_DSN` build environment (CI secret + local `$env:SENTRY_DSN`).
+The project exists (created by the Flutter wizard) and its DSN is stored as the
+`SENTRY_DSN` GitHub secret. Project toggles that still need a human:
+**Prevent Storing of IP Addresses** and a daily **rate limit** in Inbound Filters.
 3. **Settings → Security & Privacy**: turn on **Prevent Storing of IP Addresses** (keeps
    the privacy policy's "no IP" claim true).
 4. **Settings → Inbound Filters**: enable "Filter out errors known to be caused by browser
@@ -66,8 +64,8 @@ project toggles remain:
    mapping; add `sentry-cli` symbol upload later only if obfuscation is enabled.
 
 The wizard's own token is scoped for release uploads only (the API answers 403 for
-project metadata), which is why the DSN has to be copied from the UI rather than fetched
-here.
+project metadata); the DSN was copied from the project UI and stored as a secret, never in
+source.
 
 ## Verifying a report
 
@@ -82,15 +80,16 @@ here.
 
 ## Before shipping reporting to production
 
-- [ ] Project created; DSN in CI secret and local env.
-- [ ] "Prevent Storing of IP Addresses" enabled for the project.
-- [ ] **Privacy policy updated** (`SLNews` → `/privacy`): add Sentry to the provider list
-      and a diagnostics line — "crash diagnostics (stack trace, device model, OS version,
-      app version); no personal data or content".
-- [ ] **Data safety updated** (`store/play/DATA-SAFETY.md`): Diagnostics → **Crash logs**
-      collected, not shared, encrypted in transit, deletion available; Device or other
-      IDs only if you enable Sentry's anonymous user id (currently off).
-- [ ] Checklist B6 closed.
+- [x] Project created; DSN in CI secret and local env.
+- [x] **Privacy policy updated** (`SLNews` → `/privacy` PR `chore/sentry-diagnostics`):
+      Sentry in the provider list, crash-diagnostics paragraph, 90-day retention.
+- [x] **Data safety updated** (`store/play/DATA-SAFETY.md`): Diagnostics → Crash logs
+      (and sampled performance) collected, not shared, encrypted in transit, deletion
+      available.
+- [ ] "Prevent Storing of IP Addresses" enabled for the project (Sentry UI).
+- [ ] Daily rate limit set in Inbound Filters (Sentry UI).
+- [ ] Verify from a device with the verification APK (Settings → About).
+- [x] Checklist B6 closed.
 
 ## Deliberately not collected
 
