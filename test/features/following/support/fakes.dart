@@ -74,6 +74,7 @@ class InMemoryFollowingRepository implements FollowingRepository {
   @override
   List<FollowTarget> get catalogue => const <FollowTarget>[];
 
+  @override
   FollowingSnapshot load() {
     final List<FollowTarget> followedTargets = _entries.values
         .where((_Entry entry) => entry.followed)
