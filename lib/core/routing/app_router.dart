@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/article/presentation/article_page.dart';
 import '../../features/article/presentation/article_web_page.dart';
+import '../../features/auth/presentation/account_page.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
@@ -135,6 +136,13 @@ GoRouter createAppRouter() {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) =>
             const SavedStoriesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.account,
+        name: RouteNames.account,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) =>
+            const AccountPage(),
       ),
       GoRoute(
         path: AppRoutes.signIn,

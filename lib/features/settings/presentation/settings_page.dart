@@ -88,7 +88,9 @@ class SettingsPage extends ConsumerWidget {
                                 auth.user?.label ??
                                 'Signed in')
                           : 'Not signed in — tap to sign in',
-                      onTap: () => context.push(AppRoutes.signIn),
+                      onTap: () => context.push(
+                        auth.isSignedIn ? AppRoutes.account : AppRoutes.signIn,
+                      ),
                     ),
                     if (auth.isSignedIn &&
                         ref.watch(syncApiConfigProvider).isConfigured)

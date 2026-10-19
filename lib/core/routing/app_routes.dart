@@ -30,6 +30,9 @@ abstract final class AppRoutes {
   /// Identity surface, pushed above the shell so it covers the navigation bar.
   static const String signIn = '/sign_in';
 
+  /// The signed-in reader's account surface (`/account`).
+  static const String account = '/account';
+
   /// Reader settings, pushed above the shell like the reference screen (which
   /// hides the bottom navigation).
   static const String settings = '/settings';
@@ -80,6 +83,7 @@ abstract final class RouteNames {
   static const String articleOriginal = 'article_original';
   static const String saved = 'saved';
   static const String signIn = 'sign_in';
+  static const String account = 'account';
   static const String settings = 'settings';
   static const String stocks = 'stocks';
   static const String search = 'search';
