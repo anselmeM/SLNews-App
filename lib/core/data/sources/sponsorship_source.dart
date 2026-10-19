@@ -40,7 +40,7 @@ class SponsorshipSource {
       for (final Object? item in items) {
         if (item is! Map) continue;
         try {
-          units.add(AdUnit.fromJson(Map<String, dynamic>.from(item)));
+          units.add(AdUnit.fromSponsorship(Map<String, dynamic>.from(item)));
         } catch (error) {
           debugPrint('SponsorshipSource: skipping malformed unit: $error');
         }

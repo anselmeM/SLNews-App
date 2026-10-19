@@ -18,6 +18,7 @@ class AdUnit {
     this.assetLabel,
     this.disclosure,
     this.targetUrl,
+    this.placement,
   });
 
   final String id;
@@ -45,6 +46,12 @@ class AdUnit {
 
   final String? targetUrl;
 
+  /// Placement of a directly sold unit; null for the seeded house rotation.
+  /// Only sold units are measured.
+  final String? placement;
+
+  bool get isSold => placement != null;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'headline': headline,
@@ -57,6 +64,21 @@ class AdUnit {
     'disclosure': disclosure,
     'targetUrl': targetUrl,
   };
+
+  /// Parses a directly sold unit from `/api/mobile/v1/sponsorships`.
+  factory AdUnit.fromSponsorship(Map<String, dynamic> json) => AdUnit(
+    id: json['id'] as String,
+    headline: json['headline'] as String,
+    body: json['body'] as String? ?? '',
+    ctaLabel: json['ctaLabel'] as String? ?? 'View more',
+    advertiser: json['advertiser'] as String? ?? 'Sponsored',
+    brandHex: json['brandHex'] as String? ?? '#0B6FD1',
+    brandAccentHex: json['brandAccentHex'] as String? ?? '#2E9BF5',
+    assetLabel: json['assetLabel'] as String?,
+    disclosure: json['disclosure'] as String?,
+    targetUrl: json['targetUrl'] as String?,
+    placement: json['placement'] as String?,
+  );
 
   factory AdUnit.fromJson(Map<String, dynamic> json) => AdUnit(
     id: json['id'] as String,

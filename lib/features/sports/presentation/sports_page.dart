@@ -13,7 +13,7 @@ import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/ad_card.dart';
+import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/overflow_menu_button.dart';
 import '../../../core/widgets/section_header.dart';
@@ -216,7 +216,7 @@ class SportsPage extends ConsumerWidget {
           AppSpacing.lg,
           0,
         ),
-        child: AdCard(
+        child: TrackedAdCard(
           unit: unit,
           onCtaPressed: () =>
               _showSnack(context, 'Sponsored by ${unit.advertiser}'),

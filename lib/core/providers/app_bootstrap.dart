@@ -7,6 +7,7 @@ import '../data/local/article_cache.dart';
 import '../data/local/preferences_store.dart';
 import '../data/repositories/default_ad_repository.dart';
 import '../data/sources/sponsorship_source.dart';
+import '../data/sources/sponsorship_tracker.dart';
 import '../data/repositories/default_following_repository.dart';
 import '../data/repositories/default_notification_repository.dart';
 import '../data/repositories/default_sports_repository.dart';
@@ -238,6 +239,12 @@ class AppBootstrap {
           weatherRepositoryProvider.overrideWithValue(weatherRepository),
           userStateProvider.overrideWithValue(userStateRepository),
           adRepositoryProvider.overrideWithValue(adRepository),
+          sponsorshipTrackerProvider.overrideWithValue(
+            SponsorshipTracker(
+              client: client,
+              baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
+            ),
+          ),
           // The video rail shares the scraper configuration; when the build has
           // no key it stays null and the bundled rotation is used instead.
           slNewsVideoSourceProvider.overrideWithValue(

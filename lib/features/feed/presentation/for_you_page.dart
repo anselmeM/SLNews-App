@@ -15,7 +15,7 @@ import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/ad_card.dart';
+import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/more_stories_link.dart';
 import '../../../core/widgets/overflow_menu_button.dart';
@@ -353,7 +353,7 @@ class _FeedSliver extends ConsumerWidget {
                 AppSpacing.lg,
                 0,
               ),
-              child: AdCard(
+              child: TrackedAdCard(
                 unit: leadAd,
                 onCtaPressed: () => _openAd(context, leadAd),
                 onOpened: (AdUnit unit) => _openAd(context, unit),
@@ -450,7 +450,7 @@ class _FeedSliver extends ConsumerWidget {
                 AppSpacing.lg,
                 0,
               ),
-              child: AdCard(
+              child: TrackedAdCard(
                 unit: secondAd,
                 onCtaPressed: () => _openAd(context, secondAd),
                 onOpened: (AdUnit unit) => _openAd(context, unit),

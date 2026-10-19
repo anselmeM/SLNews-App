@@ -8,6 +8,7 @@ import '../data/local/preferences_store.dart';
 import '../data/seed/seed_loader.dart';
 import '../data/seed/video_seed.dart';
 import '../data/sources/api_client.dart';
+import '../data/sources/sponsorship_tracker.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/market_rate_source.dart';
 import '../data/sources/sl_news_video_source.dart';
@@ -114,6 +115,15 @@ final Provider<WeatherRepository> weatherRepositoryProvider =
         'weatherRepositoryProvider must be overridden by AppBootstrap',
       ),
       name: 'weatherRepository',
+    );
+
+/// Posts sold-unit impression/tap counters; overridden by AppBootstrap.
+final Provider<SponsorshipTracker> sponsorshipTrackerProvider =
+    Provider<SponsorshipTracker>(
+      (Ref ref) => throw UnimplementedError(
+        'sponsorshipTrackerProvider must be overridden by AppBootstrap',
+      ),
+      name: 'sponsorshipTracker',
     );
 
 final Provider<AdRepository> adRepositoryProvider = Provider<AdRepository>(

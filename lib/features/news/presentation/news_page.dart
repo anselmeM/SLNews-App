@@ -7,7 +7,7 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/widgets/ad_card.dart';
+import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/article_hero_card.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/overflow_menu_button.dart';
@@ -384,7 +384,7 @@ class _InStreamAd extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: NewsRowInset(
-        child: AdCard(unit: units.first, onCtaPressed: onCtaPressed),
+        child: TrackedAdCard(unit: units.first, onCtaPressed: onCtaPressed),
       ),
     );
   }
