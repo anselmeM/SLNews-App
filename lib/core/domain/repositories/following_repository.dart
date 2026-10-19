@@ -2,6 +2,10 @@ import '../models/follow_models.dart';
 
 /// The reader's subscriptions: sports teams, leagues, locations and topics.
 abstract interface class FollowingRepository {
+  /// Everything the seed publishes as followable (the full catalogue), not just
+  /// followed targets and their suggestions.
+  List<FollowTarget> get catalogue;
+
   /// Current subscriptions plus the suggestion catalogue, grouped for display.
   FollowingSnapshot load();
 

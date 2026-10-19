@@ -49,6 +49,9 @@ class DefaultFollowingRepository implements FollowingRepository {
   Future<void> ready() => _ready;
 
   @override
+  List<FollowTarget> get catalogue => _catalogue;
+
+  @override
   FollowingSnapshot load() {
     unawaited(_ready);
     return _snapshot();

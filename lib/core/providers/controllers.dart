@@ -133,6 +133,13 @@ class LikesController extends Notifier<Set<String>> {
 }
 
 /// Followed teams, leagues, locations and topics.
+/// Full followable catalogue (seed), independent of what is followed.
+final Provider<List<FollowTarget>> followCatalogueProvider =
+    Provider<List<FollowTarget>>(
+      (Ref ref) => ref.watch(followingRepositoryProvider).catalogue,
+      name: 'followCatalogue',
+    );
+
 final NotifierProvider<FollowingController, FollowingSnapshot>
 followingControllerProvider =
     NotifierProvider<FollowingController, FollowingSnapshot>(
