@@ -43,9 +43,8 @@ class DefaultAdRepository implements AdRepository {
   @override
   Future<List<AdUnit>> units({String placement = 'default'}) async {
     await _ready;
-    final SponsorshipSource? sponsorships = sponsorships;
-    if (sponsorships != null) {
-      final List<AdUnit> sold = await sponsorships.units(placement);
+    if (this.sponsorships != null) {
+      final List<AdUnit> sold = await this.sponsorships!.units(placement);
       if (sold.isNotEmpty) {
         return sold.take(maxUnits).toList(growable: false);
       }
