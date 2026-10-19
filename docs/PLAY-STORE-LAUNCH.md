@@ -2,7 +2,7 @@
 
 **Execution checklist:** [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — the ordered, owner-tagged gates to work through before upload and production.
 
-Assessment date: 18 October 2026 · repo `SLNews-Mobile` at `7918fe1` · app version
+Assessment date: 18 October 2026 · repo `SLNews-App` at `7918fe1` · app version
 `1.0.0+1` · package `com.slnews.mobile`.
 
 **Short answer: the app is code-launchable, but it is not submission-ready.** About
@@ -58,7 +58,7 @@ The mark is "**SL.**" — Inter ExtraBold letters with the brand blue dot. Confi
 change the brand constants at the top of the generator and rerun.
 
 ### B2. Privacy policy + terms — **live** (in-app links remain)
-The legal pages are **app-first and live** (`anselmeM/SLNews` PR #108, merged
+The legal pages are **app-first and live** (`anselmeM/SLNews-Web` PR #108, merged
 `a6b1734`): `/privacy` describes the Flutter apps first and scopes AdSense/Meta
 Pixel/web-push to "the website (web only)"; `/terms` covers accounts, aggregation/IP
 and market data; `/delete-account` is new. Verified in production on 2026-10-18.

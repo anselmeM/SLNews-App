@@ -27,7 +27,7 @@ param(
     [string]$Org = 'firstmiledevs',
     [string]$Project = 'slnews-flutter',
     [string]$Team = '',
-    [string]$GitHubRepo = 'anselmeM/SLNews-Mobile',
+    [string]$GitHubRepo = 'anselmeM/SLNews-Web-App',
     [switch]$SkipGitHubSecret
 )
 

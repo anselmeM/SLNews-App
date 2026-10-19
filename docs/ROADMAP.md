@@ -11,7 +11,7 @@ Repos touched:
 | --- | --- |
 | `SLNews` (Next.js + Prisma + Neon + Clerk) | owns identity and user data; hosts the new mobile sync API |
 | `SLNewsAPIScapper` (Express + Prisma + Neon) | content API; gains Clerk JWT verification |
-| `SLNews-Mobile` (Flutter) | sync client, merge-on-first-sign-in, Clerk session |
+| `SLNews-App` (Flutter) | sync client, merge-on-first-sign-in, Clerk session |
 
 Both backend repos are branch-protected: every change lands through a feature
 branch, conventional commits and a PR. Local gates before pushing are
@@ -36,7 +36,7 @@ branch, conventional commits and a PR. Local gates before pushing are
 
 **Goal:** freeze the interface before either side implements it.
 
-- **T1.1** `docs/SYNC-API.md` in `SLNews-Mobile`: endpoints, payloads, idempotency,
+- **T1.1** `docs/SYNC-API.md` in `SLNews-App`: endpoints, payloads, idempotency,
   conflict rule (last-write-wins on `updatedAt`), delta cursor, error codes,
   versioning (`/api/mobile/v1`), and the item-id scheme (`slnews-api:123`,
   `rss:<hash>`, `web:<cuid>`).
@@ -123,10 +123,10 @@ storage and history UI already exist. Needs Firebase/APNs credentials.
 | --- | --- | --- |
 | T1.1–1.2 sync contract + merge rule | done | [SYNC-API.md](SYNC-API.md) |
 | T2.1 additive Prisma models | done | `SLNews/docs/mobile-sync-migration.sql` (idempotent, applied by the deployment) |
-| T2.2–2.4 sync routes (pull/push/auth/limits) | done | `SLNews` PR [#101](https://github.com/anselmeM/SLNews/pull/101) |
+| T2.2–2.4 sync routes (pull/push/auth/limits) | done | `SLNews` PR [#101](https://github.com/anselmeM/SLNews-Web/pull/101) |
 | T2.5 route + engine tests | done | 73 new PWA tests; full suite 609 green |
-| T2.6 schema present in the deployed database | done | applied by `vercel-build` (`SLNews` PR [#102](https://github.com/anselmeM/SLNews/pull/102)); proven by the production end-to-end run |
-| T3.1–3.3 scraper accepts Clerk JWTs | done | `SLNewsAPIScapper` PR [#8](https://github.com/anselmeM/SLNewsAPIScapper/pull/8) — 125 tests, static-key path proven unchanged |
+| T2.6 schema present in the deployed database | done | applied by `vercel-build` (`SLNews` PR [#102](https://github.com/anselmeM/SLNews-Web/pull/102)); proven by the production end-to-end run |
+| T3.1–3.3 scraper accepts Clerk JWTs | done | `SLNewsAPIScapper` PR [#8](https://github.com/anselmeM/SLNews-WebAPIScapper/pull/8) — 125 tests, static-key path proven unchanged |
 | T4.1–4.2 sync client, ledger, merge-on-sign-in | done | `lib/core/{domain,data}/sync`, `LocalSyncLedger`, `SyncController` |
 | T4.3–4.5 wiring, account card, token allow-list | done | controllers hook changes; `AccountCard` shows sync state |
 | T4.4 mobile sync tests | done | 90 new tests; `flutter analyze` clean, 354 total |

@@ -1,6 +1,6 @@
 # Legal pack — drafts and how to publish them
 
-**Status:** live. The pages were rewritten app-first in `anselmeM/SLNews` PR #108
+**Status:** live. The pages were rewritten app-first in `anselmeM/SLNews-Web` PR #108
 (merged as `a6b1734`) and deployed. Verified in production on 2026-10-18:
 
 - https://sl-news.vercel.app/privacy (app section present)

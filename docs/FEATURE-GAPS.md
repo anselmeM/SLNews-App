@@ -5,7 +5,7 @@ the capabilities a news app is expected to have regardless of that reference.
 
 - **Reference**: `Screen_Recording_20261016_235625_Samsung News.mp4` (68 s), sampled
   frame by frame; timestamps below are approximate (±1 s).
-- **Code base**: `SLNews-Mobile` at `da9ccc2` (454 tests, 8 golden renders).
+- **Code base**: `SLNews-App` at `da9ccc2` (454 tests, 8 golden renders).
 - **Legend**: P0 = blocks a normal user journey, P1 = expected, P2 = notable polish,
   P3 = nice to have. Size: S ≈ ≤½ day, M ≈ 1–3 days, L ≈ >3 days.
 - Claims marked *(seen)* were observed in the video; *(inferred)* is a conclusion, not

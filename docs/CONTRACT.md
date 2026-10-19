@@ -9,7 +9,7 @@ change shared files.
 
 | Item | Value |
 | --- | --- |
-| Project root | `C:\Users\amotc\Documents\GitHub\SLNews-Mobile` |
+| Project root | `C:\Users\amotc\Documents\GitHub\SLNews-App` |
 | Flutter SDK (not on PATH) | `C:\Users\amotc\flutter\flutter\bin\flutter.bat` |
 | Dart | 3.13.5 (Flutter 3.47.7, stable) |
 | State management | Riverpod **3.4.3** (`flutter_riverpod`) |

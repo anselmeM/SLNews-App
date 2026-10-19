@@ -168,7 +168,7 @@ devices. The contract is [SYNC-API.md](SYNC-API.md); the platform plan is
 | --- | --- |
 | Contract | `docs/SYNC-API.md` (this repo, frozen) |
 | Backend | `SLNews` — `src/app/api/mobile/v1/sync/route.ts`, `src/lib/mobile-sync/` |
-| Tables | `MobileBookmark`, `MobileReaction`, `MobileFollow` — applied by the deployment (`SLNews` PR [#102](https://github.com/anselmeM/SLNews/pull/102)); idempotent SQL in `SLNews/docs/mobile-sync-migration.sql` |
+| Tables | `MobileBookmark`, `MobileReaction`, `MobileFollow` — applied by the deployment (`SLNews` PR [#102](https://github.com/anselmeM/SLNews-Web/pull/102)); idempotent SQL in `SLNews/docs/mobile-sync-migration.sql` |
 | Client | `lib/core/data/sync/`, contract in `lib/core/domain/sync/` |
 | Server notes | `SLNews/docs/mobile-sync-api.md` |
 

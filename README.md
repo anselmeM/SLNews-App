@@ -1,4 +1,5 @@
-# SLNews — Sierra Leone News (Flutter)
+# SLNews app — the Flutter product
+
 
 A cross-platform (iOS + Android) news reader for Sierra Leonean news, built with
 Flutter on a clean, offline-first architecture. The interface reproduces the

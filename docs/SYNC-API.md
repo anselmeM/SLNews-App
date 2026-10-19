@@ -2,7 +2,7 @@
 
 Status: frozen for implementation. Owner: platform.
 Backend: `SLNews` (Next.js route handlers + Prisma + Neon).
-Consumer: `SLNews-Mobile` (Flutter `SyncRepository`).
+Consumer: `SLNews-App` (Flutter `SyncRepository`).
 Related: [ROADMAP.md](ROADMAP.md) phases 1–4.
 
 ## Why this exists
