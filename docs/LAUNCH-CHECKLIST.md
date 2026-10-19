@@ -1,6 +1,8 @@
 # Final pre-launch checklist — Android / Play Store
 
 Last updated: 18 October 2026 · repo `SLNews-Mobile` at `b2d113d` · version `1.0.0+2`
+**Console walkthrough:** [PLAY-CONSOLE-WALKTHROUGH.md](PLAY-CONSOLE-WALKTHROUGH.md) — paste-ready fields in Play's order, plus the 30-minute device QA pass.
+
 Companion documents: [PLAY-STORE-LAUNCH.md](PLAY-STORE-LAUNCH.md) (assessment),
 [store/play/STORE-LISTING.md](../store/play/STORE-LISTING.md) (copy),
 [store/play/DATA-SAFETY.md](../store/play/DATA-SAFETY.md) (console answers),
