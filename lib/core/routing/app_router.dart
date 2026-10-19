@@ -8,6 +8,8 @@ import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
 import '../../features/following/presentation/following_page.dart';
+import '../../features/following/presentation/manage_sources_page.dart';
+import '../../features/following/presentation/manage_topics_page.dart';
 import '../../features/following/presentation/notification_history_page.dart';
 import '../../features/news/presentation/news_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
@@ -92,6 +94,18 @@ GoRouter createAppRouter() {
                     name: RouteNames.notificationHistory,
                     builder: (BuildContext context, GoRouterState state) =>
                         const NotificationHistoryPage(),
+                  ),
+                  GoRoute(
+                    path: 'sources',
+                    name: RouteNames.manageSources,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ManageSourcesPage(),
+                  ),
+                  GoRoute(
+                    path: 'topics',
+                    name: RouteNames.manageTopics,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ManageTopicsPage(),
                   ),
                 ],
               ),

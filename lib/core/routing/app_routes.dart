@@ -44,6 +44,12 @@ abstract final class AppRoutes {
   /// navigation bar stays visible.
   static const String notificationHistory = '/following/notifications';
 
+  /// Publisher catalogue behind Following.
+  static const String manageSources = '/following/sources';
+
+  /// Topic catalogue behind Following.
+  static const String manageTopics = '/following/topics';
+
   /// `/article/:id` for a given story.
   static String articleFor(String id) => '$article/$id';
 
@@ -82,5 +88,7 @@ abstract final class RouteNames {
   static const String league = 'league';
   static const String team = 'team';
   static const String notificationHistory = 'following_notifications';
+  static const String manageSources = 'manage_sources';
+  static const String manageTopics = 'manage_topics';
   static const String video = 'video';
 }

@@ -75,6 +75,29 @@ class FollowingPage extends ConsumerWidget {
             ),
           ),
         ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            0,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              children: <Widget>[
+                _ManageRow(
+                  label: 'Manage news sources',
+                  onTap: () => context.push(AppRoutes.manageSources),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _ManageRow(
+                  label: 'Manage news topics',
+                  onTap: () => context.push(AppRoutes.manageTopics),
+                ),
+              ],
+            ),
+          ),
+        ),
         ..._groupSlivers(context, ref, viewModel),
       ],
     );
@@ -412,6 +435,41 @@ class _FollowingSkeleton extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         const SkeletonBox(height: 44, borderRadius: AppRadius.cardRadius),
       ],
+    );
+  }
+}
+
+/// Compact entry point to a catalogue screen.
+class _ManageRow extends StatelessWidget {
+  const _ManageRow({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.colors.surface,
+      borderRadius: AppRadius.cardRadius,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: AppSpacing.row,
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(label, style: context.typography.groupTitle),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 22,
+                color: context.colors.onSurfaceFaint,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
