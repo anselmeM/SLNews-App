@@ -124,6 +124,8 @@ class FakeFollowingRepository implements FollowingRepository {
   @override
   List<FollowTarget> get catalogue => const <FollowTarget>[];
 
+  @override
+  @override
   FollowingSnapshot load() => _snapshot;
 
   @override
