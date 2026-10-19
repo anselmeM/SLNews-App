@@ -57,6 +57,48 @@ class DefaultWeatherRepository implements WeatherRepository {
     }
   }
 
+  /// Maps an Open-Meteo `current` block to the app's snapshot vocabulary.
+  ///
+  /// WMO weather codes are grouped into the glyph set the header understands
+  /// (`sun`, `cloud`, `rain`, `storm`, `snow`) so the chip renders anywhere.
+  @visibleForTesting
+  static WeatherSnapshot? mapOpenMeteo(
+    Map<String, dynamic> current,
+    NewsLocation location,
+  ) {
+    final Object? temp = current['temperature_2m'];
+    if (temp is! num) return null;
+    final int? code = (current['weather_code'] as num?)?.toInt();
+    final (String label, String glyph) = describeWeatherCode(code);
+    final int? humidity = (current['relative_humidity_2m'] as num?)?.toInt();
+    return WeatherSnapshot(
+      locationLabel: location.label,
+      temperatureC: temp.round(),
+      conditionLabel: label,
+      glyph: glyph,
+      humidityPercent: humidity,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  /// Condition label and glyph for a WMO weather code.
+  @visibleForTesting
+  static (String, String) describeWeatherCode(int? code) {
+    final int? c = code;
+    if (c == null) return ('Cloudy', 'cloud');
+    return switch (c) {
+      0 || 1 => ('Sunny', 'sun'),
+      2 || 3 => ('Partly cloudy', 'cloud'),
+      45 || 48 => ('Fog', 'cloud'),
+      >= 51 && <= 67 => ('Rain', 'rain'),
+      >= 71 && <= 77 => ('Snow', 'snow'),
+      >= 80 && <= 82 => ('Showers', 'rain'),
+      >= 85 && <= 86 => ('Snow showers', 'snow'),
+      >= 95 => ('Thundery showers', 'storm'),
+      _ => ('Cloudy', 'cloud'),
+    };
+  }
+
   Future<WeatherSnapshot?> _fetch(NewsLocation location) async {
     final ApiClient? client = _api;
     final String? template = _template;
@@ -74,6 +116,15 @@ class DefaultWeatherRepository implements WeatherRepository {
           ? payload['current'] ?? payload['data'] ?? payload
           : payload;
       if (node is! Map) return null;
+      // Open-Meteo's shape is recognised by its weather code.
+      if (node['weather_code'] != null) {
+        final Map<String, dynamic> current = <String, dynamic>{};
+        node.forEach((Object? key, Object? value) {
+          if (key is String) current[key] = value;
+        });
+        final WeatherSnapshot? live = mapOpenMeteo(current, location);
+        if (live != null) return live;
+      }
 
       final Map<String, dynamic> json = <String, dynamic>{};
       node.forEach((Object? key, Object? value) {

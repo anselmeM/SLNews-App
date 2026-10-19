@@ -193,6 +193,10 @@ class AppBootstrap {
     final DefaultWeatherRepository weatherRepository = DefaultWeatherRepository(
       seedLoader: seedLoader,
       client: client,
+      endpointTemplate: const String.fromEnvironment(
+        'SLNEWS_WEATHER_URL',
+        defaultValue: 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,weather_code,relative_humidity_2m&timezone=auto',
+      ),
     );
     final DefaultUserStateRepository userStateRepository =
         DefaultUserStateRepository(preferences: preferences);
