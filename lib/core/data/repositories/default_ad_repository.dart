@@ -14,11 +14,8 @@ import '../sources/sponsorship_source.dart';
 /// layer exists.
 class DefaultAdRepository implements AdRepository {
   /// Creates a repository over [seedLoader].
-  DefaultAdRepository({
-    required SeedLoader seedLoader,
-    this.sponsorships,
-  }) : _seeds = seedLoader,
-       {
+  DefaultAdRepository({required SeedLoader seedLoader, this.sponsorships})
+    : _seeds = seedLoader {
     unawaited(_ready);
   }
 
@@ -43,8 +40,8 @@ class DefaultAdRepository implements AdRepository {
   @override
   Future<List<AdUnit>> units({String placement = 'default'}) async {
     await _ready;
-    if (this.sponsorships != null) {
-      final List<AdUnit> sold = await this.sponsorships!.units(placement);
+    if (sponsorships != null) {
+      final List<AdUnit> sold = await sponsorships!.units(placement);
       if (sold.isNotEmpty) {
         return sold.take(maxUnits).toList(growable: false);
       }
