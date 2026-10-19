@@ -1,9 +1,9 @@
-name: slnews_mobile
+﻿name: slnews_mobile
 description: "SLNews - Sierra Leone news aggregation app (Flutter, iOS + Android)."
 publish_to: 'none' # Private application; never published to pub.dev.
 
 # versionName / versionCode for Android, CFBundleShortVersionString / CFBundleVersion for iOS.
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.13.5
@@ -66,7 +66,7 @@ flutter:
     - family: SLNewsSans
       fonts:
         - asset: assets/fonts/Inter-Variable.ttf
-# Crash reporting uses the DSN passed at build time (--dart-define=SENTRY_DSN=â€¦),
+# Crash reporting uses the DSN passed at build time (--dart-define=SENTRY_DSN=Ã¢â‚¬Â¦),
 # not the release-upload plugin: sentry_dart_plugin refuses to run without an auth
 # token even when uploads are disabled, which would break clean builds. Re-add it
 # (and SENTRY_AUTH_TOKEN in CI) if release builds ever enable --obfuscate.
