@@ -16,9 +16,9 @@ class DefaultAdRepository implements AdRepository {
   /// Creates a repository over [seedLoader].
   DefaultAdRepository({
     required SeedLoader seedLoader,
-    SponsorshipSource? sponsorships,
+    this.sponsorships,
   }) : _seeds = seedLoader,
-       _sponsorships = sponsorships {
+       {
     unawaited(_ready);
   }
 
@@ -28,7 +28,7 @@ class DefaultAdRepository implements AdRepository {
   final SeedLoader _seeds;
 
   /// Sold units, tried before the seeded house rotation.
-  final SponsorshipSource? _sponsorships;
+  final SponsorshipSource? sponsorships;
 
   List<AdUnit> _units = const <AdUnit>[];
 
@@ -43,7 +43,7 @@ class DefaultAdRepository implements AdRepository {
   @override
   Future<List<AdUnit>> units({String placement = 'default'}) async {
     await _ready;
-    final SponsorshipSource? sponsorships = _sponsorships;
+    final SponsorshipSource? sponsorships = sponsorships;
     if (sponsorships != null) {
       final List<AdUnit> sold = await sponsorships.units(placement);
       if (sold.isNotEmpty) {
