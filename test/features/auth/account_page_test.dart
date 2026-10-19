@@ -48,10 +48,10 @@ void main() {
     final GoRouter router = GoRouter(
       initialLocation: '/account',
       routes: <RouteBase>[
-        GoRoute(path: '/account', builder: (_, __) => const AccountPage()),
+        GoRoute(path: '/account', builder: (_, _) => const AccountPage()),
         GoRoute(
           path: '/sign_in',
-          builder: (_, __) => const Scaffold(body: Text('sign-in')),
+          builder: (_, _) => const Scaffold(body: Text('sign-in')),
         ),
       ],
     );
