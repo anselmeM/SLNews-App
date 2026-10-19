@@ -13,7 +13,7 @@ import '../sources/api_client.dart';
 class SponsorshipSource {
   /// Creates a source that talks to [baseUrl] through [client].
   SponsorshipSource({required ApiClient client, required this.baseUrl})
-      _fetch = ((String url) => client.getJson(url));
+    : _fetch = ((String url) => client.getJson(url));
 
   /// Test seam: a plain fetcher with no HTTP client or platform channel.
   @visibleForTesting
