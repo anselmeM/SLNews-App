@@ -12,26 +12,25 @@ import '../sources/api_client.dart';
 /// surface must never break the feed it sits in.
 class SponsorshipSource {
   /// Creates a source that talks to [baseUrl] through [client].
-  SponsorshipSource({required ApiClient client, required String baseUrl})
-    : _baseUrl = baseUrl,
+  SponsorshipSource({required ApiClient client, required this.baseUrl})
       _fetch = ((String url) => client.getJson(url));
 
   /// Test seam: a plain fetcher with no HTTP client or platform channel.
   @visibleForTesting
   SponsorshipSource.forFetcher(Future<Object?> Function(String url) fetch)
-    : _baseUrl = 'https://example.invalid',
+    : baseUrl = 'https://example.invalid',
       _fetch = fetch;
 
   static const Duration timeout = Duration(seconds: 5);
 
-  final String _baseUrl;
+  final String baseUrl;
   final Future<Object?> Function(String url) _fetch;
 
   /// Sold units for [placement]; empty when nothing is sold, unreachable or
   /// malformed.
   Future<List<AdUnit>> units(String placement) async {
     final String url =
-        '${_baseUrl.replaceAll(RegExp(r"/+$"), "")}/api/mobile/v1/sponsorships'
+        '${baseUrl.replaceAll(RegExp(r"/+$"), "")}/api/mobile/v1/sponsorships'
         '?placement=${Uri.encodeQueryComponent(placement)}';
     try {
       final Object? payload = await _fetch(url).timeout(timeout);
