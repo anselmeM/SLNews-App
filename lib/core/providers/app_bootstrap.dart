@@ -6,6 +6,7 @@ import '../data/auth/clerk_auth_repository.dart';
 import '../data/local/article_cache.dart';
 import '../data/local/preferences_store.dart';
 import '../data/repositories/default_ad_repository.dart';
+import '../data/sources/sponsorship_source.dart';
 import '../data/repositories/default_following_repository.dart';
 import '../data/repositories/default_notification_repository.dart';
 import '../data/repositories/default_sports_repository.dart';
@@ -202,6 +203,10 @@ class AppBootstrap {
         DefaultUserStateRepository(preferences: preferences);
     final DefaultAdRepository adRepository = DefaultAdRepository(
       seedLoader: seedLoader,
+      sponsorships: SponsorshipSource(
+        client: client,
+        baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
+      ),
     );
 
     // The seed-backed repositories expose synchronous reads (required by the

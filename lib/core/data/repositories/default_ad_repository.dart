@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../domain/models/ad_unit.dart';
 import '../../domain/repositories/ad_repository.dart';
 import '../seed/seed_loader.dart';
+import '../sources/sponsorship_source.dart';
 
 /// House ad rotation served from the bundled seed.
 ///
@@ -13,7 +14,11 @@ import '../seed/seed_loader.dart';
 /// layer exists.
 class DefaultAdRepository implements AdRepository {
   /// Creates a repository over [seedLoader].
-  DefaultAdRepository({required SeedLoader seedLoader}) : _seeds = seedLoader {
+  DefaultAdRepository({
+    required SeedLoader seedLoader,
+    SponsorshipSource? sponsorships,
+  }) : _seeds = seedLoader,
+       _sponsorships = sponsorships {
     unawaited(_ready);
   }
 
@@ -21,6 +26,9 @@ class DefaultAdRepository implements AdRepository {
   static const int maxUnits = 6;
 
   final SeedLoader _seeds;
+
+  /// Sold units, tried before the seeded house rotation.
+  final SponsorshipSource? _sponsorships;
 
   List<AdUnit> _units = const <AdUnit>[];
 
@@ -35,6 +43,13 @@ class DefaultAdRepository implements AdRepository {
   @override
   Future<List<AdUnit>> units({String placement = 'default'}) async {
     await _ready;
+    final SponsorshipSource? sponsorships = _sponsorships;
+    if (sponsorships != null) {
+      final List<AdUnit> sold = await sponsorships.units(placement);
+      if (sold.isNotEmpty) {
+        return sold.take(maxUnits).toList(growable: false);
+      }
+    }
     return _units.take(maxUnits).toList(growable: false);
   }
 
