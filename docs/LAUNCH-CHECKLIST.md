@@ -1,6 +1,8 @@
 # Final pre-launch checklist — Android / Play Store
 
 Last updated: 18 October 2026 · repo `SLNews-App` at `b2d113d` · version `1.0.0+2`
+**Upload session:** [PLAY-CONSOLE-UPLOAD-CHECKLIST.md](PLAY-CONSOLE-UPLOAD-CHECKLIST.md) — tick-box, tailored to the code-7 assets.
+
 **Console walkthrough:** [PLAY-CONSOLE-WALKTHROUGH.md](PLAY-CONSOLE-WALKTHROUGH.md) — paste-ready fields in Play's order, plus the 30-minute device QA pass.
 
 Companion documents: [PLAY-STORE-LAUNCH.md](PLAY-STORE-LAUNCH.md) (assessment),
