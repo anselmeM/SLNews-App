@@ -6,6 +6,7 @@ import 'app.dart';
 import 'core/observability/error_reporter.dart';
 import 'core/observability/sentry_settings.dart';
 import 'core/providers/app_bootstrap.dart';
+import 'core/push/push_service.dart';
 
 /// Entry point.
 ///
@@ -17,6 +18,8 @@ import 'core/providers/app_bootstrap.dart';
 /// as before, which is what keeps tests and contributor builds offline.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Missing google-services.json degrades to "no push" rather than a crash.
+  await initializeFirebase();
 
   final SentrySettings sentry = SentrySettings.fromEnvironment();
   if (!sentry.isEnabled) {

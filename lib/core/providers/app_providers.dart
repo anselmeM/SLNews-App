@@ -8,6 +8,7 @@ import '../data/local/preferences_store.dart';
 import '../data/seed/seed_loader.dart';
 import '../data/seed/video_seed.dart';
 import '../data/sources/api_client.dart';
+import '../push/push_service.dart';
 import '../data/sources/sponsorship_tracker.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/market_rate_source.dart';
@@ -125,6 +126,14 @@ final Provider<SponsorshipTracker> sponsorshipTrackerProvider =
       ),
       name: 'sponsorshipTracker',
     );
+
+/// Device registration for breaking-news pushes; overridden by AppBootstrap.
+final Provider<PushService> pushServiceProvider = Provider<PushService>(
+  (Ref ref) => throw UnimplementedError(
+    'pushServiceProvider must be overridden by AppBootstrap',
+  ),
+  name: 'pushService',
+);
 
 final Provider<AdRepository> adRepositoryProvider = Provider<AdRepository>(
   (Ref ref) => throw UnimplementedError(

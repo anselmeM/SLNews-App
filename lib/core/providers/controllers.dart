@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/app_settings.dart';
+import '../push/push_service.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
 import '../domain/repositories/notification_repository.dart';
@@ -56,6 +57,16 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setBreakingNewsAlertsEnabled(enabled);
     state = state.copyWith(breakingNewsAlertsEnabled: enabled);
+    try {
+      final PushService push = ref.read(pushServiceProvider);
+      if (enabled) {
+        await push.enable();
+      } else {
+        await push.disable();
+      }
+    } catch (error) {
+      debugPrint('SettingsController: push toggle failed: $error');
+    }
   }
 
   Future<void> setEditorsPicksEnabled(bool enabled) async {

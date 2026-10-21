@@ -8,6 +8,7 @@ import '../data/local/preferences_store.dart';
 import '../data/repositories/default_ad_repository.dart';
 import '../data/sources/sponsorship_source.dart';
 import '../data/sources/sponsorship_tracker.dart';
+import '../push/push_service.dart';
 import '../data/repositories/default_following_repository.dart';
 import '../data/repositories/default_notification_repository.dart';
 import '../data/repositories/default_sports_repository.dart';
@@ -241,6 +242,12 @@ class AppBootstrap {
           adRepositoryProvider.overrideWithValue(adRepository),
           sponsorshipTrackerProvider.overrideWithValue(
             SponsorshipTracker(
+              client: client,
+              baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
+            ),
+          ),
+          pushServiceProvider.overrideWithValue(
+            PushService(
               client: client,
               baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
             ),
