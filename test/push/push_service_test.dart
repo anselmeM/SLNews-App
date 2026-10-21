@@ -64,4 +64,46 @@ void main() {
     expect(await service.enable(), isFalse);
     expect(urls, isEmpty);
   });
+
+  test('requestIfNeeded asks only when undetermined', () async {
+    final List<String> calls = <String>[];
+    final service = PushService.forTransports(
+      register: (String url, _) async => calls.add(url),
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async => true,
+      notificationStatus: () async => 'notDetermined',
+    );
+    expect(await service.requestIfNeeded(), isTrue);
+    expect(calls, hasLength(1));
+  });
+
+  test('requestIfNeeded leaves a previous denial alone', () async {
+    var asked = false;
+    final service = PushService.forTransports(
+      register: (_, _) async => null,
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async {
+        asked = true;
+        return true;
+      },
+      notificationStatus: () async => 'denied',
+    );
+    expect(await service.requestIfNeeded(), isFalse);
+    expect(asked, isFalse);
+  });
+
+  test('requestIfNeeded registers silently when already authorized', () async {
+    final List<String> calls = <String>[];
+    final service = PushService.forTransports(
+      register: (String url, _) async => calls.add(url),
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async => false,
+      notificationStatus: () async => 'authorized',
+    );
+    expect(await service.requestIfNeeded(), isTrue);
+    expect(calls, hasLength(1));
+  });
 }

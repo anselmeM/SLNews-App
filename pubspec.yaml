@@ -3,7 +3,7 @@ description: "SLNews - Sierra Leone news aggregation app (Flutter, iOS + Android
 publish_to: 'none' # Private application; never published to pub.dev.
 
 # versionName / versionCode for Android, CFBundleShortVersionString / CFBundleVersion for iOS.
-version: 1.0.0+8
+version: 1.0.0+9
 
 environment:
   sdk: ^3.13.5

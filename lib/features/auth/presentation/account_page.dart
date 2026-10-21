@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/providers/app_providers.dart';
+
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/legal_links.dart';
@@ -107,6 +110,11 @@ class AccountPage extends ConsumerWidget {
               icon: Icons.logout,
               onTap: () async {
                 await ref.read(authControllerProvider.notifier).signOut();
+                try {
+                  await ref.read(pushServiceProvider).disable();
+                } catch (_) {
+                  // Push not wired in this build.
+                }
                 if (context.mounted && context.canPop()) context.pop();
               },
             ),
@@ -171,6 +179,11 @@ class AccountPage extends ConsumerWidget {
     try {
       await ref.read(accountDeletionServiceProvider).deleteAccount();
       await ref.read(authControllerProvider.notifier).signOut();
+      try {
+        await ref.read(pushServiceProvider).disable();
+      } catch (_) {
+        // Push not wired in this build.
+      }
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Your account was deleted.')),

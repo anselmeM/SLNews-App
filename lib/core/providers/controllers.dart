@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -60,7 +62,11 @@ class SettingsController extends Notifier<AppSettings> {
     try {
       final PushService push = ref.read(pushServiceProvider);
       if (enabled) {
-        await push.enable();
+        final bool granted = await push.enable();
+        if (!granted) {
+          await ref.read(userStateProvider).setBreakingNewsAlertsEnabled(false);
+          state = state.copyWith(breakingNewsAlertsEnabled: false);
+        }
       } else {
         await push.disable();
       }
@@ -108,6 +114,7 @@ class BookmarksController extends Notifier<Set<String>> {
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleBookmark(articleId);
     state = <String>{...repository.bookmarkedIds};
+    if (state.contains(articleId)) _askForPushAfterFirstAction(ref);
     await recordSyncChange(
       ref,
       SyncCollections.bookmarks,
@@ -134,6 +141,7 @@ class LikesController extends Notifier<Set<String>> {
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleLike(articleId);
     state = <String>{...repository.likedIds};
+    if (state.contains(articleId)) _askForPushAfterFirstAction(ref);
     await recordSyncChange(
       ref,
       SyncCollections.reactions,
@@ -164,6 +172,7 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 
   Future<void> toggle(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).toggle(target);
+    if (state.isFollowed(target.id)) _askForPushAfterFirstAction(ref);
     await recordSyncChange(
       ref,
       SyncCollections.follows,
@@ -174,6 +183,7 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 
   Future<void> follow(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).follow(target);
+    _askForPushAfterFirstAction(ref);
     await recordSyncChange(ref, SyncCollections.follows, target.id);
   }
 
@@ -195,6 +205,15 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 /// they care about; the ledger and the sync repository are not overridden there.
 /// A bookmark toggle must still work in that world, so a missing sync stack is
 /// treated as "this build does not sync" rather than an error.
+/// Nudges the OS permission prompt once, after a first save/like/follow.
+void _askForPushAfterFirstAction(Ref ref) {
+  try {
+    unawaited(ref.read(pushServiceProvider).requestIfNeeded());
+  } catch (_) {
+    // Push is not wired in this scope (tests, keyless builds).
+  }
+}
+
 Future<void> recordSyncChange(
   Ref ref,
   String collection,

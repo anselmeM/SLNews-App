@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'core/domain/models/app_settings.dart';
 import 'core/providers/auth_providers.dart';
 import 'core/providers/controllers.dart';
+import 'core/push/push_route.dart';
+import 'core/providers/app_providers.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 
@@ -32,9 +36,11 @@ class SlNewsApp extends ConsumerWidget {
         darkTheme: AppTheme.dark(),
         themeMode: settings.themeMode.materialMode,
         routerConfig: router,
-        builder: (BuildContext context, Widget? child) => _TextScaleScope(
-          scale: settings.textScale,
-          child: child ?? const SizedBox.shrink(),
+        builder: (BuildContext context, Widget? child) => _PushTapHandler(
+          child: _TextScaleScope(
+            scale: settings.textScale,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );
@@ -59,4 +65,40 @@ class _TextScaleScope extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// Routes notification taps to the story/video they point at.
+class _PushTapHandler extends ConsumerStatefulWidget {
+  const _PushTapHandler({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_PushTapHandler> createState() => _PushTapHandlerState();
+}
+
+class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
+  StreamSubscription<Map<String, dynamic>>? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _subscription = ref.read(pushServiceProvider).taps.listen((data) {
+        final String? route = pushRouteFor(data);
+        if (route != null && mounted) ref.read(appRouterProvider).push(route);
+      });
+    } catch (_) {
+      // No push service in this scope.
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

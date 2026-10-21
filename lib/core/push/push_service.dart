@@ -48,11 +48,13 @@ class PushService {
     unregister,
     required Future<String?> Function() token,
     required Future<bool> Function() requestPermission,
+    Future<String> Function()? notificationStatus,
     String baseUrl = 'https://example.invalid',
   }) : _register = register,
        _unregister = unregister,
        _token = token,
        _requestPermission = requestPermission,
+       _notificationStatus = notificationStatus,
        _baseUrl = baseUrl,
        _ensureFirebase = (() async => true),
        _testMode = true;
@@ -67,6 +69,8 @@ class PushService {
 
   Future<String?> Function()? _token;
   Future<bool> Function()? _requestPermission;
+  Future<String> Function()? _notificationStatus;
+  StreamSubscription<String>? _registered;
   final StreamController<Map<String, dynamic>> _taps =
       StreamController<Map<String, dynamic>>.broadcast();
   FlutterLocalNotificationsPlugin? _notifications;
@@ -90,10 +94,7 @@ class PushService {
       if (!granted) return false;
       final String? token = await (_token ?? _tokenReal)();
       if (token == null || token.isEmpty) return false;
-      await _register(_devicesUrl, <String, dynamic>{
-        'token': token,
-        'platform': _platform,
-      });
+      await _registerToken(token);
       await _startNotifications();
       return true;
     } catch (error) {
@@ -108,10 +109,7 @@ class PushService {
       if (!await _ensureFirebase()) return;
       final String? token = await (_token ?? _tokenReal)();
       if (token == null || token.isEmpty) return;
-      await _register(_devicesUrl, <String, dynamic>{
-        'token': token,
-        'platform': _platform,
-      });
+      await _registerToken(token);
       await _startNotifications();
     } catch (error) {
       debugPrint('PushService: ensureRegistered failed: $error');
@@ -130,6 +128,45 @@ class PushService {
     } catch (error) {
       debugPrint('PushService: disable failed: $error');
     }
+  }
+
+  /// Asks only when the OS has not decided yet, then registers.
+  ///
+  /// Called after the first save/follow so the prompt arrives at a moment the
+  /// reader understands, instead of on cold launch. A previous denial is left
+  /// alone: the Settings toggle is the explicit way back in.
+  Future<bool> requestIfNeeded() async {
+    try {
+      if (!await _ensureFirebase()) return false;
+      final String status =
+          await (_notificationStatus ?? _notificationStatusReal)();
+      if (status == 'authorized' || status == 'provisional') {
+        await ensureRegistered();
+        return true;
+      }
+      if (status != 'notDetermined') return false;
+      final bool granted =
+          await (_requestPermission ?? _requestPermissionReal)();
+      if (!granted) return false;
+      await ensureRegistered();
+      return true;
+    } catch (error) {
+      debugPrint('PushService: requestIfNeeded failed: $error');
+      return false;
+    }
+  }
+
+  Future<void> _registerToken(String token) async {
+    await _register(_devicesUrl, <String, dynamic>{
+      'token': token,
+      'platform': _platform,
+    });
+  }
+
+  Future<String> _notificationStatusReal() async {
+    final NotificationSettings settings = await FirebaseMessaging.instance
+        .getNotificationSettings();
+    return settings.authorizationStatus.name;
   }
 
   Future<bool> _requestPermissionReal() async {
@@ -159,6 +196,11 @@ class PushService {
       android: android,
     );
     await plugin.initialize(settings: settings);
+    _registered ??= FirebaseMessaging.instance.onRegistered.listen((
+      String token,
+    ) {
+      unawaited(_registerToken(token));
+    });
     _foreground ??= FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final RemoteNotification? notification = message.notification;
       if (notification == null) return;
