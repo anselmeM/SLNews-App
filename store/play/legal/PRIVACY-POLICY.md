@@ -134,3 +134,8 @@ app before they take effect.
 **{{LEGAL ENTITY / OWNER NAME}}**
 Sierra Leone
 Email: **privacy@slnews.sl**
+
+
+**Push notifications:** delivered through Firebase Cloud Messaging (Google). The
+app registers a device token with our server; it is used only to deliver alerts the
+reader enabled, and is removed on sign-out or when invalid.

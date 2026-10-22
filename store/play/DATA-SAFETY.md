@@ -132,3 +132,17 @@ Console; no export licence exception is needed for that.
 Enrol with the existing upload key (`android/slnews-release.jks`, `CN=SLNews`), which
 signed `build/dist/SLNews-1.0.0-1.aab`. Keep the keystore and `key.properties` out of
 git; CI reads them from `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEY_PROPERTIES`.
+
+## Push notifications (Firebase Cloud Messaging)
+
+- **Data type:** Device or other IDs — the FCM registration token.
+- **Collected:** only when the reader enables Breaking news.
+- **Purpose:** App functionality (delivering the notification they asked for).
+- **Shared:** with Google Firebase Cloud Messaging solely to deliver the push.
+- **Optional:** yes — the toggle can be turned off, and signing out unregisters
+  the device.
+- **Not used for:** analytics, advertising, profiling or tracking across apps.
+- **Retention:** the token is deleted from our registry when the app
+  unregisters it, on sign-out, or when FCM reports it invalid.
+- **Data safety form:** declare *Device or other IDs* → collected → App
+  functionality → not shared for advertising → deletable.
