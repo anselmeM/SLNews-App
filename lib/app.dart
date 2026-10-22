@@ -8,6 +8,7 @@ import 'core/domain/models/app_settings.dart';
 import 'core/providers/auth_providers.dart';
 import 'core/providers/controllers.dart';
 import 'core/push/push_route.dart';
+import 'core/push/push_service.dart';
 import 'core/providers/app_providers.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -84,7 +85,9 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
   void initState() {
     super.initState();
     try {
-      _subscription = ref.read(pushServiceProvider).taps.listen((data) {
+      final PushService push = ref.read(pushServiceProvider);
+      unawaited(push.ensureRegisteredIfGranted());
+      _subscription = push.taps.listen((data) {
         final String? route = pushRouteFor(data);
         if (route != null && mounted) ref.read(appRouterProvider).push(route);
       });

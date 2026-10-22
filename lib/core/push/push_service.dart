@@ -116,6 +116,23 @@ class PushService {
     }
   }
 
+  /// Registers silently when the OS permission is already granted.
+  ///
+  /// Covers reinstalls, restored devices and tokens rotated while the app was
+  /// closed; a user who never granted permission is left for the first
+  /// save/follow prompt.
+  Future<void> ensureRegisteredIfGranted() async {
+    try {
+      if (!await _ensureFirebase()) return;
+      final String status =
+          await (_notificationStatus ?? _notificationStatusReal)();
+      if (status != 'authorized' && status != 'provisional') return;
+      await ensureRegistered();
+    } catch (error) {
+      debugPrint('PushService: startup registration failed: $error');
+    }
+  }
+
   /// Removes this device so it stops receiving pushes.
   Future<void> disable() async {
     try {
