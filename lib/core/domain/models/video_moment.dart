@@ -18,6 +18,7 @@ class VideoMoment {
     this.category,
     this.publishedAt,
     this.duration,
+    this.youtubeId,
   });
 
   /// Stable identity for keys and de-duplication.
@@ -37,6 +38,10 @@ class VideoMoment {
   final String? summary;
   final String? category;
   final DateTime? publishedAt;
+
+  /// YouTube's own 11-character id, when the payload has one. Used as a fallback
+  /// if [url] is not a playable video URL (e.g. a channel page).
+  final String? youtubeId;
 
   /// Clip length when the payload carries one (`duration_seconds`, or a
   /// "m:ss" `duration` string). Many rows have none, and the card shows no
@@ -61,6 +66,7 @@ class VideoMoment {
       duration: _duration(
         json['duration_seconds'] ?? json['durationSeconds'] ?? json['duration'],
       ),
+      youtubeId: _string(json['video_id'] ?? json['youtube_id']),
     );
   }
 
@@ -74,6 +80,7 @@ class VideoMoment {
     'category': category,
     'published_at': publishedAt?.toUtc().toIso8601String(),
     'duration_seconds': duration?.inSeconds,
+    'video_id': youtubeId,
   };
 
   static String? _string(Object? value) {

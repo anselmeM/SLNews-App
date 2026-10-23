@@ -87,4 +87,13 @@ void main() {
       }
     });
   });
+
+  test('falls back to the known id when the URL is a channel page', () {
+    final VideoPlayback playback = resolvePlayback(
+      'https://www.youtube.com/@AYVMedia',
+      knownId: '3f4Y2N4w1bY',
+    );
+    expect(playback.kind, VideoPlaybackKind.youtube);
+    expect(playback.embedUrl, contains('3f4Y2N4w1bY'));
+  });
 }

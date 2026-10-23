@@ -106,7 +106,10 @@ class _VideoReelPageState extends ConsumerState<VideoReelPage> {
   }
 
   Future<void> _moreSheet(VideoMoment video) async {
-    final VideoPlayback playback = resolvePlayback(video.url);
+    final VideoPlayback playback = resolvePlayback(
+      video.url,
+      knownId: video.youtubeId,
+    );
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: context.colors.surface,
@@ -227,7 +230,10 @@ class _ReelPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final VideoPlayback playback = resolvePlayback(video.url);
+    final VideoPlayback playback = resolvePlayback(
+      video.url,
+      knownId: video.youtubeId,
+    );
 
     Widget media;
     if (!playback.isPlayable) {

@@ -95,7 +95,7 @@ String? _validId(String candidate) {
 }
 
 /// Classifies a moment's URL for playback.
-VideoPlayback resolvePlayback(String rawUrl) {
+VideoPlayback resolvePlayback(String rawUrl, {String? knownId}) {
   final String url = rawUrl.trim();
   final Uri? uri = Uri.tryParse(url);
   if (uri == null ||
@@ -112,6 +112,17 @@ VideoPlayback resolvePlayback(String rawUrl) {
       embedUrl: youTubeEmbedUrl(id),
       externalUrl: url,
       youtubeId: id,
+    );
+  }
+
+  final String? fallbackId = knownId == null ? null : _validId(knownId);
+  if (fallbackId != null) {
+    return VideoPlayback(
+      kind: VideoPlaybackKind.youtube,
+      uri: uri,
+      embedUrl: youTubeEmbedUrl(fallbackId),
+      externalUrl: 'https://www.youtube.com/watch?v=$fallbackId',
+      youtubeId: fallbackId,
     );
   }
 
