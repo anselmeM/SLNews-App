@@ -86,7 +86,11 @@ class DailyBriefingCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
+                    runSpacing: 8,
                     children: <Widget>[
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -116,8 +120,7 @@ class DailyBriefingCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (updated.isNotEmpty) ...<Widget>[
-                        const Spacer(),
+                      if (updated.isNotEmpty)
                         Text(
                           updated,
                           style: context.typography.meta.copyWith(
@@ -125,7 +128,6 @@ class DailyBriefingCard extends StatelessWidget {
                             letterSpacing: 0.8,
                           ),
                         ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
