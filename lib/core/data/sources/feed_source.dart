@@ -40,6 +40,7 @@ class FeedSourceConfig {
     this.websiteUrl,
     this.authorityScore = 1.0,
     this.isWire = false,
+    this.summaryOnly = false,
   });
 
   /// Stable slug, e.g. `awoko`.
@@ -71,6 +72,11 @@ class FeedSourceConfig {
   /// Wire services are labelled and skip the follow toggle.
   final bool isWire;
 
+  /// Keep only the feed summary in the reader and send the reader to the
+  /// publisher for the full piece. Used for syndicated wires whose licence does
+  /// not allow republishing the whole body.
+  final bool summaryOnly;
+
   /// Serialises this configuration for seed storage.
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
@@ -83,6 +89,7 @@ class FeedSourceConfig {
     'websiteUrl': websiteUrl,
     'authorityScore': authorityScore,
     'isWire': isWire,
+    'summaryOnly': summaryOnly,
   };
 
   /// Rebuilds a configuration from seed JSON, tolerating missing optional keys.
@@ -99,6 +106,7 @@ class FeedSourceConfig {
         websiteUrl: json['websiteUrl'] as String?,
         authorityScore: (json['authorityScore'] as num?)?.toDouble() ?? 1.0,
         isWire: json['isWire'] as bool? ?? false,
+        summaryOnly: json['summaryOnly'] as bool? ?? false,
       );
 
   @override

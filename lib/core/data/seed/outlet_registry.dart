@@ -142,6 +142,22 @@ abstract final class OutletRegistry {
       authorityScore: 1.5,
       isWire: true,
     ),
+    // VERIFIED 2026-10-22: Yahoo Sports soccer RSS (HTTP 200, RSS 2.0 with
+    // content:encoded and media). Summaries only: the feed syndicates US and UK
+    // publishers, so the reader links out instead of republishing the body.
+    FeedSourceConfig(
+      id: 'yahoosoccer',
+      outlet: 'Yahoo Sports',
+      publisherId: 'yahoosoccer',
+      wordmark: 'YAHOO',
+      url: 'https://sports.yahoo.com/soccer/rss/',
+      kind: FeedSourceKind.rss,
+      categoryId: 'sports',
+      websiteUrl: 'https://sports.yahoo.com/soccer/',
+      authorityScore: 1.2,
+      isWire: true,
+      summaryOnly: true,
+    ),
   ];
 
   /// Looks up an outlet by its [FeedSourceConfig.id] or `publisherId`.

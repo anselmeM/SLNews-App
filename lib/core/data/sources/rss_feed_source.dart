@@ -130,6 +130,12 @@ abstract final class RssParser {
       fallback: bodyHtml,
     );
 
+    if (config.summaryOnly) {
+      // Keep the feed's own summary and route the reader to the publisher for
+      // the full article (syndication != republication rights).
+      bodyHtml = '<p>${_escapeHtml(summary)}</p>';
+    }
+
     return Article(
       id: link != null
           ? StableId.fromUrl(link)
@@ -147,6 +153,13 @@ abstract final class RssParser {
       readingMinutes: _readingMinutes(bodyHtml),
     );
   }
+
+  static String _escapeHtml(String value) => value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
 
   static Publisher _publisher(FeedSourceConfig config) => Publisher(
     id: config.publisherId,
