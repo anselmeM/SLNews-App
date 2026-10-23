@@ -52,3 +52,25 @@ sizes above were adopted, not the font.
 `newsBannerAdView_adBadge_textSize`, `newsBannerAdView_ctaBtn_cornerRadius`,
 `news_widget_list_item_divider`, `news_glance_title_*`, `news_widget_*` colours,
 `style/NewsWidget.Card.*.TextStyle` (Sec600/700).
+
+## App bar, sections and cards (measured)
+
+| Element | Samsung resource | Value | SLNews |
+| --- | --- | --- | --- |
+| Detail app bar | `news_detail_appbar_height` | 72 dp (56 dp with cover) | 56 dp branded toolbar |
+| Toolbar title | `news_detail_toolbar_title_text_size` | 21 sp | 21 sp brand mark |
+| Back icon box | `news_detail_appbar_back_icon_width` | 56 dp, start 20 / end 12 | 48 dp tap target |
+| Toolbar padding top | `news_detail_appbar_padding_top` | 8 dp | `AppSpacing.sm` |
+| Logo | `news_detail_appbar_logo_height` | 22 dp | 21 sp wordmark |
+| Toolbar start inset | `main_tab_toolbar_inset_start` | 20 dp | `AppSpacing.xl` |
+| Sub-header height | `news_widget_list_sub_header_height` | 56 dp | section header 20/16/20/8 padding |
+| Sub-header text | `news_widget_list_sub_header_text_size` | 19 sp | `sectionTitle` 22 sp (hero-scale on feed) |
+| Widget toolbar | `news_widget_configure_toolbar_height` | 64 dp | — |
+| Widget title | `news_widget_configure_toolbar_title_size` | 21 sp | — |
+| 4:3 tile title cap | `news_4_3_tile_wide_title_height` | 60 dp (100 dp narrow, 52 dp large) | image ratio ~0.87 in carousel |
+| Widget card titles | `news_widget_title_text_size_*` | 16 / 18 / 20 sp | `cardTitle` 18 sp |
+| List item title gap | `news_widget_list_item_title_margin_bottom` | 8 dp | 6 dp |
+
+The hero card ratio was set from the reference screenshot: an 872 px wide card at
+1,000 px tall on a 2340 px screen (≈0.87), which maps to a 380 dp carousel height
+on a 393 dp-wide phone.
