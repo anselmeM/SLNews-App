@@ -91,16 +91,22 @@ class AppBootstrap {
     bool allowPersistence = true,
     SeedLoader? seedLoaderOverride,
   }) async {
+    final Stopwatch clock = Stopwatch()..start();
     PreferencesStore preferences;
     ArticleCache cache;
     bool persistent = false;
 
     if (allowPersistence) {
       try {
-        // Hive needs a writable app directory before either box can open.
+        // Hive needs a writable app directory before either box can open, but
+        // the two boxes are independent: open them together.
         await Hive.initFlutter();
-        preferences = await HivePreferencesStore.open();
-        cache = await HiveArticleCache.open();
+        final List<Object> boxes = await Future.wait(<Future<Object>>[
+          HivePreferencesStore.open(),
+          HiveArticleCache.open(),
+        ]);
+        preferences = boxes[0] as PreferencesStore;
+        cache = boxes[1] as ArticleCache;
         persistent = true;
       } catch (error, stackTrace) {
         debugPrint(
@@ -115,14 +121,22 @@ class AppBootstrap {
       cache = InMemoryArticleCache();
     }
 
-    await preferences.init();
-    await cache.init();
+    final int storageMs = clock.elapsedMilliseconds;
 
     // Identity is optional too; a rejected key or an unreachable Frontend API
     // must never stop the reader from opening the app. It is created before the
     // scraper configuration because a build that ships no static key relies on
     // the session token this provides.
-    final ClerkAuthRepository? auth = await _createAuth();
+    // Identity must never hold the first frame hostage: a cold Frontend API can
+    // take seconds. Four seconds is generous for a local session restore; after
+    // that the app opens anonymously for this launch.
+    final ClerkAuthRepository? auth = await _createAuth().timeout(
+      const Duration(seconds: 4),
+      onTimeout: () {
+        debugPrint('SLNews: Clerk init timed out; continuing anonymously');
+        return null;
+      },
+    );
 
     // The aggregated Sierra Leone feed from the SLNews scraper API is an optional
     // extra source. It is enabled by a static key embedded at build time, or - in
@@ -131,6 +145,12 @@ class AppBootstrap {
     // exactly like the RSS + seed app.
     final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment(
       sessionTokenAvailable: auth != null,
+    );
+
+    debugPrint(
+      'SLNews bootstrap: storage=${storageMs}ms '
+      'auth=${clock.elapsedMilliseconds - storageMs}ms '
+      'total=${clock.elapsedMilliseconds}ms',
     );
 
     // Reader-state sync (bookmarks, likes, follows) lives on the PWA origin, so
