@@ -109,7 +109,10 @@ class DefaultSportsRepository implements SportsRepository {
           if (games.isNotEmpty) liveGames[league.label] = games;
           if (league.hasTable) {
             final List<TeamStanding> table = await live.table(league);
-            if (table.isNotEmpty) _liveTables[league.slug] = table;
+            // The free key returns at most 5 rows and no NBA table at all. A
+            // truncated table is worse than the cached seed, so only accept a
+            // plausible full table.
+            if (table.length >= 10) _liveTables[league.slug] = table;
           }
         }(),
     ]);
@@ -176,8 +179,23 @@ class DefaultSportsRepository implements SportsRepository {
 
   static bool _isTeam(Team team, String teamId) {
     if (team.id == teamId) return true;
-    return team.id.split(':').last.toLowerCase() ==
-        teamId.split(':').last.toLowerCase();
+    final String seed = teamId.split(':').last.toLowerCase();
+    if (team.id.split(':').last.toLowerCase() == seed) return true;
+
+    // Live rows carry TheSportsDB ids, so a followed seed team (`team:lakers`)
+    // would never match `team:thesportsdb-134860` by id. Fall back to name
+    // tokens: every significant token of the seed slug must appear in the live
+    // name ("man-city" -> "manchestercity").
+    final String normalised = team.name.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
+    final List<String> tokens = seed
+        .split(RegExp(r'[^a-z0-9]+'))
+        .where((String token) => token.length >= 3)
+        .toList();
+    if (tokens.isEmpty) return false;
+    return tokens.every(normalised.contains);
   }
 
   /// Live fixtures first, then upcoming, then results — which is how the strip
