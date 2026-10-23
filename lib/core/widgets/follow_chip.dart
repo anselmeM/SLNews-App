@@ -46,13 +46,13 @@ class FollowChip extends StatelessWidget {
           borderRadius: AppRadius.pillRadius,
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: dense ? AppSpacing.md : AppSpacing.xl,
-              vertical: dense ? AppSpacing.xs + 2 : AppSpacing.sm,
+              horizontal: dense ? AppSpacing.md : AppSpacing.lg,
+              vertical: dense ? AppSpacing.xs + 2 : 6,
             ),
             child: Text(
               isFollowing ? followingLabel : followLabel,
               style: context.typography.button.copyWith(
-                fontSize: dense ? 13 : 15,
+                fontSize: dense ? 13 : 14,
                 color: isFollowing
                     ? context.colors.onSurfaceVariant
                     : context.colors.onSurface,

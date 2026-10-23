@@ -67,9 +67,9 @@ class ArticleHeroCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: <Color>[
-                          Color(0x1A000000),
-                          Color(0x40000000),
-                          Color(0xD9000000),
+                          Color(0x00171717),
+                          Color(0x05171717),
+                          Color(0xB3171717),
                         ],
                         stops: <double>[0, 0.45, 1],
                       ),

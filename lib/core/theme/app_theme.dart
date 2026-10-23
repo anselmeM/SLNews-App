@@ -109,7 +109,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: Colors.transparent,
         elevation: 0,
-        height: 64,
+        height: 56,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStateProperty.resolveWith((
           Set<WidgetState> states,

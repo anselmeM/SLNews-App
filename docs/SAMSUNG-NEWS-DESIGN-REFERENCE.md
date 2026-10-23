@@ -74,3 +74,22 @@ sizes above were adopted, not the font.
 The hero card ratio was set from the reference screenshot: an 872 px wide card at
 1,000 px tall on a 2340 px screen (≈0.87), which maps to a 380 dp carousel height
 on a 393 dp-wide phone.
+
+## Bottom navigation, chips and scrim
+
+| Element | Samsung resource | Value | SLNews |
+| --- | --- | --- | --- |
+| Nav height | `design_bottom_navigation_height` | 56 dp | `NavigationBar` height 64 → **56 dp** |
+| Nav icon | `design_bottom_navigation_icon_size` | 24 dp | 24 dp |
+| Nav label | `design_bottom_navigation_text_size` | 12 sp (active 14) | `navLabel` 12 sp / 600 |
+| Nav item bounds | `design_bottom_navigation_item_max_width` | 96 dp (active 168) | four equal items |
+| Nav elevation | `design_bottom_navigation_elevation` | 8 dp | flat, 0.5 dp top hairline |
+| Chip height | `chip_height` | **32 dp** | `FollowChip` 32 dp |
+| Chip text | `chip_text_size` | 14 sp | 14 sp |
+| Chip gaps | `chip_spacing_horizontal` | 8 dp | 8–10 dp |
+| Chip group padding | `chip_group_*_padding` | 6 dp | 6 dp |
+| Cover fade edge | `cover_bottom_fading_edge_length` | **84 dp** | hero scrim 45 % → bottom |
+| Cover scrim | `news_widget_4x2_gradation_cover` | `#05171717 → #B3171717`, angle 270 | same stops |
+
+The scrim drawable is `res/jEd.xml`: `startColor=#05171717`, `endColor=#B3171717`,
+`angle=270` — a 2 % to 70 % wash of `#171717`, not pure black.
