@@ -37,12 +37,16 @@ class SlNewsVideoSource {
     try {
       // The rail is decorative: never let a cold Render instance delay the
       // reader for the client-wide 8s timeout.
+      // A key-less build authenticates with the Clerk session token, which
+      // ApiClient attaches to the allow-listed scraper host. Sending an empty
+      // "Bearer " here would override that token and 401 the request.
+      final String key = _config.apiKey.trim();
       final ApiResponse response = await _api
           .get(
             url,
-            headers: <String, String>{
-              'Authorization': 'Bearer ${_config.apiKey}',
-            },
+            headers: key.isEmpty
+                ? null
+                : <String, String>{'Authorization': 'Bearer $key'},
           )
           .timeout(const Duration(seconds: 4));
       return parse(response.data).take(limit).toList(growable: false);

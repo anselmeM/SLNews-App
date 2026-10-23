@@ -313,13 +313,17 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
     } catch (error) {
       debugPrint('videoMoments: unreadable cache: $error');
     }
-    return SlVideos.all;
+    // A configured build must never present demo clips as if they were real
+    // videos: show nothing until the first successful fetch.
+    return ref.read(slNewsVideoSourceProvider) == null
+        ? SlVideos.all
+        : const <VideoMoment>[];
   }
 
   Future<void> _refresh() async {
     final SlNewsVideoSource? source = ref.read(slNewsVideoSourceProvider);
     if (source == null) return;
-    final List<VideoMoment> live = await source.latest(limit: 8);
+    final List<VideoMoment> live = await source.latest(limit: 30);
     if (live.isEmpty) return;
     state = live;
     try {
