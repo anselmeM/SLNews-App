@@ -44,7 +44,7 @@ class AppTypography {
 
   /// Screen title, e.g. "Top stories" (34 / 700).
   TextStyle get screenTitle => _sans(
-    size: 34,
+    size: 32,
     weight: 700,
     height: 1.15,
     tracking: -0.8,
@@ -53,7 +53,7 @@ class AppTypography {
 
   /// Section header inside a screen, e.g. "Cars and Vehicles" (24 / 700).
   TextStyle get sectionTitle => _sans(
-    size: 24,
+    size: 22,
     weight: 700,
     height: 1.2,
     tracking: -0.5,
@@ -62,7 +62,7 @@ class AppTypography {
 
   /// Sub-section header, e.g. "Sports", "Locations" (19 / 700).
   TextStyle get groupTitle => _sans(
-    size: 19,
+    size: 18,
     weight: 700,
     height: 1.25,
     tracking: -0.3,
@@ -71,7 +71,7 @@ class AppTypography {
 
   /// Card headline (19 / 700).
   TextStyle get cardTitle => _sans(
-    size: 19,
+    size: 18,
     weight: 700,
     height: 1.28,
     tracking: -0.3,

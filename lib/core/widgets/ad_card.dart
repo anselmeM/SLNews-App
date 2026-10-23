@@ -69,7 +69,7 @@ class AdCard extends StatelessWidget {
                       unit.headline,
                       style: context.typography.sectionTitle.copyWith(
                         color: Colors.white,
-                        fontSize: 26,
+                        fontSize: 24,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -81,7 +81,7 @@ class AdCard extends StatelessWidget {
                     Row(
                       children: <Widget>[
                         Text(
-                          'Ad',
+                          'AD',
                           style: context.typography.overline.copyWith(
                             color: const Color(0xCCFFFFFF),
                           ),

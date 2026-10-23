@@ -2,8 +2,9 @@ import 'package:flutter/widgets.dart';
 
 /// Spacing, radius and elevation tokens.
 ///
-/// The reference UI is a 4pt grid with generous 16pt page gutters, 16pt card
-/// radii and a 12pt gap between feed cards.
+/// The reference UI is a 4pt grid. Samsung News measures a 10dp side margin and
+/// 16dp inner padding; 12dp is the closest 4pt step that keeps body copy from
+/// touching the edge on phones.
 abstract final class AppSpacing {
   static const double xxs = 2;
   static const double xs = 4;
@@ -15,7 +16,7 @@ abstract final class AppSpacing {
   static const double xxxl = 32;
 
   /// Horizontal page gutter.
-  static const EdgeInsets page = EdgeInsets.symmetric(horizontal: lg);
+  static const EdgeInsets page = EdgeInsets.symmetric(horizontal: md);
 
   /// Standard card inner padding.
   static const EdgeInsets card = EdgeInsets.all(lg);
@@ -23,7 +24,7 @@ abstract final class AppSpacing {
   /// Padding for list rows inside a card group.
   static const EdgeInsets row = EdgeInsets.symmetric(
     horizontal: lg,
-    vertical: 14,
+    vertical: md,
   );
 }
 
