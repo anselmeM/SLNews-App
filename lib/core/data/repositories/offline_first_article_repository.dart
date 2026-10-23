@@ -56,7 +56,10 @@ class OfflineFirstArticleRepository implements ArticleRepository {
   List<Article> _memory = <Article>[];
   List<Article>? _seedArticles;
   bool _hydrated = false;
-  bool _offline = true;
+  // Optimistic: a fresh launch with connectivity must not flash an "Offline"
+  // banner before the first refresh has even been attempted. Only a failed
+  // refresh flips this on.
+  bool _offline = false;
   DateTime? _lastSyncedAt;
   Future<List<Article>>? _inFlightRefresh;
 

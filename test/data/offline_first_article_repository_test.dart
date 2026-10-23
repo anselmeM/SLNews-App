@@ -39,7 +39,11 @@ void main() {
         stories.map((Article a) => a.id),
         containsAll(<String>['seed-1', 'seed-2']),
       );
-      expect(repository.isOffline, isTrue);
+      expect(
+        repository.isOffline,
+        isFalse,
+        reason: 'a launch with no failed fetch must not claim to be offline',
+      );
       expect(repository.lastSyncedAt, isNull);
     });
 
@@ -70,7 +74,11 @@ void main() {
         (await offline.topStories()).map((Article a) => a.id),
         contains('a-1'),
       );
-      expect(offline.isOffline, isTrue, reason: 'nothing was fetched this run');
+      expect(
+        offline.isOffline,
+        isFalse,
+        reason: 'no refresh was attempted, so the banner has nothing to report',
+      );
       expect(offline.lastSyncedAt, isNotNull, reason: 'carried over from disk');
     });
 
