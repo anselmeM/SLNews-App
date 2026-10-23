@@ -18,7 +18,7 @@ class TopStoriesCarousel extends ConsumerStatefulWidget {
     super.key,
     required this.articles,
     this.onOpenArticle,
-    this.height = 420,
+    this.height = 380,
   });
 
   /// Lead stories, already ordered by the For You view model.

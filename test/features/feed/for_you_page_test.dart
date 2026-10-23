@@ -299,7 +299,7 @@ void main() {
 
     expect(find.byType(AdCard), findsOneWidget);
     expect(find.text('Ultimate Shopping Spree'), findsOneWidget);
-    expect(find.text('Ad'), findsWidgets, reason: 'sponsored must be labelled');
+    expect(find.text('AD'), findsWidgets, reason: 'sponsored must be labelled');
   });
 
   testWidgets('shows the Following topic mosaic', (WidgetTester tester) async {

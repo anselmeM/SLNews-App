@@ -220,7 +220,7 @@ void main() {
     await tester.pumpWidget(buildApp());
     await settle(tester);
 
-    expect(find.text('Ad'), findsOneWidget);
+    expect(find.text('AD'), findsOneWidget);
     expect(find.text('CLAIM YOUR REWARD'), findsOneWidget);
     expect(find.text('PayPal'), findsOneWidget);
   });
@@ -244,7 +244,7 @@ void main() {
       ),
       findsNWidgets(2),
     );
-    expect(find.text('Ad'), findsOneWidget);
+    expect(find.text('AD'), findsOneWidget);
     expect(find.text('Leone Stars news'), findsOneWidget);
     expect(find.byType(ErrorStateView), findsNothing);
   });

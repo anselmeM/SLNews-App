@@ -15,10 +15,10 @@ class SectionHeader extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.padding = const EdgeInsets.fromLTRB(
-      AppSpacing.lg,
       AppSpacing.xl,
       AppSpacing.lg,
-      AppSpacing.md,
+      AppSpacing.xl,
+      AppSpacing.sm,
     ),
     this.compact = false,
   });

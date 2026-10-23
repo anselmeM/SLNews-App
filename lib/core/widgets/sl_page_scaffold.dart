@@ -128,9 +128,9 @@ class _SlPageScaffoldState extends ConsumerState<SlPageScaffold> {
           scrolledUnderElevation: 0,
           backgroundColor: context.colors.canvas,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: _hasBrandMark ? 48 : 64,
+          toolbarHeight: _hasBrandMark ? 56 : 64,
           automaticallyImplyLeading: false,
-          titleSpacing: AppSpacing.lg,
+          titleSpacing: AppSpacing.xl,
           title: _hasBrandMark
               ? Text(
                   widget.brandMark!,
