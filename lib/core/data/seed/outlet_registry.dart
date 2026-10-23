@@ -142,20 +142,34 @@ abstract final class OutletRegistry {
       authorityScore: 1.5,
       isWire: true,
     ),
-    // VERIFIED 2026-10-22: Yahoo Sports soccer RSS (HTTP 200, RSS 2.0 with
-    // content:encoded and media). Summaries only: the feed syndicates US and UK
-    // publishers, so the reader links out instead of republishing the body.
+    // VERIFIED 2026-10-22: BBC Sport football RSS (HTTP 200). International
+    // football; summary-only because BBC's RSS terms do not allow republishing
+    // the article body.
     FeedSourceConfig(
-      id: 'yahoosoccer',
-      outlet: 'Yahoo Sports',
-      publisherId: 'yahoosoccer',
-      wordmark: 'YAHOO',
-      url: 'https://sports.yahoo.com/soccer/rss/',
+      id: 'bbcsport',
+      outlet: 'BBC Sport',
+      publisherId: 'bbcsport',
+      wordmark: 'BBC SPORT',
+      url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
       kind: FeedSourceKind.rss,
       categoryId: 'sports',
-      websiteUrl: 'https://sports.yahoo.com/soccer/',
-      authorityScore: 1.2,
+      websiteUrl: 'https://www.bbc.co.uk/sport/football',
+      authorityScore: 1.4,
       isWire: true,
+      summaryOnly: true,
+    ),
+    // VERIFIED 2026-10-22: Football Sierra Leone (HTTP 200). Local Sierra Leone
+    // football: national teams, WAFU, AFCON qualifiers, players abroad.
+    FeedSourceConfig(
+      id: 'footballsierraleone',
+      outlet: 'Football Sierra Leone',
+      publisherId: 'footballsierraleone',
+      wordmark: 'FSL',
+      url: 'https://footballsierraleone.com/feed/',
+      kind: FeedSourceKind.rss,
+      categoryId: 'sports',
+      websiteUrl: 'https://footballsierraleone.com',
+      authorityScore: 1.2,
       summaryOnly: true,
     ),
   ];
