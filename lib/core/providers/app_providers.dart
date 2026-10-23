@@ -16,6 +16,7 @@ import '../data/sources/sl_news_video_source.dart';
 import '../domain/models/ad_unit.dart';
 import '../domain/models/market_snapshot.dart';
 import '../domain/models/article.dart';
+import '../domain/sports_ranking.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
 import '../domain/models/sports_models.dart';
@@ -157,11 +158,22 @@ final topStoriesProvider = FutureProvider<List<Article>>(
 );
 
 /// Latest stories for a category slug.
-final categoryFeedProvider = FutureProvider.family<List<Article>, String>(
-  (Ref ref, String categoryId) =>
-      ref.watch(articleRepositoryProvider).byCategory(categoryId),
-  name: 'categoryFeed',
-);
+final categoryFeedProvider = FutureProvider.family<List<Article>, String>((
+  Ref ref,
+  String categoryId,
+) async {
+  final ArticleRepository repository = ref.watch(articleRepositoryProvider);
+  if (categoryId != 'sports') {
+    return repository.byCategory(categoryId);
+  }
+  // Fetch a wider window, rank local Sierra Leone sport first, then cap. The
+  // repository's own limit would otherwise let wires fill all 30 slots.
+  final List<Article> pool = await repository.byCategory(
+    categoryId,
+    limit: 120,
+  );
+  return rankSportsStories(pool).take(30).toList(growable: false);
+}, name: 'categoryFeed');
 
 /// Stories for a followed location (`city:freetown`, ...).
 final locationFeedProvider = FutureProvider.family<List<Article>, String>(
