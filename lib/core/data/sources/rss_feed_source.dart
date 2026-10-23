@@ -148,10 +148,54 @@ abstract final class RssParser {
       sourceUrl: link ?? UrlNormalizer.canonical(base),
       publisher: _publisher(config),
       publishedAt: publishedAt,
-      categoryId: config.categoryId,
+      categoryId: _categoryFor(item, config),
       tags: _tags(item),
       readingMinutes: _readingMinutes(bodyHtml),
     );
+  }
+
+  /// Sport keywords that should move an item into the Sports tab even when its
+  /// outlet is filed under another category (the Sierra Leone outlets tag sports
+  /// posts rather than splitting their feed).
+  static const List<String> _sportWords = <String>[
+    'sport',
+    'football',
+    'soccer',
+    'volleyball',
+    'basketball',
+    'athletics',
+    'boxing',
+    'cricket',
+    'rugby',
+    'tennis',
+    'golf',
+    'cycling',
+    'formula 1',
+    'f1',
+    'darts',
+    'wrestling',
+    'judo',
+    'swimming',
+    'para',
+    'olympic',
+    'commonwealth',
+    'wafu',
+    'afcon',
+    'league',
+    'fifa',
+    'caf',
+  ];
+
+  static String _categoryFor(XmlElement item, FeedSourceConfig config) {
+    if (config.categoryId == 'sports') return 'sports';
+    final String haystack = <String>[
+      for (final String tag in _tags(item)) tag.toLowerCase(),
+      _firstText(item, const <String>['category'])?.toLowerCase() ?? '',
+    ].join(' ');
+    for (final String word in _sportWords) {
+      if (haystack.contains(word)) return 'sports';
+    }
+    return config.categoryId;
   }
 
   static String _escapeHtml(String value) => value

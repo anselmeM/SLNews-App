@@ -142,24 +142,39 @@ abstract final class OutletRegistry {
       authorityScore: 1.5,
       isWire: true,
     ),
-    // VERIFIED 2026-10-22: BBC Sport football RSS (HTTP 200). International
-    // football; summary-only because BBC's RSS terms do not allow republishing
-    // the article body.
+    // VERIFIED 2026-10-22: BBC Sport all-sport RSS (HTTP 200) — football,
+    // cricket, F1, tennis, rugby, athletics, boxing, golf, basketball, cycling,
+    // darts and more. Summary-only; BBC's feed terms do not allow republishing.
     FeedSourceConfig(
       id: 'bbcsport',
       outlet: 'BBC Sport',
       publisherId: 'bbcsport',
       wordmark: 'BBC SPORT',
-      url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
+      url: 'https://feeds.bbci.co.uk/sport/rss.xml',
       kind: FeedSourceKind.rss,
       categoryId: 'sports',
-      websiteUrl: 'https://www.bbc.co.uk/sport/football',
+      websiteUrl: 'https://www.bbc.co.uk/sport',
       authorityScore: 1.4,
       isWire: true,
       summaryOnly: true,
     ),
-    // VERIFIED 2026-10-22: Football Sierra Leone (HTTP 200). Local Sierra Leone
-    // football: national teams, WAFU, AFCON qualifiers, players abroad.
+    // VERIFIED 2026-10-22: BBC Sport Africa RSS (HTTP 200) — African sport
+    // across codes, the closest wire coverage to a Sierra Leonean audience.
+    FeedSourceConfig(
+      id: 'bbcsportafrica',
+      outlet: 'BBC Sport Africa',
+      publisherId: 'bbcsportafrica',
+      wordmark: 'BBC AFRICA',
+      url: 'https://feeds.bbci.co.uk/sport/africa/rss.xml',
+      kind: FeedSourceKind.rss,
+      categoryId: 'sports',
+      websiteUrl: 'https://www.bbc.co.uk/sport/africa',
+      authorityScore: 1.35,
+      isWire: true,
+      summaryOnly: true,
+    ),
+    // VERIFIED 2026-10-22: Football Sierra Leone (HTTP 200). Local football:
+    // national teams, WAFU, AFCON qualifiers, players abroad.
     FeedSourceConfig(
       id: 'footballsierraleone',
       outlet: 'Football Sierra Leone',
