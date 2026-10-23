@@ -56,8 +56,7 @@ class ForYouPage extends ConsumerWidget {
     );
     // Both rails degrade to "absent" rather than erroring the page: video
     // moments fall back to the bundled rotation, ads may be empty.
-    final List<VideoMoment> videos =
-        ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
+    final List<VideoMoment> videos = ref.watch(videoMomentsProvider);
     final List<AdUnit> ads =
         ref.watch(forYouAdsProvider).value ?? const <AdUnit>[];
     // Interactive content: the Stocks board only exists when the reader turned

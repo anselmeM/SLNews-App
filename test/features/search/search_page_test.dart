@@ -65,7 +65,7 @@ void main() {
             articles: FakeArticleRepository(topStories: articles),
           ),
           preferencesStoreProvider.overrideWithValue(store),
-          videoMomentsProvider.overrideWith((Ref ref) async => videos),
+          videoMomentsProvider.overrideWith(() => _FixedVideoMoments(videos)),
         ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
@@ -207,4 +207,13 @@ void main() {
 
     expect(find.byIcon(Icons.close), findsNothing);
   });
+}
+
+class _FixedVideoMoments extends VideoMomentsController {
+  _FixedVideoMoments(this.fixed);
+
+  final List<VideoMoment> fixed;
+
+  @override
+  List<VideoMoment> build() => fixed;
 }

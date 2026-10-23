@@ -133,8 +133,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   /// Videos whose title or outlet mentions the query.
   List<VideoMoment> _videoHits(String needle) {
-    final List<VideoMoment> videos =
-        ref.watch(videoMomentsProvider).value ?? const <VideoMoment>[];
+    final List<VideoMoment> videos = ref.watch(videoMomentsProvider);
     final String lower = needle.toLowerCase();
     return videos
         .where(

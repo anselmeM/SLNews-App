@@ -35,12 +35,10 @@ class VideoReelRoute extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<VideoMoment>? live = ref.watch(videoMomentsProvider).value;
+    final List<VideoMoment> live = ref.watch(videoMomentsProvider);
     // The rail always has something to show — live rows when configured, the
     // bundled rotation otherwise — so the reel can never open empty.
-    final List<VideoMoment> videos = (live != null && live.isNotEmpty)
-        ? live
-        : SlVideos.all;
+    final List<VideoMoment> videos = live.isNotEmpty ? live : SlVideos.all;
     return VideoReelPage(
       videos: videos,
       videoId: videoId,

@@ -44,7 +44,7 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           userStateProvider.overrideWithValue(FakeUserStateRepository()),
-          videoMomentsProvider.overrideWith((Ref ref) async => reels()),
+          videoMomentsProvider.overrideWith(() => _FixedVideoMoments(reels())),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -176,4 +176,13 @@ void main() {
     expect(find.byType(VideoReelPage), findsNothing);
     expect(find.text('open reel'), findsOneWidget);
   });
+}
+
+class _FixedVideoMoments extends VideoMomentsController {
+  _FixedVideoMoments(this.fixed);
+
+  final List<VideoMoment> fixed;
+
+  @override
+  List<VideoMoment> build() => fixed;
 }

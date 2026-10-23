@@ -261,18 +261,69 @@ class SelectedCategoryController extends Notifier<String> {
 final Provider<SlNewsVideoSource?> slNewsVideoSourceProvider =
     Provider<SlNewsVideoSource?>((Ref ref) => null, name: 'slNewsVideoSource');
 
-/// Video moments for the For You rail: live entries when the API answers with
-/// any, the bundled rotation otherwise. Never throws, so the rail is either
-/// populated or absent and the page never shows an error for it.
-final FutureProvider<List<VideoMoment>> videoMomentsProvider =
-    FutureProvider<List<VideoMoment>>((Ref ref) async {
-      final SlNewsVideoSource? source = ref.watch(slNewsVideoSourceProvider);
-      if (source != null) {
-        final List<VideoMoment> live = await source.latest(limit: 8);
-        if (live.isNotEmpty) return live;
+const String _videoCacheKey = 'video_moments.cache.v1';
+
+/// Video moments for the For You rail.
+///
+/// Builds synchronously from the last payload written to preferences (or the
+/// bundled rotation on a first launch), then refreshes from the API in the
+/// background. A cold Render instance therefore never delays the rail.
+final NotifierProvider<VideoMomentsController, List<VideoMoment>>
+videoMomentsProvider =
+    NotifierProvider<VideoMomentsController, List<VideoMoment>>(
+      VideoMomentsController.new,
+      name: 'videoMoments',
+    );
+
+class VideoMomentsController extends Notifier<List<VideoMoment>> {
+  @override
+  List<VideoMoment> build() {
+    final List<VideoMoment> cached = _readCache();
+    Future<void>.microtask(_refresh);
+    return cached;
+  }
+
+  List<VideoMoment> _readCache() {
+    try {
+      final String? raw = ref
+          .read(preferencesStoreProvider)
+          .string(_videoCacheKey);
+      if (raw != null && raw.isNotEmpty) {
+        final Object? decoded = jsonDecode(raw);
+        if (decoded is List && decoded.isNotEmpty) {
+          final List<VideoMoment> cached = <VideoMoment>[
+            for (final Object? row in decoded)
+              if (row is Map) VideoMoment.fromJson(row.cast<String, dynamic>()),
+          ].where((VideoMoment v) => v.id.isNotEmpty).toList();
+          if (cached.isNotEmpty) return cached;
+        }
       }
-      return SlVideos.all;
-    }, name: 'videoMoments');
+    } catch (error) {
+      debugPrint('videoMoments: unreadable cache: $error');
+    }
+    return SlVideos.all;
+  }
+
+  Future<void> _refresh() async {
+    final SlNewsVideoSource? source = ref.read(slNewsVideoSourceProvider);
+    if (source == null) return;
+    final List<VideoMoment> live = await source.latest(limit: 8);
+    if (live.isEmpty) return;
+    state = live;
+    try {
+      await ref
+          .read(preferencesStoreProvider)
+          .putString(
+            _videoCacheKey,
+            jsonEncode(<Map<String, dynamic>>[
+              for (final VideoMoment v in live) v.toJson(),
+            ]),
+          );
+    } catch (error) {
+      debugPrint('videoMoments: could not cache: $error');
+    }
+  }
+}
 
 /// Ads rotated into the For You feed, one per section break.
 final FutureProvider<List<AdUnit>> forYouAdsProvider =

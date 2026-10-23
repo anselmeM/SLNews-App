@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -18,8 +20,9 @@ import 'core/push/push_service.dart';
 /// as before, which is what keeps tests and contributor builds offline.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Missing google-services.json degrades to "no push" rather than a crash.
-  await initializeFirebase();
+  // Never block the first frame on Firebase: verification/registration runs
+  // lazily from PushService when the reader first interacts with push.
+  unawaited(initializeFirebase());
 
   final SentrySettings sentry = SentrySettings.fromEnvironment();
   if (!sentry.isEnabled) {

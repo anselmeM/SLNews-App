@@ -35,10 +35,16 @@ class SlNewsVideoSource {
     final String url = '$base$path?page_size=${limit.clamp(1, 100)}';
 
     try {
-      final ApiResponse response = await _api.get(
-        url,
-        headers: <String, String>{'Authorization': 'Bearer ${_config.apiKey}'},
-      );
+      // The rail is decorative: never let a cold Render instance delay the
+      // reader for the client-wide 8s timeout.
+      final ApiResponse response = await _api
+          .get(
+            url,
+            headers: <String, String>{
+              'Authorization': 'Bearer ${_config.apiKey}',
+            },
+          )
+          .timeout(const Duration(seconds: 4));
       return parse(response.data).take(limit).toList(growable: false);
     } catch (error) {
       debugPrint('SlNewsVideoSource: /v1/videos unavailable ($error)');
