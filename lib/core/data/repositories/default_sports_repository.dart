@@ -7,6 +7,7 @@ import '../../domain/repositories/sports_repository.dart';
 import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
 import '../sources/api_client.dart';
+import '../sources/the_sports_db_source.dart';
 
 /// Fixtures, scores and standings backed by the seed, with an optional live
 /// scoreboard endpoint.
@@ -20,15 +21,21 @@ class DefaultSportsRepository implements SportsRepository {
     required SeedLoader seedLoader,
     ApiClient? client,
     String? scoreboardUrl,
+    TheSportsDbSource? liveSource,
   }) : _seeds = seedLoader,
        _api = client,
-       _endpoint = scoreboardUrl {
+       _endpoint = scoreboardUrl,
+       _live = liveSource {
     unawaited(_ready);
   }
 
   final SeedLoader _seeds;
   final ApiClient? _api;
   final String? _endpoint;
+  final TheSportsDbSource? _live;
+  Future<void>? _liveRefresh;
+  final Map<String, List<TeamStanding>> _liveTables =
+      <String, List<TeamStanding>>{};
 
   ScoreboardSnapshot _scoreboard = ScoreboardSnapshot(
     games: const <GameScore>[],
@@ -45,6 +52,9 @@ class DefaultSportsRepository implements SportsRepository {
   @override
   Future<ScoreboardSnapshot> scoreboard({int limit = 8}) async {
     await _ready;
+    // Seed paints immediately; wait briefly for live scores rather than block
+    // the tab on a slow third party.
+    await _ensureLive().timeout(const Duration(seconds: 6), onTimeout: () {});
     final List<GameScore> games = _sorted(_scoreboard.games);
     return ScoreboardSnapshot(
       games: games.length > limit ? games.sublist(0, limit) : games,
@@ -66,7 +76,12 @@ class DefaultSportsRepository implements SportsRepository {
   @override
   Future<List<TeamStanding>> standings(String leagueId) async {
     await _ready;
+    // Seed paints immediately; wait briefly for live scores rather than block
+    // the tab on a slow third party.
+    await _ensureLive().timeout(const Duration(seconds: 6), onTimeout: () {});
     final String slug = leagueId.split(':').last.toLowerCase();
+    final List<TeamStanding>? live = _liveTables[slug];
+    if (live != null && live.isNotEmpty) return live;
     final List<TeamStanding> matches = <TeamStanding>[
       for (final TeamStanding row in _standings)
         if (row.leagueId.toLowerCase().split(':').last == slug) row,
@@ -76,6 +91,40 @@ class DefaultSportsRepository implements SportsRepository {
         : matches;
     rows.sort((TeamStanding a, TeamStanding b) => a.rank.compareTo(b.rank));
     return rows;
+  }
+
+  /// Fetches the live leagues once; concurrent callers share the same future.
+  Future<void> _ensureLive() {
+    final TheSportsDbSource? live = _live;
+    if (live == null) return Future<void>.value();
+    return _liveRefresh ??= _refreshLive(live);
+  }
+
+  Future<void> _refreshLive(TheSportsDbSource live) async {
+    final Map<String, List<GameScore>> liveGames = <String, List<GameScore>>{};
+    await Future.wait(<Future<void>>[
+      for (final SportsDbLeague league in TheSportsDbSource.leagues)
+        () async {
+          final List<GameScore> games = await live.games(league);
+          if (games.isNotEmpty) liveGames[league.label] = games;
+          if (league.hasTable) {
+            final List<TeamStanding> table = await live.table(league);
+            if (table.isNotEmpty) _liveTables[league.slug] = table;
+          }
+        }(),
+    ]);
+    if (liveGames.isEmpty) return;
+    _scoreboard = ScoreboardSnapshot(
+      games: <GameScore>[
+        // Keep Sierra Leone fixtures from the seed; replace only the leagues
+        // TheSportsDB actually answered for.
+        for (final GameScore game in _scoreboard.games)
+          if (!liveGames.containsKey(game.leagueLabel)) game,
+        for (final List<GameScore> games in liveGames.values) ...games,
+      ],
+      providerLabel: 'thesportsdb',
+      updatedAt: DateTime.now(),
+    );
   }
 
   Future<void> _hydrate() async {

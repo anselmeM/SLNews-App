@@ -21,6 +21,7 @@ import '../data/sources/api_client.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/sl_news_api_source.dart';
 import '../data/sources/sl_news_video_source.dart';
+import '../data/sources/the_sports_db_source.dart';
 import '../data/sync/sync_api_config.dart';
 import '../domain/repositories/ad_repository.dart';
 import '../domain/repositories/article_repository.dart';
@@ -202,6 +203,11 @@ class AppBootstrap {
     final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
       seedLoader: seedLoader,
       client: client,
+      // Live scores are a production-build feature: tests and key-less builds
+      // stay fully offline and instant.
+      liveSource: const bool.fromEnvironment('THESPORTSDB_ENABLED')
+          ? TheSportsDbSource(client: client)
+          : null,
     );
     final DefaultFollowingRepository followingRepository =
         DefaultFollowingRepository(
