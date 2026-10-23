@@ -34,6 +34,8 @@ class DefaultSportsRepository implements SportsRepository {
   final String? _endpoint;
   final TheSportsDbSource? _live;
   Future<void>? _liveRefresh;
+  DateTime? _liveFetchedAt;
+  static const Duration _liveTtl = Duration(minutes: 5);
   final Map<String, List<TeamStanding>> _liveTables =
       <String, List<TeamStanding>>{};
 
@@ -97,7 +99,14 @@ class DefaultSportsRepository implements SportsRepository {
   Future<void> _ensureLive() {
     final TheSportsDbSource? live = _live;
     if (live == null) return Future<void>.value();
-    return _liveRefresh ??= _refreshLive(live);
+    final DateTime? fetchedAt = _liveFetchedAt;
+    final bool stale =
+        fetchedAt == null || DateTime.now().difference(fetchedAt) > _liveTtl;
+    if (!stale) return _liveRefresh ?? Future<void>.value();
+    return _liveRefresh ??= _refreshLive(live).whenComplete(() {
+      // Cache even a failed attempt: no hammering a struggling third party.
+      _liveFetchedAt = DateTime.now();
+    });
   }
 
   Future<void> _refreshLive(TheSportsDbSource live) async {

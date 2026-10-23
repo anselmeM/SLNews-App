@@ -90,10 +90,20 @@ class TheSportsDbSource {
 
   /// Last results and next fixtures for a league, newest first.
   Future<List<GameScore>> games(SportsDbLeague league) async {
-    final List<GameScore> games = <GameScore>[];
+    final DateTime now = DateTime.now().toUtc();
+    final String day =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+
+    // Free-key plan: one past, one next and up to three of today's games per
+    // league (the free limits for these endpoints), deduped. That is ~15 calls
+    // per cold refresh, inside the 30/min budget, and the repository caches it.
+    final Map<String, GameScore> byId = <String, GameScore>{};
     for (final String path in <String>[
       'eventspastleague.php?id=${league.dbId}',
       'eventsnextleague.php?id=${league.dbId}',
+      'eventsday.php?d=$day&l=${league.dbId}',
     ]) {
       final Object? payload = await _getJson(path);
       final Object? rows = payload is Map ? payload['events'] : null;
@@ -101,10 +111,10 @@ class TheSportsDbSource {
       for (final Object? row in rows) {
         if (row is! Map) continue;
         final GameScore? game = _toGame(row.cast<String, dynamic>(), league);
-        if (game != null) games.add(game);
+        if (game != null) byId[game.id] = game;
       }
     }
-    return games;
+    return byId.values.toList(growable: false);
   }
 
   /// League table for a league, or an empty list when unavailable.
