@@ -44,8 +44,15 @@ jobs:
 
       # test/golden is excluded on purpose: its pixels depend on the host
       # renderer, so it is a local visual-review harness rather than a gate.
-      - name: Test
-        run: flutter test test/core test/data test/features test/sync
+      - name: Secret scan
+        shell: pwsh
+        run: ./scripts/check-secrets.ps1
+
+      - name: Test (serial; parallel workers deadlock on this suite)
+        run: flutter test test/core test/data test/features test/sync --concurrency=1
+
+      - name: Golden tests
+        run: flutter test test/golden test/features/feed/daily_briefing_golden_test.dart --concurrency=1
 
       - name: Decode release keystore
         if: env.ANDROID_KEYSTORE_BASE64 != ''

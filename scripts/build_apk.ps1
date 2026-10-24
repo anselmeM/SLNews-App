@@ -34,6 +34,7 @@
 [CmdletBinding()]
 param(
     [switch] $SplitPerAbi,
+    [switch] $Aab,
     [switch] $SkipTests,
     [string] $OutDir = 'build/dist',
     [string[]] $DartDefine = @()
@@ -117,6 +118,30 @@ if (-not $SkipTests) {
     }
 
     # --- Build -------------------------------------------------------------------
+    if ($Aab) {
+        # Play Store artefact: an app bundle, not an APK. The bundle is already
+        # per-ABI, so -SplitPerAbi is ignored.
+        $bundleArgs = @('build', 'appbundle', '--release') + $defineArgs
+        & $flutter @bundleArgs
+        if ($LASTEXITCODE -ne 0) { throw 'flutter build appbundle failed' }
+
+        $bundle = 'build/app/outputs/bundle/release/app-release.aab'
+        if (-not (Test-Path $bundle)) { throw "No AAB produced at $bundle" }
+        New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+        $version = (Select-String -Path 'pubspec.yaml' -Pattern '^version:\s*([^\s]+)' |
+            Select-Object -First 1).Matches.Groups[1].Value
+        $target = Join-Path $OutDir ("SLNews-{0}.aab" -f $version)
+        Copy-Item $bundle $target -Force
+        $hash = (Get-FileHash $target -Algorithm SHA256).Hash.ToLowerInvariant()
+        $sizeMb = [math]::Round((Get-Item $target).Length / 1MB, 1)
+        Write-Host ''
+        Write-Host "AAB: $target" -ForegroundColor Green
+        Write-Host "  version: $version"
+        Write-Host "  size   : $sizeMb MB"
+        Write-Host "  sha256 : $hash"
+        return
+    }
+
     $buildArgs = @('build', 'apk', '--release') + $defineArgs
     if ($SplitPerAbi) { $buildArgs += '--split-per-abi' }
     & $flutter @buildArgs
