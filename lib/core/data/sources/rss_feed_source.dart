@@ -332,13 +332,60 @@ abstract final class RssParser {
   }
 
   /// Removes every inline `<img>` and reports the first one as the hero image.
+  /// First usable image URL in an `<img>` tag: `src`, the common lazy-loading
+  /// attributes, then the largest candidate from `srcset`.
+  static String? _inlineImageSource(String tag) {
+    for (final String attribute in const <String>[
+      'src',
+      'data-src',
+      'data-lazy-src',
+      'data-original',
+      'data-url',
+    ]) {
+      final String? value = _attribute(tag, attribute)?.trim();
+      if (value != null && value.isNotEmpty && !value.startsWith('data:')) {
+        return value;
+      }
+    }
+    return _largestSrcset(
+      _attribute(tag, 'srcset') ?? _attribute(tag, 'data-srcset'),
+    );
+  }
+
+  /// Picks the highest-resolution candidate from a `srcset` list.
+  static String? _largestSrcset(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    String? best;
+    double bestScore = -1;
+    for (final String candidate in value.split(',')) {
+      final List<String> parts = candidate.trim().split(RegExp(r'\s+'));
+      if (parts.isEmpty || parts.first.isEmpty) continue;
+      if (parts.first.startsWith('data:')) continue;
+      double score = 1;
+      if (parts.length > 1) {
+        final String descriptor = parts[1].toLowerCase();
+        final double? number = double.tryParse(
+          descriptor.replaceAll(RegExp(r'[^0-9.]'), ''),
+        );
+        if (number != null) {
+          score = descriptor.endsWith('x') ? number * 1000 : number;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = parts.first;
+      }
+    }
+    return best;
+  }
+
   static _InlineImage _extractInlineImage(String body, String base) {
     String? src;
     final String stripped = body.replaceAllMapped(_imageTag, (Match match) {
       if (src != null) return '';
       final String tag = match.group(0)!;
-      final String? raw = _attribute(tag, 'src') ?? _attribute(tag, 'data-src');
-      if (raw != null && raw.trim().isNotEmpty) {
+      final String? raw = _inlineImageSource(tag);
+      if (raw != null) {
         src = UrlNormalizer.absolute(_decodeEntities(raw), base: base);
       }
       return '';
