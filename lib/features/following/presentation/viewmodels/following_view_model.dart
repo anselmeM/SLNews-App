@@ -89,23 +89,30 @@ class FollowingViewModel {
   /// Entities of the given [kinds], merging the per-kind catalogues with the
   /// flat `followed` list, de-duplicated by id and sorted alphabetically.
   List<FollowTarget> _group(Set<FollowKind> kinds) {
-    // `followed` leads so a followed entity is present even if the per-kind
-    // catalogue is stale or missing the id.
+    // The per-kind lists are the subscription *catalogue*, not the follow set:
+    // rendering them wholesale made every available topic look followed. Only
+    // ids in `followed` may appear in a followed group; the catalogue entries
+    // are used to repair labels for those ids.
+    final Set<String> followedIds = snapshot.followedIds.toSet();
     final List<FollowTarget> merged = <FollowTarget>[
       ...snapshot.followed.where(
         (FollowTarget target) => kinds.contains(target.kind),
       ),
       ...snapshot.sports.where(
-        (FollowTarget target) => kinds.contains(target.kind),
+        (FollowTarget target) =>
+            kinds.contains(target.kind) && followedIds.contains(target.id),
       ),
       ...snapshot.locations.where(
-        (FollowTarget target) => kinds.contains(target.kind),
+        (FollowTarget target) =>
+            kinds.contains(target.kind) && followedIds.contains(target.id),
       ),
       ...snapshot.topics.where(
-        (FollowTarget target) => kinds.contains(target.kind),
+        (FollowTarget target) =>
+            kinds.contains(target.kind) && followedIds.contains(target.id),
       ),
       ...snapshot.publishers.where(
-        (FollowTarget target) => kinds.contains(target.kind),
+        (FollowTarget target) =>
+            kinds.contains(target.kind) && followedIds.contains(target.id),
       ),
     ];
     return _sort(_dedupe(merged));

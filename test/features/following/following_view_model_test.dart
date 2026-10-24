@@ -84,7 +84,7 @@ void main() {
       expect(viewModel.hasAnyGroup, isTrue);
     });
 
-    test('merges the per-kind catalogues with the flat followed list', () {
+    test('catalogue entries that are not followed stay out of the groups', () {
       const FollowingViewModel viewModel = FollowingViewModel(
         snapshot: FollowingSnapshot(
           followed: <FollowTarget>[lakers],
@@ -96,12 +96,31 @@ void main() {
       );
 
       expect(viewModel.sports.map((FollowTarget t) => t.label), <String>[
-        'Arsenal',
         'Los Angeles Lakers',
       ]);
-      expect(viewModel.locations.single.label, 'Freetown');
-      expect(viewModel.topics.single.label, 'Politics');
+      expect(viewModel.locations, isEmpty);
+      expect(viewModel.topics, isEmpty);
     });
+
+    test(
+      'a full catalogue with nothing followed renders no followed groups',
+      () {
+        const FollowingViewModel viewModel = FollowingViewModel(
+          snapshot: FollowingSnapshot(
+            followed: <FollowTarget>[],
+            suggested: <FollowTarget>[],
+            sports: <FollowTarget>[lakers, arsenal],
+            locations: <FollowTarget>[freetown],
+            topics: <FollowTarget>[politics],
+          ),
+        );
+
+        expect(viewModel.sports, isEmpty);
+        expect(viewModel.locations, isEmpty);
+        expect(viewModel.topics, isEmpty);
+        expect(viewModel.hasAnyGroup, isFalse);
+      },
+    );
 
     test('keeps the first occurrence of a duplicated id', () {
       const FollowTarget duplicateLakers = FollowTarget(
