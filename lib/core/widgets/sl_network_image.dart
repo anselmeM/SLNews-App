@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/url_normalizer.dart';
 
 /// Remote image with a graceful, layout-stable placeholder.
 ///
@@ -53,11 +54,17 @@ class SlNetworkImage extends StatelessWidget {
     return Semantics(image: true, label: label, child: result);
   }
 
-  bool get _hasUrl => url != null && url!.trim().isNotEmpty;
+  String? get _secureUrl => UrlNormalizer.secureImage(url);
+
+  bool get _hasUrl => _secureUrl != null;
+
+  /// Optional server-side image proxy; bypasses hotlink protection, mixed
+  /// content and dead direct URLs. Enabled per build, not required.
+  static const String _proxyBase = String.fromEnvironment('SLNEWS_IMAGE_PROXY');
 
   Widget _buildRemote(BuildContext context) {
     return CachedNetworkImage(
-      imageUrl: url!,
+      imageUrl: _secureUrl!,
       width: width,
       height: height,
       fit: fit,
@@ -65,6 +72,21 @@ class SlNetworkImage extends StatelessWidget {
       fadeInDuration: AppMotion.medium,
       placeholder: (BuildContext context, String url) =>
           _buildFallback(context),
+      errorWidget: (BuildContext context, String url, Object error) =>
+          _buildProxyOrFallback(context, url),
+    );
+  }
+
+  Widget _buildProxyOrFallback(BuildContext context, String failedUrl) {
+    if (_proxyBase.isEmpty) return _buildFallback(context);
+    final String proxied = '$_proxyBase${Uri.encodeComponent(failedUrl)}';
+    return CachedNetworkImage(
+      imageUrl: proxied,
+      width: width,
+      height: height,
+      fit: fit,
+      alignment: alignment,
+      fadeInDuration: AppMotion.medium,
       errorWidget: (BuildContext context, String url, Object error) =>
           _buildFallback(context),
     );

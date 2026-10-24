@@ -4,6 +4,22 @@
 /// mixed-case hosts. Normalising them in one place keeps article identity
 /// stable (`StableId`) and stops the same story being cached under two URLs.
 abstract final class UrlNormalizer {
+  /// Image URL safe for Android/iOS: absolute https only.
+  ///
+  /// Feeds still advertise `http://` images; Android blocks cleartext, which is
+  /// why some thumbnails rendered blank. Upgrading the scheme is enough for
+  /// every publisher we ingest (their hosts serve TLS).
+  static String? secureImage(String? candidate) {
+    final String? absoluteUrl = candidate?.trim();
+    if (absoluteUrl == null || absoluteUrl.isEmpty) return null;
+    final String lowered = absoluteUrl.toLowerCase();
+    if (lowered.startsWith('http://')) {
+      return 'https://${absoluteUrl.substring(7)}';
+    }
+    if (lowered.startsWith('https://')) return absoluteUrl;
+    return null;
+  }
+
   /// Query parameters that identify a campaign, never a resource.
   static const Set<String> _trackingKeys = <String>{'fbclid', 'gclid'};
 
