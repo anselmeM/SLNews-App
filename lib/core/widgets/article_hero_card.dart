@@ -71,7 +71,7 @@ class ArticleHeroCard extends StatelessWidget {
                           Color(0x05171717),
                           Color(0xB3171717),
                         ],
-                        stops: <double>[0, 0.45, 1],
+                        stops: <double>[0, 0.752, 1],
                       ),
                     ),
                   ),

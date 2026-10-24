@@ -43,7 +43,8 @@ class TopicMosaic extends StatelessWidget {
   /// the rail never becomes a second feed.
   final int maxItems;
 
-  static const double _aspectRatio = 1.45;
+  // Samsung cover_2x2 is 150x133 dp (1.128).
+  static const double _aspectRatio = 1.13;
 
   @override
   Widget build(BuildContext context) {

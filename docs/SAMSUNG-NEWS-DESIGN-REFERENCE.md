@@ -111,3 +111,51 @@ The scrim drawable is `res/jEd.xml`: `startColor=#05171717`, `endColor=#B3171717
 | Ad CTA | `newsBannerAdView_ctaBtn_*` | 30 dp high, radius 15 | 30 dp / 15 dp |
 | Ad title | `newsBannerAdView_title_textSize` | 16 dp | 24 sp hero (kept) |
 | Ad badge | `newsBannerAdView_adBadge_textSize` | 12 dp | 12 sp “AD” |
+
+## Night colour matrix (news_* night variants)
+
+| Resource | Light | Night |
+| --- | --- | --- |
+| `news_glance_title_color_brief` | `#FAFAFF` | `#000000` |
+| `news_glance_title_color_brief_preview` | `#252525` | `#FFFFFF` |
+| `news_widget_list_item_title_color` | `#010102` | `#FAFAFF` |
+| `news_widget_list_item_time_color` | `#4D4D52` | `#CCCCCE` |
+| `news_widget_list_item_logo_text_color` | `#4D4D52` | `#CCCCCE` |
+| `news_widget_list_item_background_color_night` | — | `#2D2D30` (60 %) |
+| `news_mini_page_category_list_text_color` | `#010102` | `#FAFAFA` |
+| `news_mini_page_category_list_checked_blue` | `#376FDE` | `#578FFF` |
+| `news_mini_page_toolbar_background_color_*` | `#F6F6F6` | `#010102` |
+| `news_widget_configure_bg_shape_*` | `#80000000` / `#DEDEE1` | `#80FFFFFF` / `#5A5A5D` |
+| `news_glance_loading_*` | `#33FFFFFF` | `#33000000` |
+| `news_glance_error_background_color_card_cover` | `#B3FAFAFF` | `#B32D2D30` |
+
+Applied to `AppColors.dark`: canvas `#010102`, surface `#1B1B1D`, muted
+`#2D2D30`, ink `#FAFAFF`, variant `#CCCCCE`, faint `#99999B`, divider `#333336`,
+primary `#578FFF`; light ink variant `#4D4D52`, faint `#8C8C8C`, canvas `#F6F6F7`.
+
+## Widget preview ratios
+
+| Token | Value | Ratio |
+| --- | --- | --- |
+| `cover_2x2_width/height` | 150 × 133 dp | **1.128** |
+| `cover_2x2_image_height` | 84 dp | — |
+| `cover_2x2_gradient_height` | 49 dp | — |
+| `cover_4x2_width/height` | 312 × 133 dp | **2.346** |
+| `cover_height` / fade | 339 dp / 84 dp | fade = 24.8 % of height |
+| `news_widget_configure_preview_medium_*` | 162 × 169 dp | 0.96 (land 126 × 131) |
+
+Topic mosaic uses **1.13** (2x2 card); the hero scrim now starts at 75.2 % so the
+fade occupies the last 24.8 %, matching `cover_bottom_fading_edge_length`.
+
+## Category chip / tab geometry
+
+| Token | Value | SLNews |
+| --- | --- | --- |
+| `chip_height` | **32 dp** | CategoryPill 32 dp |
+| `chip_text_size` | **14 sp** | 14 sp |
+| `chip_spacing_horizontal` | 8 dp | 8–12 dp |
+| `chip_group_min_height` | 32 dp | strip 46 dp scroll area |
+| `main_tab_layout_height` | **60 dp** | bottom nav (kept 56 dp per Material token) |
+| `main_tab_side_padding` | 16 dp (24 at sw480) | 16 dp |
+| `main_tab_toolbar_inset_start` | 20 dp (24 at w480) | 20 dp |
+| `design_tab_text_size` | 14 sp | 14 sp |
