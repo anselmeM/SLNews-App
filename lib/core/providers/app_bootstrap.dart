@@ -208,7 +208,11 @@ class AppBootstrap {
       scoreboardUrl: const String.fromEnvironment('SLNEWS_SCOREBOARD_URL'),
       // Live scores are a production-build feature: tests and key-less builds
       // stay fully offline and instant.
-      liveSource: const bool.fromEnvironment('THESPORTSDB_ENABLED')
+      // Prefer the backend proxy when configured: it caches, hides the key and
+      // survives rate limits. Direct TheSportsDB stays for proxy-less builds.
+      liveSource:
+          const bool.fromEnvironment('THESPORTSDB_ENABLED') &&
+              const String.fromEnvironment('SLNEWS_SCOREBOARD_URL').isEmpty
           ? TheSportsDbSource(client: client)
           : null,
     );
