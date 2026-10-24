@@ -13,8 +13,8 @@ const FeedSourceConfig config = FeedSourceConfig(
   categoryId: 'news',
 );
 
-String fixture(String imageTag) =>
-    """
+String fixture(String imageTag) {
+  return '''
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
@@ -29,6 +29,7 @@ String fixture(String imageTag) =>
   </channel>
 </rss>
 ''';
+}
 
 Article parseOne(String tag) =>
     RssParser.parse(fixture(tag), config: config).single;
