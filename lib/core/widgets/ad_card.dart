@@ -62,49 +62,70 @@ class AdCard extends StatelessWidget {
                   AppSpacing.lg,
                   AppSpacing.lg,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Stack(
                   children: <Widget>[
-                    Text(
-                      unit.headline,
-                      style: context.typography.sectionTitle.copyWith(
-                        color: Colors.white,
-                        fontSize: 24,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    if (unit.assetLabel != null) ...<Widget>[
-                      const SizedBox(height: AppSpacing.lg),
-                      Center(child: _OfferCard(unit: unit)),
-                    ],
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          'AD',
-                          style: context.typography.overline.copyWith(
-                            color: const Color(0xCCFFFFFF),
+                    // Samsung banner scrim: #0D000000 -> #33000000 at the bottom.
+                    const Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: <Color>[
+                              Color(0x00000000),
+                              Color(0x0D000000),
+                              Color(0x33000000),
+                            ],
+                            stops: <double>[0, 0.55, 1],
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        const Icon(
-                          Icons.info_outline,
-                          size: 13,
-                          color: Color(0xCCFFFFFF),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          unit.headline,
+                          style: context.typography.sectionTitle.copyWith(
+                            color: Colors.white,
+                            fontSize: 24,
+                            letterSpacing: -0.2,
+                          ),
                         ),
+                        if (unit.assetLabel != null) ...<Widget>[
+                          const SizedBox(height: AppSpacing.lg),
+                          Center(child: _OfferCard(unit: unit)),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
+                        Row(
+                          children: <Widget>[
+                            Text(
+                              'AD',
+                              style: context.typography.overline.copyWith(
+                                color: const Color(0xCCFFFFFF),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            const Icon(
+                              Icons.info_outline,
+                              size: 13,
+                              color: Color(0xCCFFFFFF),
+                            ),
+                          ],
+                        ),
+                        if (unit.disclosure != null) ...<Widget>[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            unit.disclosure!,
+                            style: context.typography.overline.copyWith(
+                              color: const Color(0x99FFFFFF),
+                              letterSpacing: 0,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                    if (unit.disclosure != null) ...<Widget>[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        unit.disclosure!,
-                        style: context.typography.overline.copyWith(
-                          color: const Color(0x99FFFFFF),
-                          letterSpacing: 0,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -132,9 +153,12 @@ class AdCard extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: context.colors.surfaceMuted,
                       foregroundColor: context.colors.onSurface,
+                      minimumSize: const Size(0, 30),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
+                        horizontal: AppSpacing.md,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(15)),
                       ),
                     ),
                     child: Text(unit.ctaLabel),

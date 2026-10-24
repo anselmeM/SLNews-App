@@ -144,6 +144,8 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
           slivers: <Widget>[
             SliverAppBar(
               pinned: true,
+              toolbarHeight: 72,
+              titleSpacing: AppSpacing.xl,
               backgroundColor: context.colors.canvas,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
@@ -158,8 +160,8 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
               // has one and its brand wordmark otherwise.
               title: PublisherMark(
                 publisher: article.publisher,
-                logoHeight: 18,
-                maxWidth: 130,
+                logoHeight: 22,
+                maxWidth: 150,
                 color: context.colors.onSurfaceVariant,
               ),
               centerTitle: true,

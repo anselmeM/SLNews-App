@@ -93,3 +93,21 @@ on a 393 dp-wide phone.
 
 The scrim drawable is `res/jEd.xml`: `startColor=#05171717`, `endColor=#B3171717`,
 `angle=270` — a 2 % to 70 % wash of `#171717`, not pure black.
+
+## Reader, list rows and ad card
+
+| Element | Samsung resource | Value | SLNews |
+| --- | --- | --- | --- |
+| Detail app bar | `news_detail_appbar_height` | **72 dp** (56 dp cover) | reader `SliverAppBar` 72 dp |
+| Detail title | `news_detail_toolbar_title_text_size` | 21 sp | publisher mark 22 dp |
+| Back icon box | `news_detail_appbar_back_icon_width` | 56 dp (start 20 / end 12) | 56 dp |
+| Toolbar top pad | `news_detail_appbar_padding_top` | 8 dp | 8 dp |
+| List item radius | `news_widget_list_item_radius` | 18 dp | 20 dp card |
+| List item side margin | `news_widget_list_item_margin_side` | 10 dp | 12 dp page gutter |
+| List item padding | `news_widget_list_item_padding_*` | 16 dp | 16 dp |
+| Title gap | `news_widget_list_item_title_margin_bottom` | 8 dp | 8 dp |
+| List divider | `news_widget_list_item_divider` | 10 dp | 12 dp |
+| Ad scrim | `news_banner_ad_gradient_*` | `#0D000000 → #33000000` | bottom scrim 0/55/100 % |
+| Ad CTA | `newsBannerAdView_ctaBtn_*` | 30 dp high, radius 15 | 30 dp / 15 dp |
+| Ad title | `newsBannerAdView_title_textSize` | 16 dp | 24 sp hero (kept) |
+| Ad badge | `newsBannerAdView_adBadge_textSize` | 12 dp | 12 sp “AD” |
