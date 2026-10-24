@@ -28,7 +28,7 @@ String fixture(String imageTag) =>
     </item>
   </channel>
 </rss>
-""";
+''';
 
 Article parseOne(String tag) =>
     RssParser.parse(fixture(tag), config: config).single;
