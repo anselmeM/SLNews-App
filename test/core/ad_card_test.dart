@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
@@ -67,7 +67,7 @@ void main() {
 
     expect(find.text('CLAIM YOUR REWARD'), findsOneWidget);
     expect(find.text(r'$20'), findsOneWidget);
-    expect(find.text('Ad'), findsOneWidget);
+    expect(find.text('AD'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -83,7 +83,7 @@ void main() {
   ) async {
     await pumpCard(tester, withLabel, textScale: 1);
 
-    expect(find.text('Ad'), findsOneWidget);
+    expect(find.text('AD'), findsOneWidget);
     expect(
       find.text(
         'Actual payout depends on playing games and engaging with the app.',
