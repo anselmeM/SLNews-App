@@ -203,6 +203,9 @@ class AppBootstrap {
     final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
       seedLoader: seedLoader,
       client: client,
+      // Optional backend sports proxy (`/api/mobile/v1/sports`). The app maps
+      // the same {games} shape it already consumed from the old scoreboard URL.
+      scoreboardUrl: const String.fromEnvironment('SLNEWS_SCOREBOARD_URL'),
       // Live scores are a production-build feature: tests and key-less builds
       // stay fully offline and instant.
       liveSource: const bool.fromEnvironment('THESPORTSDB_ENABLED')
