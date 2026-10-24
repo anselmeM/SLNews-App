@@ -112,6 +112,14 @@ class SettingsPage extends ConsumerWidget {
                       onChanged: controller.setBreakingNewsAlertsEnabled,
                     ),
                     SettingsSwitchRow(
+                      title: 'Topics you follow',
+                      subtitle:
+                          'Alerts when there is a new story in a topic you '
+                          'follow.',
+                      value: settings.followedTopicAlertsEnabled,
+                      onChanged: controller.setFollowedTopicAlertsEnabled,
+                    ),
+                    SettingsSwitchRow(
                       title: "Editor's picks",
                       subtitle:
                           'Get top stories, daily briefings, and recommended '

@@ -38,6 +38,7 @@ class AppSettings {
     this.editorsPicksEnabled = false,
     this.interactiveContentEnabled = true,
     this.sportsAlertsEnabled = true,
+    this.followedTopicAlertsEnabled = true,
     this.weatherForecastEnabled = true,
   });
 
@@ -58,6 +59,9 @@ class AppSettings {
   final bool editorsPicksEnabled;
   final bool interactiveContentEnabled;
   final bool sportsAlertsEnabled;
+
+  /// Alerts for the topics the reader follows.
+  final bool followedTopicAlertsEnabled;
 
   /// When false the weather row is hidden from the feeds.
   final bool weatherForecastEnabled;
@@ -83,6 +87,7 @@ class AppSettings {
     bool? editorsPicksEnabled,
     bool? interactiveContentEnabled,
     bool? sportsAlertsEnabled,
+    bool? followedTopicAlertsEnabled,
     bool? weatherForecastEnabled,
   }) {
     return AppSettings(
@@ -95,6 +100,8 @@ class AppSettings {
       interactiveContentEnabled:
           interactiveContentEnabled ?? this.interactiveContentEnabled,
       sportsAlertsEnabled: sportsAlertsEnabled ?? this.sportsAlertsEnabled,
+      followedTopicAlertsEnabled:
+          followedTopicAlertsEnabled ?? this.followedTopicAlertsEnabled,
       weatherForecastEnabled:
           weatherForecastEnabled ?? this.weatherForecastEnabled,
     );

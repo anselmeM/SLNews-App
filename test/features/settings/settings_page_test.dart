@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -78,7 +78,7 @@ void main() {
     // Header and account.
     expect(find.text('SLNews settings'), findsOneWidget);
     expect(find.text('SLNews account'), findsOneWidget);
-    expect(find.text('Not signed in — tap to sign in'), findsOneWidget);
+    expect(find.text('Not signed in \u2014 tap to sign in'), findsOneWidget);
 
     // Notifications: the four categories, with the reference copy.
     expect(find.text('Notifications'), findsOneWidget);
@@ -203,5 +203,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('sign-in route'), findsOneWidget);
+  });
+  testWidgets('offers an alert toggle for followed topics', (
+    WidgetTester tester,
+  ) async {
+    await pumpPage(tester);
+
+    expect(find.text('Topics you follow'), findsOneWidget);
+    expect(
+      find.textContaining('new story in a topic you follow'),
+      findsOneWidget,
+    );
   });
 }

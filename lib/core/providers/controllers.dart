@@ -32,6 +32,7 @@ class SettingsController extends Notifier<AppSettings> {
       editorsPicksEnabled: repository.editorsPicksEnabled,
       interactiveContentEnabled: repository.interactiveContentEnabled,
       sportsAlertsEnabled: repository.sportsAlertsEnabled,
+      followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
     );
   }
@@ -88,6 +89,18 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setSportsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setSportsAlertsEnabled(enabled);
     state = state.copyWith(sportsAlertsEnabled: enabled);
+  }
+
+  Future<void> setFollowedTopicAlertsEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setFollowedTopicAlertsEnabled(enabled);
+    state = state.copyWith(followedTopicAlertsEnabled: enabled);
+    try {
+      if (enabled) {
+        await ref.read(pushServiceProvider).enable();
+      }
+    } catch (error) {
+      debugPrint('SettingsController: topic alert permission failed: $error');
+    }
   }
 
   Future<void> setWeatherForecastEnabled(bool enabled) async {

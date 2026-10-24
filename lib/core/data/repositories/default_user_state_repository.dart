@@ -21,6 +21,7 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String editorsPicksKey = 'settings.editorsPicks';
   static const String interactiveContentKey = 'settings.interactiveContent';
   static const String sportsAlertsKey = 'settings.sportsAlerts';
+  static const String followedTopicAlertsKey = 'settings.followedTopicAlerts';
   static const String weatherForecastKey = 'settings.weatherForecast';
 
   /// Defaults applied when a key has never been written.
@@ -31,6 +32,7 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const bool defaultEditorsPicks = false;
   static const bool defaultInteractiveContent = false;
   static const bool defaultSportsAlerts = true;
+  static const bool defaultFollowedTopicAlerts = true;
   static const bool defaultWeatherForecast = true;
 
   final PreferencesStore _store;
@@ -109,6 +111,14 @@ class DefaultUserStateRepository implements UserStateRepository {
   @override
   Future<void> setSportsAlertsEnabled(bool enabled) =>
       _store.putBool(sportsAlertsKey, enabled);
+
+  @override
+  bool get followedTopicAlertsEnabled =>
+      _store.boolean(followedTopicAlertsKey) ?? defaultFollowedTopicAlerts;
+
+  @override
+  Future<void> setFollowedTopicAlertsEnabled(bool enabled) =>
+      _store.putBool(followedTopicAlertsKey, enabled);
 
   @override
   bool get weatherForecastEnabled =>

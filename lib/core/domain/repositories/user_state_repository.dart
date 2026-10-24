@@ -34,6 +34,11 @@ abstract interface class UserStateRepository {
 
   Future<void> setBreakingNewsAlertsEnabled(bool enabled);
 
+  /// Alerts for topics the reader follows.
+  bool get followedTopicAlertsEnabled;
+
+  Future<void> setFollowedTopicAlertsEnabled(bool enabled);
+
   /// "Editor's picks" notifications.
   bool get editorsPicksEnabled;
 
