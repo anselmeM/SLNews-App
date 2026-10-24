@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sl_network_image.dart';
+import '../../../../core/theme/category_icons.dart';
 
 /// One image topic card in the Following mosaic.
 @immutable
@@ -95,7 +96,12 @@ class _TopicCard extends StatelessWidget {
             fit: StackFit.expand,
             children: <Widget>[
               if (hasImage)
-                SlNetworkImage(url: item.imageUrl, placeholderLabel: item.label)
+                SlNetworkImage(
+                  url: item.imageUrl,
+                  seed: item.label,
+                  fallbackIcon: articleCategoryIcon(item.label),
+                  placeholderLabel: item.label,
+                )
               else
                 Center(
                   child: Icon(

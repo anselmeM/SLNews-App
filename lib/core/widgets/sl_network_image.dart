@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +24,8 @@ class SlNetworkImage extends StatelessWidget {
     this.placeholderLabel,
     this.semanticLabel,
     this.alignment = Alignment.center,
+    this.seed,
+    this.fallbackIcon,
   });
 
   final String? url;
@@ -38,6 +42,13 @@ class SlNetworkImage extends StatelessWidget {
   final String? semanticLabel;
 
   final Alignment alignment;
+
+  /// Stable text used to derive the fallback artwork colour, usually the
+  /// article or publisher id, so the same story always gets the same card.
+  final String? seed;
+
+  /// Glyph shown when there is no image (category icon by default).
+  final IconData? fallbackIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +105,23 @@ class SlNetworkImage extends StatelessWidget {
 
   Widget _buildFallback(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color base = context.colors.skeleton;
+    final String key = (seed ?? placeholderLabel ?? 'slnews').trim();
+    final double hue = (key.hashCode.abs() % 360).toDouble();
+    final HSLColor top = HSLColor.fromAHSL(
+      1,
+      hue,
+      isDark ? 0.38 : 0.42,
+      isDark ? 0.26 : 0.55,
+    );
+    final HSLColor bottom = HSLColor.fromAHSL(
+      1,
+      (hue + 26) % 360,
+      isDark ? 0.42 : 0.5,
+      isDark ? 0.14 : 0.36,
+    );
+    final IconData icon = fallbackIcon ?? Icons.newspaper;
+    final double glyphSize = (math.min(width ?? 120, height ?? 120) * 0.30)
+        .clamp(18, 64);
     return Container(
       width: width,
       height: height,
@@ -103,27 +130,57 @@ class SlNetworkImage extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            base,
-            Color.lerp(base, isDark ? Colors.black : Colors.white, 0.35) ??
-                base,
-          ],
+          colors: <Color>[top.toColor(), bottom.toColor()],
         ),
       ),
-      child: placeholderLabel == null || placeholderLabel!.isEmpty
-          ? null
-          : Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          // Two translucent rings keep flat fallbacks from looking like a
+          // loading state without introducing photography we do not own.
+          Positioned(
+            right: -18,
+            top: -24,
+            child: Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0x33FFFFFF), width: 10),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -26,
+            bottom: -30,
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x1FFFFFFF),
+              ),
+            ),
+          ),
+          Center(
+            child: Icon(icon, size: glyphSize, color: const Color(0xE6FFFFFF)),
+          ),
+          if (placeholderLabel != null && placeholderLabel!.isNotEmpty)
+            Positioned(
+              left: AppSpacing.sm,
+              bottom: AppSpacing.sm,
               child: Text(
                 placeholderLabel!,
-                textAlign: TextAlign.center,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: context.typography.overline.copyWith(
-                  color: context.colors.onSurfaceFaint,
+                  color: const Color(0xCCFFFFFF),
+                  letterSpacing: 0.8,
                 ),
               ),
             ),
+        ],
+      ),
     );
   }
 }

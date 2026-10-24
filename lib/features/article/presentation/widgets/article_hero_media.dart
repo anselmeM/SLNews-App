@@ -4,6 +4,7 @@ import '../../../../core/domain/models/article.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sl_network_image.dart';
+import '../../../../core/theme/category_icons.dart';
 
 /// Featured image with its caption and credit line.
 ///
@@ -34,6 +35,8 @@ class ArticleHeroMedia extends StatelessWidget {
             url: url,
             borderRadius: AppRadius.imageRadius,
             placeholderLabel: article.publisher.mark,
+            seed: article.id,
+            fallbackIcon: articleCategoryIcon(article.categoryId),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),

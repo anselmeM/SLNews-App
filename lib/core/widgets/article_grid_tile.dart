@@ -7,6 +7,7 @@ import 'overflow_menu_button.dart';
 import 'publisher_mark.dart';
 import 'pressable_ink_well.dart';
 import 'sl_network_image.dart';
+import '../theme/category_icons.dart';
 
 /// Vertical card used by the two-column sub-category grid in the News tab.
 ///
@@ -54,6 +55,8 @@ class ArticleGridTile extends StatelessWidget {
                 child: SlNetworkImage(
                   url: article.imageUrl,
                   placeholderLabel: article.publisher.mark,
+                  seed: article.id,
+                  fallbackIcon: articleCategoryIcon(article.categoryId),
                 ),
               ),
               Flexible(

@@ -8,6 +8,7 @@ import 'overflow_menu_button.dart';
 import 'publisher_mark.dart';
 import 'pressable_ink_well.dart';
 import 'sl_network_image.dart';
+import '../theme/category_icons.dart';
 
 /// Compact feed card: text column on the left, thumbnail on the right.
 ///
@@ -115,6 +116,8 @@ class ArticleTile extends StatelessWidget {
                     height: thumbnailHeight,
                     borderRadius: AppRadius.imageRadius,
                     placeholderLabel: article.publisher.mark,
+                    seed: article.id,
+                    fallbackIcon: articleCategoryIcon(article.categoryId),
                   ),
                 ],
               ],
