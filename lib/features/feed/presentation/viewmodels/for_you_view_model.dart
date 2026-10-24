@@ -73,10 +73,44 @@ abstract final class ForYouViewModel {
       ..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
   }
 
-  /// Orders [articles] newest first without mutating the input.
-  static List<Article> _newestFirst(Iterable<Article> articles) {
-    return articles.toList(growable: false)
-      ..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
+  /// Number of explicit follow matches an article earns.
+  ///
+  /// Follow ids are prefixed (`topic:`, `publisher:`, `city:`), so a story can
+  /// match through its category, one of its tags, or its publisher.
+  static int personalMatch(Article article, Set<String> followingIds) {
+    if (followingIds.isEmpty) return 0;
+    int matches = 0;
+    if (followingIds.contains('topic:${article.categoryId}')) matches += 2;
+    if (followingIds.contains('publisher:${article.publisher.id}')) {
+      matches += 2;
+    }
+    for (final String tag in article.tags) {
+      if (followingIds.contains('topic:$tag')) matches += 1;
+      if (followingIds.contains('city:$tag')) matches += 1;
+    }
+    return matches;
+  }
+
+  static DateTime _effectiveTime(Article article, Set<String> followingIds) {
+    if (personalMatch(article, followingIds) == 0) return article.publishedAt;
+    return article.publishedAt.add(const Duration(hours: 36));
+  }
+
+  static void _sortPersonalFirst(List<Article> articles, Set<String> ids) {
+    if (ids.isEmpty) {
+      articles.sort(
+        (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
+      );
+      return;
+    }
+    articles.sort((Article a, Article b) {
+      final int byMatch = personalMatch(
+        b,
+        ids,
+      ).compareTo(personalMatch(a, ids));
+      if (byMatch != 0) return byMatch;
+      return b.publishedAt.compareTo(a.publishedAt);
+    });
   }
 
   /// Builds the render-ready feed exactly as the screen renders it.
@@ -91,6 +125,7 @@ abstract final class ForYouViewModel {
     required bool isOffline,
     DateTime? lastSyncedAt,
     int heroLimit = ForYouViewModel.heroLimit,
+    Set<String> followingIds = const <String>{},
   }) {
     final List<Article> merged = merge(
       topStories,
@@ -102,14 +137,17 @@ abstract final class ForYouViewModel {
     // "Top stories" carousel opens on what the reader must not miss. Each group
     // is ordered newest first, so the carousel never depends on the order the
     // repository happened to return.
-    final List<Article> heroPool = <Article>[
-      ..._newestFirst(
-        topStories.where((Article article) => article.isBreaking),
-      ),
-      ..._newestFirst(
-        topStories.where((Article article) => !article.isBreaking),
-      ),
-    ];
+    // Breaking stays first. Within each group, a story the reader follows
+    // (topic, publisher, city or tag id) outranks one they do not, then newest.
+    final List<Article> breaking = topStories
+        .where((Article article) => article.isBreaking)
+        .toList(growable: false);
+    final List<Article> rest = topStories
+        .where((Article article) => !article.isBreaking)
+        .toList(growable: false);
+    _sortPersonalFirst(breaking, followingIds);
+    _sortPersonalFirst(rest, followingIds);
+    final List<Article> heroPool = <Article>[...breaking, ...rest];
     final List<Article> hero = heroPool.take(heroLimit).toList(growable: false);
 
     final Set<String> heroIds = <String>{
@@ -132,6 +170,15 @@ abstract final class ForYouViewModel {
               !heroIds.contains(article.id) && !shown.contains(article.id),
         )
         .toList(growable: false);
+    // A followed story gets a fresh-news window: it may sit above newer
+    // unrelated stories, but not indefinitely.
+    latestStream.sort((Article a, Article b) {
+      final int byTime = _effectiveTime(
+        b,
+        followingIds,
+      ).compareTo(_effectiveTime(a, followingIds));
+      return byTime;
+    });
 
     return ForYouFeed(
       hero: hero,
@@ -186,7 +233,17 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
     isOffline = false;
   }
 
+  // Personalisation is a boost, never a gate: an un-overridden test scope must
+  // still render the feed.
+  Set<String> followingIds = const <String>{};
+  try {
+    followingIds = ref.watch(followingControllerProvider).followedIds.toSet();
+  } on Object {
+    followingIds = const <String>{};
+  }
+
   return ForYouViewModel.build(
+    followingIds: followingIds,
     topStories: top.value ?? const <Article>[],
     locationStories: local.value ?? const <Article>[],
     extraStories: extra.value ?? const <Article>[],

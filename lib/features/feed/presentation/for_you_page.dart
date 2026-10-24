@@ -355,10 +355,29 @@ class _FeedSliver extends ConsumerWidget {
             ),
           ),
         if (videos.isNotEmpty) ...<Widget>[
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionHeader(
               title: 'Video moments',
               subtitle: "See what's new",
+              onTap: () => _openVideo(context, videos.first),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    Icons.play_circle_outline,
+                    size: 17,
+                    color: context.colors.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Watch all',
+                    style: context.typography.caption.copyWith(
+                      color: context.colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           SliverToBoxAdapter(

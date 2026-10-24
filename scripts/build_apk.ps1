@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds a release APK for SLNews and copies it to build/dist with a checksum.
 
@@ -104,7 +104,10 @@ try {
     & $flutter pub get
     if ($LASTEXITCODE -ne 0) { throw 'flutter pub get failed' }
 
-    if (-not $SkipTests) {
+    & $PSScriptRoot/check-secrets.ps1
+if ($LASTEXITCODE -ne 0) { throw 'secret scan failed' }
+
+if (-not $SkipTests) {
         & $flutter analyze
         if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
         # Parallel workers occasionally interleave a network-backed test into a

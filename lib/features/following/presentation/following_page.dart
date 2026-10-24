@@ -143,9 +143,9 @@ class FollowingPage extends ConsumerWidget {
     }
 
     if (!viewModel.hasAnyGroup) {
-      return const <Widget>[
+      return <Widget>[
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
             AppSpacing.xl,
             AppSpacing.lg,
@@ -155,7 +155,10 @@ class FollowingPage extends ConsumerWidget {
             child: EmptyStateView(
               title: 'Nothing followed yet',
               message:
-                  'Follow teams, places and topics to build your own feed.',
+                  'Pick a few topics, teams or places and For You adapts to '
+                  'what you follow.',
+              actionLabel: 'Pick topics',
+              onAction: () => context.push(AppRoutes.manageTopics),
               icon: Icons.add_circle_outline,
             ),
           ),

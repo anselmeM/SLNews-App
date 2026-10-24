@@ -21,7 +21,9 @@ class ArticleHeroMedia extends StatelessWidget {
     if (url == null || url.trim().isEmpty) return const SizedBox.shrink();
 
     final String? caption = article.imageCaption;
-    final String? credit = article.imageCredit;
+    // Rights posture: every image carries a credit. When the feed or the page
+    // does not supply one, attribute it to the publisher we took it from.
+    final String creditLine = _creditLine(article);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,25 +36,31 @@ class ArticleHeroMedia extends StatelessWidget {
             placeholderLabel: article.publisher.mark,
           ),
         ),
-        if (caption != null || credit != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.sm),
-          Text.rich(
-            TextSpan(
-              children: <InlineSpan>[
-                if (caption != null) TextSpan(text: caption),
-                if (credit != null)
-                  TextSpan(
-                    text: ' | $credit',
-                    style: context.typography.caption.copyWith(
-                      color: context.colors.onSurfaceFaint,
-                    ),
-                  ),
-              ],
-            ),
-            style: context.typography.caption,
+        const SizedBox(height: AppSpacing.sm),
+        Text.rich(
+          TextSpan(
+            children: <InlineSpan>[
+              if (caption != null) TextSpan(text: '$caption | '),
+              TextSpan(
+                text: creditLine,
+                style: context.typography.caption.copyWith(
+                  color: context.colors.onSurfaceFaint,
+                ),
+              ),
+            ],
           ),
-        ],
+          style: context.typography.caption,
+        ),
       ],
     );
+  }
+
+  /// "Photo: Reuters" from a supplied credit, otherwise the publisher name.
+  static String _creditLine(Article article) {
+    final String? credit = article.imageCredit?.trim();
+    if (credit == null || credit.isEmpty) {
+      return 'Photo: ${article.publisher.name}';
+    }
+    return credit.toLowerCase().startsWith('photo') ? credit : 'Photo: $credit';
   }
 }

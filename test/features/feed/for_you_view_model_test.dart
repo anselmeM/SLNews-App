@@ -14,8 +14,10 @@ void main() {
     List<Article> localStories = const <Article>[],
     List<Article> extraStories = const <Article>[],
     int heroLimit = ForYouViewModel.heroLimit,
+    Set<String> followingIds = const <String>{},
   }) {
     return ForYouViewModel.build(
+      followingIds: followingIds,
       topStories: topStories,
       locationStories: localStories,
       extraStories: extraStories,
@@ -24,6 +26,75 @@ void main() {
       heroLimit: heroLimit,
     );
   }
+
+  test('a followed topic outranks newer unrelated hero stories', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+      publishedAt: DateTime(2026, 10, 14, 9),
+    );
+    final Article newer = testArticle(
+      id: 'newer',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 9),
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[newer, followed],
+      followingIds: const <String>{'topic:politics'},
+    );
+
+    expect(feed.hero.map((Article a) => a.id).toList(), <String>[
+      'followed',
+      'newer',
+    ]);
+  });
+
+  test('the stream gives followed stories a bounded fresher window', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+      publishedAt: DateTime(2026, 10, 14, 12),
+    );
+    final Article newer = testArticle(
+      id: 'newer',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 12),
+    );
+    final Article staleFollowed = testArticle(
+      id: 'stale',
+      categoryId: 'politics',
+      publishedAt: DateTime(2026, 10, 10, 12),
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[newer, followed, staleFollowed],
+      heroLimit: 0,
+      followingIds: const <String>{'topic:politics'},
+    );
+
+    // +36h boosts the one-day-old followed story above "now", but not a
+    // five-day-old one.
+    expect(feed.stream.map((Article a) => a.id).toList(), <String>[
+      'followed',
+      'newer',
+      'stale',
+    ]);
+  });
+
+  test('personalMatch counts category, publisher and tag follow ids', () {
+    final Article article = testArticle(id: 'matched', categoryId: 'politics');
+    expect(
+      ForYouViewModel.personalMatch(article, const <String>{'topic:politics'}),
+      2,
+    );
+    expect(
+      ForYouViewModel.personalMatch(article, const <String>{
+        'publisher:unknown',
+      }),
+      0,
+    );
+  });
 
   test('de-duplicates the same story arriving from every stream', () {
     final Article shared = testArticle(

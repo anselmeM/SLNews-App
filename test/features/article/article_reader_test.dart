@@ -61,6 +61,41 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('an image without a supplied credit names the publisher', (
+    WidgetTester tester,
+  ) async {
+    final Article article = testArticle(
+      id: 'story-image',
+      title: 'Freetown market reopens after renovation',
+      imageUrl: 'https://cdn.example.com/market.jpg',
+      publishedAt: DateTime.utc(2026, 10, 16, 19, 30),
+    );
+    await pumpReader(tester, article);
+
+    expect(
+      find.textContaining('Photo: ${article.publisher.name}'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the action bar exposes text size, share and translate', (
+    WidgetTester tester,
+  ) async {
+    await pumpReader(tester, story());
+
+    expect(find.text('aA'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Tooltip && (widget.message ?? '').startsWith('Text size'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.ios_share), findsOneWidget);
+    expect(find.byIcon(Icons.translate), findsOneWidget);
+    expect(find.text('Follow'), findsOneWidget);
+  });
+
   testWidgets('shows the publisher wordmark in the bar and the header', (
     WidgetTester tester,
   ) async {
