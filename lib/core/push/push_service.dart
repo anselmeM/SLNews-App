@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../data/sources/api_client.dart';
+import '../domain/models/app_settings.dart';
+import 'push_segments.dart';
 
 /// Initialises Firebase once. Returns false (and logs) when the platform
 /// config is missing, so a build without `google-services.json` still runs.
@@ -37,7 +39,11 @@ class PushService {
        _unregister = ((String url, Map<String, dynamic> body) =>
            client.deleteJson(url, body: body)),
        _baseUrl = baseUrl,
-       _ensureFirebase = ensureFirebase ?? initializeFirebase;
+       _ensureFirebase = ensureFirebase ?? initializeFirebase,
+       _subscribeTopic = ((String topic) =>
+           FirebaseMessaging.instance.subscribeToTopic(topic)),
+       _unsubscribeTopic = ((String topic) =>
+           FirebaseMessaging.instance.unsubscribeFromTopic(topic));
 
   /// Test seam: no Firebase, no platform channels.
   @visibleForTesting
@@ -49,12 +55,16 @@ class PushService {
     required Future<String?> Function() token,
     required Future<bool> Function() requestPermission,
     Future<String> Function()? notificationStatus,
+    Future<void> Function(String topic)? subscribeTopic,
+    Future<void> Function(String topic)? unsubscribeTopic,
     String baseUrl = 'https://example.invalid',
   }) : _register = register,
        _unregister = unregister,
        _token = token,
        _requestPermission = requestPermission,
        _notificationStatus = notificationStatus,
+       _subscribeTopic = subscribeTopic ?? ((String topic) async {}),
+       _unsubscribeTopic = unsubscribeTopic ?? ((String topic) async {}),
        _baseUrl = baseUrl,
        _ensureFirebase = (() async => true),
        _testMode = true;
@@ -75,6 +85,9 @@ class PushService {
       StreamController<Map<String, dynamic>>.broadcast();
   FlutterLocalNotificationsPlugin? _notifications;
   StreamSubscription<RemoteMessage>? _foreground;
+  late final Future<void> Function(String topic) _subscribeTopic;
+  late final Future<void> Function(String topic) _unsubscribeTopic;
+  final Set<String> _activeTopics = <String>{};
 
   /// Notification taps, for routing. Empty payloads are ignored.
   Stream<Map<String, dynamic>> get taps => _taps.stream;
@@ -135,6 +148,7 @@ class PushService {
 
   /// Removes this device so it stops receiving pushes.
   Future<void> disable() async {
+    await clearSegments();
     try {
       final String? token = await (_token ?? _tokenReal)();
       if (token == null || token.isEmpty) return;
@@ -172,6 +186,51 @@ class PushService {
       return false;
     }
   }
+
+  /// Subscribes/unsubscribes FCM topics so delivery matches the reader's
+  /// follows and notification toggles. Diff-based, so repeated calls are cheap.
+  Future<void> syncSegments({
+    required Set<String> followedIds,
+    required AppSettings settings,
+  }) async {
+    final Set<String> target = segmentTopicsFor(
+      followedIds: followedIds,
+      settings: settings,
+    );
+    final Set<String> added = target.difference(_activeTopics);
+    final Set<String> removed = _activeTopics.difference(target);
+    for (final String topic in removed) {
+      try {
+        await _unsubscribeTopic.call(topic);
+        _activeTopics.remove(topic);
+      } catch (error) {
+        debugPrint('PushService: unsubscribe $topic failed: $error');
+      }
+    }
+    for (final String topic in added) {
+      try {
+        await _subscribeTopic.call(topic);
+        _activeTopics.add(topic);
+      } catch (error) {
+        debugPrint('PushService: subscribe $topic failed: $error');
+      }
+    }
+  }
+
+  /// Drops every managed topic (sign-out, notifications off).
+  Future<void> clearSegments() async {
+    for (final String topic in List<String>.of(_activeTopics)) {
+      try {
+        await _unsubscribeTopic.call(topic);
+      } catch (error) {
+        debugPrint('PushService: unsubscribe $topic failed: $error');
+      }
+    }
+    _activeTopics.clear();
+  }
+
+  @visibleForTesting
+  Set<String> get activeTopics => Set<String>.of(_activeTopics);
 
   Future<void> _registerToken(String token) async {
     await _register(_devicesUrl, <String, dynamic>{

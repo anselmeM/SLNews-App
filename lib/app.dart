@@ -87,6 +87,7 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
     try {
       final PushService push = ref.read(pushServiceProvider);
       unawaited(push.ensureRegisteredIfGranted());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _syncSegments());
       _subscription = push.taps.listen((data) {
         final String? route = pushRouteFor(data);
         if (route != null && mounted) ref.read(appRouterProvider).push(route);
@@ -102,6 +103,26 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
     super.dispose();
   }
 
+  Future<void> _syncSegments() async {
+    try {
+      await ref
+          .read(pushServiceProvider)
+          .syncSegments(
+            followedIds: ref
+                .read(followingControllerProvider)
+                .followedIds
+                .toSet(),
+            settings: ref.read(settingsControllerProvider),
+          );
+    } catch (error) {
+      debugPrint('PushTapHandler: segment sync failed: $error');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    ref.listen(followingControllerProvider, (_, _) => _syncSegments());
+    ref.listen(settingsControllerProvider, (_, _) => _syncSegments());
+    return widget.child;
+  }
 }

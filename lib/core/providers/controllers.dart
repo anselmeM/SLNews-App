@@ -61,6 +61,7 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setBreakingNewsAlertsEnabled(enabled);
     state = state.copyWith(breakingNewsAlertsEnabled: enabled);
+    await _syncPushSegments();
     try {
       final PushService push = ref.read(pushServiceProvider);
       if (enabled) {
@@ -82,6 +83,22 @@ class SettingsController extends Notifier<AppSettings> {
     state = state.copyWith(editorsPicksEnabled: enabled);
   }
 
+  Future<void> _syncPushSegments() async {
+    try {
+      await ref
+          .read(pushServiceProvider)
+          .syncSegments(
+            followedIds: ref
+                .read(followingControllerProvider)
+                .followedIds
+                .toSet(),
+            settings: state,
+          );
+    } catch (error) {
+      debugPrint('SettingsController: push segments failed: $error');
+    }
+  }
+
   Future<void> setInteractiveContentEnabled(bool enabled) async {
     await ref.read(userStateProvider).setInteractiveContentEnabled(enabled);
     state = state.copyWith(interactiveContentEnabled: enabled);
@@ -90,11 +107,13 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setSportsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setSportsAlertsEnabled(enabled);
     state = state.copyWith(sportsAlertsEnabled: enabled);
+    await _syncPushSegments();
   }
 
   Future<void> setFollowedTopicAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setFollowedTopicAlertsEnabled(enabled);
     state = state.copyWith(followedTopicAlertsEnabled: enabled);
+    await _syncPushSegments();
     try {
       if (enabled) {
         await ref.read(pushServiceProvider).enable();
@@ -193,6 +212,7 @@ class FollowingController extends Notifier<FollowingSnapshot> {
   Future<void> toggle(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).toggle(target);
     if (state.isFollowed(target.id)) _askForPushAfterFirstAction(ref);
+    await _syncPushSegments();
     await recordSyncChange(
       ref,
       SyncCollections.follows,
@@ -204,17 +224,32 @@ class FollowingController extends Notifier<FollowingSnapshot> {
   Future<void> follow(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).follow(target);
     _askForPushAfterFirstAction(ref);
+    await _syncPushSegments();
     await recordSyncChange(ref, SyncCollections.follows, target.id);
   }
 
   Future<void> unfollow(String targetId) async {
     state = await ref.read(followingRepositoryProvider).unfollow(targetId);
+    await _syncPushSegments();
     await recordSyncChange(
       ref,
       SyncCollections.follows,
       targetId,
       deleted: true,
     );
+  }
+
+  Future<void> _syncPushSegments() async {
+    try {
+      await ref
+          .read(pushServiceProvider)
+          .syncSegments(
+            followedIds: state.followedIds.toSet(),
+            settings: ref.read(settingsControllerProvider),
+          );
+    } catch (error) {
+      debugPrint('FollowingController: push segments failed: $error');
+    }
   }
 }
 

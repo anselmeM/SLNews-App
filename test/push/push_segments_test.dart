@@ -1,0 +1,75 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:slnews_mobile/core/domain/models/app_settings.dart';
+import 'package:slnews_mobile/core/push/push_segments.dart';
+import 'package:slnews_mobile/core/push/push_service.dart';
+
+void main() {
+  const AppSettings allOn = AppSettings(
+    breakingNewsAlertsEnabled: true,
+    followedTopicAlertsEnabled: true,
+    sportsAlertsEnabled: true,
+  );
+
+  test('maps follow ids to stable FCM topic names', () {
+    expect(topicForFollowId('topic:politics'), 'slnews_topic_politics');
+    expect(topicForFollowId('team:lal'), 'slnews_team_lal');
+  });
+
+  test('only subscribes to enabled categories', () {
+    final Set<String> topics = segmentTopicsFor(
+      followedIds: const <String>{'topic:politics', 'team:lal', 'league:nba'},
+      settings: allOn,
+    );
+    expect(
+      topics,
+      containsAll(<String>[
+        breakingPushTopic,
+        'slnews_topic_politics',
+        'slnews_team_lal',
+        'slnews_league_nba',
+      ]),
+    );
+
+    final Set<String> muted = segmentTopicsFor(
+      followedIds: const <String>{'topic:politics', 'team:lal'},
+      settings: const AppSettings(
+        breakingNewsAlertsEnabled: false,
+        followedTopicAlertsEnabled: false,
+        sportsAlertsEnabled: false,
+      ),
+    );
+    expect(muted, isEmpty);
+  });
+
+  test('sync subscribes new topics and drops removed ones', () async {
+    final List<String> subscribed = <String>[];
+    final List<String> unsubscribed = <String>[];
+    final PushService push = PushService.forTransports(
+      register: (String url, Map<String, dynamic> body) async => null,
+      unregister: (String url, Map<String, dynamic> body) async => null,
+      token: () async => 'token',
+      requestPermission: () async => true,
+      subscribeTopic: (String topic) async => subscribed.add(topic),
+      unsubscribeTopic: (String topic) async => unsubscribed.add(topic),
+    );
+
+    await push.syncSegments(
+      followedIds: const <String>{'topic:politics'},
+      settings: allOn,
+    );
+    expect(
+      subscribed,
+      containsAll(<String>[breakingPushTopic, 'slnews_topic_politics']),
+    );
+
+    await push.syncSegments(
+      followedIds: const <String>{'topic:sports'},
+      settings: allOn,
+    );
+    expect(subscribed, contains('slnews_topic_sports'));
+    expect(unsubscribed, contains('slnews_topic_politics'));
+
+    await push.clearSegments();
+    expect(push.activeTopics, isEmpty);
+  });
+}
