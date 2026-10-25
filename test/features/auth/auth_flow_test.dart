@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:slnews_mobile/core/domain/auth/auth_repository.dart';
+import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/auth_providers.dart';
 import 'package:slnews_mobile/core/routing/app_routes.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/auth/presentation/account_card.dart';
 import 'package:slnews_mobile/features/auth/presentation/sign_in_page.dart';
+
+import '../feed/support/fakes.dart';
 
 /// Controllable identity provider: no Clerk, no network.
 class FakeAuthRepository implements AuthRepository {
@@ -156,11 +159,14 @@ void main() {
         ],
       );
 
+      final FakeUserStateRepository userState = FakeUserStateRepository()
+        ..onboardingCompleted = true;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             authRepositoryProvider.overrideWithValue(repository),
             signInSurfaceProvider.overrideWithValue(const FakeSignInSurface()),
+            userStateProvider.overrideWithValue(userState),
           ],
           child: MaterialApp.router(
             theme: AppTheme.light(),

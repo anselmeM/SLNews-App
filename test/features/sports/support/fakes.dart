@@ -231,6 +231,12 @@ class FakeUserStateRepository implements UserStateRepository {
   Future<void> setFollowedTopicAlertsEnabled(bool enabled) async {}
 
   @override
+  bool get onboardingCompleted => false;
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async {}
+
+  @override
   bool get weatherForecastEnabled => true;
 
   @override

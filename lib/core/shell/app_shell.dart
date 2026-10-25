@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/domain/auth/auth_repository.dart';
+import '../domain/models/app_settings.dart';
+import '../providers/auth_providers.dart';
+import '../providers/controllers.dart';
 import '../routing/app_routes.dart';
+import '../../features/onboarding/presentation/onboarding_page.dart';
 
 /// Persistent bottom navigation shell holding the four tab roots.
 ///
@@ -34,6 +39,18 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // First-run gate: after sign-in, the topic/location picker must land before
+    // the first personalised feed render.
+    final bool signedIn = ref.watch(
+      authControllerProvider.select((AuthState state) => state.isSignedIn),
+    );
+    final bool onboarded = ref.watch(
+      settingsControllerProvider.select(
+        (AppSettings settings) => settings.onboardingCompleted,
+      ),
+    );
+    if (signedIn && !onboarded) return const OnboardingPage();
+
     final ThemeData theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,

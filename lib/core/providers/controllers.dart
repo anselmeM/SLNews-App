@@ -34,6 +34,7 @@ class SettingsController extends Notifier<AppSettings> {
       sportsAlertsEnabled: repository.sportsAlertsEnabled,
       followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
+      onboardingCompleted: repository.onboardingCompleted,
     );
   }
 
@@ -106,6 +107,12 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setWeatherForecastEnabled(bool enabled) async {
     await ref.read(userStateProvider).setWeatherForecastEnabled(enabled);
     state = state.copyWith(weatherForecastEnabled: enabled);
+  }
+
+  /// Marks the first-run picker as done and persists it.
+  Future<void> completeOnboarding() async {
+    await ref.read(userStateProvider).setOnboardingCompleted(true);
+    state = state.copyWith(onboardingCompleted: true);
   }
 }
 

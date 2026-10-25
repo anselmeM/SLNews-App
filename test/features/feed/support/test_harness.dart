@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+import 'package:slnews_mobile/core/domain/repositories/following_repository.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
@@ -17,6 +18,7 @@ List<Override> feedTestOverrides({
   required FakeArticleRepository articles,
   FakeUserStateRepository? userState,
   FakeWeatherRepository? weather,
+  FollowingRepository? following,
   List<AdUnit> ads = const <AdUnit>[],
 }) {
   return <Override>[
@@ -26,7 +28,9 @@ List<Override> feedTestOverrides({
       weather ?? FakeWeatherRepository(),
     ),
     sportsRepositoryProvider.overrideWithValue(FakeSportsRepository()),
-    followingRepositoryProvider.overrideWithValue(FakeFollowingRepository()),
+    followingRepositoryProvider.overrideWithValue(
+      following ?? FakeFollowingRepository(),
+    ),
     notificationRepositoryProvider.overrideWithValue(
       FakeNotificationRepository(),
     ),

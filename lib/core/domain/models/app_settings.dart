@@ -40,6 +40,7 @@ class AppSettings {
     this.sportsAlertsEnabled = true,
     this.followedTopicAlertsEnabled = true,
     this.weatherForecastEnabled = true,
+    this.onboardingCompleted = false,
   });
 
   final AppThemeMode themeMode;
@@ -66,6 +67,9 @@ class AppSettings {
   /// When false the weather row is hidden from the feeds.
   final bool weatherForecastEnabled;
 
+  /// True once the first-run topic/location picker has been completed.
+  final bool onboardingCompleted;
+
   /// Language and region shown on the settings screen. The app ships one locale.
   static const String languageRegion = 'English (Sierra Leone)';
 
@@ -89,6 +93,7 @@ class AppSettings {
     bool? sportsAlertsEnabled,
     bool? followedTopicAlertsEnabled,
     bool? weatherForecastEnabled,
+    bool? onboardingCompleted,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,

@@ -54,6 +54,11 @@ abstract interface class UserStateRepository {
 
   Future<void> setSportsAlertsEnabled(bool enabled);
 
+  /// True once the reader has seen the first-run topic/location picker.
+  bool get onboardingCompleted;
+
+  Future<void> setOnboardingCompleted(bool completed);
+
   /// Whether the feeds show the weather row.
   bool get weatherForecastEnabled;
 

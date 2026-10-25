@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/auth_providers.dart';
+import '../../../core/providers/controllers.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
@@ -69,6 +70,14 @@ class SignInPage extends ConsumerWidget {
               child: surface.build(
                 context,
                 onSignedIn: () {
+                  final bool onboarded = ref
+                      .read(settingsControllerProvider)
+                      .onboardingCompleted;
+                  if (!onboarded) {
+                    // Land on the shell so the first-run gate can render.
+                    context.go('/for_you');
+                    return;
+                  }
                   if (context.canPop()) {
                     context.pop();
                   } else {

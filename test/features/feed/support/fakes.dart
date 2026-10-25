@@ -233,6 +233,13 @@ class FakeUserStateRepository implements UserStateRepository {
       followedTopicAlertsEnabled = enabled;
 
   @override
+  bool onboardingCompleted = false;
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async =>
+      onboardingCompleted = completed;
+
+  @override
   bool weatherForecastEnabled = true;
 
   @override
@@ -280,31 +287,47 @@ class FakeSportsRepository implements SportsRepository {
 
 /// Empty following double; the app bar reads nothing from it in these tests.
 class FakeFollowingRepository implements FollowingRepository {
+  FakeFollowingRepository({
+    List<FollowTarget> catalogue = const <FollowTarget>[],
+  }) : _catalogue = catalogue;
+
+  final List<FollowTarget> _catalogue;
   final Set<String> _followed = <String>{};
 
   @override
-  @override
-  List<FollowTarget> get catalogue => const <FollowTarget>[];
+  List<FollowTarget> get catalogue => _catalogue;
+
+  FollowingSnapshot _snapshot() => FollowingSnapshot(
+    followed: <FollowTarget>[
+      for (final FollowTarget target in _catalogue)
+        if (_followed.contains(target.id)) target,
+    ],
+    suggested: const <FollowTarget>[],
+    topics: <FollowTarget>[
+      for (final FollowTarget target in _catalogue)
+        if (target.kind == FollowKind.topic) target,
+    ],
+  );
 
   @override
-  FollowingSnapshot load() => const FollowingSnapshot.empty();
+  FollowingSnapshot load() => _snapshot();
 
   @override
   Future<FollowingSnapshot> follow(FollowTarget target) async {
     _followed.add(target.id);
-    return const FollowingSnapshot.empty();
+    return _snapshot();
   }
 
   @override
   Future<FollowingSnapshot> unfollow(String targetId) async {
     _followed.remove(targetId);
-    return const FollowingSnapshot.empty();
+    return _snapshot();
   }
 
   @override
   Future<FollowingSnapshot> toggle(FollowTarget target) async {
     if (!_followed.remove(target.id)) _followed.add(target.id);
-    return const FollowingSnapshot.empty();
+    return _snapshot();
   }
 
   @override
