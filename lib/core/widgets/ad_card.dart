@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/models/ad_unit.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'sl_network_image.dart';
 
 /// Native-style inline ad unit.
 ///
@@ -64,19 +65,35 @@ class AdCard extends StatelessWidget {
                 ),
                 child: Stack(
                   children: <Widget>[
-                    // Samsung banner scrim: #0D000000 -> #33000000 at the bottom.
-                    const Positioned.fill(
+                    // Optional sold-creative image sits under the copy. A
+                    // stronger scrim keeps white text readable on photos.
+                    if (unit.imageUrl != null && unit.imageUrl!.isNotEmpty)
+                      Positioned.fill(
+                        child: SlNetworkImage(
+                          url: unit.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholderLabel: unit.advertiser,
+                          seed: unit.id,
+                        ),
+                      ),
+                    Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: <Color>[
-                              Color(0x00000000),
-                              Color(0x0D000000),
-                              Color(0x33000000),
-                            ],
-                            stops: <double>[0, 0.55, 1],
+                            colors: unit.imageUrl != null
+                                ? const <Color>[
+                                    Color(0x66000000),
+                                    Color(0x99000000),
+                                    Color(0xCC000000),
+                                  ]
+                                : const <Color>[
+                                    Color(0x00000000),
+                                    Color(0x0D000000),
+                                    Color(0x33000000),
+                                  ],
+                            stops: const <double>[0, 0.55, 1],
                           ),
                         ),
                       ),

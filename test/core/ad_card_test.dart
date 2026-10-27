@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/widgets/ad_card.dart';
+import 'package:slnews_mobile/core/widgets/sl_network_image.dart';
 
 /// Regression coverage for the shared ad unit.
 ///
@@ -19,6 +20,15 @@ void main() {
     assetLabel: r'$20',
     disclosure:
         'Actual payout depends on playing games and engaging with the app.',
+  );
+
+  const AdUnit withImage = AdUnit(
+    id: 'ad-image',
+    headline: 'SCAN AND WIN',
+    body: 'Every top-up this month',
+    ctaLabel: 'View more',
+    advertiser: 'Orange SL',
+    imageUrl: 'https://cdn.example.com/creative.jpg',
   );
 
   const AdUnit withoutLabel = AdUnit(
@@ -76,6 +86,16 @@ void main() {
 
     expect(find.text('BUY LOCAL'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('renders a sold creative image behind the copy', (
+    WidgetTester tester,
+  ) async {
+    await pumpCard(tester, withImage, textScale: 1);
+
+    expect(find.byType(SlNetworkImage), findsOneWidget);
+    expect(find.text('SCAN AND WIN'), findsOneWidget);
+    expect(find.text('AD'), findsOneWidget);
   });
 
   testWidgets('carries the Ad label and its disclosure', (

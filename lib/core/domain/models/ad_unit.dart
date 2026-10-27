@@ -17,6 +17,7 @@ class AdUnit {
     this.brandAccentHex = '#2E9BF5',
     this.assetLabel,
     this.disclosure,
+    this.imageUrl,
     this.targetUrl,
     this.placement,
   });
@@ -44,6 +45,9 @@ class AdUnit {
   /// Legal / disclosure copy under the creative.
   final String? disclosure;
 
+  /// Optional hosted creative image (https). Sold campaigns may supply one.
+  final String? imageUrl;
+
   final String? targetUrl;
 
   /// Placement of a directly sold unit; null for the seeded house rotation.
@@ -62,6 +66,7 @@ class AdUnit {
     'brandAccentHex': brandAccentHex,
     'assetLabel': assetLabel,
     'disclosure': disclosure,
+    'imageUrl': imageUrl,
     'targetUrl': targetUrl,
   };
 
@@ -76,6 +81,7 @@ class AdUnit {
     brandAccentHex: json['brandAccentHex'] as String? ?? '#2E9BF5',
     assetLabel: json['assetLabel'] as String?,
     disclosure: json['disclosure'] as String?,
+    imageUrl: json['imageUrl'] as String?,
     targetUrl: json['targetUrl'] as String?,
     placement: json['placement'] as String?,
   );
@@ -90,6 +96,7 @@ class AdUnit {
     brandAccentHex: json['brandAccentHex'] as String? ?? '#2E9BF5',
     assetLabel: json['assetLabel'] as String?,
     disclosure: json['disclosure'] as String?,
+    imageUrl: json['imageUrl'] as String?,
     targetUrl: json['targetUrl'] as String?,
   );
 
