@@ -344,7 +344,7 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
 /// Ads rotated into the For You feed, one per section break.
 final FutureProvider<List<AdUnit>> forYouAdsProvider =
     FutureProvider<List<AdUnit>>(
-      (Ref ref) => ref.watch(adRepositoryProvider).units(placement: 'for_you'),
+      (Ref ref) => ref.watch(adRepositoryProvider).units(placement: 'feed'),
       name: 'forYouAds',
     );
 
