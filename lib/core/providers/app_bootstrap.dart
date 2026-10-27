@@ -236,12 +236,16 @@ class AppBootstrap {
     );
     final DefaultUserStateRepository userStateRepository =
         DefaultUserStateRepository(preferences: preferences);
+    // Sold sponsorships and their counters live on the marketing/API host, not
+    // the scraper host. Pointing them at SyncApiConfig sent these calls to
+    // Render, where the route does not exist, so every feed fell back to seed ads.
+    const String webApiBase = String.fromEnvironment(
+      'SLNEWS_WEB_URL',
+      defaultValue: 'https://sl-news.vercel.app',
+    );
     final DefaultAdRepository adRepository = DefaultAdRepository(
       seedLoader: seedLoader,
-      sponsorships: SponsorshipSource(
-        client: client,
-        baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
-      ),
+      sponsorships: SponsorshipSource(client: client, baseUrl: webApiBase),
     );
 
     // The seed-backed repositories expose synchronous reads (required by the
@@ -274,16 +278,10 @@ class AppBootstrap {
           userStateProvider.overrideWithValue(userStateRepository),
           adRepositoryProvider.overrideWithValue(adRepository),
           sponsorshipTrackerProvider.overrideWithValue(
-            SponsorshipTracker(
-              client: client,
-              baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
-            ),
+            SponsorshipTracker(client: client, baseUrl: webApiBase),
           ),
           pushServiceProvider.overrideWithValue(
-            PushService(
-              client: client,
-              baseUrl: SyncApiConfig.fromEnvironment().baseUrl,
-            ),
+            PushService(client: client, baseUrl: webApiBase),
           ),
           // The video rail shares the scraper configuration; when the build has
           // no key it stays null and the bundled rotation is used instead.
