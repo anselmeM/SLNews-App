@@ -54,8 +54,9 @@ jobs:
       - name: Enforce app coverage ratchet
         run: python3 scripts/check_app_coverage.py
 
-      - name: Golden tests
-        run: flutter test test/golden test/features/feed/daily_briefing_golden_test.dart --concurrency=1
+      # Goldens are a local visual-review harness: the PNGs are host-renderer
+      # dependent (Flutter's Linux rasterizer differs from Windows), so they are
+      # intentionally not a CI gate.
 
       - name: Restore upload keystore
         if: env.ANDROID_KEYSTORE_BASE64 != ''
