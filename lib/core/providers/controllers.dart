@@ -329,13 +329,21 @@ class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
 }
 
 /// Refreshes every ingest-backed stream in one call (pull-to-refresh).
-final Provider<Future<void> Function()> refreshFeedsProvider =
-    Provider<Future<void> Function()>((Ref ref) {
-      return () async {
-        await ref.read(articleRepositoryProvider).refresh();
-        ref.invalidate(topStoriesProvider);
-        ref.invalidate(categoryFeedProvider);
-        ref.invalidate(locationFeedProvider);
-        ref.invalidate(articleProvider);
-      };
-    }, name: 'refreshFeeds');
+final Provider<Future<void> Function()>
+refreshFeedsProvider = Provider<Future<void> Function()>((Ref ref) {
+  return () async {
+    await ref.read(articleRepositoryProvider).refresh();
+    ref.invalidate(topStoriesProvider);
+    ref.invalidate(categoryFeedProvider);
+    ref.invalidate(locationFeedProvider);
+    ref.invalidate(articleProvider);
+    // League feeds are lazy and cached in the source; a pull-to-refresh must
+    // clear both so a failed/empty feed can recover and new stories land.
+    try {
+      ref.read(leagueNewsSourceProvider).clearCache();
+    } catch (_) {
+      // Source is not configured in this build/test harness.
+    }
+    ref.invalidate(leagueNewsProvider);
+  };
+}, name: 'refreshFeeds');

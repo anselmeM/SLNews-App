@@ -168,12 +168,11 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 ### Engineering follow-ups (post-launch acceptable)
 
 1. Upgrade `@vercel/blob` (and review Sentry plugins) to clear high/moderate advisories; re-run `npm audit`.
-2. Make onboarding and auth-gate states explicit; catch onboarding write failures.
-3. Reconcile desired vs applied FCM topics and persist applied state.
-4. Add sync retry/backoff and ad impression idempotency.
-5. Split `scraper.ts` into feed/page/sitemap/image modules; add dead-letter handling for failed image URLs.
-6. Add a 24h/7d alert acknowledgement path for image backfill.
-7. Add app coverage reporting and split >500-line presentation files.
+2. Reconcile desired vs applied FCM topics and persist applied state.
+3. Split `scraper.ts` into feed/page/sitemap/image modules; add dead-letter handling for failed image URLs.
+4. Add a 24h/7d alert acknowledgement path for image backfill.
+5. Add app coverage reporting and split >500-line presentation files.
+6. Investigate the sticky offline flag (a failed refresh remains until a later success).
 
 ---
 
@@ -181,7 +180,7 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 
 ```text
 App:      flutter analyze -> No issues
-          flutter test --concurrency=1 -> 600 passed, 7 skipped
+          flutter test --concurrency=1 -> 602 passed, 7 skipped
 Web:      npm run typecheck -> pass
           npm run lint -> 0 errors, 0 warnings
           npm test -- --run -> 61 files / 576 tests passed
@@ -194,3 +193,23 @@ Scraper:  npm run typecheck -> pass
 ```
 
 PRs: `SLNewsAPIScapper#36` (ingestion + tests + coverage), `SLNews-Web#141` (quality + dependencies).
+
+---
+
+## 7. Follow-up fixes from the implicit-state audit (code 51)
+
+These were the highest-risk findings from `IMPLICIT-STATE-MACHINES.md`; all are
+now implemented and covered by tests where practical.
+
+| Machine | Fix | Verification |
+|---|---|---|
+| App session gate | `AuthStatus.unknown` now renders a splash instead of the anonymous shell, removing the session-restore flash | auth/onboarding suites pass |
+| Onboarding | Added catch + visible error; onboarding is not marked complete and navigation is skipped on a failed follow/location write | new failing-write widget test |
+| Ad tracking | Impressions are deduped per sold unit per session; a failed post is retried on the next impression | tracker tests (duplicate + failed retry) |
+| Sync | Bounded retry ladder (20 s → 2 min → 10 min) after a failed push/merge; cleared on success/sign-out/dispose | analyzer + sync tests |
+| Lazy league feeds | Pull-to-refresh clears the league source cache and invalidates the feed providers, so stale/empty feeds recover | feed/sports tests |
+| Onboarding/auth flow | 602 tests pass, 7 skipped; analyzer clean | full suite |
+
+The app now ships as **1.0.0 (code 51)**. Remaining state machinery work is the
+FCM desired-vs-applied reconciliation/persistence and an explicit offline
+connectivity state.

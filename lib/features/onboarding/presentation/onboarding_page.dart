@@ -23,6 +23,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final Set<String> _topics = <String>{};
   String? _locationId;
   bool _saving = false;
+  String? _error;
 
   @override
   Widget build(BuildContext context) {
@@ -131,31 +132,48 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 AppSpacing.xl,
                 AppSpacing.lg,
               ),
-              child: Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  TextButton(
-                    onPressed: _saving ? null : () => _finish(skip: true),
-                    child: const Text('Skip for now'),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 48),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xl,
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Text(
+                        _error!,
+                        style: context.typography.caption.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
-                    onPressed: _saving ? null : () => _finish(skip: false),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Start reading'),
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: <Widget>[
+                      TextButton(
+                        onPressed: _saving ? null : () => _finish(skip: true),
+                        child: const Text('Skip for now'),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xl,
+                          ),
+                        ),
+                        onPressed: _saving ? null : () => _finish(skip: false),
+                        child: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Start reading'),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -168,7 +186,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   Future<void> _finish({required bool skip}) async {
     if (_saving) return;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       if (!skip) {
         final FollowingSnapshot snapshot = ref.read(
@@ -192,6 +213,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       await ref.read(settingsControllerProvider.notifier).completeOnboarding();
       if (!mounted) return;
       context.go(AppRoutes.forYou);
+    } catch (error) {
+      // Partial writes are possible; do not mark onboarding complete or leave
+      // the reader on a picker that silently did nothing.
+      if (mounted) {
+        setState(() {
+          _error = 'We could not save your choices. Please try again.';
+        });
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

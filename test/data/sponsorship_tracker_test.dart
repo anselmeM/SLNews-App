@@ -30,12 +30,32 @@ void main() {
     tracker.impression(house);
     tracker.tap(house);
     tracker.impression(sold);
+    tracker.impression(sold);
     tracker.tap(sold);
     await Future<void>.delayed(Duration.zero);
 
     expect(sent, hasLength(2));
     expect(sent[0], <String, dynamic>{'id': 'sp_1', 'type': 'impression'});
     expect(sent[1], <String, dynamic>{'id': 'sp_1', 'type': 'tap'});
+  });
+
+  test('a failed impression can be retried after a remount', () async {
+    final List<Map<String, dynamic>> sent = <Map<String, dynamic>>[];
+    var fail = true;
+    final tracker = SponsorshipTracker.forPoster((_, body) async {
+      if (fail) throw StateError('offline');
+      sent.add(body);
+      return null;
+    });
+
+    tracker.impression(sold);
+    await Future<void>.delayed(Duration.zero);
+    expect(sent, isEmpty);
+
+    fail = false;
+    tracker.impression(sold);
+    await Future<void>.delayed(Duration.zero);
+    expect(sent, hasLength(1));
   });
 
   test('a failed post is swallowed', () async {

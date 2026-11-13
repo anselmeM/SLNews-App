@@ -79,6 +79,9 @@ class LeagueNewsSource {
   static bool supports(String leagueId) =>
       _feeds.containsKey(leagueId.split(':').last.toLowerCase());
 
+  /// Drops session caches so pull-to-refresh can retry a failed league feed.
+  void clearCache() => _cache.clear();
+
   Future<List<Article>> fetch(String leagueId, {int limit = 6}) async {
     final String slug = leagueId.split(':').last.toLowerCase();
     final _LeagueFeed? feed = _feeds[slug];

@@ -109,15 +109,44 @@ const Duration syncPushDebounce = Duration(seconds: 3);
 
 class SyncController extends Notifier<SyncStatus> {
   Timer? _debounce;
+  Timer? _retryTimer;
+  int _retryAttempt = 0;
   DateTime? _lastPushedAt;
+
+  /// Bounded retry ladder for a failed push. A transient outage should not
+  /// leave the account card stuck on `failed` until the next local edit.
+  static const List<Duration> _retryDelays = <Duration>[
+    Duration(seconds: 20),
+    Duration(minutes: 2),
+    Duration(minutes: 10),
+  ];
 
   @override
   SyncStatus build() {
-    ref.onDispose(() => _debounce?.cancel());
+    ref.onDispose(() {
+      _debounce?.cancel();
+      _retryTimer?.cancel();
+    });
     final SyncRepository repository = ref.watch(syncRepositoryProvider);
     return SyncStatus(
       phase: repository.isConfigured ? SyncPhase.idle : SyncPhase.disabled,
     );
+  }
+
+  void _clearRetry() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _retryAttempt = 0;
+  }
+
+  void _scheduleRetry() {
+    if (_retryTimer != null || _retryAttempt >= _retryDelays.length) return;
+    final Duration delay = _retryDelays[_retryAttempt];
+    _retryAttempt += 1;
+    _retryTimer = Timer(delay, () {
+      _retryTimer = null;
+      unawaited(pushLocalChanges());
+    });
   }
 
   /// Merge-on-first-sign-in: push what is here, pull what is there, keep the
@@ -127,10 +156,12 @@ class SyncController extends Notifier<SyncStatus> {
   Future<void> mergeOnSignIn() async {
     final SyncRepository repository = ref.read(syncRepositoryProvider);
     if (!repository.isConfigured) {
+      _clearRetry();
       state = const SyncStatus(phase: SyncPhase.disabled);
       return;
     }
     if (!ref.read(authControllerProvider).isSignedIn) {
+      _clearRetry();
       state = SyncStatus(
         phase: SyncPhase.idle,
         lastSyncedAt: state.lastSyncedAt,
@@ -159,6 +190,11 @@ class SyncController extends Notifier<SyncStatus> {
       rejected: pushed.rejected.length,
       failure: pushed.failure,
     );
+    if (pushed.ok) {
+      _clearRetry();
+    } else {
+      _scheduleRetry();
+    }
   }
 
   /// Coalesced push of local changes; called by the bookmark/like/follow
@@ -198,6 +234,11 @@ class SyncController extends Notifier<SyncStatus> {
       rejected: pushed.rejected.length,
       failure: pushed.failure,
     );
+    if (pushed.ok) {
+      _clearRetry();
+    } else {
+      _scheduleRetry();
+    }
   }
 
   /// Records that the reader changed a row, so the next push carries the right

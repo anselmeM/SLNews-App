@@ -24,11 +24,18 @@ class SponsorshipTracker {
   final String baseUrl;
   final Future<Object?> Function(String url, Map<String, dynamic> body) _post;
 
-  void impression(AdUnit unit) => _send(unit, 'impression');
+  /// One impression per sold unit per app session. A widget remount (list
+  /// recycling, refresh, retry) must not bill the advertiser twice.
+  final Set<String> _impressed = <String>{};
+
+  void impression(AdUnit unit) {
+    if (!unit.isSold || !_impressed.add(unit.id)) return;
+    _send(unit, 'impression', onFailure: () => _impressed.remove(unit.id));
+  }
 
   void tap(AdUnit unit) => _send(unit, 'tap');
 
-  void _send(AdUnit unit, String type) {
+  void _send(AdUnit unit, String type, {VoidCallback? onFailure}) {
     if (!unit.isSold) return;
     final String url =
         '${baseUrl.replaceAll(RegExp(r"/+$"), "")}'
@@ -37,6 +44,7 @@ class SponsorshipTracker {
       _post(url, <String, dynamic>{'id': unit.id, 'type': type}).then<void>(
         (Object? _) {},
         onError: (Object error, StackTrace stack) {
+          onFailure?.call();
           debugPrint('SponsorshipTracker: $type not counted: $error');
         },
       ),

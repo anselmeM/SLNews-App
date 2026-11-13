@@ -41,9 +41,15 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // First-run gate: after sign-in, the topic/location picker must land before
     // the first personalised feed render.
-    final bool signedIn = ref.watch(
-      authControllerProvider.select((AuthState state) => state.isSignedIn),
-    );
+    final AuthState auth = ref.watch(authControllerProvider);
+    // The session restore is async. Treating `unknown` as anonymous made the
+    // shell flash before a restored Clerk session arrived.
+    if (auth.status == AuthStatus.unknown) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
+    final bool signedIn = auth.isSignedIn;
     final bool onboarded = ref.watch(
       settingsControllerProvider.select(
         (AppSettings settings) => settings.onboardingCompleted,

@@ -111,4 +111,69 @@ void main() {
     expect(userState.onboardingCompleted, isTrue);
     expect(find.text('For You'), findsOneWidget);
   });
+
+  testWidgets(
+    'shows an error and does not complete onboarding on write failure',
+    (WidgetTester tester) async {
+      final FakeUserStateRepository userState = FakeUserStateRepository();
+      final GoRouter router = GoRouter(
+        initialLocation: '/onboarding',
+        routes: <RouteBase>[
+          GoRoute(
+            path: '/onboarding',
+            builder: (BuildContext context, GoRouterState state) =>
+                const OnboardingPage(),
+          ),
+          GoRoute(
+            path: '/for_you',
+            builder: (BuildContext context, GoRouterState state) =>
+                const Scaffold(body: Text('For You')),
+          ),
+        ],
+      );
+
+      await tester.binding.setSurfaceSize(const Size(390, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: feedTestOverrides(
+            articles: FakeArticleRepository(),
+            userState: userState,
+            following: _FailingFollowingRepository(),
+          ),
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Politics'));
+      await tester.tap(find.text('Start reading'));
+      await tester.pumpAndSettle();
+
+      expect(userState.onboardingCompleted, isFalse);
+      expect(find.textContaining('could not save'), findsOneWidget);
+      expect(find.text('For You'), findsNothing);
+    },
+  );
+}
+
+class _FailingFollowingRepository extends FakeFollowingRepository {
+  _FailingFollowingRepository()
+    : super(
+        catalogue: const <FollowTarget>[
+          FollowTarget(
+            id: 'topic:politics',
+            kind: FollowKind.topic,
+            label: 'Politics',
+          ),
+        ],
+      );
+
+  @override
+  Future<FollowingSnapshot> follow(FollowTarget target) async {
+    throw StateError('offline');
+  }
 }
