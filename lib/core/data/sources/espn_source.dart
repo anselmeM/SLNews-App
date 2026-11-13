@@ -65,6 +65,9 @@ class EspnSource {
       league: 'eng.1',
       label: 'Premier League',
     ),
+    'nfl': EspnLeagueRef(sport: 'football', league: 'nfl', label: 'NFL'),
+    'nhl': EspnLeagueRef(sport: 'hockey', league: 'nhl', label: 'NHL'),
+    'mlb': EspnLeagueRef(sport: 'baseball', league: 'mlb', label: 'MLB'),
   };
 
   static bool supportsTeamId(String teamId) => teams.containsKey(teamId);

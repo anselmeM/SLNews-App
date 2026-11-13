@@ -247,8 +247,25 @@ class SportsPage extends ConsumerWidget {
     final String? heroLeague = viewModel.heroTeam == null
         ? null
         : EspnSource.leagueIdForTeam(viewModel.heroTeam!.id);
+    const List<String> order = <String>[
+      'NBA',
+      'NFL',
+      'MLB',
+      'NHL',
+      'Premier League',
+      'Sierra Leone Premier League',
+      'AFCON Qualifier',
+    ];
+    final List<String> labels = groups.keys.toList(growable: false)
+      ..sort((a, b) {
+        final int left = order.indexOf(a);
+        final int right = order.indexOf(b);
+        return (left < 0 ? order.length : left).compareTo(
+          right < 0 ? order.length : right,
+        );
+      });
     final List<Widget> slivers = <Widget>[];
-    for (final String label in groups.keys.take(3)) {
+    for (final String label in labels) {
       final List<GameScore> games = groups[label]!;
       final String slug = SportsLinks.leagueIdForLabel(label);
       final FollowTarget target = FollowTarget(
@@ -257,12 +274,15 @@ class SportsPage extends ConsumerWidget {
         label: label,
       );
       final bool useSpecific = heroLeague != null && heroLeague == slug;
+      final List<Article> leagueStories = useSpecific
+          ? specific
+          : _articlesForLeague(label, generic);
       slivers.add(
         SliverToBoxAdapter(
           child: SportsLeagueSection(
             leagueLabel: label,
             games: games,
-            articles: useSpecific ? specific : generic,
+            articles: leagueStories,
             isFollowing: following.isFollowed(target.id),
             onToggleFollow: () =>
                 ref.read(followingControllerProvider.notifier).toggle(target),
@@ -298,6 +318,44 @@ class SportsPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Picks the stories that plausibly belong to one league, falling back to
+  /// the latest sports stories so a block is never empty.
+  List<Article> _articlesForLeague(String label, List<Article> generic) {
+    final String value = label.toLowerCase();
+    final List<String> terms = <String>[
+      ...value.split(RegExp(r'[^a-z0-9]+')).where((String t) => t.length >= 3),
+    ];
+    if (value.contains('nba')) {
+      terms.addAll(<String>['nba', 'lakers', 'basketball']);
+    }
+    if (value.contains('nfl')) {
+      terms.addAll(<String>['nfl', 'football', 'quarterback']);
+    }
+    if (value.contains('mlb')) {
+      terms.addAll(<String>['mlb', 'baseball', 'pitcher']);
+    }
+    if (value.contains('nhl')) terms.addAll(<String>['nhl', 'hockey', 'goal']);
+    if (value.contains('premier')) {
+      terms.addAll(<String>['premier', 'epl', 'arsenal', 'liverpool']);
+    }
+    if (value.contains('sierra')) {
+      terms.addAll(<String>['sierra leone', 'leone stars', 'spl']);
+    }
+    if (value.contains('afcon')) {
+      terms.addAll(<String>['afcon', 'leone stars', 'guinea']);
+    }
+    final List<Article> matching = generic
+        .where((Article article) {
+          final String haystack = '${article.title} ${article.summary}'
+              .toLowerCase();
+          return terms.any(haystack.contains);
+        })
+        .toList(growable: false);
+    return (matching.isEmpty ? generic : matching)
+        .take(4)
+        .toList(growable: false);
   }
 
   List<Widget> _newsSlivers(

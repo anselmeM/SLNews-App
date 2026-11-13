@@ -215,7 +215,7 @@ final searchResultsProvider = FutureProvider.family<List<Article>, String>(
 
 /// Live/recent fixtures for the Sports tab.
 final scoreboardProvider = FutureProvider<ScoreboardSnapshot>(
-  (Ref ref) => ref.watch(sportsRepositoryProvider).scoreboard(),
+  (Ref ref) => ref.watch(sportsRepositoryProvider).scoreboard(limit: 40),
   name: 'scoreboard',
 );
 

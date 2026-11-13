@@ -38,16 +38,9 @@ class SportsLeagueSection extends StatelessWidget {
   final ValueChanged<GameScore> onGameTap;
   final VoidCallback onLeagueTap;
 
-  static const Color _nbaTop = Color(0xFF0B2E6B);
-  static const Color _nbaBottom = Color(0xFF1558B0);
-  static const Color _splTop = Color(0xFF062E1C);
-  static const Color _splBottom = Color(0xFF0F5A37);
-
   @override
   Widget build(BuildContext context) {
-    final bool nba = leagueLabel.toUpperCase().contains('NBA');
-    final Color top = nba ? _nbaTop : _splTop;
-    final Color bottom = nba ? _nbaBottom : _splBottom;
+    final _LeagueLook look = _LeagueLook.forLabel(leagueLabel);
     final List<Article> stories = articles.take(4).toList(growable: false);
 
     return Container(
@@ -56,7 +49,7 @@ class SportsLeagueSection extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: <Color>[top, bottom],
+          colors: <Color>[look.top, look.bottom],
         ),
       ),
       child: Column(
@@ -77,11 +70,7 @@ class SportsLeagueSection extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: Row(
                       children: <Widget>[
-                        Icon(
-                          nba ? Icons.sports_basketball : Icons.sports_soccer,
-                          color: Colors.white,
-                          size: 28,
-                        ),
+                        Icon(look.icon, color: Colors.white, size: 28),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
@@ -298,6 +287,58 @@ class _HeroStory extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LeagueLook {
+  const _LeagueLook(this.icon, this.top, this.bottom);
+
+  final IconData icon;
+  final Color top;
+  final Color bottom;
+
+  static _LeagueLook forLabel(String label) {
+    final String value = label.toUpperCase();
+    if (value.contains('NBA')) {
+      return const _LeagueLook(
+        Icons.sports_basketball,
+        Color(0xFF0B2E6B),
+        Color(0xFF1558B0),
+      );
+    }
+    if (value.contains('NFL')) {
+      return const _LeagueLook(
+        Icons.sports_football,
+        Color(0xFF0A2A22),
+        Color(0xFF146B4A),
+      );
+    }
+    if (value.contains('MLB')) {
+      return const _LeagueLook(
+        Icons.sports_baseball,
+        Color(0xFF1C2340),
+        Color(0xFF31508E),
+      );
+    }
+    if (value.contains('NHL')) {
+      return const _LeagueLook(
+        Icons.sports_hockey,
+        Color(0xFF1A1A1E),
+        Color(0xFF3A3A42),
+      );
+    }
+    if (value.contains('PREMIER')) {
+      return const _LeagueLook(
+        Icons.sports_soccer,
+        Color(0xFF2B0A45),
+        Color(0xFF5B1E8A),
+      );
+    }
+    return const _LeagueLook(
+      Icons.sports_soccer,
+      Color(0xFF062E1C),
+      Color(0xFF0F5A37),
     );
   }
 }
