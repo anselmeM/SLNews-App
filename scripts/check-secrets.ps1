@@ -20,6 +20,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 $findings = New-Object System.Collections.Generic.List[string]
 foreach ($file in $files) {
+  $file = "$file".Trim()
+  if ([string]::IsNullOrWhiteSpace($file)) { continue }
   if ($file -match '(^|/)(build|\.dart_tool|node_modules|\.git)/') { continue }
   # google-services.json is Firebase's client config, committed by design; its
   # API key is app-restricted and public. Still scanned for private keys.
