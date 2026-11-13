@@ -81,7 +81,7 @@ try {
             }
         }
     }
-    foreach ($name in @('SLNEWS_API_URL', 'SLNEWS_API_KEY', 'SLNEWS_API_PAGE_SIZE', 'CLERK_PUBLISHABLE_KEY', 'SENTRY_DSN', 'SENTRY_ENV', 'THESPORTSDB_ENABLED', 'THESPORTSDB_KEY')) {
+    foreach ($name in @('SLNEWS_API_URL', 'SLNEWS_API_KEY', 'SLNEWS_API_PAGE_SIZE', 'CLERK_PUBLISHABLE_KEY', 'SENTRY_DSN', 'SENTRY_ENV', 'THESPORTSDB_ENABLED', 'THESPORTSDB_KEY', 'SLNEWS_SCOREBOARD_URL', 'SLNEWS_IMAGE_PROXY', 'SLNEWS_WEB_URL')) {
         $fromEnvironment = (Get-Item "env:$name" -ErrorAction SilentlyContinue).Value
         if ($fromEnvironment) { $defines[$name] = $fromEnvironment }
     }
