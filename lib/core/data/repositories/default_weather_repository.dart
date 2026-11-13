@@ -9,6 +9,8 @@ import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
 import '../sources/api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Current conditions for the active location.
 ///
 /// Resolution order is remote (when an endpoint is configured) → seeded
@@ -53,7 +55,7 @@ class DefaultWeatherRepository implements WeatherRepository {
       final SeedData seed = await _seeds.load();
       _weather = seed.weather;
     } catch (error) {
-      debugPrint('DefaultWeatherRepository: seed unavailable: $error');
+      AppLog.debug('DefaultWeatherRepository: seed unavailable: $error');
     }
   }
 
@@ -139,7 +141,9 @@ class DefaultWeatherRepository implements WeatherRepository {
       json['updatedAt'] = json['updatedAt'] ?? DateTime.now().toIso8601String();
       return WeatherSnapshot.fromJson(json);
     } catch (error) {
-      debugPrint('DefaultWeatherRepository: live weather unavailable: $error');
+      AppLog.debug(
+        'DefaultWeatherRepository: live weather unavailable: $error',
+      );
       return null;
     }
   }

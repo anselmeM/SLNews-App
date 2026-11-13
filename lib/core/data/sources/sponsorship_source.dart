@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../../domain/models/ad_unit.dart';
 import '../sources/api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Fetches directly sold sponsorship units from the SLNews backend.
 ///
 /// The endpoint is public and returns units already shaped like [AdUnit]; this
@@ -42,12 +44,12 @@ class SponsorshipSource {
         try {
           units.add(AdUnit.fromSponsorship(Map<String, dynamic>.from(item)));
         } catch (error) {
-          debugPrint('SponsorshipSource: skipping malformed unit: $error');
+          AppLog.debug('SponsorshipSource: skipping malformed unit: $error');
         }
       }
       return List<AdUnit>.unmodifiable(units);
     } catch (error) {
-      debugPrint('SponsorshipSource: unavailable: $error');
+      AppLog.debug('SponsorshipSource: unavailable: $error');
       return const <AdUnit>[];
     }
   }

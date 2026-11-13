@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 import '../../auth/sign_in_surface.dart';
 import '../../domain/auth/auth_repository.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Clerk implementation of the identity contract.
 ///
 /// This is the **only** file in the app that imports `clerk_flutter`. Everything
@@ -83,7 +85,7 @@ class ClerkAuthRepository implements AuthRepository, SignInSurface {
       final token = await _state.sessionToken();
       return token.jwt;
     } catch (error) {
-      debugPrint('ClerkAuthRepository: session token unavailable ($error)');
+      AppLog.debug('ClerkAuthRepository: session token unavailable ($error)');
       return null;
     }
   }
@@ -93,7 +95,7 @@ class ClerkAuthRepository implements AuthRepository, SignInSurface {
     try {
       await _state.signOut();
     } catch (error) {
-      debugPrint('ClerkAuthRepository: sign-out failed ($error)');
+      AppLog.debug('ClerkAuthRepository: sign-out failed ($error)');
     } finally {
       _emitStatus();
     }

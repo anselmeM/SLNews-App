@@ -17,6 +17,8 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/sl_network_image.dart';
 import '../../../core/widgets/state_views.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Search surface: query field, recent searches, stories and clips.
 ///
 /// The repository already had `search()` and a provider; what was missing was
@@ -77,7 +79,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         ];
       }
     } catch (error) {
-      debugPrint('SearchPage: recent searches unreadable ($error)');
+      AppLog.debug('SearchPage: recent searches unreadable ($error)');
     }
   }
 

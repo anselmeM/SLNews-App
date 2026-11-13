@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/sports_models.dart';
 import '../../domain/repositories/sports_repository.dart';
 import '../seed/seed_data.dart';
@@ -9,6 +7,8 @@ import '../seed/seed_loader.dart';
 import '../sources/api_client.dart';
 import '../sources/espn_source.dart';
 import '../sources/the_sports_db_source.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Fixtures, scores and standings backed by the seed, with an optional live
 /// scoreboard endpoint.
@@ -90,7 +90,7 @@ class DefaultSportsRepository implements SportsRepository {
         final List<TeamStanding> liveTable = await source.standings(leagueId);
         if (liveTable.isNotEmpty) return liveTable;
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'DefaultSportsRepository: ESPN standings unavailable: $error',
         );
       }
@@ -162,7 +162,7 @@ class DefaultSportsRepository implements SportsRepository {
       _scoreboard = seed.scoreboard;
       _standings = seed.standings;
     } catch (error) {
-      debugPrint('DefaultSportsRepository: seed unavailable: $error');
+      AppLog.debug('DefaultSportsRepository: seed unavailable: $error');
     }
     final ApiClient? client = _api;
     final String? url = _endpoint;
@@ -189,7 +189,7 @@ class DefaultSportsRepository implements SportsRepository {
         try {
           games.add(GameScore.fromJson(_stringKeyed(entry)));
         } catch (error) {
-          debugPrint('DefaultSportsRepository: skipping wire game: $error');
+          AppLog.debug('DefaultSportsRepository: skipping wire game: $error');
         }
       }
       if (games.isEmpty) return;
@@ -199,7 +199,9 @@ class DefaultSportsRepository implements SportsRepository {
         updatedAt: DateTime.now(),
       );
     } catch (error) {
-      debugPrint('DefaultSportsRepository: scoreboard refresh failed: $error');
+      AppLog.debug(
+        'DefaultSportsRepository: scoreboard refresh failed: $error',
+      );
     }
   }
 

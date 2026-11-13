@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Failure raised by [ApiClient] for any transport, status or parse problem.
 ///
@@ -249,7 +250,7 @@ class ApiClient {
     try {
       return await provider();
     } catch (error) {
-      debugPrint('ApiClient: session token unavailable ($error)');
+      AppLog.debug('ApiClient: session token unavailable ($error)');
       return null;
     }
   }
@@ -260,7 +261,7 @@ class ApiClient {
     try {
       return await request();
     } on DioException catch (error) {
-      debugPrint(
+      AppLog.debug(
         'ApiClient: ${error.requestOptions.uri} failed (${error.type.name}): ${error.message}',
       );
       throw _toApiException(error);

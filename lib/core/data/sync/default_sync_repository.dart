@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
-
 import '../../domain/sync/merge.dart';
 import '../../domain/sync/sync_repository.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// The transport seam the repository composes.
 ///
@@ -83,7 +83,7 @@ class DefaultSyncRepository implements SyncRepository {
       if (retried.ok) {
         _clearPending();
       } else {
-        debugPrint(
+        AppLog.debug(
           'DefaultSyncRepository: queued push still failing '
           '(${retried.failure?.kind ?? 'unknown'})',
         );
@@ -114,7 +114,7 @@ class DefaultSyncRepository implements SyncRepository {
       _clearPending();
     } else {
       _pending = attempt;
-      debugPrint(
+      AppLog.debug(
         'DefaultSyncRepository: queueing $pendingRowCount row(s) after '
         '${result.failure?.kind ?? 'unknown'} failure',
       );
@@ -129,7 +129,7 @@ class DefaultSyncRepository implements SyncRepository {
     try {
       return await _source.push(state);
     } catch (error) {
-      debugPrint('DefaultSyncRepository: push threw ($error)');
+      AppLog.debug('DefaultSyncRepository: push threw ($error)');
       return SyncResult.failed(SyncFailure.unavailable('$error'), local: state);
     }
   }
@@ -138,6 +138,6 @@ class DefaultSyncRepository implements SyncRepository {
   void _clearPending() {
     if (!hasPendingPush) return;
     _pending = const SyncState.empty();
-    debugPrint('DefaultSyncRepository: queued push applied, queue cleared');
+    AppLog.debug('DefaultSyncRepository: queued push applied, queue cleared');
   }
 }

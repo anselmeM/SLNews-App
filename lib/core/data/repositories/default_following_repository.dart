@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/follow_models.dart';
 import '../../domain/repositories/following_repository.dart';
 import '../local/preferences_store.dart';
 import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Subscriptions backed by a persisted id set and the seeded catalogue.
 ///
@@ -100,7 +100,7 @@ class DefaultFollowingRepository implements FollowingRepository {
         ),
       );
     } catch (error) {
-      debugPrint('DefaultFollowingRepository: catalogue unavailable: $error');
+      AppLog.debug('DefaultFollowingRepository: catalogue unavailable: $error');
     }
   }
 
@@ -116,14 +116,14 @@ class DefaultFollowingRepository implements FollowingRepository {
         try {
           targets.add(FollowTarget.fromJson(entry.cast<String, dynamic>()));
         } catch (error) {
-          debugPrint(
+          AppLog.debug(
             'DefaultFollowingRepository: dropping cached target: $error',
           );
         }
       }
       return targets;
     } on FormatException catch (error) {
-      debugPrint(
+      AppLog.debug(
         'DefaultFollowingRepository: unreadable catalogue cache: $error',
       );
       return const <FollowTarget>[];

@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/sync/sync_repository.dart';
 import '../sources/api_client.dart';
 import 'default_sync_repository.dart';
 import 'sync_api_config.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// `GET`/`POST /api/mobile/v1/sync` over [ApiClient].
 ///
@@ -192,7 +192,7 @@ class RemoteSyncSource implements SyncApiSource {
       state = state.copyWith(serverTime: serverTime);
     }
     if (rawState != null && serverState == null) {
-      debugPrint(
+      AppLog.debug(
         'RemoteSyncSource: "state" was not an object, using the sent rows',
       );
     }
@@ -274,7 +274,7 @@ class RemoteSyncSource implements SyncApiSource {
   /// Logs [failure], remembers it, and reports the empty state a pull must
   /// return instead of throwing.
   SyncState _degraded(SyncFailure failure) {
-    debugPrint(
+    AppLog.debug(
       'RemoteSyncSource: pull degraded (${failure.kind}: ${failure.message})',
     );
     _lastFailure = failure;
@@ -283,7 +283,7 @@ class RemoteSyncSource implements SyncApiSource {
 
   /// Logs [failure] and remembers it for [lastFailure].
   SyncFailure _remember(SyncFailure failure) {
-    debugPrint(
+    AppLog.debug(
       'RemoteSyncSource: push degraded (${failure.kind}: ${failure.message})',
     );
     _lastFailure = failure;
@@ -357,7 +357,7 @@ class RemoteSyncSource implements SyncApiSource {
     try {
       return build();
     } catch (error) {
-      debugPrint(
+      AppLog.debug(
         'RemoteSyncSource: skipping malformed $collection row ($error)',
       );
       return null;

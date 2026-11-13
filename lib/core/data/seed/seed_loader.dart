@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../domain/models/ad_unit.dart';
@@ -10,6 +9,8 @@ import '../../domain/models/notification_item.dart';
 import '../../domain/models/sports_models.dart';
 import '../../domain/models/weather_snapshot.dart';
 import 'seed_data.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Source of the bundled offline content.
 abstract interface class SeedLoader {
@@ -58,7 +59,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         articles.add(_article(json, now));
       } catch (error) {
-        debugPrint('AssetSeedLoader: skipping article ${json['id']}: $error');
+        AppLog.debug('AssetSeedLoader: skipping article ${json['id']}: $error');
       }
     }
 
@@ -76,7 +77,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         notifications.add(_notification(json, now));
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'AssetSeedLoader: skipping notification ${json['id']}: $error',
         );
       }
@@ -94,7 +95,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         standings.add(TeamStanding.fromJson(json));
       } catch (error) {
-        debugPrint('AssetSeedLoader: skipping standing: $error');
+        AppLog.debug('AssetSeedLoader: skipping standing: $error');
       }
     }
 
@@ -155,7 +156,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         games.add(GameScore.fromJson(normalised));
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'AssetSeedLoader: skipping game ${normalised['id']}: $error',
         );
       }
@@ -194,7 +195,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         snapshots[key] = WeatherSnapshot.fromJson(json);
       } catch (error) {
-        debugPrint('AssetSeedLoader: skipping weather for $key: $error');
+        AppLog.debug('AssetSeedLoader: skipping weather for $key: $error');
       }
     });
     return snapshots;
@@ -209,7 +210,7 @@ class AssetSeedLoader implements SeedLoader {
       try {
         result.add(build(json));
       } catch (error) {
-        debugPrint('AssetSeedLoader: skipping entry: $error');
+        AppLog.debug('AssetSeedLoader: skipping entry: $error');
       }
     }
     return result;
@@ -221,7 +222,7 @@ class AssetSeedLoader implements SeedLoader {
       if (raw.trim().isEmpty) return null;
       return jsonDecode(raw);
     } catch (error) {
-      debugPrint('AssetSeedLoader: could not read $path: $error');
+      AppLog.debug('AssetSeedLoader: could not read $path: $error');
       return null;
     }
   }

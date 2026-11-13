@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/ad_unit.dart';
 import '../../domain/repositories/ad_repository.dart';
 import '../seed/seed_loader.dart';
 import '../sources/sponsorship_source.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// House ad rotation served from the bundled seed.
 ///
@@ -53,7 +53,7 @@ class DefaultAdRepository implements AdRepository {
     try {
       _units = (await _seeds.load()).ads;
     } catch (error) {
-      debugPrint('DefaultAdRepository: seed unavailable: $error');
+      AppLog.debug('DefaultAdRepository: seed unavailable: $error');
     }
   }
 }

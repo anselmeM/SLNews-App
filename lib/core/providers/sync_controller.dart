@@ -12,6 +12,8 @@ import 'auth_providers.dart';
 import 'controllers.dart';
 import 'sync_repository_provider.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// What the account surface shows about syncing.
 enum SyncPhase {
   /// This build has no sync endpoint (`SLNEWS_SYNC_URL` empty).
@@ -451,7 +453,7 @@ class SyncController extends Notifier<SyncStatus> {
     try {
       return await ref.read(articleRepositoryProvider).byId(id);
     } catch (error) {
-      debugPrint('SyncController: article $id unavailable for sync ($error)');
+      AppLog.debug('SyncController: article $id unavailable for sync ($error)');
       return null;
     }
   }

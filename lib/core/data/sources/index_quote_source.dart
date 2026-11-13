@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../domain/models/index_quote.dart';
 import 'api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Reads the index board for the Stocks section.
 ///
 /// Source: Yahoo Finance's public chart endpoint, which is keyless and answers
@@ -63,7 +65,7 @@ class IndexQuoteSource {
           ),
         );
       } catch (error) {
-        debugPrint('IndexQuoteSource: ${entry.symbol} unavailable ($error)');
+        AppLog.debug('IndexQuoteSource: ${entry.symbol} unavailable ($error)');
       }
     }
     if (quotes.isEmpty) return null;

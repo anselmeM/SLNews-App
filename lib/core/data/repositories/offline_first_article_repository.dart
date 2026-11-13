@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/article.dart';
 import '../../domain/repositories/article_repository.dart';
 import '../local/article_cache.dart';
@@ -9,6 +7,8 @@ import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
 import '../sources/api_client.dart';
 import '../sources/feed_source.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Editorial content resolved in-memory → disk cache → bundled seed → network.
 ///
@@ -161,7 +161,7 @@ class OfflineFirstArticleRepository implements ArticleRepository {
           return fetched;
         }
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'OfflineFirstArticleRepository: byId fetch failed for "$id": $error',
         );
       }
@@ -252,7 +252,7 @@ class OfflineFirstArticleRepository implements ArticleRepository {
       final SeedData data = await _seeds.load();
       _seedArticles = data.articles;
     } catch (error) {
-      debugPrint('OfflineFirstArticleRepository: seed unavailable: $error');
+      AppLog.debug('OfflineFirstArticleRepository: seed unavailable: $error');
       _seedArticles = const <Article>[];
     }
     return _seedArticles!;
@@ -267,7 +267,7 @@ class OfflineFirstArticleRepository implements ArticleRepository {
             .fetch(limit: perSourceLimit)
             .timeout(sourceTimeout, onTimeout: () => const <Article>[])
             .catchError((Object error) {
-              debugPrint(
+              AppLog.debug(
                 'OfflineFirstArticleRepository(${source.config.id}): $error',
               );
               return const <Article>[];

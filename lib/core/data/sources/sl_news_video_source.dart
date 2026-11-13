@@ -4,6 +4,8 @@ import '../../domain/models/video_moment.dart';
 import 'api_client.dart';
 import 'sl_news_api_source.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Reads the "Video moments" rail from the scraper's `/v1/videos` endpoint.
 ///
 /// The same key and host as the news source are reused, so a build configured
@@ -51,7 +53,7 @@ class SlNewsVideoSource {
           .timeout(const Duration(seconds: 4));
       return parse(response.data).take(limit).toList(growable: false);
     } catch (error) {
-      debugPrint('SlNewsVideoSource: /v1/videos unavailable ($error)');
+      AppLog.debug('SlNewsVideoSource: /v1/videos unavailable ($error)');
       return const <VideoMoment>[];
     }
   }

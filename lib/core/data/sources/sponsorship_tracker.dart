@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../../domain/models/ad_unit.dart';
 import 'api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Posts impression/tap counters for directly sold sponsorship units.
 ///
 /// Fire-and-forget by design: measurement must never delay or break a feed. House
@@ -45,7 +47,7 @@ class SponsorshipTracker {
         (Object? _) {},
         onError: (Object error, StackTrace stack) {
           onFailure?.call();
-          debugPrint('SponsorshipTracker: $type not counted: $error');
+          AppLog.debug('SponsorshipTracker: $type not counted: $error');
         },
       ),
     );

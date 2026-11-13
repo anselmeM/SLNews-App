@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/article.dart';
 import '../../../features/sports/domain/league_stories.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
 import 'rss_feed_source.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// League-specific news, never the generic sports feed.
 ///
@@ -116,7 +116,7 @@ class LeagueNewsSource {
       _cache[slug] = result;
       return result;
     } catch (error) {
-      debugPrint('LeagueNewsSource($slug): $error');
+      AppLog.debug('LeagueNewsSource($slug): $error');
       return const <Article>[];
     }
   }

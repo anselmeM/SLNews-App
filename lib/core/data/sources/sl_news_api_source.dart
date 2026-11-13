@@ -7,6 +7,8 @@ import 'api_client.dart';
 import 'feed_source.dart';
 import 'wire_date.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Where the SLNews scraper API lives and how to authenticate to it.
 ///
 /// Two credentials are accepted by the deployed service: a static API key (which
@@ -273,14 +275,16 @@ class SlNewsApiSource implements FeedSource {
         );
       } on ApiException catch (error) {
         if (error.statusCode != 404) {
-          debugPrint('SlNewsApiSource(${config.id}): /v1/news failed ($error)');
+          AppLog.debug(
+            'SlNewsApiSource(${config.id}): /v1/news failed ($error)',
+          );
           return SlNewsApiPage.empty(page: page, pageSize: size);
         }
-        debugPrint(
+        AppLog.debug(
           'SlNewsApiSource(${config.id}): /v1/news absent (404), using $legacyPath',
         );
       } catch (error) {
-        debugPrint('SlNewsApiSource(${config.id}): /v1/news failed ($error)');
+        AppLog.debug('SlNewsApiSource(${config.id}): /v1/news failed ($error)');
         return SlNewsApiPage.empty(page: page, pageSize: size);
       }
     }
@@ -293,7 +297,9 @@ class SlNewsApiSource implements FeedSource {
         query: query,
       );
     } catch (error) {
-      debugPrint('SlNewsApiSource(${config.id}): $legacyPath failed ($error)');
+      AppLog.debug(
+        'SlNewsApiSource(${config.id}): $legacyPath failed ($error)',
+      );
       return SlNewsApiPage.empty(page: page, pageSize: size);
     }
   }
@@ -317,7 +323,7 @@ class SlNewsApiSource implements FeedSource {
       );
       return _mapLegacyRow(_rowOf(response.data));
     } catch (error) {
-      debugPrint(
+      AppLog.debug(
         'SlNewsApiSource(${config.id}): article $digits failed ($error)',
       );
       return null;
@@ -337,7 +343,9 @@ class SlNewsApiSource implements FeedSource {
       final Object? data = response.data;
       return data is Map && _text(data['status']).toLowerCase() == 'ok';
     } catch (error) {
-      debugPrint('SlNewsApiSource(${config.id}): health probe failed ($error)');
+      AppLog.debug(
+        'SlNewsApiSource(${config.id}): health probe failed ($error)',
+      );
       return false;
     }
   }
@@ -537,7 +545,7 @@ class SlNewsApiSource implements FeedSource {
         json['pubDate'] != null ||
         json['createdAt'] != null;
     if (hadCandidate) {
-      debugPrint(
+      AppLog.debug(
         'SlNewsApiSource(${config.id}): unparseable date, using now()',
       );
     }

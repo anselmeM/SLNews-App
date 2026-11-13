@@ -12,6 +12,8 @@ import '../data/sources/api_client.dart';
 import '../domain/models/app_settings.dart';
 import 'push_segments.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Initialises Firebase once. Returns false (and logs) when the platform
 /// config is missing, so a build without `google-services.json` still runs.
 Future<bool> initializeFirebase() async {
@@ -19,7 +21,7 @@ Future<bool> initializeFirebase() async {
     if (Firebase.apps.isEmpty) await Firebase.initializeApp();
     return true;
   } catch (error) {
-    debugPrint('PushService: Firebase unavailable: $error');
+    AppLog.debug('PushService: Firebase unavailable: $error');
     return false;
   }
 }
@@ -123,7 +125,7 @@ class PushService {
       await _startNotifications();
       return true;
     } catch (error) {
-      debugPrint('PushService: enable failed: $error');
+      AppLog.debug('PushService: enable failed: $error');
       return false;
     }
   }
@@ -137,7 +139,7 @@ class PushService {
       await _registerToken(token);
       await _startNotifications();
     } catch (error) {
-      debugPrint('PushService: ensureRegistered failed: $error');
+      AppLog.debug('PushService: ensureRegistered failed: $error');
     }
   }
 
@@ -154,7 +156,7 @@ class PushService {
       if (status != 'authorized' && status != 'provisional') return;
       await ensureRegistered();
     } catch (error) {
-      debugPrint('PushService: startup registration failed: $error');
+      AppLog.debug('PushService: startup registration failed: $error');
     }
   }
 
@@ -169,7 +171,7 @@ class PushService {
         'platform': _platform,
       });
     } catch (error) {
-      debugPrint('PushService: disable failed: $error');
+      AppLog.debug('PushService: disable failed: $error');
     }
   }
 
@@ -194,7 +196,7 @@ class PushService {
       await ensureRegistered();
       return true;
     } catch (error) {
-      debugPrint('PushService: requestIfNeeded failed: $error');
+      AppLog.debug('PushService: requestIfNeeded failed: $error');
       return false;
     }
   }
@@ -216,7 +218,7 @@ class PushService {
         await _unsubscribeTopic.call(topic);
         _activeTopics.remove(topic);
       } catch (error) {
-        debugPrint('PushService: unsubscribe $topic failed: $error');
+        AppLog.debug('PushService: unsubscribe $topic failed: $error');
       }
     }
     for (final String topic in added) {
@@ -224,7 +226,7 @@ class PushService {
         await _subscribeTopic.call(topic);
         _activeTopics.add(topic);
       } catch (error) {
-        debugPrint('PushService: subscribe $topic failed: $error');
+        AppLog.debug('PushService: subscribe $topic failed: $error');
       }
     }
     await _persistActiveTopics();
@@ -236,7 +238,7 @@ class PushService {
       try {
         await _unsubscribeTopic.call(topic);
       } catch (error) {
-        debugPrint('PushService: unsubscribe $topic failed: $error');
+        AppLog.debug('PushService: unsubscribe $topic failed: $error');
       }
     }
     _activeTopics.clear();
@@ -251,7 +253,7 @@ class PushService {
     try {
       await persist(Set<String>.unmodifiable(_activeTopics));
     } catch (error) {
-      debugPrint('PushService: persisting topics failed: $error');
+      AppLog.debug('PushService: persisting topics failed: $error');
     }
   }
 

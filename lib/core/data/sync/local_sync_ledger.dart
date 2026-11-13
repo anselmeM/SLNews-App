@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
 import '../local/preferences_store.dart';
 import '../../domain/sync/sync_repository.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Remembers **when** each piece of local reader state changed.
 ///
@@ -148,7 +148,7 @@ class LocalSyncLedger {
       // A corrupt ledger must never block the reader; losing timestamps makes
       // the next merge treat local rows as "just changed", which is the same
       // behaviour as a first merge.
-      debugPrint('LocalSyncLedger: ignoring corrupt ledger ($error)');
+      AppLog.debug('LocalSyncLedger: ignoring corrupt ledger ($error)');
       return <String, dynamic>{};
     }
   }

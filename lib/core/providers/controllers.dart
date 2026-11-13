@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/app_settings.dart';
@@ -12,6 +11,8 @@ import '../domain/repositories/user_state_repository.dart';
 import '../domain/sync/sync_repository.dart';
 import 'app_providers.dart';
 import 'sync_controller.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Reader preferences (theme, text scale, home location, alerts).
 final NotifierProvider<SettingsController, AppSettings>
@@ -74,7 +75,7 @@ class SettingsController extends Notifier<AppSettings> {
         await push.disable();
       }
     } catch (error) {
-      debugPrint('SettingsController: push toggle failed: $error');
+      AppLog.debug('SettingsController: push toggle failed: $error');
     }
   }
 
@@ -95,7 +96,7 @@ class SettingsController extends Notifier<AppSettings> {
             settings: state,
           );
     } catch (error) {
-      debugPrint('SettingsController: push segments failed: $error');
+      AppLog.debug('SettingsController: push segments failed: $error');
     }
   }
 
@@ -119,7 +120,7 @@ class SettingsController extends Notifier<AppSettings> {
         await ref.read(pushServiceProvider).enable();
       }
     } catch (error) {
-      debugPrint('SettingsController: topic alert permission failed: $error');
+      AppLog.debug('SettingsController: topic alert permission failed: $error');
     }
   }
 
@@ -248,7 +249,7 @@ class FollowingController extends Notifier<FollowingSnapshot> {
             settings: ref.read(settingsControllerProvider),
           );
     } catch (error) {
-      debugPrint('FollowingController: push segments failed: $error');
+      AppLog.debug('FollowingController: push segments failed: $error');
     }
   }
 }
@@ -283,7 +284,7 @@ Future<void> recordSyncChange(
     // No sync stack in this scope (a feature test, or a build without one):
     // local state is still saved, it simply does not sync.
   } catch (error) {
-    debugPrint('SLNews: sync hook skipped ($error)');
+    AppLog.debug('SLNews: sync hook skipped ($error)');
   }
 }
 

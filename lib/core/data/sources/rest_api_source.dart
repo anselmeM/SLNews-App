@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/article.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
 import 'json_article_mapper.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Reader for a plain REST endpoint that returns articles as JSON.
 ///
@@ -25,7 +25,7 @@ class RestApiSource implements FeedSource {
       final Object? payload = await _api.getJson(config.url);
       return JsonArticleMapper.toArticles(payload, config, limit: limit);
     } catch (error) {
-      debugPrint('RestApiSource(${config.id}): $error');
+      AppLog.debug('RestApiSource(${config.id}): $error');
       return const <Article>[];
     }
   }

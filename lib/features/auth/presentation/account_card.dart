@@ -12,6 +12,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/sl_network_image.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Account entry point at the top of the Following tab.
 ///
 /// Signed out it invites the reader to sign in (the reference app keeps a single
@@ -223,7 +225,7 @@ SyncStatus _readSyncStatus(WidgetRef ref) {
   } on UnimplementedError {
     return const SyncStatus(phase: SyncPhase.disabled);
   } catch (error) {
-    debugPrint('AccountCard: sync status unavailable ($error)');
+    AppLog.debug('AccountCard: sync status unavailable ($error)');
     return const SyncStatus(phase: SyncPhase.disabled);
   }
 }

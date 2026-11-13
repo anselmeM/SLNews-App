@@ -5,6 +5,8 @@ import '../../domain/models/publisher.dart';
 import '../../domain/models/sports_models.dart';
 import 'api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Live team news and league tables from ESPN's public JSON endpoints.
 ///
 /// The seed catalogue only knows a handful of clubs; ESPN fills the gap for the
@@ -105,7 +107,7 @@ class EspnSource {
         all.add(article);
         if (_mentionsTeam(json, ref.teamId)) tagged.add(article);
       } catch (error) {
-        debugPrint('EspnSource: skipping malformed article: $error');
+        AppLog.debug('EspnSource: skipping malformed article: $error');
       }
     }
     final List<Article> chosen = (tagged.isNotEmpty ? tagged : all)

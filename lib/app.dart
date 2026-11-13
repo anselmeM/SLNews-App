@@ -13,6 +13,8 @@ import 'core/providers/app_providers.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Application root: themes, router and the reader's text-size preference.
 class SlNewsApp extends ConsumerWidget {
   const SlNewsApp({super.key});
@@ -118,7 +120,7 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
     try {
       await ref.read(refreshFeedsProvider)();
     } catch (error) {
-      debugPrint('PushTapHandler: resume refresh failed: $error');
+      AppLog.debug('PushTapHandler: resume refresh failed: $error');
     }
   }
 
@@ -134,7 +136,7 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
             settings: ref.read(settingsControllerProvider),
           );
     } catch (error) {
-      debugPrint('PushTapHandler: segment sync failed: $error');
+      AppLog.debug('PushTapHandler: segment sync failed: $error');
     }
   }
 

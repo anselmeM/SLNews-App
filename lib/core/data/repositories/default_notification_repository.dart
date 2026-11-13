@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/notification_item.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../local/preferences_store.dart';
 import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Alert history seeded from the bundled bundle and amended at runtime.
 ///
@@ -103,7 +103,7 @@ class DefaultNotificationRepository implements NotificationRepository {
       );
       _history = history;
     } catch (error) {
-      debugPrint('DefaultNotificationRepository: seed unavailable: $error');
+      AppLog.debug('DefaultNotificationRepository: seed unavailable: $error');
     }
   }
 }

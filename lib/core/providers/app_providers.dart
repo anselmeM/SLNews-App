@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/article_cache.dart';
@@ -33,6 +32,8 @@ import '../domain/repositories/user_state_repository.dart';
 import '../domain/repositories/weather_repository.dart';
 import '../data/sources/index_quote_source.dart';
 import '../domain/models/index_quote.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Infrastructure providers.
 ///
@@ -348,7 +349,7 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
         }
       }
     } catch (error) {
-      debugPrint('videoMoments: unreadable cache: $error');
+      AppLog.debug('videoMoments: unreadable cache: $error');
     }
     // A configured build must never present demo clips as if they were real
     // videos: show nothing until the first successful fetch.
@@ -373,7 +374,7 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
             ]),
           );
     } catch (error) {
-      debugPrint('videoMoments: could not cache: $error');
+      AppLog.debug('videoMoments: could not cache: $error');
     }
   }
 }
@@ -438,7 +439,7 @@ MarketSnapshot? _cachedBoard(PreferencesStore? store) {
       });
     }
   } catch (error) {
-    debugPrint('marketSnapshot: cached board unreadable ($error)');
+    AppLog.debug('marketSnapshot: cached board unreadable ($error)');
   }
   return null;
 }
@@ -477,7 +478,7 @@ final FutureProvider<IndexBoard?> indexBoardProvider =
             });
           }
         } catch (error) {
-          debugPrint('indexBoard: cached board unreadable ($error)');
+          AppLog.debug('indexBoard: cached board unreadable ($error)');
         }
       }
 

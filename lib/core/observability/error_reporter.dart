@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'sentry_settings.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Reports an unexpected error to Sentry when the build has a DSN.
 ///
@@ -9,7 +10,7 @@ import 'sentry_settings.dart';
 /// what happened. Callers pass a short `where` tag instead of a sentence: it is
 /// what makes `list.filter(tag:where:sync)` useful in the Sentry UI.
 void reportError(Object error, {StackTrace? stackTrace, String? where}) {
-  debugPrint('SLNews error${where == null ? '' : ' [$where]'}: $error');
+  AppLog.debug('SLNews error${where == null ? '' : ' [$where]'}: $error');
   if (!SentrySettings.fromEnvironment().isEnabled) return;
 
   Sentry.captureException(

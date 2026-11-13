@@ -36,6 +36,8 @@ import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'sync_repository_provider.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Opens local storage and wires the object graph before the first frame.
 ///
 /// Doing this in `main()` (instead of inside providers) keeps every provider
@@ -112,7 +114,7 @@ class AppBootstrap {
         cache = boxes[1] as ArticleCache;
         persistent = true;
       } catch (error, stackTrace) {
-        debugPrint(
+        AppLog.debug(
           'SLNews: local storage unavailable, falling back to memory ($error)',
         );
         debugPrintStack(stackTrace: stackTrace);
@@ -136,7 +138,7 @@ class AppBootstrap {
     final ClerkAuthRepository? auth = await _createAuth().timeout(
       const Duration(seconds: 4),
       onTimeout: () {
-        debugPrint('SLNews: Clerk init timed out; continuing anonymously');
+        AppLog.debug('SLNews: Clerk init timed out; continuing anonymously');
         return null;
       },
     );
@@ -150,7 +152,7 @@ class AppBootstrap {
       sessionTokenAvailable: auth != null,
     );
 
-    debugPrint(
+    AppLog.debug(
       'SLNews bootstrap: storage=${storageMs}ms '
       'auth=${clock.elapsedMilliseconds - storageMs}ms '
       'total=${clock.elapsedMilliseconds}ms',
@@ -184,7 +186,7 @@ class AppBootstrap {
       ...OutletRegistry.buildSources(client),
       ?apiSource,
     ];
-    debugPrint(
+    AppLog.debug(
       'SLNews: ingest sources=${sources.length} '
       '(scraper API ${apiConfig.isConfigured ? 'enabled on ${apiConfig.host} via '
                 '${apiConfig.apiKey.trim().isEmpty ? 'Clerk session' : 'embedded key'}' : 'disabled - no key and no identity'}), '
@@ -338,17 +340,19 @@ class AppBootstrap {
   static Future<ClerkAuthRepository?> _createAuth() async {
     const String key = String.fromEnvironment('CLERK_PUBLISHABLE_KEY');
     if (key.trim().isEmpty) {
-      debugPrint('SLNews: identity disabled - no CLERK_PUBLISHABLE_KEY');
+      AppLog.debug('SLNews: identity disabled - no CLERK_PUBLISHABLE_KEY');
       return null;
     }
     try {
       final ClerkAuthRepository repository = await ClerkAuthRepository.create(
         publishableKey: key.trim(),
       );
-      debugPrint('SLNews: identity enabled via Clerk');
+      AppLog.debug('SLNews: identity enabled via Clerk');
       return repository;
     } catch (error, stackTrace) {
-      debugPrint('SLNews: Clerk unavailable, continuing anonymously ($error)');
+      AppLog.debug(
+        'SLNews: Clerk unavailable, continuing anonymously ($error)',
+      );
       debugPrintStack(stackTrace: stackTrace);
       return null;
     }

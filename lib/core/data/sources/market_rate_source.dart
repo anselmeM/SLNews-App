@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../domain/models/market_snapshot.dart';
 import 'api_client.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Reads the Markets module's currency board.
 ///
 /// Source: <https://open.er-api.com>, a documented, keyless exchange-rate feed
@@ -33,7 +35,7 @@ class MarketRateSource {
       final Object? payload = await _api.getJson(url);
       return parse(payload);
     } catch (error) {
-      debugPrint('MarketRateSource: rates unavailable ($error)');
+      AppLog.debug('MarketRateSource: rates unavailable ($error)');
       return null;
     }
   }

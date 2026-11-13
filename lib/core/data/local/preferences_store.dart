@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Key/value storage for reader preferences.
 ///
@@ -137,7 +137,7 @@ class HivePreferencesStore implements PreferencesStore {
     } catch (error) {
       // Hive may not be initialised yet (no Flutter binding, no path); reads
       // then degrade to defaults instead of failing the first frame.
-      debugPrint('HivePreferencesStore: could not open "$_name": $error');
+      AppLog.debug('HivePreferencesStore: could not open "$_name": $error');
       _box = null;
     }
   }

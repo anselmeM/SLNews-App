@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
 import '../../domain/models/article.dart';
@@ -8,6 +7,8 @@ import '../../utils/url_normalizer.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
 import 'wire_date.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// RSS 2.0 / Atom reader for one outlet.
 class RssFeedSource implements FeedSource {
@@ -27,7 +28,7 @@ class RssFeedSource implements FeedSource {
       return RssParser.parse(document, config: config, limit: limit);
     } catch (error) {
       // One unreachable outlet must not fail the whole refresh.
-      debugPrint('RssFeedSource(${config.id}): $error');
+      AppLog.debug('RssFeedSource(${config.id}): $error');
       return const <Article>[];
     }
   }
@@ -75,7 +76,7 @@ abstract final class RssParser {
       try {
         return XmlDocument.parse(_resolveUnknownEntities(document));
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'RssParser(${config.id}): malformed feed document: $firstError / $error',
         );
         return null;

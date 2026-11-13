@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
-
 import '../../domain/models/article.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
 import 'json_article_mapper.dart';
+
+import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// Reader for arbitrary JSON endpoints, including GraphQL.
 ///
@@ -60,7 +60,7 @@ class JsonEndpointSource implements FeedSource {
         paths: _extractPaths,
       );
     } catch (error) {
-      debugPrint('JsonEndpointSource(${config.id}): $error');
+      AppLog.debug('JsonEndpointSource(${config.id}): $error');
       return const <Article>[];
     }
   }

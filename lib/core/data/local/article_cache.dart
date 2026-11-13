@@ -6,6 +6,8 @@ import 'package:hive/hive.dart';
 
 import '../../domain/models/article.dart';
 
+import 'package:slnews_mobile/core/utils/app_log.dart';
+
 /// Disk cache for ingested articles, keyed by feed scope (`all`, `category:top`).
 ///
 /// [read] is synchronous: the first frame renders from whatever was persisted
@@ -61,7 +63,7 @@ abstract class _JsonArticleCache implements ArticleCache {
 
     final Object? decoded = _tryDecode(raw);
     if (decoded is! List) {
-      debugPrint('ArticleCache: unreadable entry "$storageKey" removed');
+      AppLog.debug('ArticleCache: unreadable entry "$storageKey" removed');
       unawaited(deleteRaw(storageKey));
       return const <Article>[];
     }
@@ -76,7 +78,7 @@ abstract class _JsonArticleCache implements ArticleCache {
       try {
         articles.add(Article.fromJson(entry.cast<String, dynamic>()));
       } catch (error) {
-        debugPrint(
+        AppLog.debug(
           'ArticleCache: dropping corrupt article in "$storageKey": $error',
         );
         pruned = true;
@@ -190,7 +192,7 @@ class HiveArticleCache extends _JsonArticleCache {
           ? Hive.box<dynamic>(_name)
           : await Hive.openBox<dynamic>(_name);
     } catch (error) {
-      debugPrint('HiveArticleCache: could not open "$_name": $error');
+      AppLog.debug('HiveArticleCache: could not open "$_name": $error');
       _box = null;
     }
   }
