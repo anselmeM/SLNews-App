@@ -18,49 +18,43 @@ void main() {
     await iconLoader.load();
   });
 
-  testWidgets(
-    'daily briefing card layout',
-    (WidgetTester tester) async {
-      final articles = <dynamic>[
-        testArticle(
-          id: 'a',
-          title: 'Government orders legal review of steel plant',
-        ),
-        testArticle(id: 'b', title: 'Macron reacts to protests in Freetown'),
-        testArticle(
-          id: 'c',
-          title: 'Abnormal weather suspected across the provinces',
-        ),
-      ];
-      await tester.binding.setSurfaceSize(const Size(440, 860));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets('daily briefing card layout', (WidgetTester tester) async {
+    final articles = <dynamic>[
+      testArticle(
+        id: 'a',
+        title: 'Government orders legal review of steel plant',
+      ),
+      testArticle(id: 'b', title: 'Macron reacts to protests in Freetown'),
+      testArticle(
+        id: 'c',
+        title: 'Abnormal weather suspected across the provinces',
+      ),
+    ];
+    await tester.binding.setSurfaceSize(const Size(440, 860));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light(),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: DailyBriefingCard(
-                  title: 'Evening briefing',
-                  articles: articles.cast(),
-                ),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: DailyBriefingCard(
+                title: 'Evening briefing',
+                articles: articles.cast(),
               ),
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await expectLater(
-        find.byType(DailyBriefingCard),
-        matchesGoldenFile('goldens/daily_briefing_card.png'),
-      );
-    },
-    skip: Platform.environment['CI'] == 'true'
-        ? 'Host-dependent golden; run locally for visual review'
-        : false,
-  );
+    await expectLater(
+      find.byType(DailyBriefingCard),
+      matchesGoldenFile('goldens/daily_briefing_card.png'),
+    );
+  }, skip: Platform.environment['CI'] == 'true');
 }
