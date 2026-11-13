@@ -288,7 +288,13 @@ class AppBootstrap {
             SponsorshipTracker(client: client, baseUrl: webApiBase),
           ),
           pushServiceProvider.overrideWithValue(
-            PushService(client: client, baseUrl: webApiBase),
+            PushService(
+              client: client,
+              baseUrl: webApiBase,
+              initialTopics: preferences.stringSet(PushService.topicsPrefKey),
+              persistTopics: (Set<String> topics) =>
+                  preferences.putStringSet(PushService.topicsPrefKey, topics),
+            ),
           ),
           // The video rail shares the scraper configuration; when the build has
           // no key it stays null and the bundled rotation is used instead.

@@ -1,8 +1,8 @@
-# Production code audit — 2026-11-13
+﻿# Production code audit â€” 2026-11-13
 
 **Scope:** `SLNews-App` (Flutter), `SLNews-Web` (Next.js), `SLNewsAPIScapper` (Express/Prisma)
 **Method:** line-level static review, repository gates, unit/integration tests, coverage, dependency audit, CI logs, production health checks.
-**Overall grade:** **B / launch-ready with external blockers** — no open critical application vulnerability found; one high-impact ingestion bug and two CI gates were fixed during the audit.
+**Overall grade:** **B / launch-ready with external blockers** â€” no open critical application vulnerability found; one high-impact ingestion bug and two CI gates were fixed during the audit.
 
 ---
 
@@ -16,12 +16,12 @@
 
 **Fixed during this audit**
 
-1. **High — same-source story suppression (scraper).** Cross-source dedupe was adding accepted items to the index *inside the current feed pass*, so near-identical headlines from one publisher were dropped. The run now snapshots the index per source and adds accepted items afterwards. This was also why 17 ingestion tests failed in CI.
-2. **Medium — CI coverage gate was red.** Added focused tests for the image backfill sweep, runtime state, image dimensions/fingerprints and URL guard; coverage now exceeds all thresholds.
-3. **Medium — deadline guard.** A run whose deadline has already passed now returns before any DB or HTTP work.
-4. **Low — image fingerprint corruption.** Missing ETag/Last-Modified/Content-Length produced a fingerprint of `":"` for every image, giving the same cache-busting key. Now returns `null` and leaves the URL untouched.
-5. **Low — test isolation.** In-process source backoff is reset between ingestion tests; the image sweep can be skipped in ingestion tests via a test seam.
-6. **Low — web quality.** Applied non-breaking dependency updates, removed an unused Clerk session read and Material icon-font lint warning, normalized import order. Lint is now 0 warnings.
+1. **High â€” same-source story suppression (scraper).** Cross-source dedupe was adding accepted items to the index *inside the current feed pass*, so near-identical headlines from one publisher were dropped. The run now snapshots the index per source and adds accepted items afterwards. This was also why 17 ingestion tests failed in CI.
+2. **Medium â€” CI coverage gate was red.** Added focused tests for the image backfill sweep, runtime state, image dimensions/fingerprints and URL guard; coverage now exceeds all thresholds.
+3. **Medium â€” deadline guard.** A run whose deadline has already passed now returns before any DB or HTTP work.
+4. **Low â€” image fingerprint corruption.** Missing ETag/Last-Modified/Content-Length produced a fingerprint of `":"` for every image, giving the same cache-busting key. Now returns `null` and leaves the URL untouched.
+5. **Low â€” test isolation.** In-process source backoff is reset between ingestion tests; the image sweep can be skipped in ingestion tests via a test seam.
+6. **Low â€” web quality.** Applied non-breaking dependency updates, removed an unused Clerk session read and Material icon-font lint warning, normalized import order. Lint is now 0 warnings.
 
 ---
 
@@ -34,7 +34,7 @@
 | Gate | Result |
 |---|---|
 | `flutter analyze` | **No issues** |
-| Full test suite (`--concurrency=1`) | **600 passed, 7 skipped, 0 failed** |
+| Full test suite (`--concurrency=1`) | **603 passed, 7 skipped, 0 failed** |
 | Goldens | pass after refreshing article snapshot |
 | Release artifact | AAB/APK code **50**, targetSdk 36, signed |
 | Secret scan in build script | pass |
@@ -45,7 +45,7 @@
 - Feature-first clean architecture is consistent: domain models/repositories, data sources/repositories, presentation/viewmodels.
 - Provider graph is explicit through `AppBootstrap`; test seams exist (`forFetcher`, `forPoster`, fakes).
 - Lazy league feeds were added for the Sports feed; each block fetches its own league news near the viewport.
-- **State is largely implicit** — documented in `docs/IMPLICIT-STATE-MACHINES.md` (13 machines) with rendered diagrams in `docs/state-machines.html`.
+- **State is largely implicit** â€” documented in `docs/IMPLICIT-STATE-MACHINES.md` (13 machines) with rendered diagrams in `docs/state-machines.html`.
 
 ### Findings
 
@@ -59,14 +59,14 @@
 | Low | 90 `debugPrint` calls; no structured client logger | Open |
 | Low | No coverage threshold in CI; tests are broad but unmeasured | Open |
 | Low | Six files over 500 lines; sports/video/for-you pages mix layout and orchestration | Open |
-| Info | Lazy league feed cache is not cleared by pull-to-refresh, so a successful feed isn’t refetched | Open |
+| Info | Lazy league feed cache is not cleared by pull-to-refresh, so a successful feed isnâ€™t refetched | Open |
 
 ### Launch blockers (non-code)
 
 - Play Console account/app verification, demo account, privacy mailbox, App Content forms, listing assets, closed-testing window.
 - Play upload not done; latest AAB is local.
 
-**App grade: B+** — strong test coverage and architecture, but state-machine debt and external Play tasks remain.
+**App grade: B+** â€” strong test coverage and architecture, but state-machine debt and external Play tasks remain.
 
 ---
 
@@ -93,13 +93,13 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 
 | Severity | Finding | Status |
 |---|---|---|
-| High (transitive) | `@vercel/blob → @vercel/oidc → @vercel/cli-config → zod` memory-exhaustion advisory; fix requires major `@vercel/blob` change | Open / accepted pending upgrade |
+| High (transitive) | `@vercel/blob â†’ @vercel/oidc â†’ @vercel/cli-config â†’ zod` memory-exhaustion advisory; fix requires major `@vercel/blob` change | Open / accepted pending upgrade |
 | Moderate (build) | `glob`/`minimatch` DoS advisories via Sentry build plugins (`--force` required) | Open / build-time |
 | Low | Campaign lifecycle has no draft/paused state; stop is irreversible from the console; extension can revive an expired campaign | Open |
 | Low | `docs/TODO.md` references remain in video-sync comments | Info |
 | Info | No coverage threshold enforced in CI | Open |
 
-**Web grade: B** — quality gates are clean and runtime auth is solid; dependency advisory debt is the main remaining risk.
+**Web grade: B** â€” quality gates are clean and runtime auth is solid; dependency advisory debt is the main remaining risk.
 
 ---
 
@@ -109,9 +109,9 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 
 ### Root cause of the red CI (fixed)
 
-`DedupeIndex` was mutated while iterating one source. The similarity threshold (`0.85`) then suppressed legitimate same-publisher headlines (“Article 0” vs “Article 1”), and the same mechanism made 17 ingestion tests fail after the dedupe feature landed. Fixed with a per-source snapshot so only **DB + prior sources** are compared, never the source’s own items. Cross-source first-publisher-wins is preserved.
+`DedupeIndex` was mutated while iterating one source. The similarity threshold (`0.85`) then suppressed legitimate same-publisher headlines (â€œArticle 0â€ vs â€œArticle 1â€), and the same mechanism made 17 ingestion tests fail after the dedupe feature landed. Fixed with a per-source snapshot so only **DB + prior sources** are compared, never the sourceâ€™s own items. Cross-source first-publisher-wins is preserved.
 
-### Gates before → after
+### Gates before â†’ after
 
 | Gate | Before | After |
 |---|---|---|
@@ -136,7 +136,7 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 | Low | `scraper.ts` is 784 lines and mixes feed, page, sitemap, image and video orchestration | Open |
 | Info | 3 moderate `glob`/`minimatch` advisories via `swagger-jsdoc`; fix requires major downgrade | Open / build-time |
 
-**Scraper grade: B+** — ingestion correctness and CI are now green; module size and alert lifecycle remain.
+**Scraper grade: B+** â€” ingestion correctness and CI are now green; module size and alert lifecycle remain.
 
 ---
 
@@ -180,7 +180,7 @@ Already hardened earlier: admin middleware cookie gate, page-level guard, consta
 
 ```text
 App:      flutter analyze -> No issues
-          flutter test --concurrency=1 -> 602 passed, 7 skipped
+          flutter test --concurrency=1 -> 603 passed, 7 skipped
 Web:      npm run typecheck -> pass
           npm run lint -> 0 errors, 0 warnings
           npm test -- --run -> 61 files / 576 tests passed
@@ -206,10 +206,32 @@ now implemented and covered by tests where practical.
 | App session gate | `AuthStatus.unknown` now renders a splash instead of the anonymous shell, removing the session-restore flash | auth/onboarding suites pass |
 | Onboarding | Added catch + visible error; onboarding is not marked complete and navigation is skipped on a failed follow/location write | new failing-write widget test |
 | Ad tracking | Impressions are deduped per sold unit per session; a failed post is retried on the next impression | tracker tests (duplicate + failed retry) |
-| Sync | Bounded retry ladder (20 s → 2 min → 10 min) after a failed push/merge; cleared on success/sign-out/dispose | analyzer + sync tests |
+| Sync | Bounded retry ladder (20 s â†’ 2 min â†’ 10 min) after a failed push/merge; cleared on success/sign-out/dispose | analyzer + sync tests |
 | Lazy league feeds | Pull-to-refresh clears the league source cache and invalidates the feed providers, so stale/empty feeds recover | feed/sports tests |
-| Onboarding/auth flow | 602 tests pass, 7 skipped; analyzer clean | full suite |
+| Onboarding/auth flow | 603 tests pass, 7 skipped; analyzer clean | full suite |
 
 The app now ships as **1.0.0 (code 51)**. Remaining state machinery work is the
 FCM desired-vs-applied reconciliation/persistence and an explicit offline
 connectivity state.
+
+---
+
+## 8. Remaining findings closed (code 52)
+
+| Finding | Fix | Verification |
+|---|---|---|
+| FCM desired-vs-applied divergence | Applied topic set is persisted under `push.topics` and seeded into `PushService` at startup, so removed/stale topics are unsubscribed instead of being forgotten across restarts | topic persistence/reconciliation test |
+| Sticky offline flag | A foreground resume now refreshes ingest-backed feeds, giving the offline marker a recovery path without waiting for a manual pull | analyzer + feed/sync suites |
+| Campaign stop irreversible | Admin console shows **Reactivate** for inactive campaigns, creating a fresh 7-day window | web typecheck/lint/tests |
+| Extension revives expired campaign | `extendCampaign` now rejects stopped/expired campaigns; only Reactivate brings them back | web typecheck/lint/tests |
+| Backfill alert has no acknowledgement | New `POST /api/stats/image-backfill/ack` clears alert/stuck counter and dead-letter list; sweep records the last 20 unresolved URLs with reasons | scraper tests + coverage |
+| Push/sync state machines implicit | Deferred as a dedicated refactor; behavior is now bounded and persisted, but state is still represented by enums/booleans rather than sealed types | tracked |
+
+**Final app gate:** 603 tests pass, 7 skipped; analyzer clean; **code 52** APK/AAB.
+
+**Final scraper gate:** 361 tests pass; coverage 89.98% stmts / 83.36% branch /
+93.56% funcs / 91.55% lines; lint/typecheck clean.
+
+**Final web gate:** typecheck/lint clean; 576 tests pass; production build and
+deployment after the campaign lifecycle merge.
+

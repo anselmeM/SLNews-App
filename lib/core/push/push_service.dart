@@ -30,16 +30,23 @@ Future<bool> initializeFirebase() async {
 /// `{ token, platform }`; both require the caller's session token, which
 /// [ApiClient] attaches only to SLNews hosts.
 class PushService {
+  /// Persisted set of applied FCM topics, reconciled on the next launch.
+  static const String topicsPrefKey = 'push.topics';
+
   PushService({
     required ApiClient client,
     required String baseUrl,
     Future<bool> Function()? ensureFirebase,
+    Set<String> initialTopics = const <String>{},
+    Future<void> Function(Set<String>)? persistTopics,
   }) : _register = ((String url, Map<String, dynamic> body) =>
            client.postJson(url, body)),
        _unregister = ((String url, Map<String, dynamic> body) =>
            client.deleteJson(url, body: body)),
        _baseUrl = baseUrl,
        _ensureFirebase = ensureFirebase ?? initializeFirebase,
+       _persistTopics = persistTopics,
+       _activeTopics = <String>{...initialTopics},
        _subscribeTopic = ((String topic) =>
            FirebaseMessaging.instance.subscribeToTopic(topic)),
        _unsubscribeTopic = ((String topic) =>
@@ -58,6 +65,8 @@ class PushService {
     Future<void> Function(String topic)? subscribeTopic,
     Future<void> Function(String topic)? unsubscribeTopic,
     String baseUrl = 'https://example.invalid',
+    Set<String> initialTopics = const <String>{},
+    Future<void> Function(Set<String>)? persistTopics,
   }) : _register = register,
        _unregister = unregister,
        _token = token,
@@ -67,6 +76,8 @@ class PushService {
        _unsubscribeTopic = unsubscribeTopic ?? ((String topic) async {}),
        _baseUrl = baseUrl,
        _ensureFirebase = (() async => true),
+       _persistTopics = persistTopics,
+       _activeTopics = <String>{...initialTopics},
        _testMode = true;
 
   final Future<Object?> Function(String url, Map<String, dynamic> body)
@@ -87,7 +98,8 @@ class PushService {
   StreamSubscription<RemoteMessage>? _foreground;
   late final Future<void> Function(String topic) _subscribeTopic;
   late final Future<void> Function(String topic) _unsubscribeTopic;
-  final Set<String> _activeTopics = <String>{};
+  final Future<void> Function(Set<String>)? _persistTopics;
+  final Set<String> _activeTopics;
 
   /// Notification taps, for routing. Empty payloads are ignored.
   Stream<Map<String, dynamic>> get taps => _taps.stream;
@@ -215,6 +227,7 @@ class PushService {
         debugPrint('PushService: subscribe $topic failed: $error');
       }
     }
+    await _persistActiveTopics();
   }
 
   /// Drops every managed topic (sign-out, notifications off).
@@ -227,6 +240,19 @@ class PushService {
       }
     }
     _activeTopics.clear();
+    await _persistActiveTopics();
+  }
+
+  /// Persists the applied set so the next launch can reconcile stale topics
+  /// instead of re-subscribing to everything and forgetting removals.
+  Future<void> _persistActiveTopics() async {
+    final Future<void> Function(Set<String>)? persist = _persistTopics;
+    if (persist == null) return;
+    try {
+      await persist(Set<String>.unmodifiable(_activeTopics));
+    } catch (error) {
+      debugPrint('PushService: persisting topics failed: $error');
+    }
   }
 
   @visibleForTesting

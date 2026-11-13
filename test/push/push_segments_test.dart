@@ -72,4 +72,35 @@ void main() {
     await push.clearSegments();
     expect(push.activeTopics, isEmpty);
   });
+
+  test(
+    'persists applied topics and reconciles stale topics on restart',
+    () async {
+      final List<String> unsubscribed = <String>[];
+      Set<String> persisted = <String>{};
+      final PushService push = PushService.forTransports(
+        register: (String url, Map<String, dynamic> body) async => null,
+        unregister: (String url, Map<String, dynamic> body) async => null,
+        token: () async => 'token',
+        requestPermission: () async => true,
+        subscribeTopic: (String topic) async {},
+        unsubscribeTopic: (String topic) async => unsubscribed.add(topic),
+        initialTopics: const <String>{'slnews_topic_stale'},
+        persistTopics: (Set<String> topics) async => persisted = topics,
+      );
+
+      await push.syncSegments(
+        followedIds: const <String>{'topic:politics'},
+        settings: const AppSettings(
+          breakingNewsAlertsEnabled: false,
+          followedTopicAlertsEnabled: true,
+          sportsAlertsEnabled: false,
+        ),
+      );
+
+      expect(unsubscribed, contains('slnews_topic_stale'));
+      expect(persisted, <String>{'slnews_topic_politics'});
+      expect(push.activeTopics, <String>{'slnews_topic_politics'});
+    },
+  );
 }

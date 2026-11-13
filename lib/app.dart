@@ -78,12 +78,14 @@ class _PushTapHandler extends ConsumerStatefulWidget {
   ConsumerState<_PushTapHandler> createState() => _PushTapHandlerState();
 }
 
-class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
+class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
+    with WidgetsBindingObserver {
   StreamSubscription<Map<String, dynamic>>? _subscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     try {
       final PushService push = ref.read(pushServiceProvider);
       unawaited(push.ensureRegisteredIfGranted());
@@ -99,8 +101,25 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    // One failed refresh must not keep the app marked offline forever: retry
+    // when the reader brings the app back to the foreground.
+    unawaited(_refreshOnResume());
+  }
+
+  Future<void> _refreshOnResume() async {
+    try {
+      await ref.read(refreshFeedsProvider)();
+    } catch (error) {
+      debugPrint('PushTapHandler: resume refresh failed: $error');
+    }
   }
 
   Future<void> _syncSegments() async {
