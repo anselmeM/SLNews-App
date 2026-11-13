@@ -13,6 +13,7 @@ import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/sports_links.dart';
+import '../domain/league_stories.dart';
 import 'widgets/sports_fixture_row.dart';
 import 'widgets/standings_table.dart';
 
@@ -40,8 +41,25 @@ class LeaguePage extends ConsumerWidget {
     final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(
       scoreboardProvider,
     );
-    final AsyncValue<List<Article>> stories = ref.watch(
+    final AsyncValue<List<Article>> allStories = ref.watch(
       categoryFeedProvider('sports'),
+    );
+    final List<GameScore> leagueGames =
+        scoreboard.asData?.value.games
+            .where(
+              (GameScore game) =>
+                  SportsLinks.leagueIdForLabel(game.leagueLabel) ==
+                  SportsLinks.leagueIdForLabel(label),
+            )
+            .toList(growable: false) ??
+        const <GameScore>[];
+    final AsyncValue<List<Article>> stories = allStories.whenData(
+      (List<Article> articles) => LeagueStories.forLeague(
+        label,
+        articles,
+        games: leagueGames,
+        limit: 6,
+      ),
     );
 
     return Theme(

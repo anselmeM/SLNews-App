@@ -202,15 +202,21 @@ void main() {
       );
 
       // Slivers below the fold are only built once they scroll into view.
-      for (int i = 0; i < 12 && find.text('Top stories').evaluate().isEmpty; i++) {
+      for (
+        int i = 0;
+        i < 12 && find.text('Top stories').evaluate().isEmpty;
+        i++
+      ) {
         await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
         await tester.pump();
       }
       expect(find.text('Top stories'), findsOneWidget);
 
-      for (int i = 0;
-          i < 20 && find.text('Fixtures & results').evaluate().isEmpty;
-          i++) {
+      for (
+        int i = 0;
+        i < 20 && find.text('Fixtures & results').evaluate().isEmpty;
+        i++
+      ) {
         await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
         await tester.pump();
       }

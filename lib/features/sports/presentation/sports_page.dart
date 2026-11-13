@@ -27,6 +27,7 @@ import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'viewmodels/sports_view_model.dart';
 import '../domain/sports_links.dart';
+import '../domain/league_stories.dart';
 import 'widgets/followed_teams_row.dart';
 import 'widgets/scoreboard_strip.dart';
 import 'widgets/sports_league_section.dart';
@@ -276,7 +277,7 @@ class SportsPage extends ConsumerWidget {
       final bool useSpecific = heroLeague != null && heroLeague == slug;
       final List<Article> leagueStories = useSpecific
           ? specific
-          : _articlesForLeague(label, generic);
+          : LeagueStories.forLeague(label, generic, games: games);
       slivers.add(
         SliverToBoxAdapter(
           child: SportsLeagueSection(
@@ -318,44 +319,6 @@ class SportsPage extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  /// Picks the stories that plausibly belong to one league, falling back to
-  /// the latest sports stories so a block is never empty.
-  List<Article> _articlesForLeague(String label, List<Article> generic) {
-    final String value = label.toLowerCase();
-    final List<String> terms = <String>[
-      ...value.split(RegExp(r'[^a-z0-9]+')).where((String t) => t.length >= 3),
-    ];
-    if (value.contains('nba')) {
-      terms.addAll(<String>['nba', 'lakers', 'basketball']);
-    }
-    if (value.contains('nfl')) {
-      terms.addAll(<String>['nfl', 'football', 'quarterback']);
-    }
-    if (value.contains('mlb')) {
-      terms.addAll(<String>['mlb', 'baseball', 'pitcher']);
-    }
-    if (value.contains('nhl')) terms.addAll(<String>['nhl', 'hockey', 'goal']);
-    if (value.contains('premier')) {
-      terms.addAll(<String>['premier', 'epl', 'arsenal', 'liverpool']);
-    }
-    if (value.contains('sierra')) {
-      terms.addAll(<String>['sierra leone', 'leone stars', 'spl']);
-    }
-    if (value.contains('afcon')) {
-      terms.addAll(<String>['afcon', 'leone stars', 'guinea']);
-    }
-    final List<Article> matching = generic
-        .where((Article article) {
-          final String haystack = '${article.title} ${article.summary}'
-              .toLowerCase();
-          return terms.any(haystack.contains);
-        })
-        .toList(growable: false);
-    return (matching.isEmpty ? generic : matching)
-        .take(4)
-        .toList(growable: false);
   }
 
   List<Widget> _newsSlivers(
