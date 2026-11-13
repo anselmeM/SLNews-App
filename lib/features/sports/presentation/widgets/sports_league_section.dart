@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/sports_models.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/widgets/article_tile.dart';
 import '../../../../core/widgets/publisher_mark.dart';
 import '../../../../core/widgets/sl_network_image.dart';
@@ -14,12 +16,14 @@ import 'score_card.dart';
 /// A coloured header with the league name and a Follow pill, the league's score
 /// cards, a full-bleed hero story, compact stories and a "More … stories" link —
 /// matching the reference Sports tab.
-class SportsLeagueSection extends StatelessWidget {
+class SportsLeagueSection extends ConsumerWidget {
   const SportsLeagueSection({
     super.key,
     required this.leagueLabel,
+    required this.leagueId,
     required this.games,
     required this.articles,
+    this.preferredArticles = const <Article>[],
     required this.isFollowing,
     required this.onToggleFollow,
     required this.onArticleTap,
@@ -29,8 +33,16 @@ class SportsLeagueSection extends StatelessWidget {
   });
 
   final String leagueLabel;
+
+  /// League slug (`nba`, `nfl`, `epl`, ...) for the lazy news feed.
+  final String leagueId;
   final List<GameScore> games;
+
+  /// Strictly filtered local fallback while the league feed loads.
   final List<Article> articles;
+
+  /// Followed-team stories take precedence over the league feed.
+  final List<Article> preferredArticles;
   final bool isFollowing;
   final VoidCallback onToggleFollow;
   final ValueChanged<Article> onArticleTap;
@@ -39,9 +51,17 @@ class SportsLeagueSection extends StatelessWidget {
   final VoidCallback onLeagueTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watched here, not in the page: a league block only starts its feed request
+    // when SliverList.builder builds it near the viewport.
+    final List<Article> feed =
+        ref.watch(leagueNewsProvider('league:$leagueId')).asData?.value ??
+        const <Article>[];
+    final List<Article> stories = preferredArticles.isNotEmpty
+        ? preferredArticles
+        : (feed.isNotEmpty ? feed : articles);
     final _LeagueLook look = _LeagueLook.forLabel(leagueLabel);
-    final List<Article> stories = articles.take(4).toList(growable: false);
+    final List<Article> shownStories = stories.take(4).toList(growable: false);
 
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.xxl),
@@ -123,10 +143,10 @@ class SportsLeagueSection extends StatelessWidget {
                 },
               ),
             ),
-          if (stories.isNotEmpty) ...<Widget>[
+          if (shownStories.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.sm),
-            _HeroStory(article: stories.first, onTap: onArticleTap),
-            for (final Article article in stories.skip(1))
+            _HeroStory(article: shownStories.first, onTap: onArticleTap),
+            for (final Article article in shownStories.skip(1))
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,

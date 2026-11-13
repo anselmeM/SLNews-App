@@ -266,30 +266,25 @@ class SportsPage extends ConsumerWidget {
           right < 0 ? order.length : right,
         );
       });
-    final List<Widget> slivers = <Widget>[];
-    for (final String label in labels) {
-      final List<GameScore> games = groups[label]!;
-      final String slug = SportsLinks.leagueIdForLabel(label);
-      final FollowTarget target = FollowTarget(
-        id: 'league:$slug',
-        kind: FollowKind.league,
-        label: label,
-      );
-      final bool useSpecific = heroLeague != null && heroLeague == slug;
-      final List<Article> feedStories =
-          ref.watch(leagueNewsProvider('league:$slug')).asData?.value ??
-          const <Article>[];
-      final List<Article> leagueStories = useSpecific && specific.isNotEmpty
-          ? specific
-          : (feedStories.isNotEmpty
-                ? feedStories
-                : LeagueStories.forLeague(label, generic, games: games));
-      slivers.add(
-        SliverToBoxAdapter(
-          child: SportsLeagueSection(
+    return <Widget>[
+      SliverList.builder(
+        itemCount: labels.length,
+        itemBuilder: (BuildContext context, int index) {
+          final String label = labels[index];
+          final List<GameScore> games = groups[label]!;
+          final String slug = SportsLinks.leagueIdForLabel(label);
+          final FollowTarget target = FollowTarget(
+            id: 'league:$slug',
+            kind: FollowKind.league,
+            label: label,
+          );
+          final bool useSpecific = heroLeague != null && heroLeague == slug;
+          return SportsLeagueSection(
             leagueLabel: label,
+            leagueId: slug,
             games: games,
-            articles: leagueStories,
+            preferredArticles: useSpecific ? specific : const <Article>[],
+            articles: LeagueStories.forLeague(label, generic, games: games),
             isFollowing: following.isFollowed(target.id),
             onToggleFollow: () =>
                 ref.read(followingControllerProvider.notifier).toggle(target),
@@ -299,11 +294,10 @@ class SportsPage extends ConsumerWidget {
                 context.push(AppRoutes.leagueFor(slug), extra: label),
             onGameTap: (GameScore game) =>
                 context.push(AppRoutes.leagueFor(slug), extra: label),
-          ),
-        ),
-      );
-    }
-    return slivers;
+          );
+        },
+      ),
+    ];
   }
 
   /// Large Samsung-style inline ad after the Following row.

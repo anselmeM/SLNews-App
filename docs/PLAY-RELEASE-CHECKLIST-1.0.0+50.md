@@ -1,4 +1,4 @@
-# SLNews — Play Console release checklist (1.0.0, code 49)
+# SLNews — Play Console release checklist (1.0.0, code 50)
 
 Built from `master` (`e41010f`) on 2026-11-12. This is the current checklist;
 `PLAY-CONSOLE-UPLOAD-CHECKLIST.md` describes an older code-7 build and is kept
@@ -9,11 +9,11 @@ only for history.
 | Field | Value |
 | --- | --- |
 | Package | `com.slnews.mobile` |
-| Version | `1.0.0` (versionCode **49**) |
+| Version | `1.0.0` (versionCode **50**) |
 | Min / target SDK | 26 / **36** (compileSdk 36) |
-| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+49.aab` |
+| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+50.aab` |
 | Size | 68.3 MB |
-| SHA-256 | `71859B1D6D0029D71F0BEE88CD2B962E3B06EBE113FCC8866685B21FC99A3B25` |
+| SHA-256 | `F256CD0A592586FE2E37748F4EF68CF8C6A52B77EC2E26F7551AC8FCE798639D` |
 | Signing | release keystore, JAR verified (`jarsigner -verify`) |
 | Release defines | `SLNEWS_SCOREBOARD_URL`, `SLNEWS_IMAGE_PROXY`, `SLNEWS_WEB_URL`, Sentry DSN, TheSportsDB |
 | Upload key | `android/slnews-release.jks` + `android/key.properties` (never commit) |
@@ -21,8 +21,8 @@ only for history.
 Re-verify before uploading:
 
 ```powershell
-Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+49.aab" -Algorithm SHA256
-jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+49.aab"
+Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+50.aab" -Algorithm SHA256
+jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+50.aab"
 ```
 
 ## 0. Pre-flight (owner: you)
@@ -64,8 +64,8 @@ jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+49.aab"
 ## 2. Internal testing (first install proof)
 
 - [ ] Testing → **Internal testing** → **Create new release**.
-- [ ] Upload `SLNews-1.0.0+49.aab`.
-- [ ] Release name: `1.0.0 (49) — live sports news/standings, ads, onboarding, push`.
+- [ ] Upload `SLNews-1.0.0+50.aab`.
+- [ ] Release name: `1.0.0 (50) — live sports news/standings, ads, onboarding, push`.
 - [ ] Release notes:
       `First-run topic/location picker, sponsored cards with image creatives, push segmentation by followed topics, offline reading polish.`
 - [ ] Add your Google account as a tester; roll out.
@@ -76,7 +76,7 @@ Optional local install proof from the AAB:
 
 ```powershell
 # bundletool: https://github.com/google/bundletool/releases
-java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+49.aab" --output=slnews.apks --mode=universal
+java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+50.aab" --output=slnews.apks --mode=universal
 java -jar bundletool.jar install-apks --apks=slnews.apks
 ```
 
@@ -140,7 +140,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 
 ## 5. Closed testing → production
 
-- [ ] Create a **Closed testing** track, add testers, roll out code 49.
+- [ ] Create a **Closed testing** track, add testers, roll out code 50.
 - [ ] Keep the track active for the period required by your account type
       (personal accounts: confirm the current tester count/duration in the
       console; historically 12 testers / 14 days).
@@ -178,7 +178,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 4. **AAB size 68.3 MB** — Play limit is 200 MB for base bundles, so fine, but
    first-install size matters for Sierra Leone data costs; consider an asset
    bundle later if it grows.
-5. **Version code 49 must never be reused**; every upload needs a higher code.
+5. **Version code 50 must never be reused**; every upload needs a higher code.
 6. Closed-testing requirements vary by account type/date — confirm in Console.
 
 ## Release notes (paste)
@@ -220,3 +220,7 @@ SLNews 1.0.0
 
 - League blocks use league-specific feeds: Yahoo Sports RSS for NBA/NFL/MLB/NHL, Google News for Premier League/Sierra Leone Premier League/AFCON; the strict league filter is applied again after parsing.
 - External league stories open on the publisher, not in the local reader.
+
+## Code 50 notes
+
+- League sections are built through SliverList.builder and fetch their league feed only when they approach the viewport; the initial Sports load no longer requests all seven feeds.
