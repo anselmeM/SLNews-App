@@ -48,8 +48,11 @@ jobs:
         shell: pwsh
         run: ./scripts/check-secrets.ps1
 
-      - name: Test (serial; parallel workers deadlock on this suite)
-        run: flutter test test/core test/data test/features test/sync --concurrency=1
+      - name: Test with coverage (serial; parallel workers deadlock on this suite)
+        run: flutter test test/core test/data test/features test/sync --coverage --concurrency=1
+
+      - name: Enforce app coverage ratchet
+        run: python3 scripts/check_app_coverage.py
 
       - name: Golden tests
         run: flutter test test/golden test/features/feed/daily_briefing_golden_test.dart --concurrency=1

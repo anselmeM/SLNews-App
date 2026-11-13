@@ -270,3 +270,52 @@ Scraper:  npm run typecheck -> pass
 scraper/deploy baseline at `36efcc0`. Code 53 artifacts carry the logging
 cleanup. See `PRODUCTION-AUDIT-2026-11-13.md` for the functional remediation
 history.
+
+---
+
+## 7. Execution update — priority 1 and 2 completed
+
+**Revised overall debt pressure: 75/100** (dependencies 58 → 84, testing
+74 → 82).
+
+### Priority 1 — production advisories: cleared
+
+`npm audit --omit=dev` is now **0 vulnerabilities** (was 9: 4 high, 5 moderate).
+No `@vercel/blob` downgrade was needed; package `overrides` resolve the
+transitive chains:
+
+```json
+{
+  "@vercel/cli-config": "^0.4.0",
+  "glob": "^14.0.3"
+}
+```
+
+- `@vercel/cli-config@0.4.0` requires zod `^4.6.6`, clearing the high-severity
+  memory-exhaustion advisory while keeping `@vercel/blob@2.9.0`.
+- `glob@14.0.6` brings patched `minimatch`, clearing the two Sentry build-plugin
+  moderates.
+- Verified: typecheck, lint, **576 tests**, production build. E2E runs in CI.
+- Remaining `npm audit` (including dev): 10 moderate advisories in
+  `vitest@4.1.10`/`typescript-eslint`; these are development-tool only and
+  require toolchain upgrades, not runtime exposure.
+
+### Priority 2 — app coverage ratchet: added
+
+- Measured baseline on 2026-11-13: **76.45% line coverage** (`LF 10,127`,
+  `LH 7,742`; full suite).
+- Added `scripts/check_app_coverage.py`; minimum is **74.5%** (≈1 point below the CI-equivalent
+  75.45%). CI prints the measured value and fails on regression.
+- Both `build-apk.yml` and `build-aab.yml` now run
+  `flutter test … --coverage --concurrency=1` and execute the gate before the
+  golden step.
+- The local CI-equivalent command was re-run to confirm the same threshold
+  passes without the golden files.
+
+### Revised next actions
+
+1. Split `scraper.ts` ingestion phases (priority 3).
+2. Split app sync/API god files (priority 4).
+3. Extract web article query builder + app scroll lifecycle helper (priority 5).
+4. Sealed push/sync state types (priority 6).
+5. Plan the dev-toolchain upgrades for the remaining 10 moderate dev advisories.
