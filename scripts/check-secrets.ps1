@@ -28,9 +28,9 @@ foreach ($file in $files) {
   $isFirebaseClientConfig = $file -eq 'android/app/google-services.json'
   $path = Join-Path (Split-Path $PSScriptRoot -Parent) $file
   if (-not (Test-Path $path -PathType Leaf)) { continue }
-  $info = Get-Item $path
-  if ($info.Length -gt 2MB) { continue }
-  $text = Get-Content $path -Raw -ErrorAction SilentlyContinue
+  $info = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+  if ($null -eq $info -or $info.Length -gt 2MB) { continue }
+  $text = Get-Content -LiteralPath $path -Raw -ErrorAction SilentlyContinue
   if ($null -eq $text) { continue }
   foreach ($pattern in $patterns) {
     $match = [regex]::Match($text, $pattern.Regex)
