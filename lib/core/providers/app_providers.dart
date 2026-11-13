@@ -12,6 +12,7 @@ import '../push/push_service.dart';
 import '../data/sources/sponsorship_tracker.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/espn_source.dart';
+import '../data/sources/league_news_source.dart';
 import '../data/sources/market_rate_source.dart';
 import '../data/sources/sl_news_video_source.dart';
 import '../domain/models/ad_unit.dart';
@@ -68,6 +69,23 @@ final Provider<EspnSource> espnSourceProvider = Provider<EspnSource>(
   (Ref ref) => EspnSource(client: ref.watch(apiClientProvider)),
   name: 'espnSource',
 );
+
+final Provider<LeagueNewsSource> leagueNewsSourceProvider =
+    Provider<LeagueNewsSource>(
+      (Ref ref) => LeagueNewsSource(client: ref.watch(apiClientProvider)),
+      name: 'leagueNewsSource',
+    );
+
+/// League-specific news feed (Yahoo/Google), empty offline or in tests.
+final leagueNewsProvider = FutureProvider.family<List<Article>, String>((
+  Ref ref,
+  String leagueId,
+) async {
+  if (!const bool.fromEnvironment('THESPORTSDB_ENABLED')) {
+    return const <Article>[];
+  }
+  return ref.watch(leagueNewsSourceProvider).fetch(leagueId);
+}, name: 'leagueNews');
 
 /// Live news for a followed team ESPN covers; empty when unsupported/offline.
 final teamNewsProvider = FutureProvider.family<List<Article>, String>((

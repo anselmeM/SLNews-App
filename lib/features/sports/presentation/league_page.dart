@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/sports_models.dart';
@@ -14,6 +17,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/sports_links.dart';
 import '../domain/league_stories.dart';
+import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/sports_fixture_row.dart';
 import 'widgets/standings_table.dart';
 
@@ -53,14 +57,20 @@ class LeaguePage extends ConsumerWidget {
             )
             .toList(growable: false) ??
         const <GameScore>[];
-    final AsyncValue<List<Article>> stories = allStories.whenData(
-      (List<Article> articles) => LeagueStories.forLeague(
-        label,
-        articles,
-        games: leagueGames,
-        limit: 6,
-      ),
+    final AsyncValue<List<Article>> leagueFeed = ref.watch(
+      leagueNewsProvider('league:${SportsLinks.leagueIdForLabel(label)}'),
     );
+    final AsyncValue<List<Article>> stories =
+        leagueFeed.asData?.value.isNotEmpty == true
+        ? leagueFeed
+        : allStories.whenData(
+            (List<Article> articles) => LeagueStories.forLeague(
+              label,
+              articles,
+              games: leagueGames,
+              limit: 6,
+            ),
+          );
 
     return Theme(
       data: AppTheme.dark(),
@@ -199,8 +209,20 @@ class LeaguePage extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (BuildContext context, int index) => ArticleTile(
               article: articles[index],
-              onTap: () =>
-                  context.push(AppRoutes.articleFor(articles[index].id)),
+              onTap: () {
+                final Article article = articles[index];
+                final String? external = article.sourceUrl;
+                if (isExternalSportsArticle(article) && external != null) {
+                  unawaited(
+                    launchUrl(
+                      Uri.parse(external),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  );
+                  return;
+                }
+                context.push(AppRoutes.articleFor(article.id));
+              },
             ),
           ),
         );

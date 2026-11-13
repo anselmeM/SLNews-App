@@ -28,6 +28,7 @@ import '../../../core/widgets/state_views.dart';
 import 'viewmodels/sports_view_model.dart';
 import '../domain/sports_links.dart';
 import '../domain/league_stories.dart';
+import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/followed_teams_row.dart';
 import 'widgets/scoreboard_strip.dart';
 import 'widgets/sports_league_section.dart';
@@ -275,9 +276,14 @@ class SportsPage extends ConsumerWidget {
         label: label,
       );
       final bool useSpecific = heroLeague != null && heroLeague == slug;
-      final List<Article> leagueStories = useSpecific
+      final List<Article> feedStories =
+          ref.watch(leagueNewsProvider('league:$slug')).asData?.value ??
+          const <Article>[];
+      final List<Article> leagueStories = useSpecific && specific.isNotEmpty
           ? specific
-          : LeagueStories.forLeague(label, generic, games: games);
+          : (feedStories.isNotEmpty
+                ? feedStories
+                : LeagueStories.forLeague(label, generic, games: games));
       slivers.add(
         SliverToBoxAdapter(
           child: SportsLeagueSection(
@@ -456,7 +462,7 @@ class SportsPage extends ConsumerWidget {
   /// reader (which only knows SLNews article ids).
   void _openArticle(BuildContext context, Article article) {
     final String? sourceUrl = article.sourceUrl;
-    if (article.id.startsWith('espn:') && sourceUrl != null) {
+    if (isExternalSportsArticle(article) && sourceUrl != null) {
       unawaited(
         launchUrl(Uri.parse(sourceUrl), mode: LaunchMode.externalApplication),
       );

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/article.dart';
 import '../../../core/data/sources/espn_source.dart';
+import '../../../core/data/sources/league_news_source.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/providers/app_providers.dart';
@@ -216,7 +217,7 @@ class TeamPage extends ConsumerWidget {
 
   void _openArticle(BuildContext context, Article article) {
     final String? sourceUrl = article.sourceUrl;
-    if (article.id.startsWith('espn:') && sourceUrl != null) {
+    if (isExternalSportsArticle(article) && sourceUrl != null) {
       unawaited(
         launchUrl(Uri.parse(sourceUrl), mode: LaunchMode.externalApplication),
       );
