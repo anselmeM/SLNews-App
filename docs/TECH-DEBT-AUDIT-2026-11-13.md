@@ -314,8 +314,35 @@ transitive chains:
 
 ### Revised next actions
 
-1. Split `scraper.ts` ingestion phases (priority 3).
-2. Split app sync/API god files (priority 4).
-3. Extract web article query builder + app scroll lifecycle helper (priority 5).
-4. Sealed push/sync state types (priority 6).
-5. Plan the dev-toolchain upgrades for the remaining 10 moderate dev advisories.
+1. Split app sync/API god files (priority 4).
+2. Extract web article query builder + app scroll lifecycle helper (priority 5).
+3. Sealed push/sync state types (priority 6).
+4. Plan the dev-toolchain upgrades for the remaining 10 moderate dev advisories.
+
+---
+
+## 8. Priority 3 completed — scraper ingestion split
+
+PR `SLNewsAPIScapper#38` (merged as `2efd715`) decomposes the 905-line
+`scraper.ts` into bounded phase modules behind a stable facade:
+
+| Module | Lines | Responsibility |
+|---|---:|---|
+| `scraper.ts` | 19 | Public facade/re-exports only |
+| `ingestion/run.ts` | 60 | Deadline, shared budgets, phase orchestration |
+| `ingestion/feed.ts` | 236 | RSS pass, dedupe, metadata/content backfill |
+| `ingestion/backfill.ts` | 173 | Image sweep + missing-content repair |
+| `ingestion/sitemap.ts` | 191 | Telegraph sitemap fallback |
+| `ingestion/content.ts` | 282 | HTML/image/content helpers |
+| `ingestion/types.ts` | 56 | Phase contracts |
+
+- `runSierraLeoneIngestion` is now **42 lines** (was ~208).
+- Largest phase function is `backfillImages` at **83 lines** (target <120).
+- Largest phase file is 282 lines (was 905).
+- Public imports (`firstPageImage`, `backfillImages`, `parseSitemapUrls`,
+  `runSierraLeoneIngestion`, video re-export) are unchanged.
+- Verified: typecheck, lint, **361 tests**, coverage **89.94/83.21/93.83/91.48**
+  (all thresholds pass). Render redeploy triggered by the merge.
+
+**Revised overall debt pressure: 80/100** (architecture 62 → 74).
+Remaining highest-value structural work is the app sync/API split (priority 4).
