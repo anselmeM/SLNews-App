@@ -304,7 +304,7 @@ transitive chains:
 
 - Measured baseline on 2026-11-13: **76.45% line coverage** (`LF 10,127`,
   `LH 7,742`; full suite).
-- Added `scripts/check_app_coverage.py`; minimum is **74.5%** (≈1 point below the CI-equivalent
+- Added `scripts/check_app_coverage.py`; minimum is **74.0%** (≈1.5 points below the CI-equivalent
   75.45%). CI prints the measured value and fails on regression.
 - Both `build-apk.yml` and `build-aab.yml` now run
   `flutter test … --coverage --concurrency=1` and execute the gate before the

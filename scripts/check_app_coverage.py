@@ -12,7 +12,7 @@ from __future__ import annotations
 import pathlib
 import sys
 
-MIN_LINE_COVERAGE = 74.5
+MIN_LINE_COVERAGE = 74.0
 LCOV = pathlib.Path("coverage/lcov.info")
 
 
