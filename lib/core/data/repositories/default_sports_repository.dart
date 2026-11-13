@@ -7,6 +7,7 @@ import '../../domain/repositories/sports_repository.dart';
 import '../seed/seed_data.dart';
 import '../seed/seed_loader.dart';
 import '../sources/api_client.dart';
+import '../sources/espn_source.dart';
 import '../sources/the_sports_db_source.dart';
 
 /// Fixtures, scores and standings backed by the seed, with an optional live
@@ -22,6 +23,7 @@ class DefaultSportsRepository implements SportsRepository {
     ApiClient? client,
     String? scoreboardUrl,
     TheSportsDbSource? liveSource,
+    this.espn,
   }) : _seeds = seedLoader,
        _api = client,
        _endpoint = scoreboardUrl,
@@ -33,6 +35,7 @@ class DefaultSportsRepository implements SportsRepository {
   final ApiClient? _api;
   final String? _endpoint;
   final TheSportsDbSource? _live;
+  final EspnSource? espn;
   Future<void>? _liveRefresh;
   DateTime? _liveFetchedAt;
   static const Duration _liveTtl = Duration(minutes: 5);
@@ -78,6 +81,17 @@ class DefaultSportsRepository implements SportsRepository {
   @override
   Future<List<TeamStanding>> standings(String leagueId) async {
     await _ready;
+    final EspnSource? source = espn;
+    if (source != null && EspnSource.supportsLeagueId(leagueId)) {
+      try {
+        final List<TeamStanding> liveTable = await source.standings(leagueId);
+        if (liveTable.isNotEmpty) return liveTable;
+      } catch (error) {
+        debugPrint(
+          'DefaultSportsRepository: ESPN standings unavailable: $error',
+        );
+      }
+    }
     // Seed paints immediately; wait briefly for live scores rather than block
     // the tab on a slow third party.
     await _ensureLive().timeout(const Duration(seconds: 6), onTimeout: () {});
@@ -188,6 +202,20 @@ class DefaultSportsRepository implements SportsRepository {
 
   static bool _isTeam(Team team, String teamId) {
     if (team.id == teamId) return true;
+    final EspnTeamRef? espnTeam = EspnSource.teams[teamId];
+    if (espnTeam != null) {
+      final String live = team.name.toLowerCase().replaceAll(
+        RegExp(r'[^a-z0-9]'),
+        '',
+      );
+      final String wanted = espnTeam.label.toLowerCase().replaceAll(
+        RegExp(r'[^a-z0-9]'),
+        '',
+      );
+      if (live == wanted || live.contains(wanted) || wanted.contains(live)) {
+        return true;
+      }
+    }
     final String seed = teamId.split(':').last.toLowerCase();
     if (team.id.split(':').last.toLowerCase() == seed) return true;
 

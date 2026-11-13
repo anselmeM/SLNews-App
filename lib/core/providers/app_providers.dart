@@ -11,6 +11,7 @@ import '../data/sources/api_client.dart';
 import '../push/push_service.dart';
 import '../data/sources/sponsorship_tracker.dart';
 import '../data/sources/feed_source.dart';
+import '../data/sources/espn_source.dart';
 import '../data/sources/market_rate_source.dart';
 import '../data/sources/sl_news_video_source.dart';
 import '../domain/models/ad_unit.dart';
@@ -62,6 +63,24 @@ final Provider<SeedLoader> seedLoaderProvider = Provider<SeedLoader>(
   ),
   name: 'seedLoader',
 );
+
+final Provider<EspnSource> espnSourceProvider = Provider<EspnSource>(
+  (Ref ref) => EspnSource(client: ref.watch(apiClientProvider)),
+  name: 'espnSource',
+);
+
+/// Live news for a followed team ESPN covers; empty when unsupported/offline.
+final teamNewsProvider = FutureProvider.family<List<Article>, String>((
+  Ref ref,
+  String teamId,
+) async {
+  // Tests and key-less builds stay offline when live sports are disabled.
+  if (!const bool.fromEnvironment('THESPORTSDB_ENABLED')) {
+    return const <Article>[];
+  }
+  if (!EspnSource.supportsTeamId(teamId)) return const <Article>[];
+  return ref.watch(espnSourceProvider).teamNews(teamId);
+}, name: 'teamNews');
 
 final Provider<ApiClient> apiClientProvider = Provider<ApiClient>(
   (Ref ref) => throw UnimplementedError(

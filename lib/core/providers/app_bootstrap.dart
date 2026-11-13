@@ -21,6 +21,7 @@ import '../data/sources/api_client.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/sl_news_api_source.dart';
 import '../data/sources/sl_news_video_source.dart';
+import '../data/sources/espn_source.dart';
 import '../data/sources/the_sports_db_source.dart';
 import '../data/sync/sync_api_config.dart';
 import '../domain/repositories/ad_repository.dart';
@@ -200,9 +201,11 @@ class AppBootstrap {
           // Deep links outside the current feed resolve, then cache.
           fetchById: apiSource?.articleById,
         );
+    final EspnSource espnSource = EspnSource(client: client);
     final DefaultSportsRepository sportsRepository = DefaultSportsRepository(
       seedLoader: seedLoader,
       client: client,
+      espn: espnSource,
       // Optional backend sports proxy (`/api/mobile/v1/sports`). The app maps
       // the same {games} shape it already consumed from the old scoreboard URL.
       scoreboardUrl: const String.fromEnvironment('SLNEWS_SCOREBOARD_URL'),
@@ -270,6 +273,7 @@ class AppBootstrap {
           feedSourcesProvider.overrideWithValue(sources),
           articleRepositoryProvider.overrideWithValue(articleRepository),
           sportsRepositoryProvider.overrideWithValue(sportsRepository),
+          espnSourceProvider.overrideWithValue(espnSource),
           followingRepositoryProvider.overrideWithValue(followingRepository),
           notificationRepositoryProvider.overrideWithValue(
             notificationRepository,

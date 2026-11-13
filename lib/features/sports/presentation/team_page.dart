@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/article.dart';
+import '../../../core/data/sources/espn_source.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/providers/app_providers.dart';
@@ -44,9 +48,9 @@ class TeamPage extends ConsumerWidget {
     final AsyncValue<List<GameScore>> fixtures = ref.watch(
       teamGamesProvider(teamId),
     );
-    final AsyncValue<List<Article>> stories = ref.watch(
-      categoryFeedProvider('sports'),
-    );
+    final AsyncValue<List<Article>> stories = EspnSource.supportsTeamId(teamId)
+        ? ref.watch(teamNewsProvider(teamId))
+        : ref.watch(categoryFeedProvider('sports'));
 
     return Scaffold(
       backgroundColor: context.colors.canvas,
@@ -168,11 +172,18 @@ class TeamPage extends ConsumerWidget {
       data: (List<Article> articles) {
         // Best-effort relevance: stories that mention the team by name first,
         // then the latest sports stories so the page is never empty.
+        final String shortName = name
+            .trim()
+            .split(RegExp(r'\s+'))
+            .last
+            .toLowerCase();
         final List<Article> mentioning = articles
             .where(
               (Article article) =>
                   article.title.toLowerCase().contains(name.toLowerCase()) ||
-                  article.summary.toLowerCase().contains(name.toLowerCase()),
+                  article.summary.toLowerCase().contains(name.toLowerCase()) ||
+                  article.title.toLowerCase().contains(shortName) ||
+                  article.summary.toLowerCase().contains(shortName),
             )
             .toList(growable: false);
         final List<Article> visible =
@@ -189,8 +200,7 @@ class TeamPage extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (BuildContext context, int index) => ArticleTile(
               article: visible[index],
-              onTap: () =>
-                  context.push(AppRoutes.articleFor(visible[index].id)),
+              onTap: () => _openArticle(context, visible[index]),
             ),
           ),
         );
@@ -202,6 +212,17 @@ class TeamPage extends ConsumerWidget {
         onRetry: () => ref.invalidate(categoryFeedProvider),
       ),
     );
+  }
+
+  void _openArticle(BuildContext context, Article article) {
+    final String? sourceUrl = article.sourceUrl;
+    if (article.id.startsWith('espn:') && sourceUrl != null) {
+      unawaited(
+        launchUrl(Uri.parse(sourceUrl), mode: LaunchMode.externalApplication),
+      );
+      return;
+    }
+    context.push(AppRoutes.articleFor(article.id));
   }
 
   Widget _notice(

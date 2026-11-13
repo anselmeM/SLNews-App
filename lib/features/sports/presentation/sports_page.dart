@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/follow_models.dart';
+import '../../../core/data/sources/espn_source.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
@@ -51,9 +53,12 @@ class SportsPage extends ConsumerWidget {
       snapshot: scoreboard.asData?.value,
       following: following,
     );
-    final AsyncValue<List<Article>> news = ref.watch(
-      categoryFeedProvider('sports'),
-    );
+    final String? heroTeamId = viewModel.heroTeam?.id;
+    final bool hasTeamNews =
+        heroTeamId != null && EspnSource.supportsTeamId(heroTeamId);
+    final AsyncValue<List<Article>> news = hasTeamNews
+        ? ref.watch(teamNewsProvider(heroTeamId))
+        : ref.watch(categoryFeedProvider('sports'));
     final AsyncValue<List<AdUnit>> ads = ref.watch(
       adUnitsProvider('sports_stream'),
     );
@@ -131,7 +136,12 @@ class SportsPage extends ConsumerWidget {
             onEmptyTap: () => context.go(AppRoutes.following),
           ),
         ),
-        ..._standingsSlivers(context, ref, viewModel.followedSports),
+        ..._standingsSlivers(
+          context,
+          ref,
+          viewModel.followedSports,
+          viewModel.heroTeam,
+        ),
         if (ad != null) _adSliver(context, ad),
         SliverToBoxAdapter(
           child: SectionHeader(title: viewModel.newsSectionTitle),
@@ -156,6 +166,7 @@ class SportsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     List<FollowTarget> followed,
+    FollowTarget? heroTeam,
   ) {
     FollowTarget? league;
     for (final FollowTarget target in followed) {
@@ -163,6 +174,17 @@ class SportsPage extends ConsumerWidget {
         league = target;
         break;
       }
+    }
+    // Following a team without its league should still show that team's table.
+    final EspnTeamRef? heroRef = heroTeam == null
+        ? null
+        : EspnSource.refForTeam(heroTeam.id);
+    if (league == null && heroRef != null) {
+      league = FollowTarget(
+        id: 'league:${heroRef.league}',
+        kind: FollowKind.league,
+        label: EspnSource.leagueLabel(heroRef.league),
+      );
     }
     if (league == null) return const <Widget>[];
 
@@ -254,7 +276,7 @@ class SportsPage extends ConsumerWidget {
                 child: ArticleTile(
                   article: article,
                   isLiked: liked.contains(article.id),
-                  onTap: () => context.push(AppRoutes.articleFor(article.id)),
+                  onTap: () => _openArticle(context, article),
                   onLike: () => unawaited(
                     ref
                         .read(likesControllerProvider.notifier)
@@ -359,6 +381,19 @@ class SportsPage extends ConsumerWidget {
   }
 
   /// Small in-stream surface used instead of a full-page error for one stream.
+  /// ESPN stories are external: open them in the browser, not the in-app
+  /// reader (which only knows SLNews article ids).
+  void _openArticle(BuildContext context, Article article) {
+    final String? sourceUrl = article.sourceUrl;
+    if (article.id.startsWith('espn:') && sourceUrl != null) {
+      unawaited(
+        launchUrl(Uri.parse(sourceUrl), mode: LaunchMode.externalApplication),
+      );
+      return;
+    }
+    context.push(AppRoutes.articleFor(article.id));
+  }
+
   Widget _noticeSliver(
     BuildContext context,
     String message, {

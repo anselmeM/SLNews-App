@@ -1,0 +1,291 @@
+import 'package:flutter/foundation.dart';
+
+import '../../domain/models/article.dart';
+import '../../domain/models/publisher.dart';
+import '../../domain/models/sports_models.dart';
+import 'api_client.dart';
+
+/// Live team news and league tables from ESPN's public JSON endpoints.
+///
+/// The seed catalogue only knows a handful of clubs; ESPN fills the gap for the
+/// ones it covers (starting with the Lakers) without adding a backend key. Every
+/// method is best-effort: an empty list means "no live data", never a crash.
+@immutable
+class EspnTeamRef {
+  const EspnTeamRef({
+    required this.sport,
+    required this.league,
+    required this.teamId,
+    required this.label,
+  });
+
+  final String sport;
+  final String league;
+  final String teamId;
+  final String label;
+}
+
+@immutable
+class EspnLeagueRef {
+  const EspnLeagueRef({
+    required this.sport,
+    required this.league,
+    required this.label,
+  });
+
+  final String sport;
+  final String league;
+  final String label;
+}
+
+class EspnSource {
+  EspnSource({required this.client, this.timeout = const Duration(seconds: 8)});
+
+  final ApiClient client;
+  final Duration timeout;
+  final Map<String, List<TeamStanding>> _standingsCache =
+      <String, List<TeamStanding>>{};
+
+  static const String _base = 'https://site.api.espn.com/apis';
+
+  /// Teams in the bundled follow catalogue that ESPN can serve news for.
+  static const Map<String, EspnTeamRef> teams = <String, EspnTeamRef>{
+    'team:lal': EspnTeamRef(
+      sport: 'basketball',
+      league: 'nba',
+      teamId: '13',
+      label: 'Los Angeles Lakers',
+    ),
+  };
+
+  static const Map<String, EspnLeagueRef> leagues = <String, EspnLeagueRef>{
+    'nba': EspnLeagueRef(sport: 'basketball', league: 'nba', label: 'NBA'),
+    'epl': EspnLeagueRef(
+      sport: 'soccer',
+      league: 'eng.1',
+      label: 'Premier League',
+    ),
+  };
+
+  static bool supportsTeamId(String teamId) => teams.containsKey(teamId);
+
+  static EspnTeamRef? refForTeam(String teamId) => teams[teamId];
+
+  /// League slug (e.g. `nba`) for a followed ESPN team, for standings.
+  static String? leagueIdForTeam(String teamId) => teams[teamId]?.league;
+
+  static String leagueLabel(String slug) =>
+      leagues[slug.toLowerCase()]?.label ?? slug.toUpperCase();
+
+  static bool supportsLeagueId(String leagueId) =>
+      leagues.containsKey(_leagueSlug(leagueId));
+
+  static String _leagueSlug(String leagueId) =>
+      leagueId.split(':').last.toLowerCase();
+
+  Future<List<Article>> teamNews(String teamId, {int limit = 8}) async {
+    final EspnTeamRef? ref = teams[teamId];
+    if (ref == null) return const <Article>[];
+    final Object? payload = await client.getJson(
+      '$_base/site/v2/sports/${ref.sport}/${ref.league}/news',
+      query: <String, dynamic>{'team': ref.teamId, 'limit': limit},
+    );
+    final Object? raw = payload is Map ? payload['articles'] : null;
+    if (raw is! List) return const <Article>[];
+    final List<Article> tagged = <Article>[];
+    final List<Article> all = <Article>[];
+    for (final Object? item in raw) {
+      if (item is! Map) continue;
+      final Map<String, dynamic> json = Map<String, dynamic>.from(item);
+      try {
+        final Article article = _articleFromJson(json);
+        all.add(article);
+        if (_mentionsTeam(json, ref.teamId)) tagged.add(article);
+      } catch (error) {
+        debugPrint('EspnSource: skipping malformed article: $error');
+      }
+    }
+    final List<Article> chosen = (tagged.isNotEmpty ? tagged : all)
+        .take(limit)
+        .toList(growable: false);
+    return List<Article>.unmodifiable(chosen);
+  }
+
+  Future<List<TeamStanding>> standings(
+    String leagueId, {
+    int limit = 20,
+  }) async {
+    final String slug = _leagueSlug(leagueId);
+    final EspnLeagueRef? ref = leagues[slug];
+    if (ref == null) return const <TeamStanding>[];
+    final List<TeamStanding>? cached = _standingsCache[slug];
+    if (cached != null) return cached;
+
+    final Object? payload = await client.getJson(
+      '$_base/v2/sports/${ref.sport}/${ref.league}/standings',
+    );
+    if (payload is! Map) return const <TeamStanding>[];
+
+    final List<Map<String, dynamic>> entries = <Map<String, dynamic>>[];
+    void collect(Object? node) {
+      if (node is! Map) return;
+      final Object? standings = node['standings'];
+      if (standings is Map && standings['entries'] is List) {
+        for (final Object? entry in standings['entries'] as List) {
+          if (entry is Map) entries.add(Map<String, dynamic>.from(entry));
+        }
+      }
+      final Object? children = node['children'];
+      if (children is List) {
+        for (final Object? child in children) {
+          collect(child);
+        }
+      }
+    }
+
+    collect(payload);
+
+    final List<TeamStanding> rows = <TeamStanding>[];
+    final Set<String> seen = <String>{};
+    for (final Map<String, dynamic> entry in entries) {
+      final Object? team = entry['team'];
+      if (team is! Map) continue;
+      final String? id = team['id']?.toString();
+      if (id == null || !seen.add(id)) continue;
+      final String name =
+          (team['displayName'] ?? team['name'] ?? team['shortDisplayName'])
+              ?.toString() ??
+          '';
+      if (name.isEmpty) continue;
+      final String code =
+          (team['abbreviation'] ?? team['shortDisplayName'] ?? name)
+              .toString()
+              .toUpperCase();
+      final Map<String, dynamic> stats = <String, dynamic>{};
+      final Object? statList = entry['stats'];
+      if (statList is List) {
+        for (final Object? stat in statList) {
+          if (stat is Map && stat['name'] is String) {
+            stats[stat['name'] as String] = stat;
+          }
+        }
+      }
+      double number(String name) {
+        final Object? stat = stats[name];
+        final Object? value = stat is Map ? stat['value'] : null;
+        return value is num ? value.toDouble() : 0;
+      }
+
+      final int wins = number('wins').round();
+      final int losses = number('losses').round();
+      final String record = (wins + losses) > 0
+          ? '$wins-$losses'
+          : _recordFromSummary(stats) ?? '0-0';
+      rows.add(
+        TeamStanding(
+          team: Team(
+            id: 'team:espn-$id',
+            name: name,
+            code: code.length > 4 ? code.substring(0, 4) : code,
+            logoUrl: null,
+            colourHex: '#0B6FD1',
+          ),
+          leagueId: slug,
+          leagueLabel: ref.label,
+          record: record,
+          rank: number('rank').round(),
+        ),
+      );
+    }
+
+    // ESPN orders entries by conference/division; rank by win pct for a single
+    // combined table, then fall back to the source order.
+    rows.sort((a, b) => _winPct(b).compareTo(_winPct(a)));
+    for (int i = 0; i < rows.length; i += 1) {
+      rows[i] = TeamStanding(
+        team: rows[i].team,
+        leagueId: rows[i].leagueId,
+        leagueLabel: rows[i].leagueLabel,
+        record: rows[i].record,
+        rank: i + 1,
+      );
+    }
+    final List<TeamStanding> result = List<TeamStanding>.unmodifiable(
+      rows.take(limit),
+    );
+    _standingsCache[slug] = result;
+    return result;
+  }
+
+  static double _winPct(TeamStanding row) {
+    final List<String> parts = row.record.split('-');
+    final int wins = int.tryParse(parts.first) ?? 0;
+    final int losses = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    final int total = wins + losses;
+    return total == 0 ? 0 : wins / total;
+  }
+
+  static String? _recordFromSummary(Map<String, dynamic> stats) {
+    for (final Object? stat in stats.values) {
+      if (stat is Map && stat['type'] == 'total') {
+        final String? summary = stat['summary']?.toString();
+        if (summary != null && summary.contains('-')) return summary;
+      }
+    }
+    return null;
+  }
+
+  /// ESPN categories tag every team a story touches.
+  static bool _mentionsTeam(Map<String, dynamic> json, String teamId) {
+    final Object? categories = json['categories'];
+    if (categories is! List) return false;
+    for (final Object? category in categories) {
+      if (category is Map &&
+          category['type'] == 'team' &&
+          category['teamId']?.toString() == teamId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Article _articleFromJson(Map<String, dynamic> json) {
+    final String headline = (json['headline'] ?? json['title'] ?? '')
+        .toString();
+    if (headline.isEmpty) throw const FormatException('missing headline');
+    final Object? links = json['links'];
+    final String? sourceUrl = links is Map && links['web'] is Map
+        ? (links['web'] as Map)['href']?.toString()
+        : null;
+    final Object? images = json['images'];
+    String? imageUrl;
+    if (images is List) {
+      for (final Object? image in images) {
+        if (image is Map && image['url'] is String) {
+          imageUrl = image['url'] as String;
+          break;
+        }
+      }
+    }
+    final DateTime published =
+        DateTime.tryParse((json['published'] ?? '').toString()) ??
+        DateTime.now().toUtc();
+    return Article(
+      id: 'espn:${json['id']}',
+      title: headline,
+      summary: (json['description'] ?? '').toString(),
+      publisher: const Publisher(
+        id: 'espn',
+        name: 'ESPN',
+        wordmark: 'ESPN',
+        websiteUrl: 'https://www.espn.com',
+        country: 'United States',
+      ),
+      publishedAt: published,
+      imageUrl: imageUrl,
+      sourceUrl: sourceUrl,
+      categoryId: 'sports',
+      tags: const <String>['sports'],
+    );
+  }
+}
