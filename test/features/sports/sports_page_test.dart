@@ -202,12 +202,18 @@ void main() {
       );
 
       // Slivers below the fold are only built once they scroll into view.
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
-      await tester.pump();
-      expect(find.text('Leone Stars news'), findsOneWidget);
+      for (int i = 0; i < 12 && find.text('Top stories').evaluate().isEmpty; i++) {
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+        await tester.pump();
+      }
+      expect(find.text('Top stories'), findsOneWidget);
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
-      await tester.pump();
+      for (int i = 0;
+          i < 20 && find.text('Fixtures & results').evaluate().isEmpty;
+          i++) {
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+        await tester.pump();
+      }
       expect(find.text('Fixtures & results'), findsOneWidget);
       // The fixture row reads "away v home".
       expect(find.text('Bo Rangers v Leone Stars'), findsOneWidget);
@@ -245,7 +251,7 @@ void main() {
       findsNWidgets(2),
     );
     expect(find.text('AD'), findsOneWidget);
-    expect(find.text('Leone Stars news'), findsOneWidget);
+    expect(find.text('Top stories'), findsOneWidget);
     expect(find.byType(ErrorStateView), findsNothing);
   });
 

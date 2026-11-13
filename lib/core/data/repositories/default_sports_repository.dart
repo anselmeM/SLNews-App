@@ -82,7 +82,10 @@ class DefaultSportsRepository implements SportsRepository {
   Future<List<TeamStanding>> standings(String leagueId) async {
     await _ready;
     final EspnSource? source = espn;
-    if (source != null && EspnSource.supportsLeagueId(leagueId)) {
+    // Keep tests and key-less builds fully offline.
+    if (const bool.fromEnvironment('THESPORTSDB_ENABLED') &&
+        source != null &&
+        EspnSource.supportsLeagueId(leagueId)) {
       try {
         final List<TeamStanding> liveTable = await source.standings(leagueId);
         if (liveTable.isNotEmpty) return liveTable;

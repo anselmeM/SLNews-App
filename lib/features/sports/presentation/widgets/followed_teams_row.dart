@@ -56,7 +56,7 @@ class FollowedTeamsRow extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 100,
+      height: 116,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -77,16 +77,18 @@ class FollowedTeamsRow extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    TeamCrest.forTarget(target, size: 48),
+                    TeamCrest.forTarget(target, size: 64),
                     const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
                     Text(
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: context.typography.overline.copyWith(
+                      style: context.typography.caption.copyWith(
                         color: context.colors.onSurface,
-                        letterSpacing: 0.2,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0,
                       ),
                     ),
                   ],

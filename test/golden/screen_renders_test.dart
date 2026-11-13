@@ -144,6 +144,7 @@ void main() {
     container.read(appRouterProvider).go(AppRoutes.sports);
     await settle(tester);
     await capture(tester, 'sports');
+
   });
 
   testWidgets('Following tab renders subscriptions and alert history', (

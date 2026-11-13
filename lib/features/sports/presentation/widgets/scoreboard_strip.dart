@@ -48,9 +48,9 @@ class ScoreboardStrip extends ConsumerWidget {
     WidgetRef ref,
     ScoreboardSnapshot snapshot,
   ) {
-    final double cardWidth = (MediaQuery.sizeOf(context).width * 0.62).clamp(
-      180.0,
-      260.0,
+    final double cardWidth = (MediaQuery.sizeOf(context).width * 0.46).clamp(
+      168.0,
+      240.0,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

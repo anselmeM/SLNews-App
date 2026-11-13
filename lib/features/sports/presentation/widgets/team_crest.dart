@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/domain/models/follow_models.dart';
+import '../../../../core/domain/models/sports_models.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_glyphs.dart';
 import '../../../../core/widgets/sl_network_image.dart';
@@ -26,9 +27,56 @@ class TeamCrest extends StatelessWidget {
   /// Crest for a followed entity (team or league) in the Following row.
   TeamCrest.forTarget(FollowTarget target, {super.key, this.size = 48})
     : name = target.label,
-      logoUrl = target.imageUrl,
+      logoUrl = target.imageUrl ?? _knownLogos[target.id],
       colourHex = null,
       initialsOverride = SportsViewModel.shortLabel(target);
+
+  /// Broadcast-crest URLs for catalogue teams whose seed has no image.
+  static const Map<String, String> _knownLogos = <String, String>{
+    'team:lal': 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png',
+  };
+
+  /// ESPN crest for common NBA clubs, keyed by the three-letter code.
+  static String? knownTeamLogo(Team team) {
+    if (team.logoUrl != null && team.logoUrl!.isNotEmpty) return team.logoUrl;
+    const Map<String, String> nba = <String, String>{
+      'ATL': 'atl',
+      'BOS': 'bos',
+      'BKN': 'bkn',
+      'CHA': 'cha',
+      'CHI': 'chi',
+      'CLE': 'cle',
+      'DAL': 'dal',
+      'DEN': 'den',
+      'DET': 'det',
+      'GSW': 'gs',
+      'HOU': 'hou',
+      'IND': 'ind',
+      'LAC': 'lac',
+      'LAL': 'lal',
+      'MEM': 'mem',
+      'MIA': 'mia',
+      'MIL': 'mil',
+      'MIN': 'min',
+      'NOP': 'no',
+      'NYK': 'ny',
+      'OKC': 'okc',
+      'ORL': 'orl',
+      'PHI': 'phi',
+      'PHO': 'phx',
+      'POR': 'por',
+      'SAC': 'sac',
+      'SAS': 'sa',
+      'TOR': 'tor',
+      'UTA': 'utah',
+      'WAS': 'wsh',
+      'WSH': 'wsh',
+    };
+    final String? slug = nba[team.code.toUpperCase()];
+    return slug == null
+        ? null
+        : 'https://a.espncdn.com/i/teamlogos/nba/500/$slug.png';
+  }
 
   /// Team or league name; supplies the initials when no crest is available.
   final String name;
