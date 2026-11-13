@@ -1,4 +1,4 @@
-﻿# Fails when a tracked file looks like it contains a live credential.
+# Fails when a tracked file looks like it contains a live credential.
 # Deliberately pattern-based: it catches the classes we have actually shipped
 # keys for (Firebase service accounts, Google API keys, GitHub/Slack/OpenAI
 # tokens, private keys, database URLs) without flagging test placeholders.
@@ -13,7 +13,11 @@ $patterns = @(
   @{ Name = 'database URL with password'; Regex = 'postgres(ql)?://[^\s:@/]+:[^\s:@/]+@' }
 )
 
-$files = git -C $PSScriptRoot\.. ls-files
+$root = Split-Path $PSScriptRoot -Parent
+$files = @(git -C $root ls-files)
+if ($LASTEXITCODE -ne 0) {
+  throw "git ls-files failed in $root"
+}
 $findings = New-Object System.Collections.Generic.List[string]
 foreach ($file in $files) {
   if ($file -match '(^|/)(build|\.dart_tool|node_modules|\.git)/') { continue }
