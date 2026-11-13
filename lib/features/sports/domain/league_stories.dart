@@ -137,8 +137,12 @@ abstract final class LeagueStories {
 
   static List<String> _cuesFor(String label) {
     final String value = label.toUpperCase();
-    for (final MapEntry<String, List<String>> entry in _cues.entries) {
-      if (value.contains(entry.key)) return entry.value;
+    // Most specific label wins: "Sierra Leone Premier League" must not match
+    // the generic Premier League cues first.
+    final List<String> keys = _cues.keys.toList()
+      ..sort((String a, String b) => b.length.compareTo(a.length));
+    for (final String key in keys) {
+      if (value.contains(key)) return _cues[key]!;
     }
     if (value.contains('SOCCER') || value.contains('LEAGUE')) {
       return _cues['PREMIER LEAGUE']!;
