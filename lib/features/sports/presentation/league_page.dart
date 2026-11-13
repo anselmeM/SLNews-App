@@ -7,6 +7,7 @@ import '../../../core/domain/models/sports_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/section_header.dart';
@@ -43,42 +44,45 @@ class LeaguePage extends ConsumerWidget {
       categoryFeedProvider('sports'),
     );
 
-    return Scaffold(
-      backgroundColor: context.colors.canvas,
-      body: CustomScrollView(
-        slivers: <Widget>[
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: context.colors.canvas,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              tooltip: 'Back',
-              onPressed: () => context.pop(),
+    return Theme(
+      data: AppTheme.dark(),
+      child: Scaffold(
+        backgroundColor: context.colors.canvas,
+        body: CustomScrollView(
+          slivers: <Widget>[
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: context.colors.canvas,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back',
+                onPressed: () => context.pop(),
+              ),
+              title: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.typography.groupTitle,
+              ),
             ),
-            title: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.groupTitle,
+            const SliverToBoxAdapter(
+              child: SectionHeader(title: 'Standings', compact: true),
             ),
-          ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Standings', compact: true),
-          ),
-          _standingsSliver(context, ref, standings, label),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Fixtures & results', compact: true),
-          ),
-          _fixturesSliver(context, ref, scoreboard, label),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Latest stories', compact: true),
-          ),
-          _storiesSliver(context, ref, stories),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
-        ],
+            _standingsSliver(context, ref, standings, label),
+            const SliverToBoxAdapter(
+              child: SectionHeader(title: 'Fixtures & results', compact: true),
+            ),
+            _fixturesSliver(context, ref, scoreboard, label),
+            const SliverToBoxAdapter(
+              child: SectionHeader(title: 'Latest stories', compact: true),
+            ),
+            _storiesSliver(context, ref, stories),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
+          ],
+        ),
       ),
     );
   }

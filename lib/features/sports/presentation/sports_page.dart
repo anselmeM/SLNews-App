@@ -31,7 +31,6 @@ import 'widgets/followed_teams_row.dart';
 import 'widgets/scoreboard_strip.dart';
 import 'widgets/sports_league_section.dart';
 import 'widgets/sports_fixture_row.dart';
-import 'widgets/standings_table.dart';
 
 /// Tab 3 — Sports.
 ///
@@ -155,12 +154,6 @@ class SportsPage extends ConsumerWidget {
                 teamNews,
                 following,
               ),
-              ..._standingsSlivers(
-                context,
-                ref,
-                viewModel.followedSports,
-                viewModel.heroTeam,
-              ),
               SliverToBoxAdapter(
                 child: SectionHeader(title: viewModel.newsSectionTitle),
               ),
@@ -274,13 +267,11 @@ class SportsPage extends ConsumerWidget {
             onToggleFollow: () =>
                 ref.read(followingControllerProvider.notifier).toggle(target),
             onArticleTap: (Article article) => _openArticle(context, article),
-            onMore: () => context.go(AppRoutes.news),
-            onGameTap: (GameScore game) => context.push(
-              AppRoutes.leagueFor(
-                SportsLinks.leagueIdForLabel(game.leagueLabel),
-              ),
-              extra: game.leagueLabel,
-            ),
+            onMore: () => context.push(AppRoutes.leagueFor(slug), extra: label),
+            onLeagueTap: () =>
+                context.push(AppRoutes.leagueFor(slug), extra: label),
+            onGameTap: (GameScore game) =>
+                context.push(AppRoutes.leagueFor(slug), extra: label),
           ),
         ),
       );
@@ -288,74 +279,7 @@ class SportsPage extends ConsumerWidget {
     return slivers;
   }
 
-  /// A compact league table for the first followed league, linking to its page.
-  List<Widget> _standingsSlivers(
-    BuildContext context,
-    WidgetRef ref,
-    List<FollowTarget> followed,
-    FollowTarget? heroTeam,
-  ) {
-    FollowTarget? league;
-    for (final FollowTarget target in followed) {
-      if (target.kind == FollowKind.league) {
-        league = target;
-        break;
-      }
-    }
-    // Following a team without its league should still show that team's table.
-    final EspnTeamRef? heroRef = heroTeam == null
-        ? null
-        : EspnSource.refForTeam(heroTeam.id);
-    if (league == null && heroRef != null) {
-      league = FollowTarget(
-        id: 'league:${heroRef.league}',
-        kind: FollowKind.league,
-        label: EspnSource.leagueLabel(heroRef.league),
-      );
-    }
-    if (league == null) return const <Widget>[];
-
-    final AsyncValue<List<TeamStanding>> standings = ref.watch(
-      standingsProvider(league.id),
-    );
-    return <Widget>[
-      SliverToBoxAdapter(
-        child: SectionHeader(
-          title: 'Standings',
-          onTap: () => context.push(
-            AppRoutes.leagueFor(league!.id),
-            extra: league.label,
-          ),
-        ),
-      ),
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: standings.when(
-            data: (List<TeamStanding> rows) => rows.isEmpty
-                ? const SizedBox.shrink()
-                : StandingsTable(
-                    rows: rows,
-                    maxRows: 5,
-                    onTeamTap: (TeamStanding row) => context.push(
-                      AppRoutes.teamFor(row.team.id),
-                      extra: row.team.name,
-                    ),
-                  ),
-            loading: () => const SkeletonBox(
-              height: 160,
-              borderRadius: AppRadius.cardRadius,
-            ),
-            error: (Object error, StackTrace stack) => const SizedBox.shrink(),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  /// Exactly one native-style inline unit, embedded in the stream right after
-  /// the Following section. Renders nothing while the rotation is empty or
-  /// still loading.
+  /// Large Samsung-style inline ad after the Following row.
   Widget _adSliver(BuildContext context, AdUnit unit) {
     return SliverToBoxAdapter(
       child: Padding(
@@ -376,7 +300,6 @@ class SportsPage extends ConsumerWidget {
     );
   }
 
-  /// Team news stream: the `sports` category feed rendered as article cards.
   List<Widget> _newsSlivers(
     BuildContext context,
     WidgetRef ref,

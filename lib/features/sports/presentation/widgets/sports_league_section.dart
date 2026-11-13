@@ -25,6 +25,7 @@ class SportsLeagueSection extends StatelessWidget {
     required this.onArticleTap,
     required this.onMore,
     required this.onGameTap,
+    required this.onLeagueTap,
   });
 
   final String leagueLabel;
@@ -35,6 +36,7 @@ class SportsLeagueSection extends StatelessWidget {
   final ValueChanged<Article> onArticleTap;
   final VoidCallback onMore;
   final ValueChanged<GameScore> onGameTap;
+  final VoidCallback onLeagueTap;
 
   static const Color _nbaTop = Color(0xFF0B2E6B);
   static const Color _nbaBottom = Color(0xFF1558B0);
@@ -69,20 +71,35 @@ class SportsLeagueSection extends StatelessWidget {
             ),
             child: Row(
               children: <Widget>[
-                Icon(
-                  nba ? Icons.sports_basketball : Icons.sports_soccer,
-                  color: Colors.white,
-                  size: 28,
-                ),
-                const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: Text(
-                    leagueLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.screenTitle.copyWith(
-                      color: Colors.white,
-                      fontStyle: FontStyle.italic,
+                  child: GestureDetector(
+                    onTap: onLeagueTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          nba ? Icons.sports_basketball : Icons.sports_soccer,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            leagueLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.typography.screenTitle.copyWith(
+                              color: Colors.white,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                      ],
                     ),
                   ),
                 ),
