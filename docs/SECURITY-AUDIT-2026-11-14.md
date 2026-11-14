@@ -48,6 +48,7 @@ a different invented bearer value on every request and receive a fresh
 expensive auth paths and all data routes.
 
 **Fix:** `rateLimitKey()` now keys on the normalised client IP only
+(PR #39)
 (`ipKeyGenerator`), with a comment documenting why pre-auth credentials must
 never select a bucket. Added a regression test that sends three requests from
 one IP with three different invented tokens and asserts the third is `429`.
@@ -60,11 +61,12 @@ or chunked body could consume memory on every request.
 
 **Fix:** a stream reader enforces `MAX_BODY_BYTES` while reading (and rejects a
 oversized `Content-Length` immediately), returns `413` and cancels the stream.
-Added a regression test for a 9 KB report.
+Added a regression test for a 9 KB report. (PR #148)
 
 ### S-03 — CSP missing `object-src` / `base-uri` (Low) — FIXED
 
-Added `object-src 'none'` and `base-uri 'self'` to the site-wide policy.
+Added `object-src 'none'` and `base-uri 'self'` to the site-wide policy
+(PR #149; live header re-checked after deployment).
 `default-src` already covered most legacy plugin paths; this removes the
 remaining injection surface around `<object>`/`<base>`.
 
@@ -125,6 +127,8 @@ GET https://sl-news.vercel.app/                200
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
+  CSP tail: worker-src 'self' blob:; object-src 'none';
+            base-uri 'self'; frame-ancestors 'self' (live verified)
 
 GET https://slnewsapiscapper.onrender.com/api/health   200
   content-security-policy, strict-transport-security,
