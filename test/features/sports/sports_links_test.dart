@@ -12,6 +12,18 @@ void main() {
       );
       expect(SportsLinks.leagueIdForLabel('Premier League'), 'epl');
       expect(SportsLinks.leagueIdForLabel('NBA'), 'nba');
+      expect(
+        SportsLinks.leagueIdForLabel('UEFA Champions League'),
+        'champions-league',
+      );
+      expect(SportsLinks.leagueIdForLabel('La Liga'), 'la-liga');
+      expect(SportsLinks.leagueIdForLabel('Serie A'), 'serie-a');
+      expect(SportsLinks.leagueIdForLabel('Bundesliga'), 'bundesliga');
+      expect(SportsLinks.leagueIdForLabel('Ligue 1'), 'ligue-1');
+      expect(SportsLinks.leagueIdForLabel('Formula 1'), 'f1');
+      expect(SportsLinks.leagueIdForLabel('Tennis'), 'tennis');
+      expect(SportsLinks.leagueIdForLabel('Cricket'), 'cricket');
+      expect(SportsLinks.leagueIdForLabel('Golf'), 'golf');
       expect(SportsLinks.leagueIdForLabel('AFCON Qualifier'), 'afcon');
     });
 

@@ -10,8 +10,20 @@ abstract final class SportsLinks {
   static const Map<String, String> _idByLabel = <String, String>{
     'Sierra Leone Premier League': 'spl',
     'Premier League': 'epl',
+    'UEFA Champions League': 'champions-league',
+    'La Liga': 'la-liga',
+    'Serie A': 'serie-a',
+    'Bundesliga': 'bundesliga',
+    'Ligue 1': 'ligue-1',
     'NBA': 'nba',
+    'NFL': 'nfl',
+    'MLB': 'mlb',
+    'NHL': 'nhl',
     'AFCON Qualifier': 'afcon',
+    'Formula 1': 'f1',
+    'Tennis': 'tennis',
+    'Cricket': 'cricket',
+    'Golf': 'golf',
   };
 
   /// League id for a fixture label; unknown labels get a stable slug so the

@@ -28,6 +28,7 @@ import '../../../core/widgets/state_views.dart';
 import 'viewmodels/sports_view_model.dart';
 import '../domain/sports_links.dart';
 import '../domain/league_stories.dart';
+import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/followed_teams_row.dart';
 import 'widgets/scoreboard_strip.dart';
@@ -242,37 +243,32 @@ class SportsPage extends ConsumerWidget {
     for (final GameScore game in viewModel.ordered) {
       groups.putIfAbsent(game.leagueLabel, () => <GameScore>[]).add(game);
     }
-    if (groups.isEmpty) return const <Widget>[];
 
     final List<Article> generic = allSports.asData?.value ?? const <Article>[];
     final List<Article> specific = teamNews.asData?.value ?? generic;
     final String? heroLeague = viewModel.heroTeam == null
         ? null
         : EspnSource.leagueIdForTeam(viewModel.heroTeam!.id);
-    const List<String> order = <String>[
-      'NBA',
-      'NFL',
-      'MLB',
-      'NHL',
-      'Premier League',
-      'Sierra Leone Premier League',
-      'AFCON Qualifier',
-    ];
-    final List<String> labels = groups.keys.toList(growable: false)
-      ..sort((a, b) {
-        final int left = order.indexOf(a);
-        final int right = order.indexOf(b);
-        return (left < 0 ? order.length : left).compareTo(
-          right < 0 ? order.length : right,
-        );
+    // The curated catalogue is the feed's minimum coverage. Scoreboard groups
+    // for leagues outside it are appended, so a new provider league still shows.
+    final Set<String> labelSet = <String>{
+      for (final SportsLeague league in kFeaturedSportsLeagues) league.label,
+      ...groups.keys,
+    };
+    final List<String> labels = labelSet.toList(growable: false)
+      ..sort((String a, String b) {
+        final int left = featuredLeagueOrder(a);
+        final int right = featuredLeagueOrder(b);
+        return left != right ? left.compareTo(right) : a.compareTo(b);
       });
     return <Widget>[
       SliverList.builder(
         itemCount: labels.length,
         itemBuilder: (BuildContext context, int index) {
           final String label = labels[index];
-          final List<GameScore> games = groups[label]!;
-          final String slug = SportsLinks.leagueIdForLabel(label);
+          final List<GameScore> games = groups[label] ?? const <GameScore>[];
+          final String slug =
+              featuredLeagueId(label) ?? SportsLinks.leagueIdForLabel(label);
           final FollowTarget target = FollowTarget(
             id: 'league:$slug',
             kind: FollowKind.league,

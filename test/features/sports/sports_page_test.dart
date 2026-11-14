@@ -212,6 +212,18 @@ void main() {
       }
       expect(find.text('Top stories'), findsOneWidget);
 
+      // The SPL block now sits after the curated major-league sections, so it
+      // may not exist until it scrolls into view.
+      for (
+        int i = 0;
+        i < 30 && find.text('Bo Rangers v Leone Stars').evaluate().isEmpty;
+        i++
+      ) {
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+        await tester.pump();
+      }
+      expect(find.text('Bo Rangers v Leone Stars'), findsOneWidget);
+
       for (
         int i = 0;
         i < 20 && find.text('Fixtures & results').evaluate().isEmpty;
@@ -221,8 +233,6 @@ void main() {
         await tester.pump();
       }
       expect(find.text('Fixtures & results'), findsOneWidget);
-      // The fixture row reads "away v home".
-      expect(find.text('Bo Rangers v Leone Stars'), findsOneWidget);
     },
   );
 

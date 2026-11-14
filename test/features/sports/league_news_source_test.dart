@@ -12,6 +12,15 @@ void main() {
     expect(LeagueNewsSource.supports('league:epl'), isTrue);
     expect(LeagueNewsSource.supports('league:spl'), isTrue);
     expect(LeagueNewsSource.supports('league:afcon'), isTrue);
+    expect(LeagueNewsSource.supports('league:champions-league'), isTrue);
+    expect(LeagueNewsSource.supports('league:la-liga'), isTrue);
+    expect(LeagueNewsSource.supports('league:serie-a'), isTrue);
+    expect(LeagueNewsSource.supports('league:bundesliga'), isTrue);
+    expect(LeagueNewsSource.supports('league:ligue-1'), isTrue);
+    expect(LeagueNewsSource.supports('league:f1'), isTrue);
+    expect(LeagueNewsSource.supports('league:tennis'), isTrue);
+    expect(LeagueNewsSource.supports('league:cricket'), isTrue);
+    expect(LeagueNewsSource.supports('league:golf'), isTrue);
     expect(LeagueNewsSource.supports('league:unknown'), isFalse);
   });
 
