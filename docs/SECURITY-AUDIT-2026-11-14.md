@@ -76,15 +76,21 @@ remaining injection surface around `<object>`/`<base>`.
 `swagger-jsdoc` pulled vulnerable `glob`/`minimatch`. Upgraded Vitest and added
 a `glob ^14.0.3` override; `npm audit` is now 0 including dev.
 
-### S-05 — App WebView runs publisher JS unrestricted (Low, accepted)
+### S-05 — App WebView runs publisher JS unrestricted (Low, accepted; HTTP edge fixed)
 
 The "Read original" page intentionally needs JavaScript for the publisher page,
-reading-progress channel and typography injection. There is no JavaScript bridge
-that exposes app data; the progress channel only parses a clamped float.
-Navigation is policy-checked (`ArticleWebMode`): `javascript:` is blocked,
-same-publisher HTTP(S) stays in-page, every other scheme/host opens externally.
-`canReadOriginal()` accepts only absolute HTTP(S) URLs. Residual risk is the
-publisher's own page behaviour, equivalent to reading it in a browser.
+reading-progress channel and typography injection. The only JS bridge is
+`SlnewsProgress`, whose handler parses and clamps a float; it exposes no app data
+or callable native surface. Navigation is policy-checked (`ArticleWebMode`):
+`javascript:` is blocked, same-publisher HTTPS stays in-page, every other
+scheme/host opens externally.
+
+**HTTP edge eliminated:** `canReadOriginal()` now accepts HTTPS only, and the
+article header routes `http://` source links to the platform browser. The in-app
+WebView therefore never loads cleartext publisher content. Tests cover HTTPS
+in-app, HTTP external, relative/FTP rejected, plus the existing link policy.
+Residual risk is the publisher's own HTTPS page behaviour, equivalent to
+reading it in a browser.
 
 ### S-06 — CSP keeps `script-src 'unsafe-inline'` (Low, accepted)
 

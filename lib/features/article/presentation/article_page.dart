@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:slnews_mobile/core/widgets/scroll_to_top_state_mixin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/follow_models.dart';
@@ -15,6 +16,7 @@ import '../../../core/utils/html_content.dart';
 import '../../../core/widgets/publisher_mark.dart';
 import '../../../core/widgets/scroll_to_top_button.dart';
 import '../../../core/widgets/state_views.dart';
+import '../domain/article_web_mode.dart';
 import 'widgets/article_action_bar.dart';
 import 'widgets/reading_progress_bar.dart';
 import 'widgets/article_header.dart';
@@ -137,13 +139,12 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
               ),
               centerTitle: true,
               actions: <Widget>[
-                if (article.sourceUrl != null && article.sourceUrl!.isNotEmpty)
+                if (ArticleWebMode.originalAction(article.sourceUrl) !=
+                    ArticleOriginalAction.none)
                   IconButton(
                     icon: const Icon(Icons.public),
                     tooltip: 'Read original',
-                    onPressed: () => context.push(
-                      '${AppRoutes.articleFor(article.id)}/original',
-                    ),
+                    onPressed: () => _openOriginal(context, article),
                   ),
                 IconButton(
                   icon: const Icon(Icons.bookmark_border),
@@ -229,6 +230,31 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
           ),
       ],
     );
+  }
+
+  Future<void> _openOriginal(BuildContext context, Article article) async {
+    final ArticleOriginalAction action = ArticleWebMode.originalAction(
+      article.sourceUrl,
+    );
+    if (action == ArticleOriginalAction.inApp) {
+      context.push('${AppRoutes.articleFor(article.id)}/original');
+      return;
+    }
+    if (action != ArticleOriginalAction.external) return;
+
+    final Uri? uri = Uri.tryParse(article.sourceUrl ?? '');
+    if (uri == null) return;
+    try {
+      final bool opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && context.mounted) {
+        _showSnack(context, 'Could not open the link');
+      }
+    } catch (_) {
+      if (context.mounted) _showSnack(context, 'Could not open the link');
+    }
   }
 
   void _showSnack(BuildContext context, String message) {

@@ -17,6 +17,19 @@ enum ArticleLinkAction {
   block,
 }
 
+/// What the “Read original” header action should do.
+enum ArticleOriginalAction {
+  /// HTTPS publisher page: render it in the in-app WebView.
+  inApp,
+
+  /// HTTP publisher page: hand off to the platform browser rather than loading
+  /// unencrypted content inside the app.
+  external,
+
+  /// No absolute web URL.
+  none,
+}
+
 abstract final class ArticleWebMode {
   /// Decides what happens to [target] tapped while reading [article].
   ///
@@ -47,13 +60,25 @@ abstract final class ArticleWebMode {
     return ArticleLinkAction.openExternally;
   }
 
-  /// True when the story can be shown as the publisher's page at all.
-  static bool canReadOriginal(String? sourceUrl) {
+  /// Decides how the “Read original” action opens [sourceUrl].
+  static ArticleOriginalAction originalAction(String? sourceUrl) {
     final Uri? uri = Uri.tryParse(sourceUrl?.trim() ?? '');
-    return uri != null &&
-        uri.hasAbsolutePath &&
-        (uri.scheme == 'http' || uri.scheme == 'https');
+    if (uri == null || !uri.hasAbsolutePath) {
+      return ArticleOriginalAction.none;
+    }
+    return switch (uri.scheme.toLowerCase()) {
+      'https' => ArticleOriginalAction.inApp,
+      'http' => ArticleOriginalAction.external,
+      _ => ArticleOriginalAction.none,
+    };
   }
+
+  /// True when the story can be shown as the publisher's page at all.
+  ///
+  /// HTTPS only: cleartext pages are opened in the platform browser so the app
+  /// never renders unencrypted publisher content in an in-app WebView.
+  static bool canReadOriginal(String? sourceUrl) =>
+      originalAction(sourceUrl) == ArticleOriginalAction.inApp;
 
   /// JavaScript injected after every load (and again when the reader changes the
   /// text size).

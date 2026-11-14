@@ -71,10 +71,37 @@ void main() {
     });
   });
 
+  group('originalAction', () {
+    test('opens HTTPS in-app and routes HTTP to the platform', () {
+      expect(
+        ArticleWebMode.originalAction('https://example.com/a'),
+        ArticleOriginalAction.inApp,
+      );
+      expect(
+        ArticleWebMode.originalAction('http://example.com/a'),
+        ArticleOriginalAction.external,
+      );
+      expect(
+        ArticleWebMode.originalAction('HTTPS://EXAMPLE.COM/a'),
+        ArticleOriginalAction.inApp,
+      );
+      expect(ArticleWebMode.originalAction(null), ArticleOriginalAction.none);
+      expect(ArticleWebMode.originalAction(''), ArticleOriginalAction.none);
+      expect(
+        ArticleWebMode.originalAction('/relative/path'),
+        ArticleOriginalAction.none,
+      );
+      expect(
+        ArticleWebMode.originalAction('ftp://example.com/a'),
+        ArticleOriginalAction.none,
+      );
+    });
+  });
+
   group('canReadOriginal', () {
-    test('accepts absolute http(s) links only', () {
+    test('accepts absolute HTTPS links only', () {
       expect(ArticleWebMode.canReadOriginal('https://example.com/a'), isTrue);
-      expect(ArticleWebMode.canReadOriginal('http://example.com/a'), isTrue);
+      expect(ArticleWebMode.canReadOriginal('http://example.com/a'), isFalse);
       expect(ArticleWebMode.canReadOriginal(null), isFalse);
       expect(ArticleWebMode.canReadOriginal(''), isFalse);
       expect(ArticleWebMode.canReadOriginal('/relative/path'), isFalse);
