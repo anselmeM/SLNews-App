@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slnews_mobile/core/widgets/scroll_to_top_state_mixin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,38 +53,10 @@ class TopStoriesSectionPage extends ConsumerStatefulWidget {
       _TopStoriesSectionPageState();
 }
 
-class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
-  final ScrollController _controller = ScrollController();
-  bool _showToTop = false;
-
+class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage>
+    with ScrollToTopStateMixin<TopStoriesSectionPage> {
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onScroll);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final bool visible =
-        _controller.hasClients &&
-        _controller.offset > ScrollToTopButton.threshold;
-    if (visible != _showToTop) setState(() => _showToTop = visible);
-  }
-
-  Future<void> _backToTop() async {
-    if (!_controller.hasClients) return;
-    await _controller.animateTo(
-      0,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
+  double get scrollToTopThreshold => ScrollToTopButton.threshold;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +71,7 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
       body: Stack(
         children: <Widget>[
           CustomScrollView(
-            controller: _controller,
+            controller: scrollController,
             slivers: <Widget>[
               SliverAppBar(
                 pinned: true,
@@ -175,12 +148,12 @@ class _TopStoriesSectionPageState extends ConsumerState<TopStoriesSectionPage> {
               ],
             ],
           ),
-          if (_showToTop)
+          if (showScrollToTopButton)
             Positioned(
               left: 0,
               right: 0,
               bottom: AppSpacing.lg,
-              child: Center(child: ScrollToTopButton(onPressed: _backToTop)),
+              child: Center(child: ScrollToTopButton(onPressed: scrollToTop)),
             ),
         ],
       ),

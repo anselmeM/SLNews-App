@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slnews_mobile/core/widgets/scroll_to_top_state_mixin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -81,47 +82,17 @@ class _ReaderBody extends ConsumerStatefulWidget {
   ConsumerState<_ReaderBody> createState() => _ReaderBodyState();
 }
 
-class _ReaderBodyState extends ConsumerState<_ReaderBody> {
-  final ScrollController _controller = ScrollController();
-  bool _showToTop = false;
-  double _progress = 0;
+class _ReaderBodyState extends ConsumerState<_ReaderBody>
+    with ScrollToTopStateMixin<_ReaderBody> {
+  @override
+  double get scrollToTopThreshold => ScrollToTopButton.threshold;
 
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_onScroll);
-  }
+  bool get tracksReadingProgress => true;
 
   @override
-  void dispose() {
-    _controller.removeListener(_onScroll);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final bool visible =
-        _controller.hasClients &&
-        _controller.offset > ScrollToTopButton.threshold;
-    final double progress = readingProgressFor(_controller);
-    // Only rebuild when the hairline actually moves by a visible amount.
-    final bool progressChanged = (progress - _progress).abs() > 0.005;
-    if (visible != _showToTop || progressChanged) {
-      setState(() {
-        _showToTop = visible;
-        _progress = progress;
-      });
-    }
-  }
-
-  Future<void> _backToTop() async {
-    if (!_controller.hasClients) return;
-    await _controller.animateTo(
-      0,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
+  double readingProgress(ScrollController controller) =>
+      readingProgressFor(controller);
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +111,7 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
     return Stack(
       children: <Widget>[
         CustomScrollView(
-          controller: _controller,
+          controller: scrollController,
           slivers: <Widget>[
             SliverAppBar(
               pinned: true,
@@ -247,14 +218,14 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody> {
           top: MediaQuery.paddingOf(context).top + kToolbarHeight,
           left: 0,
           right: 0,
-          child: ReadingProgressBar(progress: _progress),
+          child: ReadingProgressBar(progress: scrollProgress),
         ),
-        if (_showToTop)
+        if (showScrollToTopButton)
           Positioned(
             left: 0,
             right: 0,
             bottom: AppSpacing.md,
-            child: Center(child: ScrollToTopButton(onPressed: _backToTop)),
+            child: Center(child: ScrollToTopButton(onPressed: scrollToTop)),
           ),
       ],
     );

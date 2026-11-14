@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'scroll_to_top_state_mixin.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'overflow_menu_button.dart';
@@ -75,38 +77,10 @@ class SlPageScaffold extends ConsumerStatefulWidget {
   ConsumerState<SlPageScaffold> createState() => _SlPageScaffoldState();
 }
 
-class _SlPageScaffoldState extends ConsumerState<SlPageScaffold> {
-  final ScrollController _controller = ScrollController();
-  bool _showScrollToTop = false;
-
+class _SlPageScaffoldState extends ConsumerState<SlPageScaffold>
+    with ScrollToTopStateMixin<SlPageScaffold> {
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onScroll);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final bool visible =
-        _controller.hasClients &&
-        _controller.offset > SlPageScaffold.scrollToTopThreshold;
-    if (visible != _showScrollToTop) setState(() => _showScrollToTop = visible);
-  }
-
-  Future<void> _scrollToTop() async {
-    if (!_controller.hasClients) return;
-    await _controller.animateTo(
-      0,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
+  double get scrollToTopThreshold => SlPageScaffold.scrollToTopThreshold;
 
   bool get _hasBrandMark {
     final String? mark = widget.brandMark;
@@ -119,7 +93,7 @@ class _SlPageScaffoldState extends ConsumerState<SlPageScaffold> {
         ? readOfflineStatus(ref)
         : const OfflineStatus(isOffline: false);
     final Widget content = CustomScrollView(
-      controller: _controller,
+      controller: scrollController,
       slivers: <Widget>[
         SliverAppBar(
           pinned: true,
@@ -179,8 +153,8 @@ class _SlPageScaffoldState extends ConsumerState<SlPageScaffold> {
 
     final Widget? fab =
         widget.floatingActionButton ??
-        (widget.showScrollToTop && _showScrollToTop
-            ? ScrollToTopButton(onPressed: _scrollToTop)
+        (widget.showScrollToTop && showScrollToTopButton
+            ? ScrollToTopButton(onPressed: scrollToTop)
             : null);
 
     return Scaffold(

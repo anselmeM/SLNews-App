@@ -315,9 +315,8 @@ transitive chains:
 ### Revised next actions
 
 1. Split app sync/API god files (priority 4).
-2. Extract web article query builder + app scroll lifecycle helper (priority 5).
-3. Sealed push/sync state types (priority 6).
-4. Plan the dev-toolchain upgrades for the remaining 10 moderate dev advisories.
+2. Sealed push/sync state types (priority 6).
+3. Plan the dev-toolchain upgrades for the remaining 10 moderate dev advisories.
 
 ---
 
@@ -346,3 +345,23 @@ PR `SLNewsAPIScapper#38` (merged as `2efd715`) decomposes the 905-line
 
 **Revised overall debt pressure: 80/100** (architecture 62 → 74).
 Remaining highest-value structural work is the app sync/API split (priority 4).
+
+
+---
+
+## 9. Priority 5 completed — shared query + scroll lifecycle
+
+**Web (PR #146):** every feed/search query repeated the same published /
+relations / `publishedAt` order / skip / take block. Added
+`src/lib/article-query.ts` with `findArticlePage()`; `news-service.ts` dropped
+from 413 to ~375 lines. Behaviour unchanged (same where/order/include/skip/take),
+verified by 576 tests, typecheck and lint.
+
+**App:** added `ScrollToTopStateMixin` and replaced the three copied
+scroll-controller/listener/dispose blocks in `SlPageScaffold`, the article reader
+and the top-stories section page. The article reader still tracks reading
+progress; the other two keep the simple visibility rule. Verified by analyzer
+and the article/feed/golden suites (80 tests).
+
+Remaining roadmap: app sync/API split (priority 4), sealed push/sync state types
+(priority 6), and the dev-toolchain advisories.
