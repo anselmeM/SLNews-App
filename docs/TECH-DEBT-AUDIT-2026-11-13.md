@@ -411,3 +411,16 @@ made `PushService.status` report the real transitions. The bool-returning
 
 Verified: analyzer clean; sync/push/auth suites **123 tests pass**. CI runs the
 full suite and coverage ratchet. This closes the implicit-state roadmap item.
+
+
+---
+
+## 12. Dev dependency advisories cleared
+
+Web PR #147 upgrades `vitest` and `@vitest/coverage-v8` to **4.1.12** (patched)
+and adds a targeted override for `minimatch ^11.0.1` under
+`@typescript-eslint/typescript-estree`.
+
+`npm audit` is now **0 vulnerabilities including dev** (was 10 moderate; the
+production audit has been 0 since the earlier overrides). Verified with
+typecheck, lint, **576 tests**, production build and CI (including e2e).
