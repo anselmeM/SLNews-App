@@ -53,6 +53,29 @@ void main() {
     expect(urls.single, endsWith('/api/mobile/v1/devices'));
   });
 
+  test('registration exposes a sealed status', () async {
+    final service = PushService.forTransports(
+      register: (_, _) async => null,
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async => true,
+    );
+    expect(service.status, isA<PushUnavailable>());
+    expect(await service.enable(), isTrue);
+    expect(service.status, isA<PushRegistered>());
+    await service.disable();
+    expect(service.status, isA<PushDisabled>());
+
+    final denied = PushService.forTransports(
+      register: (_, _) async => null,
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async => false,
+    );
+    expect(await denied.enable(), isFalse);
+    expect(denied.status, isA<PushPermissionDenied>());
+  });
+
   test('a missing token never registers', () async {
     final List<String> urls = <String>[];
     final service = PushService.forTransports(

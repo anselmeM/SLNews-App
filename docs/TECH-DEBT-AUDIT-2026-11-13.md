@@ -387,3 +387,27 @@ Public types remain importable from the original `sl_news_api_source.dart` path.
 
 Verified locally: analyzer clean; split sync/API tests (150 tests) pass. CI runs
 the full suite + coverage gate.
+
+
+---
+
+## 11. Priority 6 completed — sealed push/sync state
+
+**Sync:** replaced the `SyncPhase` enum + nullable-field `SyncStatus` with a
+sealed hierarchy:
+
+- `SyncDisabled`, `SyncIdle`, `SyncSyncing`, `SyncSynced`, `SyncFailed`
+- `SyncFailed` requires a typed `SyncFailure`; `SyncSynced` owns its server
+  clock. Impossible combinations (failed without a reason, synced without a
+  clock, syncing with a stale failure) can no longer be constructed.
+- `SyncStatus.asSyncing()` carries last-run metadata into the in-flight state;
+  the controller and account card now use pattern tests (`is SyncIdle`,
+  `is SyncFailed`, `is! SyncDisabled`) instead of enum comparisons.
+
+**Push:** added a sealed `PushStatus` hierarchy (`PushUnavailable`,
+`PushPermissionDenied`, `PushDisabled`, `PushRegistered`, `PushFailed`) and
+made `PushService.status` report the real transitions. The bool-returning
+`enable()` API is unchanged for callers.
+
+Verified: analyzer clean; sync/push/auth suites **123 tests pass**. CI runs the
+full suite and coverage ratchet. This closes the implicit-state roadmap item.

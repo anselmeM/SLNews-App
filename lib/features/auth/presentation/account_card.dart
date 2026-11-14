@@ -38,7 +38,7 @@ class _AccountCardState extends ConsumerState<AccountCard> {
     // First frame a reader is signed in: converge this device's local state with
     // the account's. Guarded so a rebuild cannot start a second run, and deferred
     // to a post-frame callback because it writes to providers.
-    if (auth.isSignedIn && !_mergeRequested && sync.phase == SyncPhase.idle) {
+    if (auth.isSignedIn && !_mergeRequested && sync is SyncIdle) {
       _mergeRequested = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -94,7 +94,7 @@ class _SignedInRow extends ConsumerWidget {
                 sync.label,
                 maxLines: 2,
                 style: context.typography.meta.copyWith(
-                  color: sync.phase == SyncPhase.failed
+                  color: sync is SyncFailed
                       ? context.colors.live
                       : context.colors.onSurfaceVariant,
                 ),
@@ -103,7 +103,7 @@ class _SignedInRow extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        if (sync.phase != SyncPhase.disabled)
+        if (sync is! SyncDisabled)
           IconButton(
             tooltip: 'Sync now',
             onPressed: sync.isBusy
@@ -223,9 +223,9 @@ SyncStatus _readSyncStatus(WidgetRef ref) {
   try {
     return ref.watch(syncControllerProvider);
   } on UnimplementedError {
-    return const SyncStatus(phase: SyncPhase.disabled);
+    return const SyncDisabled();
   } catch (error) {
     AppLog.debug('AccountCard: sync status unavailable ($error)');
-    return const SyncStatus(phase: SyncPhase.disabled);
+    return const SyncDisabled();
   }
 }

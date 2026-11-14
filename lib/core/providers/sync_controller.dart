@@ -15,33 +15,15 @@ import 'sync_repository_provider.dart';
 import 'package:slnews_mobile/core/utils/app_log.dart';
 
 /// What the account surface shows about syncing.
-enum SyncPhase {
-  /// This build has no sync endpoint (`SLNEWS_SYNC_URL` empty).
-  disabled,
-
-  /// Configured and signed out, or idle between runs.
-  idle,
-
-  syncing,
-  synced,
-
-  /// The last run failed; [SyncStatus.failure] says why.
-  failed,
-}
-
-/// Observable outcome of the last sync run.
-@immutable
-class SyncStatus {
-  /// Creates a status.
+///
+/// Sealed so callers cannot construct an impossible combination (for example a
+/// `failed` status without a [SyncFailure], or `synced` without a server clock).
+sealed class SyncStatus {
   const SyncStatus({
-    this.phase = SyncPhase.disabled,
     this.lastSyncedAt,
     this.applied = SyncApplied.none,
     this.rejected = 0,
-    this.failure,
   });
-
-  final SyncPhase phase;
 
   /// Server clock at the last successful run, when known.
   final DateTime? lastSyncedAt;
@@ -52,19 +34,18 @@ class SyncStatus {
   /// Rows the server refused as stale in the last push (not an error).
   final int rejected;
 
-  final SyncFailure? failure;
-
   /// True while a run is in flight.
-  bool get isBusy => phase == SyncPhase.syncing;
+  bool get isBusy => false;
 
   /// One-line description for the account card.
-  String get label => switch (phase) {
-    SyncPhase.disabled => 'Sync unavailable in this build',
-    SyncPhase.idle => 'Signed in — not synced yet',
-    SyncPhase.syncing => 'Syncing…',
-    SyncPhase.synced => 'Synced ${_relative(lastSyncedAt)}',
-    SyncPhase.failed => 'Sync failed — ${failure?.kind ?? 'unknown'}',
-  };
+  String get label;
+
+  /// Carries the last known metadata into an in-flight status.
+  SyncStatus asSyncing() => SyncSyncing(
+    lastSyncedAt: lastSyncedAt,
+    applied: applied,
+    rejected: rejected,
+  );
 
   static String _relative(DateTime? at) {
     if (at == null) return 'just now';
@@ -74,22 +55,54 @@ class SyncStatus {
     if (delta.inHours < 24) return '${delta.inHours}h ago';
     return '${delta.inDays}d ago';
   }
+}
 
-  /// Copy with the given fields replaced.
-  SyncStatus copyWith({
-    SyncPhase? phase,
-    DateTime? lastSyncedAt,
-    SyncApplied? applied,
-    int? rejected,
-    SyncFailure? failure,
-    bool clearFailure = false,
-  }) => SyncStatus(
-    phase: phase ?? this.phase,
-    lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
-    applied: applied ?? this.applied,
-    rejected: rejected ?? this.rejected,
-    failure: clearFailure ? null : (failure ?? this.failure),
-  );
+/// This build has no sync endpoint (`SLNEWS_SYNC_URL` empty).
+final class SyncDisabled extends SyncStatus {
+  const SyncDisabled({super.lastSyncedAt, super.applied, super.rejected});
+
+  @override
+  String get label => 'Sync unavailable in this build';
+}
+
+/// Configured and signed out, or idle between runs.
+final class SyncIdle extends SyncStatus {
+  const SyncIdle({super.lastSyncedAt, super.applied, super.rejected});
+
+  @override
+  String get label => 'Signed in — not synced yet';
+}
+
+final class SyncSyncing extends SyncStatus {
+  const SyncSyncing({super.lastSyncedAt, super.applied, super.rejected});
+
+  @override
+  bool get isBusy => true;
+
+  @override
+  String get label => 'Syncing…';
+}
+
+final class SyncSynced extends SyncStatus {
+  const SyncSynced({super.lastSyncedAt, super.applied, super.rejected});
+
+  @override
+  String get label => 'Synced ${SyncStatus._relative(lastSyncedAt)}';
+}
+
+/// The last run failed; [failure] is the typed reason.
+final class SyncFailed extends SyncStatus {
+  const SyncFailed({
+    required this.failure,
+    super.lastSyncedAt,
+    super.applied,
+    super.rejected,
+  });
+
+  final SyncFailure failure;
+
+  @override
+  String get label => 'Sync failed — ${failure.kind}';
 }
 
 /// Change-time ledger backing last-write-wins.
@@ -130,9 +143,7 @@ class SyncController extends Notifier<SyncStatus> {
       _retryTimer?.cancel();
     });
     final SyncRepository repository = ref.watch(syncRepositoryProvider);
-    return SyncStatus(
-      phase: repository.isConfigured ? SyncPhase.idle : SyncPhase.disabled,
-    );
+    return repository.isConfigured ? const SyncIdle() : const SyncDisabled();
   }
 
   void _clearRetry() {
@@ -151,6 +162,22 @@ class SyncController extends Notifier<SyncStatus> {
     });
   }
 
+  SyncStatus _completedStatus(SyncResult pushed, {required DateTime syncedAt}) {
+    if (pushed.ok) {
+      return SyncSynced(
+        lastSyncedAt: syncedAt,
+        applied: pushed.applied,
+        rejected: pushed.rejected.length,
+      );
+    }
+    return SyncFailed(
+      failure: pushed.failure ?? const SyncUnavailable('Sync failed'),
+      lastSyncedAt: syncedAt,
+      applied: pushed.applied,
+      rejected: pushed.rejected.length,
+    );
+  }
+
   /// Merge-on-first-sign-in: push what is here, pull what is there, keep the
   /// newer row per id, then make local storage match the merged result.
   ///
@@ -159,19 +186,16 @@ class SyncController extends Notifier<SyncStatus> {
     final SyncRepository repository = ref.read(syncRepositoryProvider);
     if (!repository.isConfigured) {
       _clearRetry();
-      state = const SyncStatus(phase: SyncPhase.disabled);
+      state = const SyncDisabled();
       return;
     }
     if (!ref.read(authControllerProvider).isSignedIn) {
       _clearRetry();
-      state = SyncStatus(
-        phase: SyncPhase.idle,
-        lastSyncedAt: state.lastSyncedAt,
-      );
+      state = SyncIdle(lastSyncedAt: state.lastSyncedAt);
       return;
     }
 
-    state = state.copyWith(phase: SyncPhase.syncing, clearFailure: true);
+    state = state.asSyncing();
     // Rows that pre-date sync have no recorded instant: this run is the moment
     // they are known to be held locally, which is what the contract's
     // "local wins on first sign-in" rule needs.
@@ -185,12 +209,9 @@ class SyncController extends Notifier<SyncStatus> {
     await applyMergedState(merged);
     await recordLedger(merged);
     _lastPushedAt = merged.latestUpdatedAt;
-    state = SyncStatus(
-      phase: pushed.ok ? SyncPhase.synced : SyncPhase.failed,
-      lastSyncedAt: merged.serverTime ?? remote.serverTime ?? now,
-      applied: pushed.applied,
-      rejected: pushed.rejected.length,
-      failure: pushed.failure,
+    state = _completedStatus(
+      pushed,
+      syncedAt: merged.serverTime ?? remote.serverTime ?? now,
     );
     if (pushed.ok) {
       _clearRetry();
@@ -223,18 +244,15 @@ class SyncController extends Notifier<SyncStatus> {
         : (local.deltaSince(since) ?? const SyncState.empty());
     if (delta.isEmpty) return;
 
-    state = state.copyWith(phase: SyncPhase.syncing, clearFailure: true);
+    state = state.asSyncing();
     final SyncResult pushed = await repository.push(delta);
     if (pushed.ok) {
       _lastPushedAt = delta.latestUpdatedAt ?? _lastPushedAt;
       await recordLedger(pushed.state);
     }
-    state = SyncStatus(
-      phase: pushed.ok ? SyncPhase.synced : SyncPhase.failed,
-      lastSyncedAt: state.lastSyncedAt ?? DateTime.now().toUtc(),
-      applied: pushed.applied,
-      rejected: pushed.rejected.length,
-      failure: pushed.failure,
+    state = _completedStatus(
+      pushed,
+      syncedAt: state.lastSyncedAt ?? DateTime.now().toUtc(),
     );
     if (pushed.ok) {
       _clearRetry();

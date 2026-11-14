@@ -31,6 +31,37 @@ Future<bool> initializeFirebase() async {
 /// The server contract is `POST/DELETE /api/mobile/v1/devices` with
 /// `{ token, platform }`; both require the caller's session token, which
 /// [ApiClient] attaches only to SLNews hosts.
+/// Explicit push-registration state.
+///
+/// `enable()` historically returned a bool and collapsed "Firebase missing",
+/// "permission denied", "no token" and "registration failed" into `false`.
+/// Sealed statuses keep those transitions distinguishable for the settings UI.
+sealed class PushStatus {
+  const PushStatus();
+}
+
+final class PushUnavailable extends PushStatus {
+  const PushUnavailable();
+}
+
+final class PushPermissionDenied extends PushStatus {
+  const PushPermissionDenied();
+}
+
+final class PushDisabled extends PushStatus {
+  const PushDisabled();
+}
+
+final class PushRegistered extends PushStatus {
+  const PushRegistered();
+}
+
+final class PushFailed extends PushStatus {
+  const PushFailed(this.message);
+
+  final String message;
+}
+
 class PushService {
   /// Persisted set of applied FCM topics, reconciled on the next launch.
   static const String topicsPrefKey = 'push.topics';
@@ -102,6 +133,10 @@ class PushService {
   late final Future<void> Function(String topic) _unsubscribeTopic;
   final Future<void> Function(Set<String>)? _persistTopics;
   final Set<String> _activeTopics;
+  PushStatus _status = const PushUnavailable();
+
+  /// Current registration state; changes are reflected in [PushStatus].
+  PushStatus get status => _status;
 
   /// Notification taps, for routing. Empty payloads are ignored.
   Stream<Map<String, dynamic>> get taps => _taps.stream;
@@ -115,16 +150,27 @@ class PushService {
   /// Returns false when Firebase is unavailable or permission was denied.
   Future<bool> enable() async {
     try {
-      if (!await _ensureFirebase()) return false;
+      if (!await _ensureFirebase()) {
+        _status = const PushUnavailable();
+        return false;
+      }
       final bool granted =
           await (_requestPermission ?? _requestPermissionReal)();
-      if (!granted) return false;
+      if (!granted) {
+        _status = const PushPermissionDenied();
+        return false;
+      }
       final String? token = await (_token ?? _tokenReal)();
-      if (token == null || token.isEmpty) return false;
+      if (token == null || token.isEmpty) {
+        _status = const PushFailed('No FCM token');
+        return false;
+      }
       await _registerToken(token);
       await _startNotifications();
+      _status = const PushRegistered();
       return true;
     } catch (error) {
+      _status = PushFailed(error.toString());
       AppLog.debug('PushService: enable failed: $error');
       return false;
     }
@@ -133,12 +179,20 @@ class PushService {
   /// Silent re-registration for an already-permitted device (app start).
   Future<void> ensureRegistered() async {
     try {
-      if (!await _ensureFirebase()) return;
+      if (!await _ensureFirebase()) {
+        _status = const PushUnavailable();
+        return;
+      }
       final String? token = await (_token ?? _tokenReal)();
-      if (token == null || token.isEmpty) return;
+      if (token == null || token.isEmpty) {
+        _status = const PushFailed('No FCM token');
+        return;
+      }
       await _registerToken(token);
       await _startNotifications();
+      _status = const PushRegistered();
     } catch (error) {
+      _status = PushFailed(error.toString());
       AppLog.debug('PushService: ensureRegistered failed: $error');
     }
   }
@@ -150,18 +204,26 @@ class PushService {
   /// save/follow prompt.
   Future<void> ensureRegisteredIfGranted() async {
     try {
-      if (!await _ensureFirebase()) return;
+      if (!await _ensureFirebase()) {
+        _status = const PushUnavailable();
+        return;
+      }
       final String status =
           await (_notificationStatus ?? _notificationStatusReal)();
-      if (status != 'authorized' && status != 'provisional') return;
+      if (status != 'authorized' && status != 'provisional') {
+        _status = const PushPermissionDenied();
+        return;
+      }
       await ensureRegistered();
     } catch (error) {
+      _status = PushFailed(error.toString());
       AppLog.debug('PushService: startup registration failed: $error');
     }
   }
 
   /// Removes this device so it stops receiving pushes.
   Future<void> disable() async {
+    _status = const PushDisabled();
     await clearSegments();
     try {
       final String? token = await (_token ?? _tokenReal)();
@@ -182,20 +244,30 @@ class PushService {
   /// alone: the Settings toggle is the explicit way back in.
   Future<bool> requestIfNeeded() async {
     try {
-      if (!await _ensureFirebase()) return false;
+      if (!await _ensureFirebase()) {
+        _status = const PushUnavailable();
+        return false;
+      }
       final String status =
           await (_notificationStatus ?? _notificationStatusReal)();
       if (status == 'authorized' || status == 'provisional') {
         await ensureRegistered();
         return true;
       }
-      if (status != 'notDetermined') return false;
+      if (status != 'notDetermined') {
+        _status = const PushPermissionDenied();
+        return false;
+      }
       final bool granted =
           await (_requestPermission ?? _requestPermissionReal)();
-      if (!granted) return false;
+      if (!granted) {
+        _status = const PushPermissionDenied();
+        return false;
+      }
       await ensureRegistered();
       return true;
     } catch (error) {
+      _status = PushFailed(error.toString());
       AppLog.debug('PushService: requestIfNeeded failed: $error');
       return false;
     }
