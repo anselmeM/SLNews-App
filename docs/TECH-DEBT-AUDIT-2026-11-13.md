@@ -365,3 +365,25 @@ and the article/feed/golden suites (80 tests).
 
 Remaining roadmap: app sync/API split (priority 4), sealed push/sync state types
 (priority 6), and the dev-toolchain advisories.
+
+
+---
+
+## 10. Priority 4 completed — app sync/API split
+
+**Sync domain:** `sync_repository.dart` was a 935-line mixed model file. It is now
+a 155-line facade/library entry with five part files:
+`sync_bookmark.dart` (140), `sync_reaction.dart` (73), `sync_follow.dart` (86),
+`sync_state.dart` (232) and `sync_result.dart` (260). `part` files keep the
+wire serialization, timestamp helpers and private parsers library-scoped, so
+there is no behaviour change and no public import churn.
+
+**Scraper API source:** `sl_news_api_source.dart` (871 lines) is now:
+- `sl_news_api_source.dart` — 368-line transport/source class
+- `sl_news_api_config.dart` — 178-line config + page value objects
+- `sl_news_api_mapping.dart` — 332-line wire-to-domain mapping/policy
+
+Public types remain importable from the original `sl_news_api_source.dart` path.
+
+Verified locally: analyzer clean; split sync/API tests (150 tests) pass. CI runs
+the full suite + coverage gate.
