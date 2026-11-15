@@ -13,7 +13,7 @@ only for history.
 | Min / target SDK | 26 / **36** (compileSdk 36) |
 | AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+59.aab` |
 | Size | 68.3 MB |
-| SHA-256 | `6F939527601D5A52119B7F33B84AF3B24E22925B59807ED0B7B514163A63E5E4` |
+| SHA-256 | `1088CCD4E29FC3191DAC5697305FEDE10B4862AB046E67B4AB67713BF59CD5F9` |
 | Signing | release keystore, JAR verified (`jarsigner -verify`) |
 | Release defines | `SLNEWS_SCOREBOARD_URL`, `SLNEWS_IMAGE_PROXY`, `SLNEWS_WEB_URL`, Sentry DSN, TheSportsDB |
 | Upload key | `android/slnews-release.jks` + `android/key.properties` (never commit) |
