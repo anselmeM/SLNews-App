@@ -15,6 +15,10 @@ Major `pub` updates are always separate PRs and are never auto-merged. The same
 applies to every Gradle and GitHub Actions update, because those can change the
 release build itself.
 
+Dependabot **security updates** are enabled in repository settings; they arrive
+as normal Dependabot PRs and follow the same patch/minor auto-merge rule. A
+security update that requires a major version jump stays open for manual review.
+
 ## Auto-merge gate
 
 `dependabot-auto-merge.yml` runs from `pull_request_target` with a write token,
