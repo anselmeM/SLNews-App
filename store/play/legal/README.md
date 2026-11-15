@@ -37,11 +37,16 @@ clauses.
 | `{{DEMO ACCOUNT EMAIL}}` / `{{DEMO ACCOUNT PASSWORD}}` | DATA-SAFETY.md §5 | create a throwaway account for Play review |
 | Domain | URLs throughout | drafts assume `https://sl-news.vercel.app`; confirm it is the canonical site (`NEXT_PUBLIC_SITE_URL`) |
 
-## Merge plan for the existing backend pages
+## Merge plan for the existing backend pages — **completed**
 
-The `SLNews` repo already serves `src/app/privacy/page.tsx` and
-`src/app/terms/page.tsx`, both labelled "Effective for SLNews Web and Mobile Apps".
-Two statements there describe **the website, not the app**:
+All six steps below landed in `SLNews-Web` (#108 for the app-first rewrite, #127 for the
+Firebase Cloud Messaging disclosure) and are live. Re-verified 2026-11-15:
+`/privacy`, `/terms` and `/delete-account` all return `200` without a session, and the
+privacy page carries the app section, the web-only scoping, the Sentry paragraph and the
+push-token paragraph verbatim. Kept as the record of what was required and why.
+
+The old conflict: the backend pages labelled "Effective for SLNews Web and Mobile Apps"
+contained two statements that describe **the website, not the app**:
 
 1. **Meta (Facebook) Pixel** — an advertising pixel for web attribution. The Android
    app contains no pixel, no ad SDK and no advertising identifier.
@@ -55,7 +60,7 @@ inconsistent with its own policy. Recommended fix (**option A**):
    advertising or tracking SDKs."*
 2. Add an **"Information the Android app handles"** section to the privacy page,
    using the table from `PRIVACY-POLICY.md` §3–5 (account data, synced reading state,
-   push token when it ships, no location/permissions, service-provider list).
+   push token, no location/permissions, service-provider list).
 3. Add the financial-data disclaimer to the terms if it is not already there
    (`TERMS-OF-USE.md` §5).
 4. Bump "Last updated" on both pages.

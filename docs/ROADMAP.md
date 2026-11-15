@@ -24,7 +24,7 @@ branch, conventional commits and a PR. Local gates before pushing are
 | --- | --- |
 | Scraper API consumed as a real content source (`/v1/news`, 43 tests) | `lib/core/data/sources/sl_news_api_source.dart` |
 | Clerk identity in the app behind `AuthRepository` (beta SDK isolated) | `lib/core/data/auth/clerk_auth_repository.dart` |
-| Offline-first content pipeline + 264 app tests | `flutter analyze`, `flutter test` |
+| Offline-first content pipeline + 604 app tests | `flutter analyze`, `flutter test` (code 61) |
 
 | Missing | Consequence today |
 | --- | --- |
@@ -107,17 +107,28 @@ offline, keyed by the mobile item id. Nothing in the existing web tables changes
 external, so cross-surface saved stories cannot be reconciled until the PWA
 content model gains a stable source key.
 
-- **T5.1** Additive `Article.sourceUrl @unique` (or `externalId`) + backfill from
-  the scraper sync, then reconcile `SavedArticle` with `MobileBookmark`.
+**Mobile half is already done.** `MobileBookmark` serialises `sourceUrl`
+(`lib/core/domain/sync/sync_bookmark.dart`) and the wire contract documents it
+([SYNC-API.md](SYNC-API.md) §payloads), so the join key is already arriving at the
+backend — nothing further is needed in this repo for T5.1.
+
+- **T5.1** *(PWA repo)* Additive `Article.sourceUrl @unique` (or `externalId`) +
+  backfill from the scraper sync, then reconcile `SavedArticle` against
+  `MobileBookmark.sourceUrl` by canonical URL.
 - **T5.2** Show mobile-saved stories on the web profile and vice versa.
 - Out of scope until the owner approves a production schema change + backfill.
 
-## Phase 6 — Mobile push notifications (later)
+## Phase 6 — Mobile push notifications (shipped in code 52+)
 
-Reuse `PushSubscription` + `web-push` with FCM/APNs transport; the mobile model,
-storage and history UI already exist. Needs Firebase/APNs credentials.
+Delivered with FCM rather than `web-push`: Firebase init with graceful degradation,
+permission requested on the first save/follow, token registration/refresh against
+`/api/mobile/v1/devices`, foreground display, tap → article routing, and topic segments
+derived from follows plus the notification toggles (persisted and reconciled).
 
-## Status — 2026-10-16
+Still open on this phase: iOS APNs capability, per-segment notification channels
+(only `breaking_news` today), quiet hours and badge counts.
+
+## Status — 2026-10-16, refreshed 2026-11-15
 
 | Task | State | Evidence |
 | --- | --- | --- |
@@ -131,8 +142,8 @@ storage and history UI already exist. Needs Firebase/APNs credentials.
 | T4.3–4.5 wiring, account card, token allow-list | done | controllers hook changes; `AccountCard` shows sync state |
 | T4.4 mobile sync tests | done | 90 new tests; `flutter analyze` clean, 354 total |
 | T4.6 precise 429 backoff | done | `ApiException.responseHeaders` carries `Retry-After`, so the thrown path yields `SyncRateLimited.retryAfter` instead of a null hint (4 tests) |
-| T5 web ↔ mobile content parity | not started | needs `Article.sourceUrl` (owner decision) |
-| T6 mobile push notifications | not started | needs FCM/APNs credentials |
+| T5 web ↔ mobile content parity | mobile half done; PWA half not started | the sync wire already carries `sourceUrl` (`sync_bookmark.dart`); the PWA still needs `Article.sourceUrl` + backfill (owner decision) |
+| T6 mobile push notifications | done (code 52+) | `lib/core/push/`: FCM transport, topic segments, tap routing |
 
 **End-to-end proof** (not just unit tests): `SLNews/scripts/verify-mobile-sync.mjs`
 mints a real Clerk session token for a throwaway probe user and drives the real

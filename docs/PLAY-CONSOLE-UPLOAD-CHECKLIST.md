@@ -1,6 +1,13 @@
-# Play Console upload — tick-box session
+# Play Console upload — tick-box session (code 7, historical)
 
-Tailored to the **current assets** (version `1.0.0+7`, 21 Oct 2026). Companion docs:
+> **⚠️ Historical document — do not use for releases.** This describes the code-7
+> build (version `1.0.0+7`, 21 Oct 2026). The current release line is
+> [PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md)
+> (version `1.0.0+61`). Several statements here are now wrong — push has shipped,
+> `POST_NOTIFICATIONS` is declared, and the legal/account screens exist. Kept for
+> history only.
+
+Tailored to the **current assets** at the time of writing (version `1.0.0+7`, 21 Oct 2026). Companion docs:
 [PLAY-CONSOLE-WALKTHROUGH.md](PLAY-CONSOLE-WALKTHROUGH.md) (explanations),
 `store/play/STORE-LISTING.md` (full description copy),
 `store/play/DATA-SAFETY.md` (Data-safety answers), `store/play/legal/`.

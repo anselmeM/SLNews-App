@@ -37,7 +37,7 @@ identifier.
 | **Account identifier** (Clerk user id) | when you sign in | stored in our database |
 | **Saved stories, likes, follows** | when you use those features while signed in | synced to our database so they appear on your other devices |
 | **Reading preferences** (theme, text size, chosen location, alert toggles) | when you change them | stored on your device; synced to our database when signed in |
-| **Push-notification token** | only if you enable notifications (when the feature ships) | stored in our database against your account |
+| **Push-notification token** (FCM registration token) | only if you enable notifications | stored in our database against your account; deleted when notifications are turned off or you delete your account |
 | **Technical request data** (IP address, app version, timestamps, error responses) | whenever the app talks to a server | processed by our hosting providers and visible to us in logs |
 | **Locally cached content** (recent articles, images, preferences) | while you use the app | stored only on your device |
 

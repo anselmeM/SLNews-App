@@ -5,6 +5,14 @@
 Assessment date: 18 October 2026 · repo `SLNews-App` at `7918fe1` · app version
 `1.0.0+1` · package `com.slnews.mobile`.
 
+> **Status update — 2026-11-15.** This is the 18 October baseline, kept for the
+> reasoning. Since then: Sentry crash reporting shipped, FCM push shipped (permission
+> flow, device registration, topic segments, tap-to-article routing), in-app privacy /
+> terms / account-deletion screens shipped, account-scoped sync shipped, and a signed
+> code-61 AAB was built and verified. The readiness percentages below are the October
+> figures, not current ones. For anything actionable use
+> [PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md).
+
 **Short answer: the app is code-launchable, but it is not submission-ready.** About
 5–7 working days of engineering (most of which I can do) plus owner decisions on
 licensing, privacy policy and accounts. Realistic first-submission date: **2–4 weeks**,
@@ -154,20 +162,19 @@ notifications before push ships).
 Still needed: owner approval, `{{CONTACT EMAIL}}`/website confirmation, real-device
 captures, and the final paste into Play Console.
 
-### B10. Alert: the app currently has **no push notifications**
-Not a Play requirement, but a news app without breaking-news push will be judged on it,
-and every competitor has it. The backend already sends FCM and has
-`/api/mobile/v1/devices`; the app needs a Firebase project, `google-services.json`, an
-APNs key for iOS later, permission priming, token registration and notification → article
-deep links. ~2–3 days including the priming card. Decide: launch without push (ok, but
-weaker) or add it (recommended before wider launch).
+### B10. Push notifications — **shipped in code 52+** (was an alert in October)
+Firebase Cloud Messaging is integrated: permission request deferred to the first
+save/follow, token registration/refresh through the session token, foreground display,
+tap → article routing, and FCM topic segments derived from follows and the notification
+toggles (persisted and reconciled on restart). Backend endpoints `/api/mobile/v1/devices`
+are in use. Remaining: iOS APNs capability, per-segment channels, quiet hours, badge
+counts, and the Samsung-style in-feed priming card.
 
-### B11. HTTPS deep links are declared but not verified
-The manifest sets `android:autoVerify="false"` and there is no `assetlinks.json`; shared
-`https://slnews.sl/article/<id>` links will not open the app (the domain does not resolve
-and no `assetlinks.json` is served). Custom scheme
-`slnews://article/<id>` works. Fixing it needs the domain under your control plus a
-served `assetlinks.json`. Not a submission blocker; a launch-quality item.
+### B11. HTTPS App Links are not declared (custom scheme only)
+The manifest declares `slnews://article/<id>` and **no** HTTPS intent filter, so shared
+`https://` links open the browser. Fixing it needs a domain under your control, an
+`https` filter in the manifest and a served `assetlinks.json` carrying the Play
+app-signing fingerprint. Not a submission blocker; a launch-quality item.
 
 ## 3. Should fix before launch (quality, not gates)
 

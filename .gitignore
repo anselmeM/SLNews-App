@@ -73,3 +73,7 @@ android/build/
 # Release artifacts are generated locally/CI and may embed client config.
 *.apk
 *.aab
+
+# Machine-local orientation note (which SLNews repo is canonical). Kept on disk
+# for local context; not tracked, because the READMEs already say what it says.
+_ACTIVE_PROJECT.md

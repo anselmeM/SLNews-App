@@ -1,5 +1,12 @@
 # Final pre-launch checklist — Android / Play Store
 
+> **⚠️ Historical document — superseded, do not tick boxes here.**
+> This is the code-2 era checklist (version `1.0.0+2`, 486 tests, repo at `b2d113d`).
+> The current release line is
+> [PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md)
+> (version `1.0.0+61`, 604 functional tests). Kept for the deferred-items table
+> (§F) and the reasoning; everything actionable has moved to the code-61 checklist.
+
 Last updated: 18 October 2026 · repo `SLNews-App` at `b2d113d` · version `1.0.0+2`
 **Upload session:** [PLAY-CONSOLE-UPLOAD-CHECKLIST.md](PLAY-CONSOLE-UPLOAD-CHECKLIST.md) — tick-box, tailored to the code-7 assets.
 
@@ -116,8 +123,10 @@ temporary mailbox cover. Everything else on this list is independent of the doma
 - [ ] **D5. Deep-link pass** — `adb shell am start -a android.intent.action.VIEW -d
       "slnews://article/<id>"` opens the reader. HTTPS App Links stay deferred with the
       domain.
-- [ ] **D6. Notification-free sanity** — ensure no screen claims notifications exist
-      (copy check) since push has not shipped.
+- [ ] **D6. Notification-free sanity** — ~~ensure no screen claims notifications exist
+      (copy check) since push has not shipped.~~ **Superseded:** push shipped in code 52+;
+      audit notification copy against the shipped FCM behaviour instead
+      ([PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md) §6).
 - [ ] **D7. Accessibility spot check** — TalkBack on the four tabs, reader and reel;
       200 % text scale; no clipped controls.
 - [ ] **D8. Real-device screenshots** — capture the seven listing screens into

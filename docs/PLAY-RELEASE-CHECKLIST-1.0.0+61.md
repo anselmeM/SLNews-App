@@ -1,8 +1,15 @@
 # SLNews — Play Console release checklist (1.0.0, code 61)
 
-Built from `master` (`e41010f`) on 2026-11-12. This is the current checklist;
+Built from `master` at `27f2477` (the commit that bumped the app to code 61,
+2026-11-15 03:36 −05) at 04:07 the same day; SHA-256 and `jarsigner`
+verification re-run on 2026-11-15 and match. This is the current checklist;
 `PLAY-CONSOLE-UPLOAD-CHECKLIST.md` describes an older code-7 build and is kept
 only for history.
+
+> Provenance note: this checklist previously claimed the artifact was built from
+> `e41010f` on 2026-11-12. That is inaccurate — `e41010f` still carries
+> `version: 1.0.0+43`, so it cannot be the code-61 bundle. The commit and date
+> above were re-derived from the repo history and the artifact's timestamp.
 
 ## Release artefact
 
@@ -12,7 +19,7 @@ only for history.
 | Version | `1.0.0` (versionCode **61**) |
 | Min / target SDK | 26 / **36** (compileSdk 36) |
 | AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+61.aab` |
-| Size | 68.3 MB |
+| Size | 71,904,245 bytes (68.6 MiB) |
 | SHA-256 | `5281B113B09C45ADFF8B2DC502A4210343C780FA00515D90E451B3787D0AFEAF` |
 | Signing | release keystore, JAR verified (`jarsigner -verify`) |
 | Release defines | `SLNEWS_SCOREBOARD_URL`, `SLNEWS_IMAGE_PROXY`, `SLNEWS_WEB_URL`, Sentry DSN, TheSportsDB |
@@ -159,9 +166,10 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 - [ ] No active campaign → house ads still render (seed fallback).
 - [ ] Push: permission prompt, breaking/topic segment arrives, toggle off stops.
 - [ ] Offline: cached For You/article open; retry when back online.
-- [ ] Deep links: `slnews://article/<id>` and the https App Link open the
-      article. Verify `https://sl-news.vercel.app/.well-known/assetlinks.json`
-      matches the Play signing certificate before relying on App Links.
+- [ ] Deep links: `slnews://article/<id>` opens the article. The manifest does
+      **not** declare an HTTPS App Link intent filter (only the custom scheme),
+      so `https://` links open the browser — confirm that is the expected
+      behaviour before ticking this.
 - [ ] Account deletion completes; data disappears after reinstall/sign-in.
 - [ ] No crashes in Sentry for the release; cold start < 3 s on a mid-range
       device.
@@ -170,12 +178,14 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 
 1. **Privacy mailbox** `privacy@slnews.sl` may not exist yet — fix before
    submission or use a monitored address.
-2. **HTTPS App Links** are declared; `assetlinks.json` returns 200 on Vercel,
-   but confirm the certificate fingerprint matches the Play app-signing cert
-   (not just the upload key).
+2. **HTTPS App Links are not implemented.** The manifest declares only
+   `slnews://article/<id>`. Adding the `https` filter needs the domain to serve
+   `/.well-known/assetlinks.json` with the Play app-signing certificate
+   fingerprint; until then shared https links open the browser. Not a
+   submission blocker.
 3. **Ads QA needs a live campaign**; production currently has 0 active feed
    campaigns.
-4. **AAB size 68.3 MB** — Play limit is 200 MB for base bundles, so fine, but
+4. **AAB size 68.6 MiB (71.9 MB)** — Play limit is 200 MB for base bundles, so fine, but
    first-install size matters for Sierra Leone data costs; consider an asset
    bundle later if it grows.
 5. **Version code 61 must never be reused**; every upload needs a higher code.

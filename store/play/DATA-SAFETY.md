@@ -1,10 +1,11 @@
 # Play Console declarations — answer sheet
 
 Copy these answers into Play Console. They describe the **Android app as built**
-(`com.slnews.mobile`, version 1.0.0+2), not the website: the app has no analytics or
+(`com.slnews.mobile`, version 1.0.0+61), not the website: the app has no analytics or
 advertising SDK and no advertising identifier. It does send **crash diagnostics to
 Sentry** (added for the launch build), configured without IP storage, account
-identifiers, content or screenshots.
+identifiers, content or screenshots. It stores an **FCM registration token** when the
+reader enables notifications (see the push section at the end).
 
 > Draft for owner review. Placeholders in `{{ }}` are listed in
 > [legal/README.md](legal/README.md#placeholders-to-fill).
@@ -26,8 +27,8 @@ Only account data, and only when the person chooses to sign in.
 
 Everything else: **not collected**. No location, no financial info, no health, no
 messages, no photos or videos, no audio, no files, no contacts, no calendar, no web
-browsing history, no app-interaction analytics, no device or other IDs, no advertising
-identifier.
+browsing history, no app-interaction analytics, no advertising identifier. The only
+device identifier is the FCM token described in the push section below.
 
 **Security practices**
 
@@ -50,11 +51,13 @@ identifier.
   cookies and no persistent cache. While that page is open the publisher's own tracking
   applies under its own policy; none of it is available to SLNews.
 
-### When push notifications ship, add
+### Push notifications (shipped in code 52+)
 
-- **Device or other IDs → Device or other IDs**: collected, optional (only when
-  notifications are enabled), purpose "App functionality (notifications)", deletion yes.
-- Diagnostics → Crash logs is already declared above (Sentry), so nothing to add here.
+Declare **Device or other IDs → Device or other IDs** as collected, optional (only when
+the reader enables notifications), purpose "App functionality (notifications)", not
+shared for advertising, deletable. Full wording is in the push section at the end of
+this sheet. Diagnostics → Crash logs is already declared above (Sentry), so nothing
+else needs adding.
 
 ## 2. App content → Ads
 
@@ -115,12 +118,13 @@ provide financial services, advice, trading, payments or lending.
 
 | Permission | Why it is declared |
 | --- | --- |
-| `INTERNET` | fetching news, images, market data, sync |
+| `INTERNET` | fetching news, images, market data, sync, push registration |
 | `ACCESS_NETWORK_STATE` | offline banner and cache decisions |
+| `POST_NOTIFICATIONS` | breaking-news alerts; the reader is asked only after their first save or follow |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT`, `USE_CREDENTIALS`, `CREDENTIAL_MANAGER_SET_ORIGIN` | added by the sign-in library (Clerk); used only for account sign-in and device credentials |
 
-No location, camera, microphone, contacts, SMS, storage or notification permission is
-declared today (`POST_NOTIFICATIONS` will be added with push).
+No location, camera, microphone, contacts, SMS or storage permission is declared.
+`POST_NOTIFICATIONS` is the only notification-related permission.
 
 ## 9. Encryption / export compliance
 
@@ -130,8 +134,11 @@ Console; no export licence exception is needed for that.
 ## 10. Play App Signing
 
 Enrol with the existing upload key (`android/slnews-release.jks`, `CN=SLNews`), which
-signed `build/dist/SLNews-1.0.0-1.aab`. Keep the keystore and `key.properties` out of
-git; CI reads them from `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEY_PROPERTIES`.
+signed `SLNews-1.0.0+61.aab` (68.6 MiB, SHA-256 verified, `jarsigner -verify` passes;
+the certificate is self-signed, which is normal for an upload key). Keep the keystore
+and `key.properties` out of git; CI restores them from `ANDROID_KEYSTORE_BASE64` plus
+`ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD` and `ANDROID_KEY_ALIAS`, and fails the
+build rather than produce a debug-signed bundle.
 
 ## Push notifications (Firebase Cloud Messaging)
 

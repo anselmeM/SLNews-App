@@ -134,8 +134,10 @@ Screenshot order and captions:
 - **Do not** write "official", "the news app of Sierra Leone", or anything implying we
   publish the aggregated reporting. That is the fastest route to an IP/misrepresentation
   complaint, and the rights situation for scraped RSS is unresolved (launch doc B4).
-- **Do not** claim notifications exist until push ships. The description mentions only
-  notification *preferences*, which is accurate today.
+- **Notifications may be described as available** (push shipped in code 52+): breaking
+  news alerts on the topics and teams the reader follows. Keep it to what the app does —
+  do not promise alert types that are not implemented (e.g. per-market or comment
+  alerts).
 - **Do not** promise exact figures, "fastest", or offline behaviour beyond what is
   tested (feeds and the last edition are cached; a story never loaded before is not).
 - Keep the financial disclaimer line — Play's financial-content reviewers look for it

@@ -22,8 +22,13 @@ lib/
 ├── app.dart                      # MaterialApp.router, themes, text-scale scope
 ├── core/
 │   ├── domain/                   # entities + repository contracts (pure Dart)
-│   ├── data/                     # sources (RSS/REST/JSON), Hive stores, repositories
+│   ├── data/                     # sources (RSS/REST/JSON), Hive stores, repositories,
+│   │                             #   auth adapter, sync client
 │   ├── providers/                # Riverpod graph, controllers, bootstrap
+│   ├── auth/                     # Clerk token seam (session for allow-listed hosts)
+│   ├── push/                     # FCM registration, topic segments, tap routing
+│   ├── observability/            # Sentry settings + error reporter
+│   ├── config/                   # build-time defines and legal links
 │   ├── theme/                    # colour, typography, spacing tokens, ThemeData
 │   ├── routing/                  # go_router configuration + route names
 │   ├── shell/                    # 4-tab bottom navigation shell
@@ -32,10 +37,16 @@ lib/
 └── features/                     # one folder per screen family
     ├── feed/                     # For You: hero carousel + streams
     ├── news/                     # News: category pills + hero + grid
-    ├── sports/                   # Sports: scoreboard + inline ad + followed teams
+    ├── sports/                   # Sports: scoreboard, leagues, teams, standings
+    ├── markets/                  # Stocks/index board (slid-up panel)
     ├── following/                # Following: alert history + subscriptions
     ├── article/                  # Reader: header, hero media, body, action bar
-    └── bookmarks/                # Saved stories (offline)
+    ├── bookmarks/                # Saved stories (offline)
+    ├── search/                   # Search v1
+    ├── onboarding/               # First-run topics + city picker
+    ├── auth/                     # Sign-in page + account screen
+    ├── video/                    # Video moments reel
+    └── settings/                 # Preferences, legal, deletion
 ```
 
 Deeper detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ·
@@ -59,7 +70,7 @@ Requirements: Flutter 3.47+ and, for Android, JDK 17 plus the Android SDK.
 # Works on Windows PowerShell 5.1 (what a stock Windows box has) and on 7.
 powershell -NoProfile -File scripts/build_apk.ps1
 
-# one APK per ABI (~15 MB each instead of ~43 MB)
+# one APK per ABI instead of a single fat APK (~74 MiB)
 powershell -NoProfile -File scripts/build_apk.ps1 -SplitPerAbi
 ```
 
@@ -127,32 +138,42 @@ connectivity still renders a complete Sierra Leonean feed.
 
 ```bash
 flutter analyze
-flutter test test/core test/data test/features   # unit + widget tests
-flutter test test/golden                          # compare screen renders
-flutter test test/golden --update-goldens         # regenerate screen renders
+flutter test test/core test/data test/features test/sync   # functional suites
+flutter test test/golden test/push                          # screen renders + push
+flutter test test/golden --update-goldens                   # regenerate renders
 ```
 
 `test/golden/` boots the **real** app — real bootstrap, router, pages and
 bundled seed content with in-memory storage, with every timestamp pinned to one
 instant so renders are byte-comparable — and writes one PNG per screen
-(`for_you`, `news`, `sports`, `following`, `article`, `saved`). It is the visual
-regression harness for the reference layout, and the clearest proof that the app
-renders with no connectivity at all.
+(`for_you`, `news`, `section`, `sports`, `following`, `article`, `saved`,
+`settings`, `sections`). It is the visual regression harness for the reference
+layout, and the clearest proof that the app renders with no connectivity at all.
 
-CI still runs only the functional suites (`test/core test/data test/features`),
-because pixel output depends on the host renderer.
+CI runs the functional suites (`test/core test/data test/features test/sync
+test/push`), then `scripts/check_app_coverage.py`, which enforces three gates in
+one place: total line coverage ≥ 75 %, a per-file floor on the critical modules
+(API client, sync, offline repository, push), and an 800-line budget per file
+(warned at 500). Flutter's coverage output has no branch records, so those
+per-file floors are what makes an untested critical module fail the build rather
+than hide inside the total. Goldens are excluded because pixel output depends on
+the host renderer.
 
-### Verified on this machine
+### Verified on this machine (2026-11-15)
 
-| Command | Result |
+| Check | Result |
 | --- | --- |
 | `flutter analyze` | No issues found |
-| `flutter test test/core test/data test/features` | 264 tests, all passed |
-| `flutter test test/golden` | 6 renders, all passed |
-| `flutter build apk --release` | `build/dist/SLNews-1.0.0-release.apk` (64.4 MB fat APK) |
+| `dart format --set-exit-if-changed lib test` | 284 files, 0 changed |
+| `flutter test test/core test/data test/features test/sync test/push --coverage` | 604 tests, all passed; **76.12 %** line coverage (gate 75 %) |
+| `python scripts/check_app_coverage.py` | passes: per-file floors and the 800-line file budget |
+| `flutter test test/golden` | 9 golden renders, all passed |
 | `scripts/smoke_api.ps1` | health ok · unauthenticated `/v1/news` correctly 401 |
+| Release APK, code 61 | `SLNews-1.0.0-61.apk`, 74.0 MiB fat APK |
+| Release AAB, code 61 | `SLNews-1.0.0+61.aab`, 68.6 MiB (71,904,245 bytes), SHA-256 matches the checklist, `jarsigner -verify` passes |
 
-Splitting per ABI (`scripts/build_apk.ps1 -SplitPerAbi`) produces ~20 MB APKs.
+Splitting per ABI (`scripts/build_apk.ps1 -SplitPerAbi`) produces one APK per ABI
+instead of a single fat APK.
 
 ## Notes and limitations
 
@@ -160,5 +181,8 @@ Splitting per ABI (`scripts/build_apk.ps1 -SplitPerAbi`) produces ~20 MB APKs.
   demos, not a live wire feed; per-URL verification status lives in the registry.
 - Ad units are locally painted house creatives (labelled `Ad` with a disclosure),
   not a live ad-SDK integration.
-- Push notifications: the alert data model, storage and history UI are in place;
-  wiring a real FCM/APNs transport is outside this delivery.
+- Push notifications: FCM delivery is wired end to end — permission flow, device
+  registration/refresh, topic segments derived from follows and notification
+  toggles (persisted and reconciled on restart), foreground display, and
+  tap-to-article routing. Remaining: iOS APNs capability, separate channels per
+  segment, quiet hours and in-app badge counts.

@@ -5,7 +5,13 @@ the capabilities a news app is expected to have regardless of that reference.
 
 - **Reference**: `Screen_Recording_20261016_235625_Samsung News.mp4` (68 s), sampled
   frame by frame; timestamps below are approximate (±1 s).
-- **Code base**: `SLNews-App` at `da9ccc2` (454 tests, 8 golden renders).
+- **Code base at first write**: `SLNews-App` at `da9ccc2` (454 tests, 8 golden renders).
+- **Status refresh (2026-11-15)**: re-audited against `master` (code 61). Current
+  gates are 604 functional tests (including the push suite) plus 9 golden renders,
+  analyzer clean, 76.12 % line coverage, and `scripts/check_app_coverage.py`
+  enforcing per-file floors on the critical modules plus an 800-line file budget.
+  Sections marked **shipped** below were re-verified in the source, not inferred
+  from commit messages.
 - **Legend**: P0 = blocks a normal user journey, P1 = expected, P2 = notable polish,
   P3 = nice to have. Size: S ≈ ≤½ day, M ≈ 1–3 days, L ≈ >3 days.
 - Claims marked *(seen)* were observed in the video; *(inferred)* is a conclusion, not
@@ -49,15 +55,19 @@ pushes the photo-header section page at `/section/:categoryId`, whose "More …"
 continues to the News tab. The Following tab keeps its management rows, which is the
 honest division of labour: discovery on the feed, management on Following.
 
-### A4. Notification permission prompt — P0 once push exists, M
+### A4. Notification permission prompt — **partially shipped** (deferred OS prompt, no priming card), M
 *(seen: 3.8 s)*
 
 An in-feed card: *"Stay on top of the news — Catch up on the top stories of the day with
 Editor's picks. You can always turn them off later in Settings."* with **No thanks** and
 **Turn on**.
 
-Current: absent, and the app has **no push stack at all** (no FCM dependency, no token
-registration), which is why the button cannot honestly exist yet. See B2.
+Current: there is **no Samsung-style priming card in the feed**. Instead the OS prompt is
+requested on the reader's first save or follow (`PushService.requestIfNeeded()` is called
+from the save/follow controller), so it arrives at a moment the reader understands. A
+previous denial is left alone and the Settings toggle is the explicit way back in. The
+push stack itself exists, so the card could honestly be added; it stays open only if the
+reference-matching copy is wanted.
 
 ### A5. "Add widget to Home screen" prompt — P2, L
 *(seen: 55 s)*
@@ -144,19 +154,30 @@ states. `search_page_test` covers each path.
 Still open for a v2: suggestions from followed topics, search-as-you-type ranking and
 relevance (the repository does a substring match), voice input, and author/topic results.
 
-### B2. Push notifications (mobile side) — P0, M+L
-The backend already has FCM sending (`SLNews/src/lib/push/fcm.ts`) and the device
-endpoint (`/api/mobile/v1/devices`), but the **app has no push integration**: no
-Firebase/APNs dependency, no token registration, no permission flow, no handler for
-foreground/background messages, no deep link from a notification.
+### B2. Push notifications (mobile side) — **shipped (v1)**, M+L
+The backend had FCM sending (`SLNews/src/lib/push/fcm.ts`) and the device endpoint
+(`/api/mobile/v1/devices`); the app now integrates both:
 
-Missing pieces: permission priming + OS request (Android 13 `POST_NOTIFICATIONS`, iOS
-`requestAuthorization`), token registration/refresh to the backend, notification channels
-(breaking/sport/daily), tap → article route, per-topic and per-team alert settings
-(toggles exist but control nothing), quiet hours, and in-app badge counts.
+- Firebase initialised with graceful degradation when the platform config is absent.
+- Permission priming deferred to the first save/follow, with a silent re-register at
+  startup for devices that already granted it.
+- Token registration and refresh (`onRegistered`) through the session token — the
+  release build carries no static key.
+- Foreground display via `flutter_local_notifications` on the `breaking_news` channel.
+- Tap → article routing (`PushService.taps` → router).
+- FCM topic segments derived from follows plus the notification toggles, diff-based,
+  persisted under `push.topics` and reconciled on restart so removed topics are
+  unsubscribed rather than forgotten.
+- `PushStatus` is a sealed hierarchy (`PushUnavailable`, `PushPermissionDenied`,
+  `PushDisabled`, `PushRegistered`, `PushFailed`).
+
+Remaining: separate notification channels per segment (only `breaking_news` exists),
+quiet hours, in-app badge counts, the iOS APNs capability, and the reference priming
+card (A4).
 
 ### B3. Reading experience — P1
-- **Reading progress** indicator and persisted scroll position per article.
+- **Reading progress** indicator shipped. Persisted scroll position per article is still
+  open.
 - **In-app translation** (currently a hand-off to Google Translate in the browser).
 - **Listen / TTS** for articles.
 - Font family choice, brightness control inside the reader, image lightbox and captions.
@@ -176,23 +197,26 @@ with "clear images", and background refresh (WorkManager) so the feed is warm ah
 the first open.
 ### B5. Platform integration — P1, M
 - **Android home-screen widget** (A5) and app shortcuts ("Search", "Saved").
-- **Verified App Links / Universal Links**: the manifest declares `slnews://article/<id>`
-  and `https://slnews.app/article/<id>` with `autoVerify="false"` and no
-  `assetlinks.json`/AASA checked in — shared links do not reliably open the app.
-- Share target (receive links into the app), iOS notification/push capability, Android
-  13 notification permission declaration, tablet and landscape layouts.
+- **Verified App Links / Universal Links**: the manifest declares
+  `slnews://article/<id>` (custom scheme, works today). No HTTPS App Link intent
+  filter is declared and no `assetlinks.json`/AASA is checked in, so shared https
+  links still do not open the app — this remains the gap.
+- Share target (receive links into the app), iOS notification/push capability, tablet
+  and landscape layouts. (Android 13's `POST_NOTIFICATIONS` is already declared.)
 
 ### B6. Account and personalisation — P1, S+M
-- Sign-in exists (Clerk) and state sync exists. Missing: **account screen** (email, sign
-  out, **delete account**, **export data**), password/email management, device list.
+- Sign-in (Clerk) and account-scoped sync exist, and the **account screen** shipped
+  (`/account`: identity, sign in/out, **delete account** with confirmation and
+  failure handling). Missing: **export data**, password/email management, device list.
 - Language and region is a static row ("English (Sierra Leone)") — not a setting.
 - No recommendation feedback ("not interested", "more like this"), and rails are positional
   slices of one stream rather than a ranking.
 - Author/publisher pages and following authors from the article kebab.
 
 ### B7. Trust, legal, compliance — P1, S+M
-- No in-app **privacy policy / terms** (needed for store review once analytics or ads
-  exist), no editorial standards or corrections page.
+- In-app **privacy policy** and **terms of use** shipped (Settings → About opens the
+  live URLs), and account deletion is implemented end to end. Missing: an editorial
+  standards / corrections page.
 - Consent flow for analytics/ads (GDPR-style), ad labelling beyond the current "Ad" tag,
   frequency capping.
 - **Content licensing**: the feed mixes scraped RSS with original reporting — attribution
@@ -216,10 +240,15 @@ No real ad SDK (in-house cards only), no sponsored-content model, no membership/
 tier, no consent management.
 
 ### B10. Reliability and observability — P1, M
-- No crash reporting, no product analytics, no remote config/feature flags.
+- Crash reporting shipped (Sentry behind `SentrySettings`/`AppLog`, DSN at build time,
+  no PII, sampled traces). Still missing: product analytics, remote config/feature
+  flags, and an explicit offline/connectivity state.
 - No force-update gate and no staged rollout path.
-- Testing is widget/unit + goldens (454 + 8); there are **no on-device integration or CI
-  end-to-end tests**, which is how push, deep links and offline would normally be verified.
+- Testing is widget/unit + goldens (604 functional + 9 golden renders) with a
+  75 % total-line-coverage gate, per-file floors on the critical modules and an
+  800-line file budget. There is still **no on-device integration or CI
+  end-to-end test**, which is how push, deep links and offline would normally be
+  verified.
 
 ### B11. Editorial operations (backend, surfaced in app) — P2, L
 Curated top stories, push composer, sponsored slot management, and analytics dashboards
@@ -237,15 +266,39 @@ are needed to *operate* the app; the app side only needs to consume those overri
 5. ~~"More … stories ›" links (A2)~~ (`abc101f`); the extra "More for you" rail (A12) remains.
 6. ~~Video card badges (A10)~~ (`2e51e6e`) and ~~Stocks as a panel (A8)~~ (batch 3).
 
-**Then (one to two weeks)**
-7. Search v1 (B1): route, entry point, debounced query, results, recents.
-8. Push v1 (B2): FCM/APNs, permission priming card (A4), token registration, deep link.
-9. Top stories section page with hero header (A1).
+**Then (one to two weeks) — all three delivered**
+7. ~~Search v1 (B1)~~: route, entry point, debounced query, results, recents.
+8. ~~Push v1 (B2)~~: FCM transport, permission flow, token registration, per-topic
+   segments, deep link. The reference priming card (A4) remains open.
+9. ~~Top stories section page with hero header (A1)~~.
 
 **Later (multi-week, need decisions or content ops)**
 10. Sports depth (A7): standings, league/team/game pages, league grouping.
 11. Following mosaic (A3), ad formats (A6), widget + shortcuts (A5, B5).
 12. Account deletion/export, privacy/terms, analytics + crash reporting, localisation.
+    *(account deletion and privacy/terms have since shipped — see Part D)*
+
+---
+
+## Part D — Deferred post-launch backlog (explicitly **not** launch blockers)
+
+Verified against `master` (`cc1328b`) on 2026-11-15. None of these blocks the code-61
+release. Each row states what already exists, what the real dependency is, an effort
+band, and how "done" would be recognised. Effort bands are engineering-day estimates,
+not commitments.
+
+| Item | Where it stands | Real dependency | Effort | Acceptance |
+| --- | --- | --- | --- | --- |
+| **Web ↔ mobile saved-story parity** | **Mobile half done.** `MobileBookmark` already serialises `sourceUrl` and [SYNC-API.md](SYNC-API.md) documents it, so the join key already reaches the backend. The PWA has no stable key to join on (`SavedArticle.articleId` points at a PWA row). | PWA-repo change: additive `Article.sourceUrl @unique` + backfill from the scraper sync; needs owner approval for a production schema change (ROADMAP phase 5). | PWA ~2–3 d + backfill run; nothing to build in this repo | A story saved on mobile appears on the web profile and vice versa, de-duplicated by canonical URL |
+| **Localisation + RTL** | Nothing: no `flutter_localizations`, no `intl`, 0 ARB files. ~210 candidate user-visible literals in `lib/` (heuristic), heaviest in `settings_page` (24), `league_news_source` (17), `for_you_page` (17), `news_category` (12). UI is English-only and LTR; there is no RTL work or RTL test. | Product decision on the language set (Krio, Mende, Temne, French?) and who translates editorial/UI copy. | ~5–8 d scaffolding + English ARB + one second locale; ~1 d per further locale | `flutter gen-l10n` in place, no user-visible literal left in `lib/`, a second locale renders end to end, RTL screenshot test |
+| **Richer ad formats (A6)** | One `AdUnit` shape: brand panel, optional hosted creative image, CTA, disclosure; `AdCard`/`TrackedAdCard` render it in every placement. Tracking is per sold unit with session dedupe. | Creative/design input, plus a `format` discriminator on `/api/mobile/v1/sponsorships` so a campaign picks a layout. | ~3–4 d | Two-product promo, app-install promo and full-bleed "spotlight" layouts selectable per campaign, each measured by the existing tracker |
+| **Android home-screen widget (A5)** | Absent: no provider, no `res/xml` widget metadata, no Glance dependency, and no widget-prompt card. | Data access off the Flutter engine: the cache is Hive, which a widget cannot open cheaply — needs a small JSON/snapshot file (or WorkManager) as the widget's feed. | ~5–7 d | Widget shows top headlines, refreshes on a schedule, tapping a headline deep-links via `slnews://article/<id>` |
+| **Article TTS + in-app translation (B3)** | Absent: no `flutter_tts`; translation is a hand-off to Google Translate in the browser. | TTS is self-contained. Translation needs a provider, a cost cap, and a content-licensing answer (machine-translating aggregated publisher text). | TTS ~1–2 d; translation ~3–4 d + provider cost | Listen controls (play/pause/seek) on the reader; translate renders copy in-app with a clear "machine translation" label |
+| **On-device / E2E tests (B10)** | Absent: no `integration_test` dependency or `integration_test/` directory. CI runs format → analyze → secret scan → widget/unit tests → coverage ratchet only. | An emulator runner in CI and Firebase/Gradle credentials; the golden suite is deliberately host-local, so it cannot substitute. | ~4–6 d | A CI job drives a real build on an emulator through onboarding → feed → article → airplane mode, plus a push/deep-link path |
+
+**Suggested order if any of these is picked up:** parity first (cheap in this repo,
+unblocks the web), then E2E (protects everything else), then TTS (quick win), then ad
+formats, then widget, then localisation (largest and needs product decisions).
 
 ---
 
@@ -269,6 +322,19 @@ are needed to *operate* the app; the app side only needs to consume those overri
 | Search v1 (kebab entry, `/search`, debounce, grouped results, recents) | `53d6ce1` |
 | Pushed Top stories section with photo header + `section.png` golden | `3f9f35c` |
 | Stocks as a slid-up panel from For You | batch 3 |
+| Account screen with sign-out and delete-account | code 61 |
+| In-app privacy policy / terms rows in Settings | code 61 |
+| Push v1: FCM transport, segments, tap routing | code 52+ |
+| Crash reporting (Sentry behind `AppLog`) | code 52+ |
+| Web ↔ mobile state sync (Clerk, merge-on-sign-in) | roadmap T4 |
+
+## Appendix 1b — Sections re-verified in the 2026-11-15 refresh
+
+These were re-read in source rather than trusted from the earlier document: A4 (no
+priming card; deferred OS prompt via `PushService.requestIfNeeded`), B2 (push v1),
+B3 (reading progress), B5 (`slnews://` only, no HTTPS App Link filter), B6 (account
+page), B7 (legal rows), B10 (Sentry). Counts in this document now match the code at
+`cc1328b`: 604 functional tests (including the push suite), 9 golden renders.
 
 ## Appendix 2 — Already matching the reference
 

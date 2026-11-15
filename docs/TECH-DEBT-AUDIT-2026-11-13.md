@@ -424,3 +424,52 @@ and adds a targeted override for `minimatch ^11.0.1` under
 `npm audit` is now **0 vulnerabilities including dev** (was 10 moderate; the
 production audit has been 0 since the earlier overrides). Verified with
 typecheck, lint, **576 tests**, production build and CI (including e2e).
+
+---
+
+## 13. Priority 7 completed — file budget and coverage floors
+
+Closed the two remaining structural items from section 3: oversized presentation
+files, and a coverage gate that could not see a regression inside one module.
+
+**Splits** (no behaviour change; every line was moved by line-range extraction,
+so bodies stay byte-identical):
+
+| File | Before | After | New files |
+| --- | ---: | ---: | --- |
+| `features/video/presentation/video_reel_page.dart` | 660 | 243 | `reel_widgets.dart` (345), `web_video_player.dart` (77) |
+| `features/sports/presentation/sports_page.dart` | 603 | 444 | `sports_sections.dart` (161) |
+| `features/feed/presentation/for_you_page.dart` | 591 | 156 | `feed_slivers.dart` (438) |
+| `core/data/sources/rss_feed_source.dart` | 599 | 211 | `rss_wire.dart` (383) |
+
+The widget splits use `part` / `part of`, so private class names and the public
+API are unchanged. `RssParser`'s private static helpers became top-level private
+functions in a part file, leaving every call site untouched. Sports deliberately
+did **not** extract its `content` subtree: the page wraps the body in a dark
+`Theme` and the notice/ad builders read the context above it, so moving them
+into a child widget would have flipped those colours from the light shell theme
+to dark.
+
+**Gate.** `scripts/check_app_coverage.py` now enforces:
+
+- total line coverage ≥ 75 % (measured 76.12 % with the push suite included);
+- per-file floors on the critical modules: `api_client` 83, `sl_news_api_source`
+  92, `offline_first_article_repository` 91, `remote_sync_source` 89,
+  `sync_state` 83, `push_service` 48;
+- file budget: fail over 800 lines, warn over 500.
+
+There is no branch threshold because **Flutter 3.47's lcov output carries no
+`BRDA` or `FNF`/`FNH` records** — verified against this suite's own output — so a
+branch percentage cannot be computed from it. The per-file floors are the
+substitute, and the script says so in its docstring rather than inventing a
+number. CI also runs `test/push` in the coverage step now; excluding it is why
+`push_service` used to measure ~4 % and any push regression was invisible.
+
+**Remaining:** `lib/core/providers/sync_controller.dart` (545 lines) still trips
+the 500-line warning. It is a controller rather than a page, and splitting it
+means moving live state, so it stays warned (visible in every CI run) rather
+than exempted.
+
+**Verification:** format gate clean (284 files), `flutter analyze` clean,
+**604 tests** pass, **9 goldens** pass, and the gate exits 0 on the real numbers
+and 1 when the total floor is temporarily raised.
