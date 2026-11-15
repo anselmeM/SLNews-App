@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Builds a release APK for SLNews and copies it to build/dist with a checksum.
 
@@ -118,6 +118,10 @@ if (-not $SkipTests) {
     }
 
     # --- Build -------------------------------------------------------------------
+    if (-not (Test-Path 'android/app/google-services.json')) {
+        throw 'android/app/google-services.json is missing. Download it from the Firebase console (Project settings -> Your apps -> Android) or restore the FIREBASE_GOOGLE_SERVICES_JSON secret in CI.'
+    }
+
     if ($Aab) {
         # Play Store artefact: an app bundle, not an APK. The bundle is already
         # per-ABI, so -SplitPerAbi is ignored.

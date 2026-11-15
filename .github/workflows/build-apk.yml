@@ -57,6 +57,23 @@ jobs:
       - name: Enforce app coverage ratchet
         run: python3 scripts/check_app_coverage.py
 
+      # The real Firebase client config is a repository secret. PRs from
+      # Dependabot/forks do not receive secrets, so they compile against the
+      # non-secret placeholder; master pushes require the real config.
+      - name: Restore Firebase client config
+        env:
+          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$FIREBASE_GOOGLE_SERVICES_JSON" ]; then
+            printf '%s\n' "$FIREBASE_GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          elif [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            cp android/app/google-services.json.example android/app/google-services.json
+            echo "::warning::FIREBASE_GOOGLE_SERVICES_JSON is not set; PR build uses the placeholder Firebase config."
+          else
+            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON is not set; refusing to build a release without Firebase config."
+            exit 1
+          fi
+
       # Goldens are a local visual-review harness: the PNGs are host-renderer
       # dependent (Flutter's Linux rasterizer differs from Windows), so they are
       # intentionally not a CI gate.
