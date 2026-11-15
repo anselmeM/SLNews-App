@@ -191,7 +191,7 @@ class ArticleActionBar extends ConsumerWidget {
         await _openSource(context);
       case ArticleAction.hide:
       case ArticleAction.report:
-        _snack(context, 'Thanks â€” this helps us improve your feed');
+        _snack(context, 'Thanks — this helps us improve your feed');
     }
   }
 
