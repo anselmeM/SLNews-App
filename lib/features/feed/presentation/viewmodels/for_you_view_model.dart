@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/domain/feed_mix.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -96,20 +97,30 @@ abstract final class ForYouViewModel {
     return article.publishedAt.add(const Duration(hours: 36));
   }
 
-  static void _sortPersonalFirst(List<Article> articles, Set<String> ids) {
-    if (ids.isEmpty) {
-      articles.sort(
-        (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
-      );
-      return;
-    }
+  /// Audience-first ordering; the optional [within] comparator keeps the
+  /// existing personalisation and breaking rules inside each bucket.
+  static void _sortForAudience(
+    List<Article> articles,
+    Set<String> ids, {
+    bool boundedFollowWindow = false,
+  }) {
     articles.sort((Article a, Article b) {
-      final int byMatch = personalMatch(
+      return FeedMix.compare(
+        a,
         b,
-        ids,
-      ).compareTo(personalMatch(a, ids));
-      if (byMatch != 0) return byMatch;
-      return b.publishedAt.compareTo(a.publishedAt);
+        within: (Article left, Article right) {
+          if (left.isBreaking != right.isBreaking) {
+            return left.isBreaking ? -1 : 1;
+          }
+          if (boundedFollowWindow) {
+            return _effectiveTime(
+              right,
+              ids,
+            ).compareTo(_effectiveTime(left, ids));
+          }
+          return personalMatch(right, ids).compareTo(personalMatch(left, ids));
+        },
+      );
     });
   }
 
@@ -125,6 +136,7 @@ abstract final class ForYouViewModel {
     required bool isOffline,
     DateTime? lastSyncedAt,
     int heroLimit = ForYouViewModel.heroLimit,
+    int sportsOutsideLimit = 2,
     Set<String> followingIds = const <String>{},
   }) {
     final List<Article> merged = merge(
@@ -133,21 +145,16 @@ abstract final class ForYouViewModel {
       extraStories: extraStories,
     );
 
-    // Breaking stories are promoted ahead of newer non-breaking ones so the
-    // "Top stories" carousel opens on what the reader must not miss. Each group
-    // is ordered newest first, so the carousel never depends on the order the
-    // repository happened to return.
-    // Breaking stays first. Within each group, a story the reader follows
-    // (topic, publisher, city or tag id) outranks one they do not, then newest.
-    final List<Article> breaking = topStories
-        .where((Article article) => article.isBreaking)
+    // The home surfaces are Sierra Leone-first, then international, then a
+    // small sports tail. Sports-only feeds are numerous and would otherwise
+    // crowd out local reporting.
+    final List<Article> heroCandidates = topStories
+        .where((Article article) => !FeedMix.isSports(article))
         .toList(growable: false);
-    final List<Article> rest = topStories
-        .where((Article article) => !article.isBreaking)
-        .toList(growable: false);
-    _sortPersonalFirst(breaking, followingIds);
-    _sortPersonalFirst(rest, followingIds);
-    final List<Article> heroPool = <Article>[...breaking, ...rest];
+    _sortForAudience(heroCandidates, followingIds);
+    final List<Article> heroPool = heroCandidates.isNotEmpty
+        ? heroCandidates
+        : topStories;
     final List<Article> hero = heroPool.take(heroLimit).toList(growable: false);
 
     final Set<String> heroIds = <String>{
@@ -156,33 +163,34 @@ abstract final class ForYouViewModel {
 
     // Local stream: the location feed, minus whatever the carousel consumed.
     final List<Article> localStream = locationStories
-        .where((Article article) => !heroIds.contains(article.id))
+        .where(
+          (Article article) =>
+              !heroIds.contains(article.id) && !FeedMix.isSports(article),
+        )
         .toList(growable: false);
+    _sortForAudience(localStream, followingIds, boundedFollowWindow: true);
     final Set<String> shown = <String>{
       for (final Article article in localStream) article.id,
+      ...heroIds,
     };
 
-    // Latest stream: every merged story the reader cannot already see above,
-    // still newest first (the merged order is preserved).
+    // Latest stream: every non-sports merged story the reader cannot already
+    // see above, then the capped sports tail.
     final List<Article> latestStream = merged
         .where(
           (Article article) =>
-              !heroIds.contains(article.id) && !shown.contains(article.id),
+              !shown.contains(article.id) && !FeedMix.isSports(article),
         )
         .toList(growable: false);
-    // A followed story gets a fresh-news window: it may sit above newer
-    // unrelated stories, but not indefinitely.
-    latestStream.sort((Article a, Article b) {
-      final int byTime = _effectiveTime(
-        b,
-        followingIds,
-      ).compareTo(_effectiveTime(a, followingIds));
-      return byTime;
-    });
+    _sortForAudience(latestStream, followingIds, boundedFollowWindow: true);
+    final List<Article> sportsStream = FeedMix.limitedSports(
+      merged.where((Article article) => !heroIds.contains(article.id)),
+      limit: sportsOutsideLimit,
+    );
 
     return ForYouFeed(
       hero: hero,
-      stream: <Article>[...localStream, ...latestStream],
+      stream: <Article>[...localStream, ...latestStream, ...sportsStream],
       breakingCount: merged
           .where((Article article) => article.isBreaking)
           .length,
