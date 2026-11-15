@@ -1,4 +1,4 @@
-# SLNews — Play Console release checklist (1.0.0, code 56)
+# SLNews — Play Console release checklist (1.0.0, code 57)
 
 Built from `master` (`e41010f`) on 2026-11-12. This is the current checklist;
 `PLAY-CONSOLE-UPLOAD-CHECKLIST.md` describes an older code-7 build and is kept
@@ -9,11 +9,11 @@ only for history.
 | Field | Value |
 | --- | --- |
 | Package | `com.slnews.mobile` |
-| Version | `1.0.0` (versionCode **56**) |
+| Version | `1.0.0` (versionCode **57**) |
 | Min / target SDK | 26 / **36** (compileSdk 36) |
-| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+56.aab` |
+| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+57.aab` |
 | Size | 68.3 MB |
-| SHA-256 | `F02E6752E2AB01EBC9BCA709F644E715802AEDE24E22C58316BF4A498C3BAEBC` |
+| SHA-256 | `096C3E38463B032CF6EB3B77731BF6483978816A66F8A96FD51F4579BBA74175` |
 | Signing | release keystore, JAR verified (`jarsigner -verify`) |
 | Release defines | `SLNEWS_SCOREBOARD_URL`, `SLNEWS_IMAGE_PROXY`, `SLNEWS_WEB_URL`, Sentry DSN, TheSportsDB |
 | Upload key | `android/slnews-release.jks` + `android/key.properties` (never commit) |
@@ -21,8 +21,8 @@ only for history.
 Re-verify before uploading:
 
 ```powershell
-Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+56.aab" -Algorithm SHA256
-jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+56.aab"
+Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+57.aab" -Algorithm SHA256
+jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+57.aab"
 ```
 
 ## 0. Pre-flight (owner: you)
@@ -64,8 +64,8 @@ jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+56.aab"
 ## 2. Internal testing (first install proof)
 
 - [ ] Testing → **Internal testing** → **Create new release**.
-- [ ] Upload `SLNews-1.0.0+56.aab`.
-- [ ] Release name: `1.0.0 (56) — live sports news/standings, ads, onboarding, push`.
+- [ ] Upload `SLNews-1.0.0+57.aab`.
+- [ ] Release name: `1.0.0 (57) — live sports news/standings, ads, onboarding, push`.
 - [ ] Release notes:
       `First-run topic/location picker, sponsored cards with image creatives, push segmentation by followed topics, offline reading polish.`
 - [ ] Add your Google account as a tester; roll out.
@@ -76,7 +76,7 @@ Optional local install proof from the AAB:
 
 ```powershell
 # bundletool: https://github.com/google/bundletool/releases
-java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+56.aab" --output=slnews.apks --mode=universal
+java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+57.aab" --output=slnews.apks --mode=universal
 java -jar bundletool.jar install-apks --apks=slnews.apks
 ```
 
@@ -140,7 +140,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 
 ## 5. Closed testing → production
 
-- [ ] Create a **Closed testing** track, add testers, roll out code 56.
+- [ ] Create a **Closed testing** track, add testers, roll out code 57.
 - [ ] Keep the track active for the period required by your account type
       (personal accounts: confirm the current tester count/duration in the
       console; historically 12 testers / 14 days).
@@ -178,7 +178,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 4. **AAB size 68.3 MB** — Play limit is 200 MB for base bundles, so fine, but
    first-install size matters for Sierra Leone data costs; consider an asset
    bundle later if it grows.
-5. **Version code 56 must never be reused**; every upload needs a higher code.
+5. **Version code 57 must never be reused**; every upload needs a higher code.
 6. Closed-testing requirements vary by account type/date — confirm in Console.
 
 ## Release notes (paste)
@@ -248,3 +248,7 @@ SLNews 1.0.0
 ## Code 56 notes
 
 - Home/For You feed is Sierra Leone-first, international second, with sports capped to a short tail outside the Sports tab. Web home mix follows the same 70/30 SL/international split and excludes Sports.
+
+## Code 57 notes
+
+- La Liga, Serie A, Bundesliga and Ligue 1 now render as one "European Leagues" section with a combined, strict-filtered four-feed news stream.
