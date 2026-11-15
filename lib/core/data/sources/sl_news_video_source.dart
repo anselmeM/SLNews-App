@@ -9,8 +9,9 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 /// Reads the "Video moments" rail from the scraper's `/v1/videos` endpoint.
 ///
 /// The same key and host as the news source are reused, so a build configured
-/// for content gets videos for free; an unconfigured build returns nothing and
-/// the rail falls back to the bundled [SlVideos] rotation.
+/// for content gets videos for free. When the endpoint is empty or unavailable,
+/// [VideoMomentsController] keeps the bundled [SlVideos] rotation visible so the
+/// rail never disappears from the home screen.
 class SlNewsVideoSource {
   /// Creates a source over the shared API client.
   /// Positional formals because the fields are private and named parameters

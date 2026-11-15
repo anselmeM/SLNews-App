@@ -351,11 +351,11 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
     } catch (error) {
       AppLog.debug('videoMoments: unreadable cache: $error');
     }
-    // A configured build must never present demo clips as if they were real
-    // videos: show nothing until the first successful fetch.
-    return ref.read(slNewsVideoSourceProvider) == null
-        ? SlVideos.all
-        : const <VideoMoment>[];
+    // Keep the rail usable on first launch, offline, and while a configured
+    // build waits for its first live response. Live/cached entries replace this
+    // rotation as soon as the scraper returns videos; an empty response never
+    // blanks the section.
+    return SlVideos.all;
   }
 
   Future<void> _refresh() async {
