@@ -180,8 +180,8 @@ void main() {
       expect(find.text('99'), findsOneWidget);
       expect(find.text('FINAL'), findsOneWidget);
       expect(find.text("72'"), findsOneWidget);
-      expect(find.text('Powered by slnews'), findsOneWidget);
-      expect(find.text('8:45PM'), findsOneWidget);
+      expect(find.text('Scores'), findsOneWidget);
+      expect(find.text('slnews · 8:45PM'), findsOneWidget);
     },
   );
 
@@ -327,6 +327,18 @@ void main() {
     await tester.pumpWidget(buildApp(textScale: 1.3, ads: FakeAdRepository()));
     await settle(tester);
 
+    expect(tester.takeException(), isNull);
+
+    // The shorter score cards move the league sections further down; build the
+    // SPL block by scrolling it into view before asserting.
+    for (
+      int i = 0;
+      i < 30 && find.text('Sierra Leone Premier League').evaluate().isEmpty;
+      i++
+    ) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump();
+    }
     expect(tester.takeException(), isNull);
     expect(find.text('Sierra Leone Premier League'), findsOneWidget);
   });

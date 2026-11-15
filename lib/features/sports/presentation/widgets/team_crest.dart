@@ -22,14 +22,19 @@ class TeamCrest extends StatelessWidget {
     this.colourHex,
     this.size = 28,
     this.initialsOverride,
+    this.monochrome = false,
   });
 
   /// Crest for a followed entity (team or league) in the Following row.
-  TeamCrest.forTarget(FollowTarget target, {super.key, this.size = 48})
-    : name = target.label,
-      logoUrl = target.imageUrl ?? _knownLogos[target.id],
-      colourHex = null,
-      initialsOverride = SportsViewModel.shortLabel(target);
+  TeamCrest.forTarget(
+    FollowTarget target, {
+    super.key,
+    this.size = 48,
+    this.monochrome = false,
+  }) : name = target.label,
+       logoUrl = target.imageUrl ?? _knownLogos[target.id],
+       colourHex = null,
+       initialsOverride = SportsViewModel.shortLabel(target);
 
   /// Broadcast-crest URLs for catalogue teams whose seed has no image.
   static const Map<String, String> _knownLogos = <String, String>{
@@ -93,6 +98,12 @@ class TeamCrest extends StatelessWidget {
   /// Explicit fallback text; defaults to [AppGlyphs.initials] of [name].
   final String? initialsOverride;
 
+  /// Neutral fallback disc for dense surfaces such as score cards.
+  ///
+  /// Club colours are still used for the Following row, but saturated green/red
+  /// fallbacks read as chips beside the neutral editorial cards.
+  final bool monochrome;
+
   @override
   Widget build(BuildContext context) {
     final String? url = logoUrl;
@@ -113,10 +124,12 @@ class TeamCrest extends StatelessWidget {
     // A followed target carries no club colour, so the fallback must still be a
     // dark disc: white initials on `surfaceMuted` are unreadable.
     final Color? club = parseTeamColour(colourHex);
-    final Color background = club ?? context.colors.surfaceInverse;
-    final Color foreground = club == null
-        ? context.colors.onSurfaceInverse
-        : Colors.white;
+    final Color background = monochrome
+        ? context.colors.surfaceMuted
+        : (club ?? context.colors.surfaceInverse);
+    final Color foreground = monochrome
+        ? context.colors.onSurfaceVariant
+        : (club == null ? context.colors.onSurfaceInverse : Colors.white);
 
     return Container(
       width: size,

@@ -125,27 +125,31 @@ class SportsLeagueSection extends ConsumerWidget {
             ),
           ),
           if (games.isNotEmpty)
-            SizedBox(
-              height: 156,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xs,
-                ),
-                itemCount: games.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(width: AppSpacing.md),
-                itemBuilder: (BuildContext context, int index) {
-                  final GameScore game = games[index];
-                  return SizedBox(
-                    width: 250,
-                    child: GestureDetector(
-                      onTap: () => onGameTap(game),
-                      child: ScoreCard(game: game),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  for (
+                    int index = 0;
+                    index < games.length;
+                    index++
+                  ) ...<Widget>[
+                    SizedBox(
+                      width: 250,
+                      child: GestureDetector(
+                        onTap: () => onGameTap(games[index]),
+                        child: ScoreCard(game: games[index]),
+                      ),
                     ),
-                  );
-                },
+                    if (index != games.length - 1)
+                      const SizedBox(width: AppSpacing.md),
+                  ],
+                ],
               ),
             ),
           if (shownStories.isNotEmpty) ...<Widget>[
@@ -175,10 +179,14 @@ class SportsLeagueSection extends ConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Text(
-                      'More $leagueLabel stories',
-                      style: context.typography.meta.copyWith(
-                        color: Colors.white,
+                    Flexible(
+                      child: Text(
+                        'More $leagueLabel stories',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typography.meta.copyWith(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const Icon(

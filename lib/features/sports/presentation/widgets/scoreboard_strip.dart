@@ -42,25 +42,65 @@ class ScoreboardStrip extends ConsumerWidget {
     );
   }
 
-  /// The scrollable card row plus the attribution / refresh footer.
+  /// A compact “Scores” header over the horizontal card rail.
   Widget _loaded(
     BuildContext context,
     WidgetRef ref,
     ScoreboardSnapshot snapshot,
   ) {
     final double cardWidth = (MediaQuery.sizeOf(context).width * 0.46).clamp(
-      168.0,
-      240.0,
+      160.0,
+      220.0,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.xs,
+            0,
+          ),
+          child: Row(
+            children: <Widget>[
+              Text(
+                'Scores',
+                style: context.typography.overline.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              Flexible(
+                child: Text(
+                  '${_providerName(snapshot.providerLabel)} · '
+                  '${snapshot.updatedAt.clockLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.caption.copyWith(
+                    color: context.colors.onSurfaceFaint,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => ref.invalidate(scoreboardProvider),
+                tooltip: 'Refresh scores',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.refresh,
+                  size: 17,
+                  color: context.colors.onSurfaceFaint,
+                ),
+              ),
+            ],
+          ),
+        ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.md,
+            AppSpacing.xs,
             AppSpacing.lg,
             0,
           ),
@@ -91,49 +131,16 @@ class ScoreboardStrip extends ConsumerWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.xs,
-            0,
-          ),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  'Powered by ${snapshot.providerLabel}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.meta,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Flexible(
-                child: Text(
-                  snapshot.updatedAt.clockLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.meta.copyWith(
-                    color: context.colors.onSurfaceFaint,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => ref.invalidate(scoreboardProvider),
-                tooltip: 'Refresh scores',
-                visualDensity: VisualDensity.compact,
-                icon: Icon(
-                  Icons.refresh,
-                  size: 18,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
+  }
+
+  static String _providerName(String raw) {
+    return switch (raw.toLowerCase()) {
+      'thesportsdb' => 'TheSportsDB',
+      'yahoo' => 'Yahoo Sports',
+      _ => raw,
+    };
   }
 
   /// Compact inline message; the rest of the screen must still render.
@@ -191,11 +198,11 @@ class _StripSkeleton extends StatelessWidget {
       child: Row(
         children: <Widget>[
           const Expanded(
-            child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius),
+            child: SkeletonBox(height: 132, borderRadius: AppRadius.cardRadius),
           ),
           const SizedBox(width: AppSpacing.md),
           const Expanded(
-            child: SkeletonBox(height: 152, borderRadius: AppRadius.cardRadius),
+            child: SkeletonBox(height: 132, borderRadius: AppRadius.cardRadius),
           ),
         ],
       ),
