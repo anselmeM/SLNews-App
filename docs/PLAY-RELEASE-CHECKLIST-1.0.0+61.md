@@ -1,4 +1,4 @@
-# SLNews — Play Console release checklist (1.0.0, code 60)
+# SLNews — Play Console release checklist (1.0.0, code 61)
 
 Built from `master` (`e41010f`) on 2026-11-12. This is the current checklist;
 `PLAY-CONSOLE-UPLOAD-CHECKLIST.md` describes an older code-7 build and is kept
@@ -9,11 +9,11 @@ only for history.
 | Field | Value |
 | --- | --- |
 | Package | `com.slnews.mobile` |
-| Version | `1.0.0` (versionCode **60**) |
+| Version | `1.0.0` (versionCode **61**) |
 | Min / target SDK | 26 / **36** (compileSdk 36) |
-| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+60.aab` |
+| AAB file | `C:\Users\amotc\Downloads\SLNews-1.0.0+61.aab` |
 | Size | 68.3 MB |
-| SHA-256 | `031F16B3AF2D35CC2BBC751B034F5E51408F218C49D665E76859132059095C39` |
+| SHA-256 | `5281B113B09C45ADFF8B2DC502A4210343C780FA00515D90E451B3787D0AFEAF` |
 | Signing | release keystore, JAR verified (`jarsigner -verify`) |
 | Release defines | `SLNEWS_SCOREBOARD_URL`, `SLNEWS_IMAGE_PROXY`, `SLNEWS_WEB_URL`, Sentry DSN, TheSportsDB |
 | Upload key | `android/slnews-release.jks` + `android/key.properties` (never commit) |
@@ -21,8 +21,8 @@ only for history.
 Re-verify before uploading:
 
 ```powershell
-Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+60.aab" -Algorithm SHA256
-jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+60.aab"
+Get-FileHash "$env:USERPROFILE\Downloads\SLNews-1.0.0+61.aab" -Algorithm SHA256
+jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+61.aab"
 ```
 
 ## 0. Pre-flight (owner: you)
@@ -64,8 +64,8 @@ jarsigner -verify "$env:USERPROFILE\Downloads\SLNews-1.0.0+60.aab"
 ## 2. Internal testing (first install proof)
 
 - [ ] Testing → **Internal testing** → **Create new release**.
-- [ ] Upload `SLNews-1.0.0+60.aab`.
-- [ ] Release name: `1.0.0 (60) — live sports news/standings, ads, onboarding, push`.
+- [ ] Upload `SLNews-1.0.0+61.aab`.
+- [ ] Release name: `1.0.0 (61) — live sports news/standings, ads, onboarding, push`.
 - [ ] Release notes:
       `First-run topic/location picker, sponsored cards with image creatives, push segmentation by followed topics, offline reading polish.`
 - [ ] Add your Google account as a tester; roll out.
@@ -76,7 +76,7 @@ Optional local install proof from the AAB:
 
 ```powershell
 # bundletool: https://github.com/google/bundletool/releases
-java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+60.aab" --output=slnews.apks --mode=universal
+java -jar bundletool.jar build-apks --bundle="$env:USERPROFILE\Downloads\SLNews-1.0.0+61.aab" --output=slnews.apks --mode=universal
 java -jar bundletool.jar install-apks --apks=slnews.apks
 ```
 
@@ -140,7 +140,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 
 ## 5. Closed testing → production
 
-- [ ] Create a **Closed testing** track, add testers, roll out code 60.
+- [ ] Create a **Closed testing** track, add testers, roll out code 61.
 - [ ] Keep the track active for the period required by your account type
       (personal accounts: confirm the current tester count/duration in the
       console; historically 12 testers / 14 days).
@@ -178,7 +178,7 @@ java -jar bundletool.jar install-apks --apks=slnews.apks
 4. **AAB size 68.3 MB** — Play limit is 200 MB for base bundles, so fine, but
    first-install size matters for Sierra Leone data costs; consider an asset
    bundle later if it grows.
-5. **Version code 60 must never be reused**; every upload needs a higher code.
+5. **Version code 61 must never be reused**; every upload needs a higher code.
 6. Closed-testing requirements vary by account type/date — confirm in Console.
 
 ## Release notes (paste)
@@ -266,3 +266,8 @@ SLNews 1.0.0
 ## Code 60 notes
 
 - Restored the Video moments rail on configured builds: the bundled rotation now stays visible until live `/v1/videos` data arrives, and an empty/failed response no longer removes the section.
+
+## Code 61 notes
+
+- Security: removed the tracked Firebase `google-services.json` and old release artifacts from version control. CI restores the client config from the base64 repository secret; PR builds use a non-secret placeholder. Local builds require the Firebase-downloaded file (gitignored).
+- Rotate and restrict the exposed Firebase/Google API key before shipping; see the security handoff notes.
