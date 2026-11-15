@@ -62,15 +62,15 @@ jobs:
       # non-secret placeholder; master pushes require the real config.
       - name: Restore Firebase client config
         env:
-          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+          FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
         run: |
-          if [ -n "$FIREBASE_GOOGLE_SERVICES_JSON" ]; then
-            printf '%s\n' "$FIREBASE_GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          if [ -n "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" ]; then
+            printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
           elif [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             cp android/app/google-services.json.example android/app/google-services.json
-            echo "::warning::FIREBASE_GOOGLE_SERVICES_JSON is not set; PR build uses the placeholder Firebase config."
+            echo "::warning::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 is not set; PR build uses the placeholder Firebase config."
           else
-            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON is not set; refusing to build a release without Firebase config."
+            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 is not set; refusing to build a release without Firebase config."
             exit 1
           fi
 
