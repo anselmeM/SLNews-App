@@ -1,0 +1,70 @@
+version: 2
+
+updates:
+  # Flutter / Dart packages. Patch and minor updates arrive as one grouped PR;
+  # majors stay separate so they get a deliberate migration review.
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Freetown"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+    groups:
+      pub-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Android Gradle plugin / Kotlin updates. These are not auto-merged: a
+  # Gradle change needs the signed AAB workflow before it reaches master.
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Africa/Freetown"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(android-deps)"
+    labels:
+      - "dependencies"
+      - "android"
+    groups:
+      gradle-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Keep the build workflows themselves current. Workflow changes are never
+  # auto-merged, because a bad action bump can change the release gate itself.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Africa/Freetown"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(actions)"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

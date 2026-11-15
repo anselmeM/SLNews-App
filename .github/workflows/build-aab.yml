@@ -14,6 +14,13 @@ on:
 jobs:
   bundle:
     name: Analyze, test and package the release app bundle
+    # Dependabot PR workflows do not receive repository secrets, so the signed
+    # bundle step cannot pass there. Dependency PRs are validated by the
+    # secret-free Dependency check and the APK build; the AAB gate still runs on
+    # every push to master (including the auto-merge commit).
+    if: >
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     env:
       # Secrets cannot be read from a step-level `if:`; route through env like the

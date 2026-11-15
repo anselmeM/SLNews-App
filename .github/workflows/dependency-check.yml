@@ -1,0 +1,49 @@
+name: Dependency check
+
+# Fast, secret-free validation for dependency-only PRs. This is the check the
+# Dependabot auto-merge gate waits for; it never needs the Android signing key,
+# which Dependabot PR workflows do not receive.
+on:
+  pull_request:
+    paths:
+      - "pubspec.yaml"
+      - "pubspec.lock"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify pub dependency update
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.7"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test with coverage
+        run: flutter test test/core test/data test/features test/sync --coverage --concurrency=1
+
+      - name: Enforce app coverage ratchet
+        run: python3 scripts/check_app_coverage.py
