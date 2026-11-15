@@ -98,6 +98,7 @@ abstract final class LeagueStories {
       'qualifier',
     ],
     'UEFA CHAMPIONS LEAGUE': <String>['champions league', 'ucl'],
+    'EUROPEAN LEAGUES': <String>['la liga', 'serie a', 'bundesliga', 'ligue 1'],
     'LA LIGA': <String>['la liga'],
     'SERIE A': <String>['serie a'],
     'BUNDESLIGA': <String>['bundesliga'],

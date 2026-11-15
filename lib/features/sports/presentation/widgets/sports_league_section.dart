@@ -360,6 +360,13 @@ class _LeagueLook {
         Color(0xFF0F7A43),
       );
     }
+    if (value.contains('EUROPEAN')) {
+      return const _LeagueLook(
+        Icons.sports_soccer,
+        Color(0xFF15102E),
+        Color(0xFF3B2A7A),
+      );
+    }
     if (value.contains('CHAMPIONS LEAGUE')) {
       return const _LeagueLook(
         Icons.sports_soccer,

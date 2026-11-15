@@ -16,6 +16,10 @@ void main() {
         SportsLinks.leagueIdForLabel('UEFA Champions League'),
         'champions-league',
       );
+      expect(
+        SportsLinks.leagueIdForLabel('European Leagues'),
+        'european-leagues',
+      );
       expect(SportsLinks.leagueIdForLabel('La Liga'), 'la-liga');
       expect(SportsLinks.leagueIdForLabel('Serie A'), 'serie-a');
       expect(SportsLinks.leagueIdForLabel('Bundesliga'), 'bundesliga');

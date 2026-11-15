@@ -10,6 +10,7 @@ abstract final class SportsLinks {
   static const Map<String, String> _idByLabel = <String, String>{
     'Sierra Leone Premier League': 'spl',
     'Premier League': 'epl',
+    'European Leagues': 'european-leagues',
     'UEFA Champions League': 'champions-league',
     'La Liga': 'la-liga',
     'Serie A': 'serie-a',

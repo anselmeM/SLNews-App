@@ -19,10 +19,7 @@ void main() {
         'NHL',
         'Premier League',
         'UEFA Champions League',
-        'La Liga',
-        'Serie A',
-        'Bundesliga',
-        'Ligue 1',
+        'European Leagues',
         'Sierra Leone Premier League',
         'AFCON Qualifier',
         'Formula 1',
@@ -31,7 +28,7 @@ void main() {
         'Golf',
       ]),
     );
-    expect(featuredLeagueId('La Liga'), 'la-liga');
+    expect(featuredLeagueId('European Leagues'), 'european-leagues');
     expect(featuredLeagueId('unknown'), isNull);
     expect(featuredLeagueOrder('NBA'), lessThan(featuredLeagueOrder('Golf')));
     expect(featuredLeagueOrder('unknown'), kFeaturedSportsLeagues.length);

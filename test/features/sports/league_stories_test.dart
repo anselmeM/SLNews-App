@@ -90,6 +90,25 @@ void main() {
       'Ligue 1 round-up',
     );
     expect(
+      LeagueStories.forLeague(
+        'European Leagues',
+        stories,
+      ).map((Article a) => a.title),
+      containsAll(<String>[
+        'La Liga title race tightens',
+        'Serie A leaders drop points',
+        'Bundesliga matchday review',
+        'Ligue 1 round-up',
+      ]),
+    );
+    expect(
+      LeagueStories.forLeague(
+        'European Leagues',
+        stories,
+      ).map((Article a) => a.title),
+      isNot(contains('Champions League final draw')),
+    );
+    expect(
       LeagueStories.forLeague('Formula 1', stories).single.title,
       'Verstappen wins Las Vegas Grand Prix',
     );

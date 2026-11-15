@@ -114,6 +114,14 @@ class LeagueNewsSource {
       website: 'https://news.google.com/',
       label: 'Ligue 1',
     ),
+    'european-leagues': _LeagueFeed(
+      url: 'https://news.google.com/rss/search?q=%22European+Leagues%22&hl=en-US&gl=US&ceid=US:en',
+      outlet: 'Google News',
+      publisherId: 'google-news',
+      wordmark: 'NEWS',
+      website: 'https://news.google.com/',
+      label: 'European Leagues',
+    ),
     'f1': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Formula+1%22&hl=en-US&gl=US&ceid=US:en',
       outlet: 'Google News',
@@ -155,8 +163,18 @@ class LeagueNewsSource {
   /// Drops session caches so pull-to-refresh can retry a failed league feed.
   void clearCache() => _cache.clear();
 
+  static const List<String> _europeanLeagueSlugs = <String>[
+    'la-liga',
+    'serie-a',
+    'bundesliga',
+    'ligue-1',
+  ];
+
   Future<List<Article>> fetch(String leagueId, {int limit = 6}) async {
     final String slug = leagueId.split(':').last.toLowerCase();
+    if (slug == 'european-leagues') {
+      return _fetchEuropeanLeagues(limit: limit);
+    }
     final _LeagueFeed? feed = _feeds[slug];
     if (feed == null) return const <Article>[];
     final List<Article>? cached = _cache[slug];
@@ -190,6 +208,62 @@ class LeagueNewsSource {
       return result;
     } catch (error) {
       AppLog.debug('LeagueNewsSource($slug): $error');
+      return const <Article>[];
+    }
+  }
+
+  Future<List<Article>> _fetchEuropeanLeagues({required int limit}) async {
+    final List<Article>? cached = _cache['european-leagues'];
+    if (cached != null) return cached;
+
+    final List<FeedSourceConfig> configs = <FeedSourceConfig>[
+      for (final String slug in _europeanLeagueSlugs)
+        FeedSourceConfig(
+          id: 'league-google-news-$slug',
+          outlet: _feeds[slug]!.outlet,
+          publisherId: _feeds[slug]!.publisherId,
+          wordmark: _feeds[slug]!.wordmark,
+          url: _feeds[slug]!.url,
+          kind: FeedSourceKind.rss,
+          categoryId: 'sports',
+          websiteUrl: _feeds[slug]!.website,
+          summaryOnly: true,
+        ),
+    ];
+
+    final List<List<Article>> batches = await Future.wait(
+      <Future<List<Article>>>[
+        for (int i = 0; i < _europeanLeagueSlugs.length; i++)
+          _fetchOne(_europeanLeagueSlugs[i], configs[i]),
+      ],
+    );
+    final Map<String, Article> byId = <String, Article>{};
+    for (final List<Article> batch in batches) {
+      for (final Article article in batch) {
+        byId[article.id] = article;
+      }
+    }
+    final List<Article> combined = byId.values.toList(growable: false)
+      ..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
+    final List<Article> result = List<Article>.unmodifiable(
+      combined.take(limit).toList(growable: false),
+    );
+    _cache['european-leagues'] = result;
+    return result;
+  }
+
+  Future<List<Article>> _fetchOne(String slug, FeedSourceConfig config) async {
+    try {
+      final _LeagueFeed feed = _feeds[slug]!;
+      final String document = await client.getText(feed.url);
+      final List<Article> parsed = RssParser.parse(
+        document,
+        config: config,
+        limit: 16,
+      );
+      return LeagueStories.forLeague(feed.label, parsed, limit: 16);
+    } catch (error) {
+      AppLog.debug('LeagueNewsSource($slug, combined): $error');
       return const <Article>[];
     }
   }

@@ -13,6 +13,7 @@ void main() {
     expect(LeagueNewsSource.supports('league:spl'), isTrue);
     expect(LeagueNewsSource.supports('league:afcon'), isTrue);
     expect(LeagueNewsSource.supports('league:champions-league'), isTrue);
+    expect(LeagueNewsSource.supports('league:european-leagues'), isTrue);
     expect(LeagueNewsSource.supports('league:la-liga'), isTrue);
     expect(LeagueNewsSource.supports('league:serie-a'), isTrue);
     expect(LeagueNewsSource.supports('league:bundesliga'), isTrue);
