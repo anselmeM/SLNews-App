@@ -14,6 +14,9 @@ import 'package:slnews_mobile/core/domain/models/notification_item.dart';
 import 'package:slnews_mobile/core/domain/repositories/following_repository.dart';
 import 'package:slnews_mobile/core/domain/repositories/notification_repository.dart';
 import 'package:slnews_mobile/features/following/presentation/following_page.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_sources_page.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_sports_page.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_topics_page.dart';
 import 'package:slnews_mobile/features/following/presentation/notification_history_page.dart';
 
 // The settings provider (read by Following and the history for the notification
@@ -49,6 +52,7 @@ class InMemoryFollowingRepository implements FollowingRepository {
   InMemoryFollowingRepository({
     List<FollowTarget> followed = const <FollowTarget>[],
     List<FollowTarget> suggested = const <FollowTarget>[],
+    List<FollowTarget> catalogue = const <FollowTarget>[],
   }) {
     for (final FollowTarget target in followed) {
       _entries[target.id] = _Entry(catalogue: target, followed: true);
@@ -56,9 +60,17 @@ class InMemoryFollowingRepository implements FollowingRepository {
     for (final FollowTarget target in suggested) {
       _entries[target.id] = _Entry(catalogue: target, followed: false);
     }
+    // Targets that exist in the catalogue but are neither followed nor a
+    // suggestion — the management screens list the whole catalogue, so their
+    // tests need entries the Following page itself never offers. A target that
+    // is already followed or suggested stays in `_entries` only.
+    for (final FollowTarget target in catalogue) {
+      if (!_entries.containsKey(target.id)) _extras[target.id] = target;
+    }
   }
 
   final Map<String, _Entry> _entries = <String, _Entry>{};
+  final Map<String, FollowTarget> _extras = <String, FollowTarget>{};
 
   /// Every `follow`/`unfollow`/`toggle` call in order, for assertions.
   final List<FollowTarget> toggleLog = <FollowTarget>[];
@@ -70,9 +82,12 @@ class InMemoryFollowingRepository implements FollowingRepository {
       .map((_Entry entry) => entry.catalogue)
       .toList(growable: false);
 
+  /// The whole catalogue: followed entries, suggestions and the extras.
   @override
-  @override
-  List<FollowTarget> get catalogue => const <FollowTarget>[];
+  List<FollowTarget> get catalogue => <FollowTarget>[
+    for (final _Entry entry in _entries.values) entry.catalogue,
+    ..._extras.values,
+  ];
 
   @override
   FollowingSnapshot load() {
@@ -118,18 +133,28 @@ class InMemoryFollowingRepository implements FollowingRepository {
   @override
   bool isFollowed(String targetId) => _entries[targetId]?.followed ?? false;
 
-  _Entry _entryFor(FollowTarget target) => _entries.putIfAbsent(
-    target.id,
-    () => _Entry(catalogue: target, followed: false),
-  );
+  _Entry _entryFor(FollowTarget target) => _entries.putIfAbsent(target.id, () {
+    // A followed extra moves from the catalogue map into the state map; leaving
+    // it in both would render the row twice.
+    _extras.remove(target.id);
+    return _Entry(catalogue: target, followed: false);
+  });
 
-  List<FollowTarget> _byKind(Set<FollowKind> kinds) => _entries.values
-      .where(
-        (_Entry entry) =>
-            entry.followed && kinds.contains(entry.catalogue.kind),
-      )
-      .map((_Entry entry) => entry.catalogue)
-      .toList(growable: false);
+  /// The production repository fills each per-kind list with the *catalogue*
+  /// for that kind, not with the followed subset; mirroring that here is what
+  /// lets the management-screen tests see un-followed options.
+  List<FollowTarget> _byKind(Set<FollowKind> kinds) {
+    final Map<String, FollowTarget> byId = <String, FollowTarget>{};
+    for (final _Entry entry in _entries.values) {
+      if (kinds.contains(entry.catalogue.kind)) {
+        byId[entry.catalogue.id] = entry.catalogue;
+      }
+    }
+    for (final FollowTarget target in _extras.values) {
+      if (kinds.contains(target.kind)) byId[target.id] = target;
+    }
+    return byId.values.toList(growable: false);
+  }
 }
 
 /// In-memory [NotificationRepository] that records mutations.
@@ -215,6 +240,12 @@ class FollowingTestFixture {
         ),
       ]);
 
+  /// A reader who follows nothing, with an empty catalogue and no alerts.
+  FollowingTestFixture.empty()
+    : userState = FakeUserStateRepository(),
+      following = InMemoryFollowingRepository(),
+      notifications = InMemoryNotificationRepository(<NotificationItem>[]);
+
   final InMemoryFollowingRepository following;
   final InMemoryNotificationRepository notifications;
 
@@ -293,12 +324,42 @@ GoRouter buildFollowingTestRouter({String initialLocation = '/following'}) {
             builder: (BuildContext context, GoRouterState state) =>
                 const NotificationHistoryPage(),
           ),
+          GoRoute(
+            path: 'sources',
+            builder: (BuildContext context, GoRouterState state) =>
+                const ManageSourcesPage(),
+          ),
+          GoRoute(
+            path: 'topics',
+            builder: (BuildContext context, GoRouterState state) =>
+                const ManageTopicsPage(),
+          ),
+          GoRoute(
+            path: 'sports',
+            builder: (BuildContext context, GoRouterState state) =>
+                const ManageSportsPage(),
+          ),
         ],
       ),
       GoRoute(
         path: '/article/:id',
         builder: (BuildContext context, GoRouterState state) =>
             ArticleStub(articleId: state.pathParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: '/sports/team/:id',
+        builder: (BuildContext context, GoRouterState state) =>
+            ArticleStub(articleId: 'team:${state.pathParameters['id']}'),
+      ),
+      GoRoute(
+        path: '/sports/league/:id',
+        builder: (BuildContext context, GoRouterState state) =>
+            ArticleStub(articleId: 'league:${state.pathParameters['id']}'),
+      ),
+      GoRoute(
+        path: '/section/:id',
+        builder: (BuildContext context, GoRouterState state) =>
+            ArticleStub(articleId: 'section:${state.pathParameters['id']}'),
       ),
     ],
   );

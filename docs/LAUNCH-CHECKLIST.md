@@ -4,7 +4,7 @@
 > This is the code-2 era checklist (version `1.0.0+2`, 486 tests, repo at `b2d113d`).
 > The current release line is
 > [PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md)
-> (version `1.0.0+61`, 604 functional tests). Kept for the deferred-items table
+> (version `1.0.0+61`, 640 functional tests). Kept for the deferred-items table
 > (§F) and the reasoning; everything actionable has moved to the code-61 checklist.
 
 Last updated: 18 October 2026 · repo `SLNews-App` at `b2d113d` · version `1.0.0+2`

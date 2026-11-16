@@ -52,20 +52,24 @@ class FollowingViewModel {
     return _dedupe(_sort(candidates));
   }
 
-  /// Followed topics, alphabetically sorted. Topics are the catch-all bucket, so
-  /// a stray publisher entry falls back here rather than rendering nowhere.
-  List<FollowTarget> get topics {
-    final List<FollowTarget> grouped = _group(<FollowKind>{FollowKind.topic});
-    final Set<String> ids = grouped
-        .map((FollowTarget target) => target.id)
-        .toSet();
-    final List<FollowTarget> publishers = snapshot.followed
+  /// Followed topics, alphabetically sorted.
+  ///
+  /// Publishers are their own group ("Sources"); before that section existed a
+  /// followed publisher fell back into Topics so it rendered somewhere.
+  List<FollowTarget> get topics => _group(<FollowKind>{FollowKind.topic});
+
+  /// "Based on what you follow" — popular topic suggestions that are not
+  /// followed yet, mirroring the reference's second suggestion group.
+  List<FollowTarget> get suggestedTopics {
+    final Set<String> followedIds = snapshot.followedIds.toSet();
+    final List<FollowTarget> candidates = snapshot.suggested
         .where(
           (FollowTarget target) =>
-              target.kind == FollowKind.publisher && !ids.contains(target.id),
+              target.kind == FollowKind.topic &&
+              !followedIds.contains(target.id),
         )
         .toList(growable: false);
-    return _sort(_dedupe(<FollowTarget>[...publishers, ...grouped]));
+    return _dedupe(_sort(candidates));
   }
 
   /// Followed publishers, kept separate for completeness of the derivation.
@@ -84,7 +88,9 @@ class FollowingViewModel {
       sports.isNotEmpty ||
       locations.isNotEmpty ||
       topics.isNotEmpty ||
-      popularLocations.isNotEmpty;
+      publishers.isNotEmpty ||
+      popularLocations.isNotEmpty ||
+      suggestedTopics.isNotEmpty;
 
   /// Entities of the given [kinds], merging the per-kind catalogues with the
   /// flat `followed` list, de-duplicated by id and sorted alphabetically.

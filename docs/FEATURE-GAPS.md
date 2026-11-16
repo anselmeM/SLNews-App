@@ -7,7 +7,7 @@ the capabilities a news app is expected to have regardless of that reference.
   frame by frame; timestamps below are approximate (±1 s).
 - **Code base at first write**: `SLNews-App` at `da9ccc2` (454 tests, 8 golden renders).
 - **Status refresh (2026-11-15)**: re-audited against `master` (code 61). Current
-  gates are 604 functional tests (including the push suite) plus 9 golden renders,
+  gates are 640 functional tests (including the push suite) plus 9 golden renders,
   analyzer clean, 76.12 % line coverage, and `scripts/check_app_coverage.py`
   enforcing per-file floors on the critical modules plus an 800-line file budget.
   Sections marked **shipped** below were re-verified in the source, not inferred
@@ -52,8 +52,18 @@ Shipped on For You: a `TopicMosaic` two-column grid after the Latest group, four
 from the curated category set (an image from that category's first story, a dark
 fallback card with a category glyph, and a white label with a chevron). Tapping a card
 pushes the photo-header section page at `/section/:categoryId`, whose "More …" link
-continues to the News tab. The Following tab keeps its management rows, which is the
-honest division of labour: discovery on the feed, management on Following.
+continues to the News tab. Discovery lives on the feed; management lives on Following.
+
+**Following screen (2026-11-15).** Rebuilt against the video: the two "Manage …" rows
+became the reference's four chevron headers — Sports, Locations, Topics, Sources — each
+opening its catalogue, with the followed entities rendered chip-less underneath and the
+two suggestion groups ("Most popular with users", "Based on what you follow") keeping
+their Follow chips. Headers render even when a group is empty, because they are the only
+route into the catalogues. `Manage news sources` now lists the whole publisher catalogue
+(it read followed+suggested before, and publishers are never "popular", so it was empty);
+`Manage news topics` lists all eleven news sections; and the Sports header opens a new
+`/following/sports` picker with every featured league plus the seeded teams instead of
+jumping to the Sports tab.
 
 ### A4. Notification permission prompt — **partially shipped** (deferred OS prompt, no priming card), M
 *(seen: 3.8 s)*
@@ -244,8 +254,8 @@ tier, no consent management.
   no PII, sampled traces). Still missing: product analytics, remote config/feature
   flags, and an explicit offline/connectivity state.
 - No force-update gate and no staged rollout path.
-- Testing is widget/unit + goldens (604 functional + 9 golden renders) with a
-  75 % total-line-coverage gate, per-file floors on the critical modules and an
+- Testing is widget/unit + goldens (640 functional + 9 golden renders) with a
+  76 % total-line-coverage gate, per-file floors on the critical modules and an
   800-line file budget. There is still **no on-device integration or CI
   end-to-end test**, which is how push, deep links and offline would normally be
   verified.
@@ -327,6 +337,8 @@ formats, then widget, then localisation (largest and needs product decisions).
 | Push v1: FCM transport, segments, tap routing | code 52+ |
 | Crash reporting (Sentry behind `AppLog`) | code 52+ |
 | Web ↔ mobile state sync (Clerk, merge-on-sign-in) | roadmap T4 |
+| Following rebuilt to the reference: chevron headers, publisher/topic/sports pickers | 2026-11-15 |
+| `JsonArticleMapper` unit tests (was 0 % covered) | 2026-11-15 |
 
 ## Appendix 1b — Sections re-verified in the 2026-11-15 refresh
 
@@ -334,7 +346,7 @@ These were re-read in source rather than trusted from the earlier document: A4 (
 priming card; deferred OS prompt via `PushService.requestIfNeeded`), B2 (push v1),
 B3 (reading progress), B5 (`slnews://` only, no HTTPS App Link filter), B6 (account
 page), B7 (legal rows), B10 (Sentry). Counts in this document now match the code at
-`cc1328b`: 604 functional tests (including the push suite), 9 golden renders.
+`cc1328b`: 640 functional tests (including the push suite), 9 golden renders.
 
 ## Appendix 2 — Already matching the reference
 

@@ -5,6 +5,8 @@ import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
+import 'package:slnews_mobile/core/widgets/follow_chip.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_sports_page.dart';
 import 'package:slnews_mobile/features/following/presentation/widgets/follow_row.dart';
 
 import 'support/fakes.dart';
@@ -88,9 +90,122 @@ void main() {
     expect(find.text('Topics'), findsOneWidget);
     expect(find.text('Politics'), findsOneWidget);
 
+    // Section 5: Sources — the header and its caption always render, even
+    // before a source is followed.
+    expect(find.text('Sources'), findsOneWidget);
+    expect(
+      find.text('Get news from the sources you trust at the top of your feed.'),
+      findsOneWidget,
+    );
+
     // Everything is reachable while scrolling too.
     await dragPage(tester);
     expect(find.byType(FollowRow), findsWidgets);
+  });
+
+  testWidgets('the Sports header opens the league/team catalogue', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Sports'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(ManageSportsPage), findsOneWidget);
+    expect(find.text('Manage leagues and teams'), findsOneWidget);
+  });
+
+  testWidgets('the Topics header opens the topic catalogue', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Topics'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Manage news topics'), findsOneWidget);
+  });
+
+  testWidgets('the Sources header opens the publisher catalogue', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Sources'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Manage news sources'), findsOneWidget);
+  });
+
+  testWidgets('tapping a followed team opens its surface', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Los Angeles Lakers'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('article-stub:team:lal'), findsOneWidget);
+  });
+
+  testWidgets('empty groups explain how to fill them', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // A reader who follows nothing and has no suggestions still needs the four
+    // headers to be usable routes into the catalogues.
+    final FollowingTestFixture empty = FollowingTestFixture.empty();
+    final ProviderContainer emptyContainer = ProviderContainer(
+      overrides: [
+        followingRepositoryProvider.overrideWithValue(empty.following),
+        userStateProvider.overrideWithValue(empty.userState),
+        notificationRepositoryProvider.overrideWithValue(empty.notifications),
+      ],
+    );
+    addTearDown(emptyContainer.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: emptyContainer,
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: buildFollowingTestRouter(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Pick the leagues and teams you follow.'), findsOneWidget);
+    expect(find.text('Pick the cities you want in your feed.'), findsOneWidget);
+    expect(
+      find.text('Pick the news sections you want to follow.'),
+      findsOneWidget,
+    );
+    expect(find.text('Sources'), findsOneWidget);
   });
 
   testWidgets(
@@ -145,11 +260,21 @@ void main() {
         isTrue,
       );
 
-      // Koidu's chip now reads "Following": one outlined chip remains (Kenema).
+      // Koidu is now a followed location: it moves out of the suggestions into
+      // the Locations group, and followed rows carry no chip (as in the
+      // reference, where only suggestions have one).
       expect(find.text('Follow'), findsOneWidget);
+      final Finder followedKoiduRow = find.ancestor(
+        of: find.text('Koidu'),
+        matching: find.byType(FollowRow),
+      );
+      expect(followedKoiduRow, findsOneWidget);
       expect(
-        find.descendant(of: koiduRow, matching: find.text('Following')),
-        findsOneWidget,
+        find.descendant(
+          of: followedKoiduRow,
+          matching: find.byType(FollowChip),
+        ),
+        findsNothing,
       );
 
       // The action is confirmed with a snack bar.

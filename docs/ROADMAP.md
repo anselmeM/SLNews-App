@@ -24,7 +24,7 @@ branch, conventional commits and a PR. Local gates before pushing are
 | --- | --- |
 | Scraper API consumed as a real content source (`/v1/news`, 43 tests) | `lib/core/data/sources/sl_news_api_source.dart` |
 | Clerk identity in the app behind `AuthRepository` (beta SDK isolated) | `lib/core/data/auth/clerk_auth_repository.dart` |
-| Offline-first content pipeline + 604 app tests | `flutter analyze`, `flutter test` (code 61) |
+| Offline-first content pipeline + 640 app tests | `flutter analyze`, `flutter test` (code 61) |
 
 | Missing | Consequence today |
 | --- | --- |

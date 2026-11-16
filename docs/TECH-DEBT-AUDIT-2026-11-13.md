@@ -452,7 +452,7 @@ to dark.
 
 **Gate.** `scripts/check_app_coverage.py` now enforces:
 
-- total line coverage ≥ 75 % (measured 76.12 % with the push suite included);
+- total line coverage ≥ 76 % (measured 77.61 %);
 - per-file floors on the critical modules: `api_client` 83, `sl_news_api_source`
   92, `offline_first_article_repository` 91, `remote_sync_source` 89,
   `sync_state` 83, `push_service` 48;
@@ -471,5 +471,5 @@ means moving live state, so it stays warned (visible in every CI run) rather
 than exempted.
 
 **Verification:** format gate clean (284 files), `flutter analyze` clean,
-**604 tests** pass, **9 goldens** pass, and the gate exits 0 on the real numbers
+**640 tests** pass, **9 goldens** pass, and the gate exits 0 on the real numbers
 and 1 when the total floor is temporarily raised.

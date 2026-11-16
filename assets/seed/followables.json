@@ -207,6 +207,24 @@
     "isPopular": false
   },
   {
+    "id": "topic:sports",
+    "kind": "topic",
+    "label": "Sports",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
+    "id": "topic:world",
+    "kind": "topic",
+    "label": "World",
+    "subtitle": "Topic",
+    "imageUrl": null,
+    "emojiOrGlyph": "topic",
+    "isPopular": false
+  },
+  {
     "id": "publisher:awoko",
     "kind": "publisher",
     "label": "Awoko Newspaper",

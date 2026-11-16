@@ -159,5 +159,77 @@ void main() {
       await repository.ready();
       expect(repository.load().topics, isNotEmpty);
     });
+
+    test(
+      'a league outside the seed catalogue survives a restart while followed',
+      () async {
+        final InMemoryPreferencesStore preferences = InMemoryPreferencesStore();
+        const FollowTarget nfl = FollowTarget(
+          id: 'league:nfl',
+          kind: FollowKind.league,
+          label: 'NFL',
+          subtitle: 'League',
+        );
+
+        final DefaultFollowingRepository first = DefaultFollowingRepository(
+          preferences: preferences,
+          seedLoader: InMemorySeedLoader(catalogue()),
+        );
+        await first.ready();
+        await first.follow(nfl);
+        expect(
+          first.load().sports.map((FollowTarget t) => t.id),
+          contains('league:nfl'),
+        );
+
+        // A second repository over the same store rehydrates from the seed,
+        // which does not carry the NFL; the followed extra must be merged back
+        // so the row does not vanish after a relaunch.
+        final DefaultFollowingRepository second = DefaultFollowingRepository(
+          preferences: preferences,
+          seedLoader: InMemorySeedLoader(catalogue()),
+        );
+        await second.ready();
+
+        expect(second.isFollowed('league:nfl'), isTrue);
+        expect(
+          second.load().followed.map((FollowTarget t) => t.label),
+          contains('NFL'),
+        );
+      },
+    );
+
+    test(
+      'an unfollowed catalogue extra is dropped on the next start',
+      () async {
+        final InMemoryPreferencesStore preferences = InMemoryPreferencesStore();
+        const FollowTarget nfl = FollowTarget(
+          id: 'league:nfl',
+          kind: FollowKind.league,
+          label: 'NFL',
+          subtitle: 'League',
+        );
+
+        final DefaultFollowingRepository first = DefaultFollowingRepository(
+          preferences: preferences,
+          seedLoader: InMemorySeedLoader(catalogue()),
+        );
+        await first.ready();
+        await first.follow(nfl);
+        await first.unfollow(nfl.id);
+
+        final DefaultFollowingRepository second = DefaultFollowingRepository(
+          preferences: preferences,
+          seedLoader: InMemorySeedLoader(catalogue()),
+        );
+        await second.ready();
+
+        expect(second.isFollowed('league:nfl'), isFalse);
+        expect(
+          second.load().sports.map((FollowTarget t) => t.id),
+          isNot(contains('league:nfl')),
+        );
+      },
+    );
   });
 }

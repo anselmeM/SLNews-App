@@ -152,7 +152,7 @@ layout, and the clearest proof that the app renders with no connectivity at all.
 
 CI runs the functional suites (`test/core test/data test/features test/sync
 test/push`), then `scripts/check_app_coverage.py`, which enforces three gates in
-one place: total line coverage ≥ 75 %, a per-file floor on the critical modules
+one place: total line coverage ≥ 76 %, a per-file floor on the critical modules
 (API client, sync, offline repository, push), and an 800-line budget per file
 (warned at 500). Flutter's coverage output has no branch records, so those
 per-file floors are what makes an untested critical module fail the build rather
@@ -164,8 +164,8 @@ the host renderer.
 | Check | Result |
 | --- | --- |
 | `flutter analyze` | No issues found |
-| `dart format --set-exit-if-changed lib test` | 284 files, 0 changed |
-| `flutter test test/core test/data test/features test/sync test/push --coverage` | 604 tests, all passed; **76.12 %** line coverage (gate 75 %) |
+| `dart format --set-exit-if-changed lib test` | 291 files, 0 changed |
+| `flutter test test/core test/data test/features test/sync test/push --coverage` | 640 tests, all passed; **77.61 %** line coverage (gate 76 %) |
 | `python scripts/check_app_coverage.py` | passes: per-file floors and the 800-line file budget |
 | `flutter test test/golden` | 9 golden renders, all passed |
 | `scripts/smoke_api.ps1` | health ok · unauthenticated `/v1/news` correctly 401 |

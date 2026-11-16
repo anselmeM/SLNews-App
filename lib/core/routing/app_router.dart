@@ -10,6 +10,7 @@ import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
 import '../../features/following/presentation/following_page.dart';
 import '../../features/following/presentation/manage_sources_page.dart';
+import '../../features/following/presentation/manage_sports_page.dart';
 import '../../features/following/presentation/manage_topics_page.dart';
 import '../../features/following/presentation/notification_history_page.dart';
 import '../../features/news/presentation/news_page.dart';
@@ -107,6 +108,12 @@ GoRouter createAppRouter() {
                     name: RouteNames.manageTopics,
                     builder: (BuildContext context, GoRouterState state) =>
                         const ManageTopicsPage(),
+                  ),
+                  GoRoute(
+                    path: 'sports',
+                    name: RouteNames.manageSports,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ManageSportsPage(),
                   ),
                 ],
               ),

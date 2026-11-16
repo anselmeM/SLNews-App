@@ -27,11 +27,11 @@ from __future__ import annotations
 import pathlib
 import sys
 
-# Total line coverage. Baseline was 76.45% on 2026-11-13, and 76.12% on
-# 2026-11-15 once the push suite was folded into the measured run; the gate sits
-# ~1 point below so ordinary incremental work passes while a dropped module does
-# not.
-MIN_LINE_COVERAGE = 75.0
+# Total line coverage. Baselines: 76.45% on 2026-11-13, 76.12% on 2026-11-15
+# once the push suite joined the measured run, then 77.61% after the Following
+# rebuild and the `JsonArticleMapper` tests. The gate sits ~1.5 points below so
+# ordinary incremental work passes while a dropped module does not.
+MIN_LINE_COVERAGE = 76.0
 
 # Critical modules: a floor each, set ~2 points under the measured value so
 # refactors inside a file pass but deleting or bypassing its tests fails.

@@ -62,8 +62,13 @@ class DefaultFollowingRepository implements FollowingRepository {
     await _ready;
     final Set<String> ids = _store.stringSet(followedIdsKey)..add(target.id);
     if (!_catalogue.any((FollowTarget existing) => existing.id == target.id)) {
-      // Keep an unseeded target renderable for the rest of the session.
+      // The catalogue is seeded, but the leagues screen follows competitions the
+      // seed does not carry (NFL, Formula 1, ...). Keep the target and persist
+      // the extended catalogue: follow ids are stored, so without this the
+      // subscription would survive a restart while its label and kind did not,
+      // and the row would silently disappear from Following.
       _catalogue = <FollowTarget>[..._catalogue, target];
+      await _persistCatalogue();
     }
     await _store.putStringSet(followedIdsKey, ids);
     return _snapshot();
@@ -86,22 +91,52 @@ class DefaultFollowingRepository implements FollowingRepository {
       _store.stringSet(followedIdsKey).contains(targetId);
 
   Future<void> _hydrate() async {
-    _catalogue = _readCachedCatalogue();
+    final List<FollowTarget> cached = _readCachedCatalogue();
+    _catalogue = cached;
     try {
       final SeedData seed = await _seeds.load();
       if (seed.followables.isEmpty) return;
-      _catalogue = seed.followables;
-      await _store.putString(
-        catalogueKey,
-        jsonEncode(
-          seed.followables
-              .map((FollowTarget target) => target.toJson())
-              .toList(growable: false),
-        ),
-      );
+      _catalogue = _mergeCatalogue(seed.followables, cached);
+      await _persistCatalogue();
     } catch (error) {
       AppLog.debug('DefaultFollowingRepository: catalogue unavailable: $error');
     }
+  }
+
+  /// The seed catalogue plus any followed target the seed does not carry.
+  ///
+  /// The leagues screen can follow competitions outside the seed (NFL, Formula 1,
+  /// ...). Only ids that are still followed are carried over, so unsubscribing
+  /// from one lets it drop out on the next launch instead of accumulating.
+  List<FollowTarget> _mergeCatalogue(
+    List<FollowTarget> seeded,
+    List<FollowTarget> cached,
+  ) {
+    if (cached.isEmpty) return seeded;
+    final Set<String> seededIds = seeded
+        .map((FollowTarget target) => target.id)
+        .toSet();
+    final Set<String> followedIds = _store.stringSet(followedIdsKey);
+    final List<FollowTarget> extras = <FollowTarget>[
+      for (final FollowTarget target in cached)
+        if (!seededIds.contains(target.id) && followedIds.contains(target.id))
+          target,
+    ];
+    if (extras.isEmpty) return seeded;
+    return <FollowTarget>[...seeded, ...extras];
+  }
+
+  /// Writes the current catalogue to the preferences cache.
+  Future<void> _persistCatalogue() async {
+    if (_catalogue.isEmpty) return;
+    await _store.putString(
+      catalogueKey,
+      jsonEncode(
+        _catalogue
+            .map((FollowTarget target) => target.toJson())
+            .toList(growable: false),
+      ),
+    );
   }
 
   List<FollowTarget> _readCachedCatalogue() {
