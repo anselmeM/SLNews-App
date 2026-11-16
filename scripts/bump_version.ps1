@@ -49,7 +49,21 @@ if ($Build -le $currentCode) {
     throw "versionCode must increase: current $currentCode, requested $Build."
 }
 
-$lines[$index] = "version: $Version+$Build"
-Set-Content -Path $pubspecPath -Value $lines -Encoding utf8
+# Read and write as UTF-8 **without a BOM**.
+#
+# `Get-Content`/`Set-Content` are not safe here on Windows PowerShell 5.1: the
+# reader defaults to ANSI, which double-encodes the file's existing UTF-8 bytes,
+# and `-Encoding utf8` writes a BOM. Either one silently rewrites every
+# non-ASCII comment in pubspec.yaml, so the file is changed through
+# System.IO with an explicit encoder instead.
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+$text = [System.IO.File]::ReadAllText($pubspecPath, $utf8)
+$updated = [regex]::Replace(
+    $text,
+    '(?m)^version:[ \t]*\S+[ \t]*$',
+    "version: $Version+$Build"
+)
+if ($updated -eq $text) { throw 'Could not rewrite the version line.' }
+[System.IO.File]::WriteAllText($pubspecPath, $updated, $utf8)
 Write-Host "pubspec.yaml version -> $Version+$Build" -ForegroundColor Green
 Write-Host 'Remember: the same build is what Play compares; never reuse a versionCode.'
