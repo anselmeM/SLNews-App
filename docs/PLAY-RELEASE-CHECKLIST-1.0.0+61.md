@@ -1,5 +1,21 @@
 # SLNews — Play Console release checklist (1.0.0, code 61)
 
+> **PARKED — 2026-11-15.** Launch prep is paused for roughly a month. The code-61
+> bundle is built, signed and verified, but **nothing has been started in Play
+> Console** — no app entry, no App Signing enrolment, no upload.
+>
+> Owner-side blockers before resuming:
+>
+> 1. Recruit closed testers (12 testers / 14 continuous days if the account is
+>    personal) — this is the longest lead time, so it gates the date.
+> 2. Get a monitored mailbox live (currently `privacy@slnews.sl`) or switch the
+>    policy and listing to an address that is.
+> 3. Finish the UI polish on the sections that still behave differently from the
+>    intended design; those fixes ship as **code 62 or higher**.
+>
+> Resume by working this file top to bottom; the engineering gates are already
+> green (604 tests, analyzer clean, coverage floors enforced).
+
 Built from `master` at `27f2477` (the commit that bumped the app to code 61,
 2026-11-15 03:36 −05) at 04:07 the same day; SHA-256 and `jarsigner`
 verification re-run on 2026-11-15 and match. This is the current checklist;
