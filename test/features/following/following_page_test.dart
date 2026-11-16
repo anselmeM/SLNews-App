@@ -5,7 +5,6 @@ import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
-import 'package:slnews_mobile/core/widgets/follow_chip.dart';
 import 'package:slnews_mobile/features/following/presentation/manage_sports_page.dart';
 import 'package:slnews_mobile/features/following/presentation/widgets/follow_row.dart';
 
@@ -56,7 +55,9 @@ void main() {
     }
   }
 
-  testWidgets('renders all five sections', (WidgetTester tester) async {
+  testWidgets('renders the subscription sections without city locations', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -76,21 +77,23 @@ void main() {
     expect(find.text('Sports'), findsOneWidget);
     expect(find.text('Los Angeles Lakers'), findsOneWidget);
 
-    // Section 2: Locations, with the followed city row.
-    expect(find.text('Locations'), findsOneWidget);
-    expect(find.text('Freetown'), findsOneWidget);
+    // City locations are off the page for now: no header, no rows and no
+    // location suggestions, even though the fixture follows Freetown.
+    expect(find.text('Locations'), findsNothing);
+    expect(find.text('Freetown'), findsNothing);
+    expect(find.text('Most popular with users'), findsNothing);
+    expect(find.text('Koidu'), findsNothing);
 
-    // Section 3: "Most popular with users" â€” only the *location* suggestions.
-    expect(find.text('Most popular with users'), findsOneWidget);
-    expect(find.text('Koidu'), findsOneWidget);
-    expect(find.text('Kenema'), findsOneWidget);
-    expect(find.text('National News'), findsNothing);
-
-    // Section 4: Topics.
+    // Section 2: Topics, with the followed topic.
     expect(find.text('Topics'), findsOneWidget);
     expect(find.text('Politics'), findsOneWidget);
 
-    // Section 5: Sources — the header and its caption always render, even
+    // Section 3: "Based on what you follow" — topic suggestions only.
+    expect(find.text('Based on what you follow'), findsOneWidget);
+    expect(find.text('Business'), findsOneWidget);
+    expect(find.text('National News'), findsNothing);
+
+    // Section 4: Sources — the header and its caption always render, even
     // before a source is followed.
     expect(find.text('Sources'), findsOneWidget);
     expect(
@@ -136,26 +139,6 @@ void main() {
     expect(find.text('Manage news topics'), findsOneWidget);
   });
 
-  testWidgets('the Locations header opens the locations catalogue', (
-    WidgetTester tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-
-    await pumpPage(tester);
-
-    await tester.tap(find.text('Locations'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Manage locations'), findsOneWidget);
-    expect(
-      find.textContaining('Select up to three locations to follow'),
-      findsOneWidget,
-    );
-  });
-
   testWidgets('the Sources header opens the publisher catalogue', (
     WidgetTester tester,
   ) async {
@@ -195,7 +178,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    // A reader who follows nothing and has no suggestions still needs the four
+    // A reader who follows nothing and has no suggestions still needs the
     // headers to be usable routes into the catalogues.
     final FollowingTestFixture empty = FollowingTestFixture.empty();
     final ProviderContainer emptyContainer = ProviderContainer(
@@ -220,10 +203,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Pick the leagues and teams you follow.'), findsOneWidget);
+    // Locations are off the page, so no city hint is offered.
     expect(
       find.text('Pick up to three cities you want in your feed.'),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.text('Locations'), findsNothing);
     expect(
       find.text('Pick the news sections you want to follow.'),
       findsOneWidget,
@@ -232,7 +217,7 @@ void main() {
   });
 
   testWidgets(
-    'tapping a Follow chip flips it to Following and mutates the repository',
+    'tapping a Follow chip follows a suggested topic and stops suggesting it',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(390, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -241,15 +226,13 @@ void main() {
       await pumpPage(tester);
 
       expect(
-        fixture.following.isFollowed(FollowingTestFixture.koidu.id),
+        fixture.following.isFollowed(FollowingTestFixture.business.id),
         isFalse,
       );
 
-      // Two outlined "Follow" chips are on screen (Kenema and Koidu); the topic
-      // row already renders "Following" for the followed topic. The suggestions
-      // are sorted by label, so target the Koidu row explicitly rather than
-      // relying on document order.
-      expect(find.text('Follow'), findsNWidgets(2));
+      // Business is the only suggestion on the page now that locations are off
+      // it; Politics is already followed and its row carries no chip.
+      expect(find.text('Follow'), findsOneWidget);
       expect(
         container
             .read(followingControllerProvider)
@@ -257,52 +240,38 @@ void main() {
         isTrue,
       );
 
-      final Finder koiduRow = find.ancestor(
-        of: find.text('Koidu'),
+      final Finder businessRow = find.ancestor(
+        of: find.text('Business'),
         matching: find.byType(FollowRow),
       );
-      final Finder koiduChip = find.descendant(
-        of: koiduRow,
+      final Finder businessChip = find.descendant(
+        of: businessRow,
         matching: find.text('Follow'),
       );
-      expect(koiduChip, findsOneWidget);
+      expect(businessChip, findsOneWidget);
 
-      await tester.tap(koiduChip);
+      await tester.tap(businessChip);
       await tester.pump();
       await tester.pump();
 
       // The fake recorded the follow and the controller state converged.
       expect(
         fixture.following.toggleLog.map((FollowTarget target) => target.id),
-        contains('city:koidu'),
+        contains('topic:business'),
       );
       expect(
         container
             .read(followingControllerProvider)
-            .isFollowed(FollowingTestFixture.koidu.id),
+            .isFollowed(FollowingTestFixture.business.id),
         isTrue,
       );
 
-      // Koidu is now a followed location: it moves out of the suggestions into
-      // the Locations group, and followed rows carry no chip (as in the
-      // reference, where only suggestions have one).
-      expect(find.text('Follow'), findsOneWidget);
-      final Finder followedKoiduRow = find.ancestor(
-        of: find.text('Koidu'),
-        matching: find.byType(FollowRow),
-      );
-      expect(followedKoiduRow, findsOneWidget);
-      expect(
-        find.descendant(
-          of: followedKoiduRow,
-          matching: find.byType(FollowChip),
-        ),
-        findsNothing,
-      );
+      // It leaves the suggestion group, so no outlined chip remains.
+      expect(find.text('Follow'), findsNothing);
 
       // The action is confirmed with a snack bar.
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Following Koidu'), findsOneWidget);
+      expect(find.text('Following Business'), findsOneWidget);
     },
   );
 

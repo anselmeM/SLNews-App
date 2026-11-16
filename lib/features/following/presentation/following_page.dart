@@ -17,7 +17,6 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../auth/presentation/account_card.dart';
-import '../../feed/presentation/widgets/location_picker_sheet.dart';
 import 'viewmodels/following_view_model.dart';
 import 'widgets/follow_row.dart';
 import 'widgets/follow_section.dart';

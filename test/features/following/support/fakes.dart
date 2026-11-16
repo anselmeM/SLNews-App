@@ -214,7 +214,7 @@ class FollowingTestFixture {
     : userState = FakeUserStateRepository(),
       following = InMemoryFollowingRepository(
         followed: <FollowTarget>[lakers, freetown, politics],
-        suggested: <FollowTarget>[koidu, kenema, nationalNews],
+        suggested: <FollowTarget>[koidu, kenema, nationalNews, business],
       ),
       notifications = InMemoryNotificationRepository(<NotificationItem>[
         NotificationItem(
@@ -301,6 +301,15 @@ class FollowingTestFixture {
     id: 'publisher:national',
     kind: FollowKind.publisher,
     label: 'National News',
+    isPopular: true,
+  );
+
+  /// Popular **topic** suggestion, the only kind the Following tab still offers
+  /// a Follow chip for now that locations are off the page.
+  static const FollowTarget business = FollowTarget(
+    id: 'topic:business',
+    kind: FollowKind.topic,
+    label: 'Business',
     isPopular: true,
   );
 }

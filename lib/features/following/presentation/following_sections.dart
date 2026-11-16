@@ -39,9 +39,10 @@ List<Widget> _groupSlivers(
     ];
   }
 
-  // The four headers always render, as in the reference: each one is the route
-  // into its catalogue, so hiding an empty group would leave a reader who
-  // follows nothing with no way to start.
+  // The remaining headers always render, as in the reference: each one is the
+  // route into its catalogue. Locations are deliberately absent — for now the
+  // feed covers all of Sierra Leone, and city following is parked until the
+  // reader wants it back (the `/following/locations` screen is kept for that).
   final List<Widget> slivers = <Widget>[
     _sliverSection(
       header: SectionHeader(
@@ -60,40 +61,7 @@ List<Widget> _groupSlivers(
                   ),
             ),
     ),
-    _sliverSection(
-      header: SectionHeader(
-        title: 'Locations',
-        onTap: () => context.push(AppRoutes.manageLocations),
-      ),
-      child: viewModel.locations.isEmpty
-          ? const _EmptyGroupHint(
-              'Pick up to three cities you want in your feed.',
-            )
-          : FollowSection(
-              targets: viewModel.locations,
-              rowBuilder: (BuildContext context, FollowTarget target) =>
-                  _entityRow(
-                    context,
-                    target,
-                    invertCircle: true,
-                    onTap: () => openLocationPicker(context, ref),
-                  ),
-            ),
-    ),
   ];
-
-  if (viewModel.popularLocations.isNotEmpty) {
-    slivers.add(
-      _sliverSection(
-        header: const FollowGroupLabel(label: 'Most popular with users'),
-        child: FollowSection(
-          targets: viewModel.popularLocations,
-          rowBuilder: (BuildContext context, FollowTarget target) =>
-              _suggestedRow(context, ref, target),
-        ),
-      ),
-    );
-  }
 
   slivers.add(
     _sliverSection(
