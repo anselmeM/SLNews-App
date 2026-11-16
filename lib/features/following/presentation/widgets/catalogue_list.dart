@@ -42,6 +42,67 @@ class CatalogueCard extends StatelessWidget {
   }
 }
 
+/// The leading selection circle: a primary check when selected, otherwise the
+/// row's own glyph (or initials) on a muted disc.
+///
+/// Extracted so a merged-league row can keep the tick as its own tap target
+/// while the rest of the row expands to list what the section contains.
+class CatalogueCheckCircle extends StatelessWidget {
+  const CatalogueCheckCircle({
+    super.key,
+    required this.label,
+    required this.isSelected,
+    this.icon,
+    this.initials,
+    this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final IconData? icon;
+  final String? initials;
+
+  /// When set, only the circle follows/unfollows (the row body does something
+  /// else, e.g. expand).
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget circle = Container(
+      width: CatalogueCheckRow.circleSize,
+      height: CatalogueCheckRow.circleSize,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? context.colors.primary
+            : context.colors.surfaceMuted,
+        shape: BoxShape.circle,
+      ),
+      child: isSelected
+          ? Icon(Icons.check, size: 22, color: context.colors.onPrimary)
+          : (icon != null
+                ? Icon(icon, size: 20, color: context.colors.onSurface)
+                : Text(
+                    initials ?? AppGlyphs.initials(label),
+                    style: context.typography.overline.copyWith(
+                      color: context.colors.onSurface,
+                    ),
+                  )),
+    );
+    if (onTap == null) return circle;
+    return Semantics(
+      button: true,
+      toggled: isSelected,
+      label: isSelected ? 'Unfollow $label' : 'Follow $label',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: circle,
+      ),
+    );
+  }
+}
+
 /// One selectable catalogue row: a leading check circle, a label and an
 /// optional subtitle, with the whole row acting as the toggle.
 ///
@@ -84,34 +145,11 @@ class CatalogueCheckRow extends StatelessWidget {
           ),
           child: Row(
             children: <Widget>[
-              Container(
-                width: circleSize,
-                height: circleSize,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? context.colors.primary
-                      : context.colors.surfaceMuted,
-                  shape: BoxShape.circle,
-                ),
-                child: isSelected
-                    ? Icon(
-                        Icons.check,
-                        size: 22,
-                        color: context.colors.onPrimary,
-                      )
-                    : (icon != null
-                          ? Icon(
-                              icon,
-                              size: 20,
-                              color: context.colors.onSurface,
-                            )
-                          : Text(
-                              initials ?? AppGlyphs.initials(label),
-                              style: context.typography.overline.copyWith(
-                                color: context.colors.onSurface,
-                              ),
-                            )),
+              CatalogueCheckCircle(
+                label: label,
+                isSelected: isSelected,
+                icon: icon,
+                initials: initials,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(

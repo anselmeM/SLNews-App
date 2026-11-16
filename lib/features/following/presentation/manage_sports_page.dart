@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_glyphs.dart';
@@ -18,6 +19,10 @@ import 'widgets/follow_section.dart';
 /// was no way to add a competition — the only followable leagues were the three
 /// seeded ones. This screen lists every featured league plus the seeded teams,
 /// and a followed league with no seed entry is persisted by the repository.
+///
+/// "European Leagues" stays a single followable section, matching the Sports
+/// feed's merged block; tapping it reveals the four competitions it contains,
+/// each of which opens its own league page.
 class ManageSportsPage extends ConsumerStatefulWidget {
   const ManageSportsPage({super.key});
 
@@ -27,6 +32,9 @@ class ManageSportsPage extends ConsumerStatefulWidget {
 
 class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
   String _query = '';
+
+  /// Merged league ids currently expanded to show their members.
+  final Set<String> _expanded = <String>{};
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +142,9 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
   }
 
   Widget _row(FollowingSnapshot snapshot, FollowTarget target) {
+    final List<SportsLeague> members = mergedLeagueMembers(_slug(target.id));
+    if (members.isNotEmpty) return _mergedLeagueRow(snapshot, target, members);
+
     final bool isTeam = target.kind == FollowKind.team;
     return CatalogueCheckRow(
       label: target.label,
@@ -144,6 +155,116 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
       onTap: () =>
           ref.read(followingControllerProvider.notifier).toggle(target),
     );
+  }
+
+  /// "European Leagues" is one followable section, so the tick follows the
+  /// section as a whole; the rest of the row expands to name the competitions
+  /// inside it, and each name opens that league's page.
+  Widget _mergedLeagueRow(
+    FollowingSnapshot snapshot,
+    FollowTarget target,
+    List<SportsLeague> members,
+  ) {
+    final bool expanded = _expanded.contains(target.id);
+    final bool selected = snapshot.isFollowed(target.id);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        InkWell(
+          onTap: () => setState(() {
+            if (!_expanded.remove(target.id)) _expanded.add(target.id);
+          }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: <Widget>[
+                CatalogueCheckCircle(
+                  label: target.label,
+                  isSelected: selected,
+                  icon: AppGlyphs.follow(FollowKind.league),
+                  onTap: () => ref
+                      .read(followingControllerProvider.notifier)
+                      .toggle(target),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        target.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typography.groupTitle,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        'One section · ${members.length} leagues',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typography.caption,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 22,
+                  color: context.colors.onSurfaceFaint,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (expanded)
+          for (final SportsLeague member in members)
+            Semantics(
+              button: true,
+              label: 'Open ${member.label}',
+              child: InkWell(
+                onTap: () => context.push(
+                  AppRoutes.leagueFor(member.id),
+                  extra: member.label,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg +
+                        CatalogueCheckRow.circleSize +
+                        AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          member.label,
+                          style: context.typography.body,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: context.colors.onSurfaceFaint,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+
+  /// `league:european-leagues` -> `european-leagues`.
+  String _slug(String id) {
+    final int separator = id.indexOf(':');
+    return separator < 0 ? id : id.substring(separator + 1);
   }
 
   /// Reuses the seeded target when the catalogue carries the league (so its

@@ -63,7 +63,9 @@ route into the catalogues. `Manage news sources` now lists the whole publisher c
 (it read followed+suggested before, and publishers are never "popular", so it was empty);
 `Manage news topics` lists all eleven news sections; and the Sports header opens a new
 `/following/sports` picker with every featured league plus the seeded teams instead of
-jumping to the Sports tab.
+jumping to the Sports tab. Inside that picker, **European Leagues** stays a single
+followable section — the same merged block the Sports feed renders — and tapping the row
+expands it to La Liga, Serie A, Bundesliga and Ligue 1, each opening its own league page.
 
 ### A4. Notification permission prompt — **partially shipped** (deferred OS prompt, no priming card), M
 *(seen: 3.8 s)*

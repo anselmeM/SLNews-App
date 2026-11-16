@@ -38,6 +38,22 @@ String? featuredLeagueId(String label) {
   return null;
 }
 
+/// The European competitions the Sports feed renders as one section.
+///
+/// They share a single combined news stream and a single "European Leagues"
+/// block, so they are never followed separately: the id below is the only
+/// follow target, and this list only says what that section contains.
+const List<SportsLeague> kEuropeanLeagueMembers = <SportsLeague>[
+  SportsLeague(label: 'La Liga', id: 'la-liga'),
+  SportsLeague(label: 'Serie A', id: 'serie-a'),
+  SportsLeague(label: 'Bundesliga', id: 'bundesliga'),
+  SportsLeague(label: 'Ligue 1', id: 'ligue-1'),
+];
+
+/// Members merged into the competition [id]; empty for a standalone league.
+List<SportsLeague> mergedLeagueMembers(String id) =>
+    id == 'european-leagues' ? kEuropeanLeagueMembers : const <SportsLeague>[];
+
 /// Index used to sort section labels; unknown labels go after the catalogue.
 int featuredLeagueOrder(String label) {
   final String? id = featuredLeagueId(label);
