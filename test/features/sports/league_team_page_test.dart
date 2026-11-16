@@ -107,6 +107,40 @@ void main() {
     expect(find.text('Blackpool win the derby'), findsOneWidget);
   });
 
+  testWidgets('the merged European section lists its four leagues', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: overrides(),
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const LeaguePage(
+            leagueId: 'european-leagues',
+            leagueLabel: 'European Leagues',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The Sports tab renders one "European Leagues" section; opening it names
+    // the competitions inside instead of showing a table the merged
+    // pseudo-league cannot have.
+    expect(find.text('Leagues'), findsOneWidget);
+    for (final String league in <String>[
+      'La Liga',
+      'Serie A',
+      'Bundesliga',
+      'Ligue 1',
+    ]) {
+      expect(find.text(league), findsOneWidget, reason: league);
+    }
+    expect(find.text('Standings'), findsNothing);
+    expect(find.text('Fixtures & results'), findsOneWidget);
+    expect(find.text('Latest stories'), findsOneWidget);
+  });
+
   testWidgets('team page shows its fixtures and a follow control', (
     WidgetTester tester,
   ) async {

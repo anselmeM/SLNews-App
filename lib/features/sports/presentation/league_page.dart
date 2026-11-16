@@ -17,6 +17,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/sports_links.dart';
 import '../domain/league_stories.dart';
+import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/sports_fixture_row.dart';
 import 'widgets/standings_table.dart';
@@ -39,6 +40,14 @@ class LeaguePage extends ConsumerWidget {
     final String label = leagueLabel?.trim().isNotEmpty == true
         ? leagueLabel!.trim()
         : SportsLinks.leagueLabelForId(leagueId);
+    // The European competitions are one Sports section; this page is the way
+    // into the four leagues it covers, so they are listed instead of a table
+    // the merged pseudo-league cannot have.
+    final List<SportsLeague> members = mergedLeagueMembers(leagueId);
+    final Set<String> fixtureLeagueIds = <String>{
+      SportsLinks.leagueIdForLabel(label),
+      for (final SportsLeague member in members) member.id,
+    };
     final AsyncValue<List<TeamStanding>> standings = ref.watch(
       standingsProvider(leagueId),
     );
@@ -51,9 +60,9 @@ class LeaguePage extends ConsumerWidget {
     final List<GameScore> leagueGames =
         scoreboard.asData?.value.games
             .where(
-              (GameScore game) =>
-                  SportsLinks.leagueIdForLabel(game.leagueLabel) ==
-                  SportsLinks.leagueIdForLabel(label),
+              (GameScore game) => fixtureLeagueIds.contains(
+                SportsLinks.leagueIdForLabel(game.leagueLabel),
+              ),
             )
             .toList(growable: false) ??
         const <GameScore>[];
@@ -74,42 +83,120 @@ class LeaguePage extends ConsumerWidget {
 
     return Theme(
       data: AppTheme.dark(),
-      child: Scaffold(
-        backgroundColor: context.colors.canvas,
-        body: CustomScrollView(
-          slivers: <Widget>[
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: context.colors.canvas,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: 'Back',
-                onPressed: () => context.pop(),
+      // The page paints itself dark whatever the reader's theme is, so every
+      // colour must be read from a context *below* this Theme. Building the
+      // body in a Builder is what guarantees that; using the outer context
+      // mixed dark section headers with light surfaces and made them
+      // illegible in light mode.
+      child: Builder(
+        builder: (BuildContext themed) => Scaffold(
+          backgroundColor: themed.colors.canvas,
+          body: CustomScrollView(
+            slivers: <Widget>[
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: themed.colors.canvas,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back',
+                  onPressed: () => themed.pop(),
+                ),
+                title: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: themed.typography.groupTitle,
+                ),
               ),
-              title: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.groupTitle,
+              if (members.isEmpty) ...<Widget>[
+                const SliverToBoxAdapter(
+                  child: SectionHeader(title: 'Standings', compact: true),
+                ),
+                _standingsSliver(themed, ref, standings, label),
+              ] else ...<Widget>[
+                const SliverToBoxAdapter(
+                  child: SectionHeader(title: 'Leagues', compact: true),
+                ),
+                _membersSliver(themed, members),
+              ],
+              const SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'Fixtures & results',
+                  compact: true,
+                ),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SectionHeader(title: 'Standings', compact: true),
-            ),
-            _standingsSliver(context, ref, standings, label),
-            const SliverToBoxAdapter(
-              child: SectionHeader(title: 'Fixtures & results', compact: true),
-            ),
-            _fixturesSliver(context, ref, scoreboard, label),
-            const SliverToBoxAdapter(
-              child: SectionHeader(title: 'Latest stories', compact: true),
-            ),
-            _storiesSliver(context, ref, stories),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
-          ],
+              _fixturesSliver(themed, ref, scoreboard, label, fixtureLeagueIds),
+              const SliverToBoxAdapter(
+                child: SectionHeader(title: 'Latest stories', compact: true),
+              ),
+              _storiesSliver(themed, ref, stories),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.xxxl),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The competitions a merged section covers, each opening its own page.
+  Widget _membersSliver(BuildContext context, List<SportsLeague> members) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      sliver: SliverToBoxAdapter(
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            borderRadius: AppRadius.cardRadius,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: <Widget>[
+              for (int index = 0; index < members.length; index++) ...<Widget>[
+                if (index > 0)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: context.colors.divider,
+                  ),
+                Semantics(
+                  button: true,
+                  label: 'Open ${members[index].label}',
+                  child: InkWell(
+                    onTap: () => context.push(
+                      AppRoutes.leagueFor(members[index].id),
+                      extra: members[index].label,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              members[index].label,
+                              style: context.typography.groupTitle,
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 22,
+                            color: context.colors.onSurfaceFaint,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -153,16 +240,15 @@ class LeaguePage extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<ScoreboardSnapshot> scoreboard,
     String label,
+    Set<String> leagueIds,
   ) {
     return scoreboard.when(
       data: (ScoreboardSnapshot snapshot) {
         final List<GameScore> games = snapshot.games
             .where(
-              (GameScore game) =>
-                  game.leagueLabel.trim().toLowerCase() ==
-                      label.toLowerCase() ||
-                  SportsLinks.leagueIdForLabel(game.leagueLabel) ==
-                      SportsLinks.leagueIdForLabel(label),
+              (GameScore game) => leagueIds.contains(
+                SportsLinks.leagueIdForLabel(game.leagueLabel),
+              ),
             )
             .toList(growable: false);
         if (games.isEmpty) {

@@ -124,6 +124,18 @@ League") to standings ids (`spl`) so the two vocabularies cannot drift.
 
 Remaining for a later pass: grouped per-league story rails with "More" links, game detail
 pages, and richer team stats.
+
+**Merged soccer section (2026-11-15).** La Liga, Serie A, Bundesliga and Ligue 1 remain
+one "European Leagues" block on the Sports tab, but opening it used to land on a league
+page whose only content was *"No standings published for European Leagues yet."* — a
+table the merged pseudo-league cannot have. That page now leads with a **Leagues** card
+listing the four competitions, each opening its own league page (standings, fixtures,
+stories); its fixtures block aggregates the member leagues, and the combined story feed
+is unchanged. While fixing it, the page's forced dark theme turned out to be applied
+only to widgets built inside it: the scaffold and row helpers read the *outer* context,
+so in light mode the section headers rendered white on a light canvas. The body is now
+built inside the theme (a `Builder`), which keeps the page dark end to end.
+
 ### A8. Stocks opened as a panel over the feed — **shipped**, S
 *(seen: 47 s)*
 
