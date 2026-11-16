@@ -148,6 +148,16 @@ only to widgets built inside it: the scaffold and row helpers read the *outer* c
 so in light mode the section headers rendered white on a light canvas. The body is now
 built inside the theme (a `Builder`), which keeps the page dark end to end.
 
+**Follows now shape the home feed (2026-11-16).** Before this, a follow only
+*reordered* stories already in the pool: both feed sources were follow-agnostic, so
+following Politics did nothing unless a politics story happened to be in the pool, and a
+followed team had no effect at all (`personalMatch` ignored `team:`/`league:`). Now each
+followed **topic** contributes its own category feed to the For You pool (capped at six
+stories per topic, then ranked by the existing Sierra Leone-first mix plus the 36 h
+follow boost), so following a section actually changes what appears. Teams and leagues
+still do not feed For You — they drive the Sports tab and push segments — and the
+personalisation remains *invisible*: there is no "Because you follow X" rail yet.
+
 **Sports follow state (2026-11-16).** `SportsViewModel` merged the whole sports
 *catalogue* into its "followed" list, so every seeded team and league rendered as
 followed, the hero team was always the first catalogue team, and a fresh install showed

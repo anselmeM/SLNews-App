@@ -77,6 +77,14 @@ class FakeArticleRepository implements ArticleRepository {
   final List<Article> _localStories;
   final List<Article> _categoryStories;
 
+  /// Category slug -> stories, for the per-category feeds a followed topic
+  /// pulls in. Falls back to [_categoryStories] when a slug is not seeded.
+  final Map<String, List<Article>> _categoryFeeds = <String, List<Article>>{};
+
+  /// Seeds one category's feed, e.g. `seed('business', <Article>[...])`.
+  void seed(String categoryId, List<Article> articles) =>
+      _categoryFeeds[categoryId] = articles;
+
   @override
   bool isOffline;
 
@@ -93,6 +101,7 @@ class FakeArticleRepository implements ArticleRepository {
     ..._topStories,
     ..._localStories,
     ..._categoryStories,
+    for (final List<Article> stories in _categoryFeeds.values) ...stories,
   ];
 
   void setTopStories(List<Article> articles) => _topStories = articles;
@@ -106,7 +115,9 @@ class FakeArticleRepository implements ArticleRepository {
   @override
   Future<List<Article>> byCategory(String categoryId, {int limit = 30}) async {
     if (failTopStories) throw StateError('offline');
-    return _categoryStories.take(limit).toList(growable: false);
+    final List<Article> stories =
+        _categoryFeeds[categoryId] ?? _categoryStories;
+    return stories.take(limit).toList(growable: false);
   }
 
   @override

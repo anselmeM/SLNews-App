@@ -51,6 +51,12 @@ abstract final class ForYouViewModel {
   /// skips so a story is never rendered twice on one screen).
   static const int heroLimit = 6;
 
+  /// Stories one followed topic may contribute per feed build.
+  ///
+  /// A cap keeps a handful of follows from swamping the Sierra Leone-first mix;
+  /// the ranking boost then decides where those stories land.
+  static const int followedFeedLimit = 6;
+
   /// Merges the three streams by [Article.id], newest first.
   ///
   /// Later sources win on an id collision because they are the more specific
@@ -239,12 +245,31 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   }
 
   // Personalisation is a boost, never a gate: an un-overridden test scope must
-  // still render the feed.
+  // still render the feed. Followed topics also contribute their own category
+  // feed, so following Politics brings politics stories in even when the home
+  // pool has none — before this, a follow could only reorder what was already
+  // there.
   Set<String> followingIds = const <String>{};
+  List<Article> followedStories = const <Article>[];
   try {
-    followingIds = ref.watch(followingControllerProvider).followedIds.toSet();
+    final FollowingSnapshot snapshot = ref.watch(followingControllerProvider);
+    followingIds = snapshot.followedIds.toSet();
+    final Set<String> followedTopics = <String>{
+      for (final String id in followingIds)
+        if (id.startsWith('topic:')) id.substring('topic:'.length),
+    }..remove('top');
+    final List<Article> stories = <Article>[];
+    for (final String categoryId in followedTopics) {
+      final List<Article>? feed = ref
+          .watch(categoryFeedProvider(categoryId))
+          .value;
+      if (feed == null) continue;
+      stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+    }
+    followedStories = stories;
   } on Object {
     followingIds = const <String>{};
+    followedStories = const <Article>[];
   }
 
   return ForYouViewModel.build(
@@ -253,7 +278,10 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
     // The feed covers Sierra Leone as a whole: there is no city-scoped rail
     // until the reader asks for one, so the "From <city>" section stays absent.
     locationStories: const <Article>[],
-    extraStories: extra.value ?? const <Article>[],
+    extraStories: <Article>[
+      ...(extra.value ?? const <Article>[]),
+      ...followedStories,
+    ],
     activeLocation: location,
     isOffline: isOffline,
     lastSyncedAt: lastSyncedAt,

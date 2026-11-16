@@ -59,6 +59,7 @@ void main() {
     FakeWeatherRepository? weather,
     List<AdUnit> ads = const <AdUnit>[],
     Size surface = const Size(390, 2200),
+    FakeFollowingRepository? following,
   }) async {
     await useTallSurface(tester, size: surface);
     final GoRouter router = GoRouter(
@@ -89,6 +90,7 @@ void main() {
           userState: userState,
           weather: weather,
           ads: ads,
+          following: following,
         ),
         child: MaterialApp.router(
           theme: AppTheme.light(),
@@ -118,6 +120,56 @@ void main() {
       expect(find.text('Only in the latest stream'), findsOneWidget);
     },
   );
+
+  testWidgets('a followed topic brings its stories into the feed', (
+    WidgetTester tester,
+  ) async {
+    final FakeArticleRepository articles = FakeArticleRepository(
+      topStories: <Article>[newest],
+    );
+    articles.seed('business', <Article>[
+      testArticle(
+        id: 'biz-1',
+        title: 'Port expansion wins backing',
+        categoryId: 'business',
+        publishedAt: DateTime(2026, 10, 15, 8),
+      ),
+    ]);
+    const FollowTarget business = FollowTarget(
+      id: 'topic:business',
+      kind: FollowKind.topic,
+      label: 'Business',
+    );
+    final FakeFollowingRepository following = FakeFollowingRepository(
+      catalogue: const <FollowTarget>[business],
+    );
+    await following.follow(business);
+
+    await pumpForYou(tester, articles: articles, following: following);
+
+    // The story is not in the home pool; it arrives because Business is followed.
+    expect(find.text('Port expansion wins backing'), findsOneWidget);
+  });
+
+  testWidgets('an unfollowed topic stays out of the feed', (
+    WidgetTester tester,
+  ) async {
+    final FakeArticleRepository articles = FakeArticleRepository(
+      topStories: <Article>[newest],
+    );
+    articles.seed('business', <Article>[
+      testArticle(
+        id: 'biz-1',
+        title: 'Port expansion wins backing',
+        categoryId: 'business',
+        publishedAt: DateTime(2026, 10, 15, 8),
+      ),
+    ]);
+
+    await pumpForYou(tester, articles: articles);
+
+    expect(find.text('Port expansion wins backing'), findsNothing);
+  });
 
   testWidgets('never repeats a story between the carousel and the streams', (
     WidgetTester tester,
