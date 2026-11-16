@@ -312,6 +312,45 @@ void main() {
     },
   );
 
+  testWidgets('a member competition folds into the merged European block', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildApp(
+        sports: FakeSportsRepository(
+          scoreboard: ScoreboardSnapshot(
+            games: <GameScore>[
+              buildGame(
+                id: 'g-la-liga',
+                leagueLabel: 'La Liga',
+                status: GameStatus.finalScore,
+                homeScore: 2,
+                awayScore: 1,
+                startsAt: DateTime(2026, 10, 14, 20),
+              ),
+            ],
+            providerLabel: 'slnews',
+            updatedAt: DateTime(2026, 10, 15, 20),
+          ),
+        ),
+      ),
+    );
+    await settle(tester);
+
+    // A provider label of "La Liga" must not spawn a second block next to the
+    // merged one; the fixture belongs to "European Leagues".
+    for (
+      int i = 0;
+      i < 30 && find.text('European Leagues').evaluate().isEmpty;
+      i++
+    ) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+      await tester.pump();
+    }
+    expect(find.text('European Leagues'), findsOneWidget);
+    expect(find.text('La Liga'), findsNothing);
+  });
+
   // The inline ad is deliberately left out of this case: the Lead-owned
   // `AdCard` paints its simulated offer row with `mainAxisSize.min` and no
   // flexible child, so under the widget-test font (one em per glyph) it

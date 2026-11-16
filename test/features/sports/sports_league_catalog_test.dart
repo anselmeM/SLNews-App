@@ -33,4 +33,20 @@ void main() {
     expect(featuredLeagueOrder('NBA'), lessThan(featuredLeagueOrder('Golf')));
     expect(featuredLeagueOrder('unknown'), kFeaturedSportsLeagues.length);
   });
+
+  test('member competitions fold onto the section that renders them', () {
+    // These four are the competitions the merged "European Leagues" block covers.
+    expect(mergedLeagueLabelFor('La Liga'), 'European Leagues');
+    expect(mergedLeagueLabelFor('  serie a '), 'European Leagues');
+    expect(mergedLeagueLabelFor('Bundesliga'), 'European Leagues');
+    expect(mergedLeagueLabelFor('Ligue 1'), 'European Leagues');
+
+    // Standalone competitions are left alone, and nothing matches empty input.
+    expect(mergedLeagueLabelFor('NBA'), isNull);
+    expect(mergedLeagueLabelFor('Premier League'), isNull);
+    expect(mergedLeagueLabelFor('  '), isNull);
+
+    // The merged id itself never maps onto itself.
+    expect(mergedLeagueLabelFor('European Leagues'), isNull);
+  });
 }

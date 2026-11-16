@@ -1,3 +1,4 @@
+import '../../../../core/data/sources/espn_source.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/domain/models/sports_models.dart';
 
@@ -167,28 +168,39 @@ class SportsViewModel {
     return buffer.toString().toUpperCase();
   }
 
-  /// Merges the sports catalogue with the followed teams and leagues, keeping
-  /// the first occurrence of each id.
+  /// The reader's followed teams and leagues, repaired with catalogue labels.
+  ///
+  /// `FollowingSnapshot.sports` is the *catalogue* for those kinds, not the
+  /// follow state — using it wholesale made every seeded team look followed and
+  /// pinned the first catalogue team as the page's hero. Only ids in `followed`
+  /// qualify; the catalogue entry supplies the label/crest when it has one.
   static List<FollowTarget> _followedSports(FollowingSnapshot? following) {
     if (following == null) return const <FollowTarget>[];
-    final List<FollowTarget> merged = <FollowTarget>[
-      ...following.sports,
-      ...following.followed.where(
-        (FollowTarget target) =>
-            target.kind == FollowKind.team || target.kind == FollowKind.league,
-      ),
-    ];
+    final Map<String, FollowTarget> catalogue = <String, FollowTarget>{
+      for (final FollowTarget target in following.sports) target.id: target,
+    };
     final Set<String> seen = <String>{};
-    return List<FollowTarget>.unmodifiable(
-      merged.where((FollowTarget target) => seen.add(target.id)),
-    );
+    return List<FollowTarget>.unmodifiable(<FollowTarget>[
+      for (final FollowTarget target in following.followed)
+        if ((target.kind == FollowKind.team ||
+                target.kind == FollowKind.league) &&
+            seen.add(target.id))
+          catalogue[target.id] ?? target,
+    ]);
   }
 
+  /// The followed team the page leads with.
+  ///
+  /// A team ESPN covers wins, because that is what makes the "team news" and
+  /// per-team fixture sections real; otherwise the first followed team is used.
   static FollowTarget? _heroTeam(List<FollowTarget> targets) {
+    FollowTarget? fallback;
     for (final FollowTarget target in targets) {
-      if (target.kind == FollowKind.team) return target;
+      if (target.kind != FollowKind.team) continue;
+      fallback ??= target;
+      if (EspnSource.supportsTeamId(target.id)) return target;
     }
-    return null;
+    return fallback;
   }
 
   /// Live fixtures lead, then scheduled, then finals, then postponed.

@@ -243,7 +243,11 @@ class SportsPage extends ConsumerWidget {
   ) {
     final Map<String, List<GameScore>> groups = <String, List<GameScore>>{};
     for (final GameScore game in viewModel.ordered) {
-      groups.putIfAbsent(game.leagueLabel, () => <GameScore>[]).add(game);
+      // A provider may label a European fixture with its own competition name;
+      // fold it onto the merged section so one block renders, not five.
+      final String label =
+          mergedLeagueLabelFor(game.leagueLabel) ?? game.leagueLabel;
+      groups.putIfAbsent(label, () => <GameScore>[]).add(game);
     }
 
     final List<Article> generic = allSports.asData?.value ?? const <Article>[];

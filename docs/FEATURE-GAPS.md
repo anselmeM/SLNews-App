@@ -148,6 +148,15 @@ only to widgets built inside it: the scaffold and row helpers read the *outer* c
 so in light mode the section headers rendered white on a light canvas. The body is now
 built inside the theme (a `Builder`), which keeps the page dark end to end.
 
+**Sports follow state (2026-11-16).** `SportsViewModel` merged the whole sports
+*catalogue* into its "followed" list, so every seeded team and league rendered as
+followed, the hero team was always the first catalogue team, and a fresh install showed
+"Los Angeles Lakers news" with Lakers fixtures. Only ids in `followed` now qualify (the
+catalogue only repairs labels/crests), and the hero prefers a followed team ESPN covers
+so the "team news" and fixture sections are real. A scoreboard fixture labelled with a
+member competition ("La Liga") is also folded onto the "European Leagues" block instead
+of spawning a second section.
+
 ### A8. Stocks opened as a panel over the feed — **shipped**, S
 *(seen: 47 s)*
 

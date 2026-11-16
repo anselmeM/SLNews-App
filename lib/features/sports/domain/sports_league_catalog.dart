@@ -54,6 +54,22 @@ const List<SportsLeague> kEuropeanLeagueMembers = <SportsLeague>[
 List<SportsLeague> mergedLeagueMembers(String id) =>
     id == 'european-leagues' ? kEuropeanLeagueMembers : const <SportsLeague>[];
 
+/// The section label that renders [label], when that competition is merged.
+///
+/// A scoreboard provider can label a fixture "La Liga" even though the Sports
+/// feed renders one "European Leagues" block. Folding the member label onto its
+/// parent before grouping is what stops a second block appearing.
+String? mergedLeagueLabelFor(String label) {
+  final String trimmed = label.trim().toLowerCase();
+  if (trimmed.isEmpty) return null;
+  for (final SportsLeague league in kFeaturedSportsLeagues) {
+    for (final SportsLeague member in mergedLeagueMembers(league.id)) {
+      if (member.label.toLowerCase() == trimmed) return league.label;
+    }
+  }
+  return null;
+}
+
 /// Index used to sort section labels; unknown labels go after the catalogue.
 int featuredLeagueOrder(String label) {
   final String? id = featuredLeagueId(label);

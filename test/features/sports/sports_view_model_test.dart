@@ -199,23 +199,73 @@ void main() {
       label: 'Freetown',
     );
 
-    test('merges the sports catalogue with followed teams and leagues', () {
+    test('keeps only followed teams and leagues, repairing labels from the catalogue', () {
+      const FollowTarget followedLakers = FollowTarget(
+        id: 'team:lal',
+        kind: FollowKind.team,
+        label: 'Lakers',
+      );
+      const FollowTarget catalogueLakers = FollowTarget(
+        id: 'team:lal',
+        kind: FollowKind.team,
+        label: 'Los Angeles Lakers',
+        imageUrl: 'https://example.test/lal.png',
+      );
       final SportsViewModel model = SportsViewModel.from(
         following: const FollowingSnapshot(
-          followed: <FollowTarget>[lakers, freetown],
+          followed: <FollowTarget>[followedLakers, freetown],
+          suggested: <FollowTarget>[],
+          // The catalogue holds both; only the followed id may appear.
+          sports: <FollowTarget>[spl, catalogueLakers],
+        ),
+      );
+
+      expect(
+        model.followedSports.map((FollowTarget target) => target.id),
+        <String>['team:lal'],
+      );
+      // The catalogue entry supplies the full label and crest.
+      expect(model.followedSports.single.label, 'Los Angeles Lakers');
+      expect(
+        model.followedSports.single.imageUrl,
+        'https://example.test/lal.png',
+      );
+      expect(model.hasFollowedSports, isTrue);
+      expect(model.heroTeam?.id, 'team:lal');
+      expect(model.newsSectionTitle, 'Los Angeles Lakers news');
+    });
+
+    test('a catalogue nobody follows is not treated as followed', () {
+      final SportsViewModel model = SportsViewModel.from(
+        following: const FollowingSnapshot(
+          followed: <FollowTarget>[],
           suggested: <FollowTarget>[],
           sports: <FollowTarget>[spl, lakers],
         ),
       );
 
-      // De-duplicated by id, catalogue first, locations excluded.
-      expect(
-        model.followedSports.map((FollowTarget target) => target.id),
-        <String>['league:spl', 'team:lal'],
+      expect(model.followedSports, isEmpty);
+      expect(model.hasFollowedSports, isFalse);
+      expect(model.heroTeam, isNull);
+      expect(model.newsSectionTitle, 'Latest in sport');
+    });
+
+    test('the hero prefers a followed team ESPN actually covers', () {
+      const FollowTarget boRangers = FollowTarget(
+        id: 'team:bo-rangers',
+        kind: FollowKind.team,
+        label: 'Bo Rangers',
       );
-      expect(model.hasFollowedSports, isTrue);
-      expect(model.heroTeam, lakers);
-      expect(model.newsSectionTitle, 'Los Angeles Lakers news');
+      final SportsViewModel model = SportsViewModel.from(
+        following: const FollowingSnapshot(
+          // Bo Rangers is first in follow order but has no ESPN feed, so the
+          // Lakers must lead: the header promises "news" and fixtures.
+          followed: <FollowTarget>[boRangers, lakers],
+          suggested: <FollowTarget>[],
+        ),
+      );
+
+      expect(model.heroTeam?.id, 'team:lal');
     });
 
     test('a followed league alone does not become the hero team', () {
