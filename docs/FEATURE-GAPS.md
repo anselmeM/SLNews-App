@@ -67,15 +67,22 @@ jumping to the Sports tab. Inside that picker, **European Leagues** stays a sing
 followable section — the same merged block the Sports feed renders — and tapping the row
 expands it to La Liga, Serie A, Bundesliga and Ligue 1, each opening its own league page.
 
-**Locations parked (2026-11-15).** City following was removed from the Following tab: no
-Locations header, no followed-city rows and no location suggestions. The product decision
-is that the feed covers **all of Sierra Leone** for now, so a city picker on the
-subscription screen implies a personalisation the reader is not getting. The
-`/following/locations` screen itself is kept and still tested (up to three follows, the
-"(n/3)" counter, the refusal on the fourth tap), so restoring it is one header row away.
-Note that the For You **local rail** is driven by the *home city* setting (Freetown by
-default), not by follows — removing the Following surface does not change that; making
-the feed entirely SL-wide is a separate switch.
+**Locations removed (2026-11-15).** The app is locked to **Sierra Leone as a whole**:
+city personalisation is gone from every surface, not just Following.
+
+- Following has no Locations header, followed-city rows or location suggestions.
+- **Onboarding no longer asks for a home city** — it offers topics only, and the
+  "Your home city" step and its write are deleted.
+- Settings loses "Manage locations" and "Followed location".
+- For You loses the city rail ("From <city>"); the feed is the national mix. The rail
+  machinery is untouched so a localised stream can return without a rewrite.
+- The weather chip is now read-only (it used to open the city picker); it still shows
+  the capital's forecast, and "Show weather forecast" in Settings hides it entirely.
+
+The `/following/locations` screen, `locationFeedProvider`, `SlLocations` and the picker
+sheet all remain in the codebase, tested, so restoring city personalisation is a header
+row plus a re-wire — not a rewrite. `activeLocationId` still defaults to
+`city:freetown`; it now only feeds the weather chip.
 
 **League → team drill-in (2026-11-15).** Each league row in the sports picker gained a
 chevron that drills into `/following/sports/:leagueId` — the reference's league → team

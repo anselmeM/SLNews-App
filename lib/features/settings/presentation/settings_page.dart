@@ -9,14 +9,12 @@ import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
-import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/providers/sync_repository_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../feed/presentation/widgets/location_picker_sheet.dart';
 import 'widgets/settings_card.dart';
 
 /// Reader settings, reconstructed from the reference "News settings" screen.
@@ -46,7 +44,6 @@ class SettingsPage extends ConsumerWidget {
     final SettingsController controller = ref.read(
       settingsControllerProvider.notifier,
     );
-    final NewsLocation location = _activeLocation(settings.activeLocationId);
 
     return Scaffold(
       backgroundColor: context.colors.canvas,
@@ -158,11 +155,6 @@ class SettingsPage extends ConsumerWidget {
                       value: settings.weatherForecastEnabled,
                       onChanged: controller.setWeatherForecastEnabled,
                     ),
-                    SettingsValueRow(
-                      title: 'Manage locations',
-                      value: location.label,
-                      onTap: () => openLocationPicker(context, ref),
-                    ),
                   ],
                 ),
                 const SettingsSectionLabel('Appearance'),
@@ -195,11 +187,6 @@ class SettingsPage extends ConsumerWidget {
                     const SettingsValueRow(
                       title: 'App version',
                       value: appVersion,
-                      showChevron: false,
-                    ),
-                    SettingsValueRow(
-                      title: 'Followed location',
-                      value: location.label,
                       showChevron: false,
                     ),
                     // Verification affordances: debug builds with reporting show
@@ -319,13 +306,6 @@ class SettingsPage extends ConsumerWidget {
   void _showSnack(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  static NewsLocation _activeLocation(String id) {
-    for (final NewsLocation candidate in SlLocations.all) {
-      if (candidate.id == id) return candidate;
-    }
-    return SlLocations.all.first;
   }
 
   static String _textScaleLabel(double scale) {

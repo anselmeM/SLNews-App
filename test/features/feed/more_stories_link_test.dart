@@ -66,6 +66,11 @@ void main() {
                   title: 'Latest elsewhere',
                   categoryId: 'top',
                 ),
+                testArticle(
+                  id: 'sport-1',
+                  title: 'Lakers win again',
+                  categoryId: 'sports',
+                ),
               ],
             ),
           ),
@@ -79,20 +84,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the local group ends with a link into the section list', (
+  testWidgets('there is no city-scoped group in a Sierra Leone-wide feed', (
     WidgetTester tester,
   ) async {
     await pumpForYou(tester);
 
-    final Finder link = find.textContaining('More Freetown stories');
-    expect(link, findsOneWidget);
-
-    await tester.ensureVisible(link);
-    await tester.pumpAndSettle();
-    await tester.tap(link);
-    await tester.pumpAndSettle();
-
-    expect(find.text('news tab'), findsOneWidget);
+    // The rail and its "More <city> stories" link went with city
+    // personalisation; the widget itself is still covered below.
+    expect(find.textContaining('More Freetown stories'), findsNothing);
+    expect(find.text('From Freetown'), findsNothing);
   });
 
   testWidgets('the widget renders its label and chevron and reports taps', (

@@ -213,17 +213,14 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
       .watch(settingsControllerProvider)
       .activeLocationId;
   final AsyncValue<List<Article>> top = ref.watch(topStoriesProvider);
-  final AsyncValue<List<Article>> local = ref.watch(
-    locationFeedProvider(locationId),
-  );
   final AsyncValue<List<Article>> extra = ref.watch(
     categoryFeedProvider('top'),
   );
 
   // An error has its own full-screen state on the page; `null` here means the
   // feed is simply not renderable yet.
-  if (top.hasError || local.hasError || extra.hasError) return null;
-  if (top.isLoading || local.isLoading || extra.isLoading) return null;
+  if (top.hasError || extra.hasError) return null;
+  if (top.isLoading || extra.isLoading) return null;
 
   final NewsLocation location = SlLocations.all.firstWhere(
     (NewsLocation candidate) => candidate.id == locationId,
@@ -253,7 +250,9 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   return ForYouViewModel.build(
     followingIds: followingIds,
     topStories: top.value ?? const <Article>[],
-    locationStories: local.value ?? const <Article>[],
+    // The feed covers Sierra Leone as a whole: there is no city-scoped rail
+    // until the reader asks for one, so the "From <city>" section stays absent.
+    locationStories: const <Article>[],
     extraStories: extra.value ?? const <Article>[],
     activeLocation: location,
     isOffline: isOffline,

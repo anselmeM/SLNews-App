@@ -110,9 +110,11 @@ void main() {
       // Once on the hero card, once in the weather/alert header.
       expect(find.text('BREAKING'), findsNWidgets(2));
       expect(find.text('29° Freetown'), findsOneWidget);
-      expect(find.text('From Freetown'), findsOneWidget);
+      // The feed covers Sierra Leone as a whole, so the city-scoped rail is
+      // gone even when the repository can serve a city feed.
+      expect(find.text('From Freetown'), findsNothing);
+      expect(find.text('Local story in Freetown'), findsNothing);
       expect(find.text('Latest'), findsOneWidget);
-      expect(find.text('Local story in Freetown'), findsOneWidget);
       expect(find.text('Only in the latest stream'), findsOneWidget);
     },
   );

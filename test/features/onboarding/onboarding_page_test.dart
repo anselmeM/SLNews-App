@@ -10,7 +10,7 @@ import '../feed/support/fakes.dart';
 import '../feed/support/test_harness.dart';
 
 void main() {
-  testWidgets('first-run picker writes follows and the home city', (
+  testWidgets('first-run picker writes follows and no home city', (
     WidgetTester tester,
   ) async {
     final FakeUserStateRepository userState = FakeUserStateRepository();
@@ -62,14 +62,16 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Politics'));
-    await tester.ensureVisible(find.text('Bo'));
-    await tester.tap(find.text('Bo'));
+    // No city step: the feed is Sierra Leone-wide, so the picker offers topics
+    // only and never asks for a home city.
+    expect(find.text('Your home city'), findsNothing);
+    expect(find.text('Bo'), findsNothing);
     await tester.ensureVisible(find.text('Start reading'));
     await tester.tap(find.text('Start reading'));
     await tester.pumpAndSettle();
 
     expect(userState.onboardingCompleted, isTrue);
-    expect(userState.activeLocationId, 'city:bo');
+    expect(userState.activeLocationId, 'city:freetown');
     expect(following.isFollowed('topic:politics'), isTrue);
     expect(find.text('For You'), findsOneWidget);
   });

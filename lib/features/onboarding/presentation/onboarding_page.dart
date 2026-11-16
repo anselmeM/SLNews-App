@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// First-run personalisation: pick a few topics and a home city before the
-/// first For You render. This is the write side of the Following loop —
-/// selections become `following.ids` and the feed ranks them immediately.
+/// First-run personalisation: pick a few topics before the first For You
+/// render. This is the write side of the Following loop — selections become
+/// `following.ids` and the feed ranks them immediately.
+///
+/// There is deliberately no city step: SLNews covers Sierra Leone as a whole
+/// for now, so asking for a home city would promise a localisation the feed
+/// does not deliver.
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
 
@@ -21,18 +24,15 @@ class OnboardingPage extends ConsumerStatefulWidget {
 
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final Set<String> _topics = <String>{};
-  String? _locationId;
   bool _saving = false;
   String? _error;
 
   @override
   Widget build(BuildContext context) {
     final FollowingSnapshot snapshot = ref.watch(followingControllerProvider);
-    final AppSettings settings = ref.watch(settingsControllerProvider);
     final List<FollowTarget> topics = snapshot.topics
         .where((FollowTarget target) => target.kind == FollowKind.topic)
         .toList(growable: false);
-    final String locationId = _locationId ?? settings.activeLocationId;
 
     return Scaffold(
       backgroundColor: context.colors.canvas,
@@ -92,33 +92,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                                 ),
                             ],
                           ),
-                        const SizedBox(height: AppSpacing.xxl),
-                        Text(
-                          'Your home city',
-                          style: context.typography.groupTitle,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Local stories and weather start here.',
-                          style: context.typography.caption,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.sm,
-                          children: <Widget>[
-                            for (final NewsLocation city in SlLocations.all)
-                              ChoiceChip(
-                                label: Text(city.label),
-                                selected: locationId == city.id,
-                                showCheckmark: false,
-                                onSelected: (bool selected) {
-                                  if (!selected) return;
-                                  setState(() => _locationId = city.id);
-                                },
-                              ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -202,12 +175,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           final FollowTarget? target = byId[id];
           if (target == null || snapshot.isFollowed(id)) continue;
           await ref.read(followingControllerProvider.notifier).follow(target);
-        }
-        final String? locationId = _locationId;
-        if (locationId != null) {
-          await ref
-              .read(settingsControllerProvider.notifier)
-              .setActiveLocation(locationId);
         }
       }
       await ref.read(settingsControllerProvider.notifier).completeOnboarding();

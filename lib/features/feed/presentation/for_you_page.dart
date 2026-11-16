@@ -52,10 +52,6 @@ class ForYouPage extends ConsumerWidget {
     final ForYouFeed? feed = ref.watch(forYouFeedProvider);
     final AsyncValue<List<Article>> topStories = ref.watch(topStoriesProvider);
     final AppSettings settings = ref.watch(settingsControllerProvider);
-    final String locationId = settings.activeLocationId;
-    final AsyncValue<List<Article>> localStories = ref.watch(
-      locationFeedProvider(locationId),
-    );
     // Both rails degrade to "absent" rather than erroring the page: video
     // moments fall back to the bundled rotation, ads may be empty.
     final List<VideoMoment> videos = ref.watch(videoMomentsProvider);
@@ -90,7 +86,10 @@ class ForYouPage extends ConsumerWidget {
     } else {
       content = _FeedSliver(
         feed: feed,
-        localStories: localStories.value ?? const <Article>[],
+        // No city-scoped rail: the feed covers Sierra Leone as a whole for now.
+        // The rail machinery stays so a localised stream can return without a
+        // rewrite once a reader can pick a city again.
+        localStories: const <Article>[],
         videos: videos,
         ads: ads,
         indexBoard: indexBoard,

@@ -7,14 +7,14 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_glyphs.dart';
-import 'location_picker_sheet.dart';
 
 /// Compact "weather + alert" row that opens the For You header.
 ///
 /// The chip is sized from the token scale, never from the network, so a slow or
 /// failed [activeWeatherProvider] cannot shift the page: both the loading and
 /// the error case fall back to [WeatherSnapshot.placeholder] for the active
-/// location. Tapping it opens the location picker.
+/// location. It is read-only: the feed covers Sierra Leone as a whole, so there
+/// is no city to switch.
 class WeatherAlertHeader extends ConsumerWidget {
   const WeatherAlertHeader({
     super.key,
@@ -45,48 +45,43 @@ class WeatherAlertHeader extends ConsumerWidget {
         weather.value ?? WeatherSnapshot.placeholder(location.label);
 
     return Semantics(
-      button: showWeather,
       label: showWeather
-          ? 'Weather for ${snapshot.locationLabel}. Change location.'
+          ? 'Weather for ${snapshot.locationLabel}'
           : 'Breaking news',
-      child: InkWell(
-        onTap: showWeather ? () => openLocationPicker(context, ref) : null,
-        borderRadius: AppRadius.pillRadius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              if (showWeather) ...<Widget>[
-                Icon(
-                  AppGlyphs.weather(snapshot.glyph),
-                  size: 18,
-                  color: context.colors.onSurface,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                // Flexible + ellipsis keeps the chip inside a 320pt screen and at
-                // large text scales instead of overflowing the header row.
-                Flexible(
-                  child: Text(
-                    '${snapshot.temperatureC}° ${snapshot.locationLabel}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.meta.copyWith(
-                      color: context.colors.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            if (showWeather) ...<Widget>[
+              Icon(
+                AppGlyphs.weather(snapshot.glyph),
+                size: 18,
+                color: context.colors.onSurface,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              // Flexible + ellipsis keeps the chip inside a 320pt screen and at
+              // large text scales instead of overflowing the header row.
+              Flexible(
+                child: Text(
+                  '${snapshot.temperatureC}° ${snapshot.locationLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.meta.copyWith(
+                    color: context.colors.onSurface,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-              if (hasBreaking) ...<Widget>[
-                if (showWeather) const SizedBox(width: AppSpacing.sm),
-                const _BreakingTag(),
-              ],
+              ),
             ],
-          ),
+            if (hasBreaking) ...<Widget>[
+              if (showWeather) const SizedBox(width: AppSpacing.sm),
+              const _BreakingTag(),
+            ],
+          ],
         ),
       ),
     );

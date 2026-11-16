@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -104,7 +104,10 @@ void main() {
     expect(find.text('Language and region'), findsOneWidget);
     expect(find.text('English (Sierra Leone)'), findsOneWidget);
     expect(find.text('Show weather forecast'), findsOneWidget);
-    expect(find.text('Manage locations'), findsOneWidget);
+    // City personalisation is parked: the feed is Sierra Leone-wide, so there
+    // is no location to manage or to show as followed.
+    expect(find.text('Manage locations'), findsNothing);
+    expect(find.text('Followed location'), findsNothing);
 
     // Appearance + About, which the app persisted but had no screen for.
     expect(find.text('Appearance'), findsOneWidget);
