@@ -136,6 +136,26 @@ void main() {
     expect(find.text('Manage news topics'), findsOneWidget);
   });
 
+  testWidgets('the Locations header opens the locations catalogue', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Locations'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Manage locations'), findsOneWidget);
+    expect(
+      find.textContaining('Select up to three locations to follow'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('the Sources header opens the publisher catalogue', (
     WidgetTester tester,
   ) async {
@@ -200,7 +220,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Pick the leagues and teams you follow.'), findsOneWidget);
-    expect(find.text('Pick the cities you want in your feed.'), findsOneWidget);
+    expect(
+      find.text('Pick up to three cities you want in your feed.'),
+      findsOneWidget,
+    );
     expect(
       find.text('Pick the news sections you want to follow.'),
       findsOneWidget,

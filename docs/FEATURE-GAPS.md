@@ -67,6 +67,17 @@ jumping to the Sports tab. Inside that picker, **European Leagues** stays a sing
 followable section — the same merged block the Sports feed renders — and tapping the row
 expands it to La Liga, Serie A, Bundesliga and Ligue 1, each opening its own league page.
 
+**Locations and the league drill-in (still 2026-11-15).** The Locations header now opens
+`/following/locations`, the reference's **Manage locations** screen: every Sierra Leonean
+city with a tick, the *"Select up to three locations to follow. (n/3)"* subtitle, and a
+fourth tap refused with an explanation rather than silently replacing a choice. Switching
+the *home* city stays on the weather chip and on a followed city row, because following a
+city and reading its weather are different decisions. Each league row in the sports picker
+also gained a chevron that drills into `/following/sports/:leagueId` — the reference's
+league → team list — where a competition's seeded clubs can be followed; competitions with
+no seeded sides show an empty state that links to the league page, and the merged European
+row lists its four member leagues instead.
+
 ### A4. Notification permission prompt — **partially shipped** (deferred OS prompt, no priming card), M
 *(seen: 3.8 s)*
 

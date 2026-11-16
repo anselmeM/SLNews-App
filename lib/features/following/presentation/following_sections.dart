@@ -63,10 +63,12 @@ List<Widget> _groupSlivers(
     _sliverSection(
       header: SectionHeader(
         title: 'Locations',
-        onTap: () => openLocationPicker(context, ref),
+        onTap: () => context.push(AppRoutes.manageLocations),
       ),
       child: viewModel.locations.isEmpty
-          ? const _EmptyGroupHint('Pick the cities you want in your feed.')
+          ? const _EmptyGroupHint(
+              'Pick up to three cities you want in your feed.',
+            )
           : FollowSection(
               targets: viewModel.locations,
               rowBuilder: (BuildContext context, FollowTarget target) =>

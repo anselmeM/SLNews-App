@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/sources/feed_source.dart';
 import 'package:slnews_mobile/core/data/sources/json_article_mapper.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
-import 'package:slnews_mobile/core/domain/models/publisher.dart';
 
 /// Unit tests for the loose-JSON normaliser shared by the REST/GraphQL sources.
 ///
@@ -70,7 +69,7 @@ void main() {
     });
 
     test('honours a custom path list', () {
-      final Object? payload = <String, Object?>{
+      final Map<String, Object?> payload = <String, Object?>{
         'feed': <Object?>['custom'],
         'items': <Object?>['default'],
       };
@@ -83,7 +82,7 @@ void main() {
 
   group('JsonArticleMapper.map', () {
     test('maps a full wire object', () {
-      final Article? article = JsonArticleMapper.map(
+      final Article article = JsonArticleMapper.map(
         <String, Object?>{
           'id': 'wire-42',
           'title': '  Budget passes  ',
@@ -112,10 +111,9 @@ void main() {
         },
         config,
         now: fixedNow,
-      );
+      )!;
 
-      expect(article, isNotNull);
-      expect(article!.id, 'wire-42');
+      expect(article.id, 'wire-42');
       expect(article.title, 'Budget passes');
       expect(article.summary, 'The budget passed.');
       expect(article.bodyHtml, contains('Parliament'));

@@ -9,6 +9,8 @@ import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
 import '../../features/following/presentation/following_page.dart';
+import '../../features/following/presentation/manage_league_teams_page.dart';
+import '../../features/following/presentation/manage_locations_page.dart';
 import '../../features/following/presentation/manage_sources_page.dart';
 import '../../features/following/presentation/manage_sports_page.dart';
 import '../../features/following/presentation/manage_topics_page.dart';
@@ -114,6 +116,25 @@ GoRouter createAppRouter() {
                     name: RouteNames.manageSports,
                     builder: (BuildContext context, GoRouterState state) =>
                         const ManageSportsPage(),
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: ':leagueId',
+                        name: RouteNames.manageLeagueTeams,
+                        builder: (BuildContext context, GoRouterState state) =>
+                            ManageLeagueTeamsPage(
+                              leagueId: state.pathParameters['leagueId'] ?? '',
+                              label: state.extra is String
+                                  ? state.extra! as String
+                                  : null,
+                            ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'locations',
+                    name: RouteNames.manageLocations,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ManageLocationsPage(),
                   ),
                 ],
               ),

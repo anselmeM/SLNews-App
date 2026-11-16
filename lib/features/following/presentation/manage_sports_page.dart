@@ -152,6 +152,25 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
       isSelected: snapshot.isFollowed(target.id),
       icon: isTeam ? null : AppGlyphs.follow(FollowKind.league),
       initials: isTeam ? AppGlyphs.initials(target.label) : null,
+      // A competition also drills into its teams; a team has nothing below it.
+      trailing: isTeam
+          ? null
+          : Semantics(
+              button: true,
+              label: 'Open ${target.label} teams',
+              child: IconButton(
+                onPressed: () => context.push(
+                  AppRoutes.leagueTeamsFor(_slug(target.id)),
+                  extra: target.label,
+                ),
+                icon: Icon(
+                  Icons.chevron_right,
+                  size: 22,
+                  color: context.colors.onSurfaceFaint,
+                ),
+                tooltip: 'Teams',
+              ),
+            ),
       onTap: () =>
           ref.read(followingControllerProvider.notifier).toggle(target),
     );

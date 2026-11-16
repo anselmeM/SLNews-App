@@ -118,6 +118,8 @@ class CatalogueCheckRow extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.initials,
+    this.trailing,
+    this.semanticLabel,
   });
 
   final String label;
@@ -127,6 +129,14 @@ class CatalogueCheckRow extends StatelessWidget {
   final IconData? icon;
   final String? initials;
 
+  /// Optional control after the label, e.g. a chevron that drills into the
+  /// competition's teams. Its own tap wins over the row's toggle.
+  final Widget? trailing;
+
+  /// Overrides the row's follow/unfollow announcement, for rows whose body
+  /// action is not the toggle.
+  final String? semanticLabel;
+
   static const double circleSize = 40;
 
   @override
@@ -134,7 +144,8 @@ class CatalogueCheckRow extends StatelessWidget {
     return Semantics(
       button: true,
       toggled: isSelected,
-      label: isSelected ? 'Unfollow $label' : 'Follow $label',
+      label:
+          semanticLabel ?? (isSelected ? 'Unfollow $label' : 'Follow $label'),
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
@@ -175,6 +186,10 @@ class CatalogueCheckRow extends StatelessWidget {
                   ],
                 ),
               ),
+              if (trailing != null) ...<Widget>[
+                const SizedBox(width: AppSpacing.sm),
+                trailing!,
+              ],
             ],
           ),
         ),

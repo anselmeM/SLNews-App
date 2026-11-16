@@ -14,6 +14,8 @@ import 'package:slnews_mobile/core/domain/models/notification_item.dart';
 import 'package:slnews_mobile/core/domain/repositories/following_repository.dart';
 import 'package:slnews_mobile/core/domain/repositories/notification_repository.dart';
 import 'package:slnews_mobile/features/following/presentation/following_page.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_league_teams_page.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_locations_page.dart';
 import 'package:slnews_mobile/features/following/presentation/manage_sources_page.dart';
 import 'package:slnews_mobile/features/following/presentation/manage_sports_page.dart';
 import 'package:slnews_mobile/features/following/presentation/manage_topics_page.dart';
@@ -338,6 +340,23 @@ GoRouter buildFollowingTestRouter({String initialLocation = '/following'}) {
             path: 'sports',
             builder: (BuildContext context, GoRouterState state) =>
                 const ManageSportsPage(),
+            routes: <RouteBase>[
+              GoRoute(
+                path: ':leagueId',
+                builder: (BuildContext context, GoRouterState state) =>
+                    ManageLeagueTeamsPage(
+                      leagueId: state.pathParameters['leagueId'] ?? '',
+                      label: state.extra is String
+                          ? state.extra! as String
+                          : null,
+                    ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'locations',
+            builder: (BuildContext context, GoRouterState state) =>
+                const ManageLocationsPage(),
           ),
         ],
       ),

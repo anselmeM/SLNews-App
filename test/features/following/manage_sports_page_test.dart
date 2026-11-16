@@ -6,6 +6,7 @@ import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
+import 'package:slnews_mobile/features/following/presentation/manage_league_teams_page.dart';
 import 'package:slnews_mobile/features/following/presentation/manage_sports_page.dart';
 import 'package:slnews_mobile/features/following/presentation/widgets/catalogue_list.dart';
 
@@ -217,5 +218,83 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('league:serie-a'), findsOneWidget);
+  });
+
+  testWidgets('a league chevron drills into its teams', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // A reader who follows nothing yet, so the drill-in starts unticked.
+    final InMemoryFollowingRepository local = InMemoryFollowingRepository(
+      catalogue: <FollowTarget>[lakers],
+    );
+    final ProviderContainer localContainer = ProviderContainer(
+      overrides: [
+        followingRepositoryProvider.overrideWithValue(local),
+        userStateProvider.overrideWithValue(FakeUserStateRepository()),
+      ],
+    );
+    addTearDown(localContainer.dispose);
+
+    final GoRouter router = GoRouter(
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/',
+          builder: (BuildContext context, GoRouterState state) =>
+              const ManageSportsPage(),
+        ),
+        GoRoute(
+          path: '/following/sports/:leagueId',
+          builder: (BuildContext context, GoRouterState state) =>
+              ManageLeagueTeamsPage(
+                leagueId: state.pathParameters['leagueId'] ?? '',
+                label: state.extra is String ? state.extra! as String : null,
+              ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: localContainer,
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final Finder nbaRow = find
+        .ancestor(of: find.text('NBA'), matching: find.byType(InkWell))
+        .first;
+    await tester.tap(
+      find.descendant(of: nbaRow, matching: find.byTooltip('Teams')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // The league row opened its own team list, not the Sports tab.
+    expect(find.text('Select the teams you want to follow.'), findsOneWidget);
+    final Finder teamsPage = find.byType(ManageLeagueTeamsPage);
+    final Finder lakersRow = find.descendant(
+      of: teamsPage,
+      matching: find.text('Los Angeles Lakers'),
+    );
+    expect(lakersRow, findsOneWidget);
+
+    await tester.tap(lakersRow);
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      localContainer.read(followingControllerProvider).isFollowed('team:lal'),
+      isTrue,
+    );
+    expect(local.toggleLog.single.id, 'team:lal');
   });
 }
