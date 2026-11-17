@@ -207,15 +207,13 @@ void main() {
 
     expect(find.text('sign-in route'), findsOneWidget);
   });
-  testWidgets('offers an alert toggle for followed topics', (
+  testWidgets('offers one alert toggle for followed topics and newspapers', (
     WidgetTester tester,
   ) async {
     await pumpPage(tester);
 
-    expect(find.text('Topics you follow'), findsOneWidget);
-    expect(
-      find.textContaining('new story in a topic you follow'),
-      findsOneWidget,
-    );
+    // Newspaper follows share this toggle: both are "things you follow".
+    expect(find.text('Topics and newspapers'), findsOneWidget);
+    expect(find.textContaining('new story in a topic or from'), findsOneWidget);
   });
 }

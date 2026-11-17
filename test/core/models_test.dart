@@ -116,6 +116,36 @@ void main() {
       expect(updated.textScale, settings.textScale);
       expect(updated.breakingNewsAlertsEnabled, isTrue);
     });
+
+    test('copyWith carries the onboarding flag through', () {
+      // Regression: the shell shows onboarding until this flag flips, so
+      // dropping it in copyWith made completing onboarding a no-op in memory.
+      const AppSettings settings = AppSettings();
+      expect(settings.onboardingCompleted, isFalse);
+      expect(
+        settings.copyWith(onboardingCompleted: true).onboardingCompleted,
+        isTrue,
+      );
+      expect(
+        settings
+            .copyWith(onboardingCompleted: true)
+            .copyWith()
+            .onboardingCompleted,
+        isTrue,
+      );
+    });
+
+    test('equality sees every persisted preference', () {
+      const AppSettings settings = AppSettings();
+      expect(settings, settings.copyWith());
+      // Fields the old == ignored must make a difference.
+      expect(
+        settings == settings.copyWith(followedTopicAlertsEnabled: false),
+        isFalse,
+      );
+      expect(settings == settings.copyWith(onboardingCompleted: true), isFalse);
+      expect(settings.hashCode == settings.copyWith().hashCode, isTrue);
+    });
   });
 
   group('FollowingSnapshot', () {

@@ -15,8 +15,16 @@ String topicForFollowId(String followId) {
 }
 
 /// Topics this device should be subscribed to, given the current follows and
-/// the notification toggles. Breaking is the only broadcast topic; topic and
-/// sports subscriptions are opt-in per category.
+/// the notification toggles.
+///
+/// Every followed entity gets `slnews_<kind>_<id>`, so an alert published for a
+/// topic, team, league or newspaper reaches exactly the devices that follow it.
+/// Breaking is the one broadcast topic.
+///
+/// Topics and newspapers share [AppSettings.followedTopicAlertsEnabled]: both
+/// are "things you follow", and a reader who muted follow alerts means all of
+/// them. The server is the other half of this contract — it must publish to the
+/// same names (`SLNews-Web`, `src/lib/push/topics.ts`).
 Set<String> segmentTopicsFor({
   required Set<String> followedIds,
   required AppSettings settings,
@@ -26,9 +34,10 @@ Set<String> segmentTopicsFor({
   for (final String id in followedIds) {
     final bool isTopic = id.startsWith('topic:');
     final bool isSport = id.startsWith('team:') || id.startsWith('league:');
-    if (isTopic && !settings.followedTopicAlertsEnabled) continue;
+    final bool isSource = id.startsWith('publisher:');
+    if ((isTopic || isSource) && !settings.followedTopicAlertsEnabled) continue;
     if (isSport && !settings.sportsAlertsEnabled) continue;
-    if (isTopic || isSport) topics.add(topicForFollowId(id));
+    if (isTopic || isSport || isSource) topics.add(topicForFollowId(id));
   }
   return topics;
 }

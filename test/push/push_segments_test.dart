@@ -13,6 +13,33 @@ void main() {
   test('maps follow ids to stable FCM topic names', () {
     expect(topicForFollowId('topic:politics'), 'slnews_topic_politics');
     expect(topicForFollowId('team:lal'), 'slnews_team_lal');
+    expect(topicForFollowId('publisher:awoko'), 'slnews_publisher_awoko');
+  });
+
+  test('newspaper follows subscribe to their own topic', () {
+    final Set<String> topics = segmentTopicsFor(
+      followedIds: const <String>{'publisher:awoko'},
+      settings: allOn,
+    );
+    expect(topics, contains('slnews_publisher_awoko'));
+
+    // The "topics and newspapers" toggle mutes both follow kinds together.
+    final Set<String> muted = segmentTopicsFor(
+      followedIds: const <String>{'publisher:awoko', 'topic:politics'},
+      settings: const AppSettings(
+        breakingNewsAlertsEnabled: false,
+        followedTopicAlertsEnabled: false,
+      ),
+    );
+    expect(muted, isEmpty);
+
+    // ...while the sports toggle leaves newspaper alerts alone.
+    final Set<String> sportsOff = segmentTopicsFor(
+      followedIds: const <String>{'publisher:awoko', 'team:lal'},
+      settings: const AppSettings(sportsAlertsEnabled: false),
+    );
+    expect(sportsOff, contains('slnews_publisher_awoko'));
+    expect(sportsOff, isNot(contains('slnews_team_lal')));
   });
 
   test('only subscribes to enabled categories', () {

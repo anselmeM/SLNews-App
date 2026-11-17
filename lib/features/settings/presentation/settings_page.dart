@@ -109,10 +109,10 @@ class SettingsPage extends ConsumerWidget {
                       onChanged: controller.setBreakingNewsAlertsEnabled,
                     ),
                     SettingsSwitchRow(
-                      title: 'Topics you follow',
+                      title: 'Topics and newspapers',
                       subtitle:
-                          'Alerts when there is a new story in a topic you '
-                          'follow.',
+                          'Alerts when there is a new story in a topic or from '
+                          'a newspaper you follow.',
                       value: settings.followedTopicAlertsEnabled,
                       onChanged: controller.setFollowedTopicAlertsEnabled,
                     ),

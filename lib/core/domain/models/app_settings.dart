@@ -61,7 +61,7 @@ class AppSettings {
   final bool interactiveContentEnabled;
   final bool sportsAlertsEnabled;
 
-  /// Alerts for the topics the reader follows.
+  /// Alerts for the topics and newspapers the reader follows.
   final bool followedTopicAlertsEnabled;
 
   /// When false the weather row is hidden from the feeds.
@@ -109,6 +109,10 @@ class AppSettings {
           followedTopicAlertsEnabled ?? this.followedTopicAlertsEnabled,
       weatherForecastEnabled:
           weatherForecastEnabled ?? this.weatherForecastEnabled,
+      // Carrying this through matters: the shell shows onboarding until it
+      // flips, so dropping it here made completing onboarding a no-op for the
+      // in-memory state (the flag only survived until the next app start).
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 
@@ -122,7 +126,9 @@ class AppSettings {
       other.editorsPicksEnabled == editorsPicksEnabled &&
       other.interactiveContentEnabled == interactiveContentEnabled &&
       other.sportsAlertsEnabled == sportsAlertsEnabled &&
-      other.weatherForecastEnabled == weatherForecastEnabled;
+      other.followedTopicAlertsEnabled == followedTopicAlertsEnabled &&
+      other.weatherForecastEnabled == weatherForecastEnabled &&
+      other.onboardingCompleted == onboardingCompleted;
 
   @override
   int get hashCode => Object.hash(
@@ -133,6 +139,8 @@ class AppSettings {
     editorsPicksEnabled,
     interactiveContentEnabled,
     sportsAlertsEnabled,
+    followedTopicAlertsEnabled,
     weatherForecastEnabled,
+    onboardingCompleted,
   );
 }
