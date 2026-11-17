@@ -81,6 +81,17 @@ if ($env:SENTRY_DSN) {
     Write-Warning 'SENTRY_DSN is not set: this bundle ships without crash reporting.'
 }
 if ($env:SENTRY_ENV) { $defineArgs += '--dart-define=SENTRY_ENV=' + $env:SENTRY_ENV }
+
+# Identity is configuration too: without the publishable key the app boots
+# anonymously, which also switches off push registration (the devices endpoint
+# needs a session) and account sync. The key is publishable by design.
+if ($env:CLERK_PUBLISHABLE_KEY) {
+    $defineArgs += '--dart-define=CLERK_PUBLISHABLE_KEY=' + $env:CLERK_PUBLISHABLE_KEY
+    Write-Host '  clerk   : publishable key set, sign-in enabled' -ForegroundColor Cyan
+} else {
+    Write-Warning 'CLERK_PUBLISHABLE_KEY is not set: this bundle runs anonymously, so sign-in, account sync and push registration are off.'
+}
+
 $defineArgs += '--dart-define=SLNEWS_RELEASE=slnews-mobile@' + $version
 
 Write-Host 'Building app bundle...' -ForegroundColor Cyan

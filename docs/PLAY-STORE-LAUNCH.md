@@ -170,6 +170,16 @@ toggles (persisted and reconciled on restart). Backend endpoints `/api/mobile/v1
 are in use. Remaining: iOS APNs capability, per-segment channels, quiet hours, badge
 counts, and the Samsung-style in-feed priming card.
 
+**Identity gates delivery.** Token registration needs a session token, so a build
+without `CLERK_PUBLISHABLE_KEY` runs anonymously and **no phone is reachable**,
+even though the push code and the backend topics exist. Both CI workflows now pass
+the key (`CLERK_PUBLISHABLE_KEY` repository secret, publishable by design); a build
+without it logs a `::warning::` instead of failing. Before a public release, check
+the secret is a **`pk_live_`** key: it currently holds the web app's `pk_test_`
+value, which points the app at Clerk's development instance. Verification step
+after building: sign in on a device, then confirm a `MobileDevice` row exists for
+that reader — that row is what the alert fan-out and topics need.
+
 ### B11. HTTPS App Links are not declared (custom scheme only)
 The manifest declares `slnews://article/<id>` and **no** HTTPS intent filter, so shared
 `https://` links open the browser. Fixing it needs a domain under your control, an

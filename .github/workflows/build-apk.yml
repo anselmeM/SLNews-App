@@ -19,6 +19,9 @@ jobs:
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Publishable by design. Without it the app is anonymous, which also turns
+      # off push registration: the devices endpoint needs a session token.
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -92,6 +95,11 @@ jobs:
           DEFINES=""
           if [ -n "$SENTRY_DSN" ]; then
             DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+          fi
+          if [ -n "$CLERK_PUBLISHABLE_KEY" ]; then
+            DEFINES="$DEFINES --dart-define=CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY"
+          else
+            echo "::warning::CLERK_PUBLISHABLE_KEY is not set; the app runs anonymously"
           fi
           flutter build apk --release --split-per-abi $DEFINES
 
