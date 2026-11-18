@@ -46,15 +46,36 @@ void main() {
       );
     });
 
-    test('routes mail, telephone and app links to the platform', () {
+    test('routes mail and telephone links to the platform', () {
       for (final String href in <String>[
         'mailto:tips@example.com',
         'tel:+23276123456',
-        'intent://scan/#Intent;scheme=zxing;end',
+        'sms:+23276123456',
       ]) {
         expect(
           ArticleWebMode.linkAction(target: Uri.parse(href), article: article),
           ArticleLinkAction.openExternally,
+          reason: href,
+        );
+      }
+    });
+
+    test('blocks schemes that could execute or launch another app', () {
+      // A publisher page controls these hrefs, so an `intent:` link is an
+      // arbitrary Android intent (component + extras) handed to the OS.
+      for (final String href in <String>[
+        'javascript:alert(1)',
+        'data:text/html,<script>alert(1)</script>',
+        'blob:https://example.com/1',
+        'file:///data/data/com.slnews.mobile/files/x',
+        'content://com.android.contacts/data/1',
+        'intent://scan/#Intent;scheme=zxing;end',
+        'android-app://com.example.app',
+        'vbscript:msgbox(1)',
+      ]) {
+        expect(
+          ArticleWebMode.linkAction(target: Uri.parse(href), article: article),
+          ArticleLinkAction.block,
           reason: href,
         );
       }

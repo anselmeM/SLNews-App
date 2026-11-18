@@ -67,7 +67,7 @@ if (-not $SkipTests) {
     if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed.' }
 
     Write-Host 'Running tests...' -ForegroundColor Cyan
-    & $flutter test test/core test/data test/features test/sync
+    & $flutter test test/core test/data test/features test/sync test/security
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 }
 

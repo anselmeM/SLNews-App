@@ -65,7 +65,7 @@ jobs:
         run: ./scripts/check-secrets.ps1
 
       - name: Test with coverage (serial; parallel workers deadlock on this suite)
-        run: flutter test test/core test/data test/features test/sync test/push --coverage --concurrency=1
+        run: flutter test test/core test/data test/features test/sync test/push test/security --coverage --concurrency=1
 
       - name: Enforce app quality gates
         run: python3 scripts/check_app_coverage.py

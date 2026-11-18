@@ -13,7 +13,7 @@ enum ArticleLinkAction {
   /// Hand off to the platform browser/app (another domain, `mailto:`, `tel:`…).
   openExternally,
 
-  /// Never execute, e.g. `javascript:` links.
+  /// Never execute, e.g. `javascript:` links or an Android `intent:` URI.
   block,
 }
 
@@ -31,6 +31,25 @@ enum ArticleOriginalAction {
 }
 
 abstract final class ArticleWebMode {
+  /// Schemes that must never reach the platform launcher.
+  ///
+  /// `javascript:`, `data:` and `blob:` would execute in our own WebView.
+  /// `intent:` and `android-app:` are the dangerous ones for a publisher page:
+  /// a tapped link can construct an arbitrary Android intent (component,
+  /// extras, flags) and hand it to the OS, which is a classic cross-app
+  /// escalation path. `file:`/`content:` would probe local storage, and
+  /// `vbscript:` is legacy IE.
+  static const Set<String> _blockedSchemes = <String>{
+    'javascript',
+    'data',
+    'blob',
+    'file',
+    'content',
+    'intent',
+    'android-app',
+    'vbscript',
+  };
+
   /// Decides what happens to [target] tapped while reading [article].
   ///
   /// Same host and its subdomains stay in the page, because that is still the
@@ -41,7 +60,7 @@ abstract final class ArticleWebMode {
     required Uri article,
   }) {
     final String scheme = target.scheme.toLowerCase();
-    if (scheme == 'javascript') return ArticleLinkAction.block;
+    if (_blockedSchemes.contains(scheme)) return ArticleLinkAction.block;
     if (scheme.isEmpty) return ArticleLinkAction.allowInPage;
     if (scheme != 'http' && scheme != 'https') {
       return ArticleLinkAction.openExternally;
