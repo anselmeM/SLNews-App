@@ -109,13 +109,15 @@ try {
 if ($LASTEXITCODE -ne 0) { throw 'secret scan failed' }
 
 if (-not $SkipTests) {
-        & $flutter analyze
-        if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
-        # Parallel workers occasionally interleave a network-backed test into a
-    # deadlock on this machine; serial runs are deterministic (6 min).
-    & $flutter test test/core test/data test/features test/sync test/security --concurrency=1
-        if ($LASTEXITCODE -ne 0) { throw 'flutter test failed' }
-    }
+    & $flutter analyze
+    if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
+    # 4 workers: measured 5.8 min with coverage vs ~11 min serial. The old
+    # serial constraint came from an unreproduced "deadlock" note; default
+    # concurrency (one worker per core) was slower than 4 because the extra
+    # workers contend on this suite.
+    & $flutter test test/core test/data test/features test/sync test/security --concurrency=4
+    if ($LASTEXITCODE -ne 0) { throw 'flutter test failed' }
+}
 
     # --- Build -------------------------------------------------------------------
     if (-not (Test-Path 'android/app/google-services.json')) {
