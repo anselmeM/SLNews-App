@@ -10,7 +10,6 @@ import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/sports/presentation/league_page.dart';
 import 'package:slnews_mobile/features/sports/presentation/team_page.dart';
 
-import '../feed/support/fakes.dart' show testArticle;
 import 'support/fakes.dart';
 
 /// League and team surfaces: each renders a table/fixtures plus stories and
