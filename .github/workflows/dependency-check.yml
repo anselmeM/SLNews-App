@@ -43,7 +43,7 @@ jobs:
         run: flutter analyze
 
       - name: Test with coverage
-        run: flutter test test/core test/data test/features test/sync test/push --coverage --concurrency=1
+        run: flutter test test/core test/data test/features test/sync test/push --coverage --concurrency=4
 
       - name: Enforce app quality gates
         run: python3 scripts/check_app_coverage.py

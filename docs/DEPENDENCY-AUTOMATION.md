@@ -44,7 +44,7 @@ When you want the same refresh immediately:
 flutter pub upgrade          # newest versions allowed by pubspec.yaml
 flutter pub outdated         # check remaining majors
 flutter analyze
-flutter test --concurrency=1
+flutter test --concurrency=4
 ```
 
 To accept a new direct minor/patch, update its constraint in `pubspec.yaml`;
