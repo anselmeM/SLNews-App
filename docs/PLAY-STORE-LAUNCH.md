@@ -170,15 +170,26 @@ toggles (persisted and reconciled on restart). Backend endpoints `/api/mobile/v1
 are in use. Remaining: iOS APNs capability, per-segment channels, quiet hours, badge
 counts, and the Samsung-style in-feed priming card.
 
-**Identity gates delivery.** Token registration needs a session token, so a build
-without `CLERK_PUBLISHABLE_KEY` runs anonymously and **no phone is reachable**,
-even though the push code and the backend topics exist. Both CI workflows now pass
-the key (`CLERK_PUBLISHABLE_KEY` repository secret, publishable by design); a build
-without it logs a `::warning::` instead of failing. Before a public release, check
-the secret is a **`pk_live_`** key: it currently holds the web app's `pk_test_`
-value, which points the app at Clerk's development instance. Verification step
-after building: sign in on a device, then confirm a `MobileDevice` row exists for
-that reader — that row is what the alert fan-out and topics need.
+**Identity gates account delivery.** The Clerk application is still a
+**development instance** (`environment_type=development`, `pk_test_…`), and the
+production Vercel env points at it. Topic alerts (breaking, follows) reach a
+phone through its FCM topic subscriptions without a `MobileDevice` row; the row
+is what account-scoped pushes (price alerts, briefing, per-reader fan-out) and
+the device registry need. Registration is best-effort in the app since code 67:
+a 401 never disables foreground display or topic subscriptions.
+
+Before a public release:
+
+1. Clerk dashboard → **Production** → activate the instance (domain and
+   sign-in methods) and copy `pk_live_…` / `sk_live_…`.
+2. Update Vercel production env: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
+   `CLERK_SECRET_KEY`, and the sign-in/sign-up URLs for the production domain,
+   then redeploy.
+3. Update the app's `CLERK_PUBLISHABLE_KEY` repository secret with the
+   `pk_live_` value and rebuild (both CI workflows pass it; a build without it
+   warns and runs anonymously).
+4. Sign in on a device, then confirm a `MobileDevice` row exists for that
+   reader — that row is what the token fan-out uses.
 
 ### B11. HTTPS App Links are not declared (custom scheme only)
 The manifest declares `slnews://article/<id>` and **no** HTTPS intent filter, so shared

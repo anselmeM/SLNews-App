@@ -165,7 +165,12 @@ class PushService {
         _status = const PushFailed('No FCM token');
         return false;
       }
-      await _registerToken(token);
+      // Best-effort: the device row powers account-scoped alerts, but topic
+      // subscriptions and foreground display do not need it. A signed-out
+      // reader has no session token, so the endpoint answers 401 — treating
+      // that as fatal used to abort `_startNotifications()` and flip the
+      // reader's alert toggle back off, killing topic alerts too.
+      await _registerDeviceBestEffort(token);
       await _startNotifications();
       _status = const PushRegistered();
       return true;
@@ -188,7 +193,7 @@ class PushService {
         _status = const PushFailed('No FCM token');
         return;
       }
-      await _registerToken(token);
+      await _registerDeviceBestEffort(token);
       await _startNotifications();
       _status = const PushRegistered();
     } catch (error) {
@@ -337,6 +342,19 @@ class PushService {
       'token': token,
       'platform': _platform,
     });
+  }
+
+  /// Registers the device without letting a failure disable notifications.
+  ///
+  /// The server needs a session token for the device row; an anonymous reader
+  /// gets a 401, which is expected and not a reason to stop listening to the
+  /// topic subscriptions that carry follow and breaking alerts.
+  Future<void> _registerDeviceBestEffort(String token) async {
+    try {
+      await _registerToken(token);
+    } catch (error) {
+      AppLog.debug('PushService: device registration skipped: $error');
+    }
   }
 
   Future<String> _notificationStatusReal() async {

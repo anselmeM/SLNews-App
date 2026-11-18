@@ -28,6 +28,20 @@ void main() {
     );
   });
 
+  test('a rejected device registration does not disable notifications', () async {
+    // Signed-out readers have no session token, so the devices endpoint answers
+    // 401. That must not abort foreground display and topic subscriptions.
+    final service = PushService.forTransports(
+      register: (_, _) async => throw StateError('401 Unauthorized'),
+      unregister: (_, _) async => null,
+      token: () async => 'token-123',
+      requestPermission: () async => true,
+    );
+
+    expect(await service.enable(), isTrue);
+    expect(service.status, isA<PushRegistered>());
+  });
+
   test('enable returns false when permission is denied', () async {
     final service = PushService.forTransports(
       register: (_, _) async => null,
