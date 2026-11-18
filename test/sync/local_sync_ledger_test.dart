@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/data/sync/local_sync_ledger.dart';
 
-import '../data/fakes.dart';
-
 /// The ledger is what makes last-write-wins safe: without a per-row instant an
 /// old phone would claim "changed just now" on every push and clobber the web.
 /// These cases pin the storage contract, the tombstones and the corrupt-ledger
