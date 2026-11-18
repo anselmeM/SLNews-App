@@ -213,13 +213,6 @@ final categoryFeedProvider = FutureProvider.family<List<Article>, String>((
   return rankSportsStories(pool).take(30).toList(growable: false);
 }, name: 'categoryFeed');
 
-/// Stories for a followed location (`city:freetown`, ...).
-final locationFeedProvider = FutureProvider.family<List<Article>, String>(
-  (Ref ref, String locationId) =>
-      ref.watch(articleRepositoryProvider).byLocation(locationId),
-  name: 'locationFeed',
-);
-
 /// Story for the reader route; resolves to `null` when unknown.
 final articleProvider = FutureProvider.family<Article?, String>(
   (Ref ref, String id) => ref.watch(articleRepositoryProvider).byId(id),

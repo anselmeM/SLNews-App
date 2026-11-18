@@ -255,7 +255,7 @@ void main() {
       );
     });
 
-    test('byId, search and byLocation read the bundle', () async {
+    test('byId and search read the bundle', () async {
       final OfflineFirstArticleRepository repository = await seeded();
 
       expect(
@@ -335,20 +335,6 @@ void main() {
             .toList();
         expect(ids, contains('network-1'));
         expect(ids, contains('seed-1'));
-      },
-    );
-
-    test(
-      'byLocation matches city tags and otherwise returns the latest feed',
-      () async {
-        final OfflineFirstArticleRepository repository = await seeded();
-
-        expect(
-          (await repository.byLocation('city:freetown'))
-              .map((Article a) => a.id),
-          <String>['h1'],
-        );
-        expect(await repository.byLocation('city:koidu'), isNotEmpty);
       },
     );
   });

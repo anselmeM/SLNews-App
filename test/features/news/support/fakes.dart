@@ -122,10 +122,6 @@ class FakeArticleRepository implements ArticleRepository {
   }
 
   @override
-  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async =>
-      const <Article>[];
-
-  @override
   Future<Article?> byId(String id) async {
     for (final List<Article> stories in _byCategory.values) {
       for (final Article story in stories) {

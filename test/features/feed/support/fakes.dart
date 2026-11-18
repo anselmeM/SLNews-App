@@ -121,12 +121,6 @@ class FakeArticleRepository implements ArticleRepository {
   }
 
   @override
-  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async {
-    if (failTopStories) throw StateError('offline');
-    return _localStories.take(limit).toList(growable: false);
-  }
-
-  @override
   Future<Article?> byId(String id) async {
     for (final Article article in all) {
       if (article.id == id) return article;

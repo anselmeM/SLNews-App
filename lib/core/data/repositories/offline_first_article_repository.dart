@@ -124,22 +124,6 @@ class OfflineFirstArticleRepository implements ArticleRepository {
   }
 
   @override
-  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async {
-    final List<Article> articles = await _resolve();
-    final String slug = locationId.split(':').last.toLowerCase();
-    final List<Article> matches = <Article>[
-      for (final Article article in articles)
-        if (_mentions(article, slug)) article,
-    ];
-    // A city feed with no local coverage falls back to everything rather than
-    // showing an empty screen.
-    return _cap(
-      _sortDescending(matches.isNotEmpty ? matches : articles),
-      limit,
-    );
-  }
-
-  @override
   Future<Article?> byId(String id) async {
     for (final Article article in await _resolve()) {
       if (article.id == id) return article;
@@ -359,14 +343,4 @@ class OfflineFirstArticleRepository implements ArticleRepository {
 
   static List<Article> _cap(List<Article> articles, int limit) =>
       articles.length > limit ? articles.sublist(0, limit) : articles;
-
-  static bool _mentions(Article article, String needle) {
-    if (article.title.toLowerCase().contains(needle)) return true;
-    if (article.summary.toLowerCase().contains(needle)) return true;
-    if (article.categoryId.toLowerCase() == needle) return true;
-    for (final String tag in article.tags) {
-      if (tag.toLowerCase().contains(needle)) return true;
-    }
-    return false;
-  }
 }

@@ -56,7 +56,6 @@ class SettingsController extends Notifier<AppSettings> {
     await ref.read(userStateProvider).setActiveLocationId(locationId);
     state = state.copyWith(activeLocationId: locationId);
     ref.invalidate(activeWeatherProvider);
-    ref.invalidate(locationFeedProvider);
   }
 
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {
@@ -336,7 +335,6 @@ refreshFeedsProvider = Provider<Future<void> Function()>((Ref ref) {
     await ref.read(articleRepositoryProvider).refresh();
     ref.invalidate(topStoriesProvider);
     ref.invalidate(categoryFeedProvider);
-    ref.invalidate(locationFeedProvider);
     ref.invalidate(articleProvider);
     // League feeds are lazy and cached in the source; a pull-to-refresh must
     // clear both so a failed/empty feed can recover and new stories land.

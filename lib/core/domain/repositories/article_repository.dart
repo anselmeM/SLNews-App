@@ -12,9 +12,6 @@ abstract interface class ArticleRepository {
   /// Latest stories for a category slug (`top`, `politics`, ...).
   Future<List<Article>> byCategory(String categoryId, {int limit = 30});
 
-  /// Stories relevant to a followed location (`city:freetown`, ...).
-  Future<List<Article>> byLocation(String locationId, {int limit = 20});
-
   /// Single story for the reader; `null` when it is unknown locally.
   Future<Article?> byId(String id);
 

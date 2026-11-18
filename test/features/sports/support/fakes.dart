@@ -86,10 +86,6 @@ class FakeArticleRepository implements ArticleRepository {
       feeds[categoryId] ?? const <Article>[];
 
   @override
-  Future<List<Article>> byLocation(String locationId, {int limit = 20}) async =>
-      const <Article>[];
-
-  @override
   Future<Article?> byId(String id) async => null;
 
   @override

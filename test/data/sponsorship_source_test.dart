@@ -97,5 +97,44 @@ void main() {
       final units = await repository.units(placement: 'feed');
       expect(units.single.headline, 'HOUSE');
     });
+
+    test('rotates the seeded creative by placement and by day', () async {
+      const AdUnit second = AdUnit(
+        id: 'house-2',
+        headline: 'SECOND',
+        body: '',
+        ctaLabel: 'View more',
+        advertiser: 'SLNews',
+      );
+      const AdUnit third = AdUnit(
+        id: 'house-3',
+        headline: 'THIRD',
+        body: '',
+        ctaLabel: 'View more',
+        advertiser: 'SLNews',
+      );
+      DateTime day = DateTime.utc(2026, 11, 18);
+      final DefaultAdRepository repository = DefaultAdRepository(
+        seedLoader: InMemorySeedLoader(
+          seedData(ads: const <AdUnit>[house, second, third]),
+        ),
+        now: () => day,
+      );
+
+      Future<List<String>> idsAt(String placement) async =>
+          (await repository.units(placement: placement))
+              .map((AdUnit unit) => unit.id)
+              .toList();
+
+      final List<String> feedToday = await idsAt('feed');
+      // Stable within the day for one placement (cache-friendly, testable).
+      expect(await idsAt('feed'), feedToday);
+      // Different placements do not all show the same creative.
+      expect(await idsAt('top'), isNot(equals(feedToday)));
+
+      // ...and the rotation moves on the next day.
+      day = day.add(const Duration(days: 1));
+      expect(await idsAt('feed'), isNot(equals(feedToday)));
+    });
   });
 }
