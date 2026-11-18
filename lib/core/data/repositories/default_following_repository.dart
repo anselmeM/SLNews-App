@@ -173,10 +173,15 @@ class DefaultFollowingRepository implements FollowingRepository {
         if (followedIds.contains(target.id)) target,
     ];
 
+    // Suggestions are the topics the reader does not follow yet, popular first.
+    // They used to be only the seeded `isPopular` targets (two topics plus the
+    // cities), so following both topics emptied the group — and the cities are
+    // no longer a thing the app follows at all.
     final List<FollowTarget> suggested = <FollowTarget>[
       for (final FollowTarget target in _catalogue)
-        if (target.isPopular && !followedIds.contains(target.id)) target,
-    ];
+        if (target.kind == FollowKind.topic && !followedIds.contains(target.id))
+          target,
+    ]..sort(_popularFirst);
 
     return FollowingSnapshot(
       followed: followed,
@@ -188,6 +193,12 @@ class DefaultFollowingRepository implements FollowingRepository {
       topics: _byKind(FollowKind.topic),
       publishers: _byKind(FollowKind.publisher),
     );
+  }
+
+  /// Popular suggestions first, then alphabetical, so the group is stable.
+  static int _popularFirst(FollowTarget a, FollowTarget b) {
+    if (a.isPopular != b.isPopular) return a.isPopular ? -1 : 1;
+    return a.label.toLowerCase().compareTo(b.label.toLowerCase());
   }
 
   List<FollowTarget> _byKind(FollowKind kind) => _byKinds(<FollowKind>[kind]);

@@ -36,10 +36,11 @@ void main() {
 
       final FollowingSnapshot snapshot = repository.load();
       expect(snapshot.followed, isEmpty);
+      // Only topics are suggested now (cities are gone), popular first and
+      // then alphabetical — the section no longer empties after two follows.
       expect(snapshot.suggested.map((FollowTarget t) => t.id), <String>[
-        'city:freetown',
-        'city:bo',
         'topic:politics',
+        'topic:music',
       ]);
       expect(snapshot.sports.map((FollowTarget t) => t.id), <String>[
         'team:lal',

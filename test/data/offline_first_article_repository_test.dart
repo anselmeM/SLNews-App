@@ -274,6 +274,70 @@ void main() {
       expect(await repository.search('   '), isEmpty);
     });
 
+    test('search ranks a headline match above a body-only match', () async {
+      final OfflineFirstArticleRepository repository = build(
+        sources: <FeedSource>[
+          FakeFeedSource(
+            config: config('awoko'),
+            articles: <Article>[
+              article(
+                'body-only',
+                title: 'Market roundup',
+                summary: 'Commodity prices',
+                bodyHtml: '<p>Guma Valley raised its tariffs.</p>',
+              ),
+              article(
+                'headline',
+                title: 'Guma Valley announces water shutdown',
+                summary: 'Freetown',
+                bodyHtml: '<p>Details inside.</p>',
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(
+        (await repository.search('guma')).map((Article a) => a.id),
+        <String>['headline', 'body-only'],
+      );
+    });
+
+    test(
+      'search matches the publisher name and merges the bundled seed',
+      () async {
+        final OfflineFirstArticleRepository repository = build(
+          sources: <FeedSource>[
+            FakeFeedSource(
+              config: config('awoko'),
+              articles: <Article>[
+                article(
+                  'network-1',
+                  title: 'Budget speech postponed',
+                  publisher: testPublisher.copyWith(name: 'Awoko Newspaper'),
+                ),
+              ],
+            ),
+          ],
+          seed: seedData(
+            articles: <Article>[
+              article('seed-1', title: 'Awoko marks thirty years'),
+            ],
+          ),
+        );
+
+        await repository.refresh();
+
+        // The seed used to be consulted only when the live/cached list returned
+        // nothing, so one live match hid every seeded match.
+        final List<String> ids = (await repository.search('awoko'))
+            .map((Article a) => a.id)
+            .toList();
+        expect(ids, contains('network-1'));
+        expect(ids, contains('seed-1'));
+      },
+    );
+
     test(
       'byLocation matches city tags and otherwise returns the latest feed',
       () async {

@@ -67,7 +67,7 @@ class WeatherAlertHeader extends ConsumerWidget {
               // large text scales instead of overflowing the header row.
               Flexible(
                 child: Text(
-                  '${snapshot.temperatureC}° ${snapshot.locationLabel}',
+                  snapshot.compactLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.typography.meta.copyWith(

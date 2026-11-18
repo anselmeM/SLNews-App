@@ -56,9 +56,6 @@ abstract final class AppRoutes {
   /// League/team catalogue behind Following.
   static const String manageSports = '/following/sports';
 
-  /// Cities catalogue behind Following.
-  static const String manageLocations = '/following/locations';
-
   /// `/article/:id` for a given story.
   static String articleFor(String id) => '$article/$id';
 
@@ -105,7 +102,6 @@ abstract final class RouteNames {
   static const String manageSources = 'manage_sources';
   static const String manageTopics = 'manage_topics';
   static const String manageSports = 'manage_sports';
-  static const String manageLocations = 'manage_locations';
   static const String manageLeagueTeams = 'manage_league_teams';
   static const String video = 'video';
 }

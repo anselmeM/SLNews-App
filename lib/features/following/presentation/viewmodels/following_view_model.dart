@@ -35,31 +35,16 @@ class FollowingViewModel {
   List<FollowTarget> get sports =>
       _group(<FollowKind>{FollowKind.team, FollowKind.league});
 
-  /// Followed cities, alphabetically sorted.
-  List<FollowTarget> get locations => _group(<FollowKind>{FollowKind.location});
-
-  /// "Most popular with users" — popularity suggestions that are locations and
-  /// are not already followed (following one must remove it from this list).
-  List<FollowTarget> get popularLocations {
-    final Set<String> followedIds = snapshot.followedIds.toSet();
-    final List<FollowTarget> candidates = snapshot.suggested
-        .where(
-          (FollowTarget target) =>
-              target.kind == FollowKind.location &&
-              !followedIds.contains(target.id),
-        )
-        .toList(growable: false);
-    return _dedupe(_sort(candidates));
-  }
-
   /// Followed topics, alphabetically sorted.
   ///
   /// Publishers are their own group ("Sources"); before that section existed a
   /// followed publisher fell back into Topics so it rendered somewhere.
   List<FollowTarget> get topics => _group(<FollowKind>{FollowKind.topic});
 
-  /// "Based on what you follow" — popular topic suggestions that are not
-  /// followed yet, mirroring the reference's second suggestion group.
+  /// "Based on what you follow" — topic suggestions that are not followed yet.
+  ///
+  /// The repository ranks them (popular first, then alphabetical) and caps the
+  /// list; re-sorting here would throw that ranking away.
   List<FollowTarget> get suggestedTopics {
     final Set<String> followedIds = snapshot.followedIds.toSet();
     final List<FollowTarget> candidates = snapshot.suggested
@@ -69,7 +54,7 @@ class FollowingViewModel {
               !followedIds.contains(target.id),
         )
         .toList(growable: false);
-    return _dedupe(_sort(candidates));
+    return _dedupe(candidates);
   }
 
   /// Followed publishers, kept separate for completeness of the derivation.
@@ -86,10 +71,8 @@ class FollowingViewModel {
   /// per-kind catalogues are all empty is the "empty catalogue" state.
   bool get hasAnyGroup =>
       sports.isNotEmpty ||
-      locations.isNotEmpty ||
       topics.isNotEmpty ||
       publishers.isNotEmpty ||
-      popularLocations.isNotEmpty ||
       suggestedTopics.isNotEmpty;
 
   /// Entities of the given [kinds], merging the per-kind catalogues with the

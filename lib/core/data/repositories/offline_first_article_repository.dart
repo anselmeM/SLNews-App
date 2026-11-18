@@ -174,16 +174,63 @@ class OfflineFirstArticleRepository implements ArticleRepository {
     final String needle = query.trim().toLowerCase();
     if (needle.isEmpty) return const <Article>[];
 
-    final List<Article> hits = <Article>[
-      for (final Article article in await _resolve())
-        if (_mentions(article, needle)) article,
-    ];
-    if (hits.isEmpty) {
-      for (final Article article in await _seed()) {
-        if (_mentions(article, needle)) hits.add(article);
+    // One result per story, from both the live/cached resolution and the bundled
+    // seed. The seed used to be consulted only when the network produced no hit,
+    // so a single cached match hid every seeded match for the same query.
+    final Map<String, Article> candidates = <String, Article>{};
+    for (final Article article in await _resolve()) {
+      candidates.putIfAbsent(article.id, () => article);
+    }
+    for (final Article article in await _seed()) {
+      candidates.putIfAbsent(article.id, () => article);
+    }
+
+    final List<({Article article, int score})> scored =
+        <({Article article, int score})>[
+          for (final Article article in candidates.values)
+            if (_score(article, needle) > 0)
+              (article: article, score: _score(article, needle)),
+        ];
+    scored.sort((
+      ({Article article, int score}) a,
+      ({Article article, int score}) b,
+    ) {
+      if (a.score != b.score) return b.score.compareTo(a.score);
+      return b.article.publishedAt.compareTo(a.article.publishedAt);
+    });
+    return _cap(
+      scored.map((({Article article, int score}) hit) => hit.article).toList(),
+      limit,
+    );
+  }
+
+  /// Relevance of [article] for [needle], weighted by where the match is.
+  ///
+  /// A headline match beats a tag match, which beats the body: the old search
+  /// treated every field equally, so a story that mentioned the word once in its
+  /// body could outrank one whose headline was about it (only recency decided,
+  /// and only among equal fields).
+  static int _score(Article article, String needle) {
+    final String title = article.title.toLowerCase();
+    int score = 0;
+    if (title == needle) {
+      score += 100;
+    } else if (title.startsWith(needle)) {
+      score += 40;
+    } else if (title.contains(needle)) {
+      score += 30;
+    }
+    if (article.categoryId.toLowerCase() == needle) score += 20;
+    for (final String tag in article.tags) {
+      if (tag.toLowerCase().contains(needle)) {
+        score += 15;
+        break;
       }
     }
-    return _cap(_sortDescending(hits), limit);
+    if (article.publisher.name.toLowerCase().contains(needle)) score += 12;
+    if (article.summary.toLowerCase().contains(needle)) score += 8;
+    if (article.bodyHtml.toLowerCase().contains(needle)) score += 4;
+    return score;
   }
 
   @override

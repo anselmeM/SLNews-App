@@ -10,7 +10,6 @@ import '../../features/bookmarks/presentation/saved_stories_page.dart';
 import '../../features/feed/presentation/for_you_page.dart';
 import '../../features/following/presentation/following_page.dart';
 import '../../features/following/presentation/manage_league_teams_page.dart';
-import '../../features/following/presentation/manage_locations_page.dart';
 import '../../features/following/presentation/manage_sources_page.dart';
 import '../../features/following/presentation/manage_sports_page.dart';
 import '../../features/following/presentation/manage_topics_page.dart';
@@ -129,12 +128,6 @@ GoRouter createAppRouter() {
                             ),
                       ),
                     ],
-                  ),
-                  GoRoute(
-                    path: 'locations',
-                    name: RouteNames.manageLocations,
-                    builder: (BuildContext context, GoRouterState state) =>
-                        const ManageLocationsPage(),
                   ),
                 ],
               ),

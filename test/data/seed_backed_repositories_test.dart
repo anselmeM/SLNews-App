@@ -288,6 +288,7 @@ void main() {
       articles: <Article>[article('seed-1')],
       followables: <FollowTarget>[
         target('city:freetown', isPopular: true, label: 'Freetown'),
+        target('topic:politics', isPopular: true, label: 'Politics'),
       ],
       notifications: <NotificationItem>[
         NotificationItem(
@@ -377,7 +378,12 @@ void main() {
     expect((await sports.gamesForTeam('lal')).single.id, 'g1');
     expect((await sports.standings('nba')).single.rank, 1);
     await following.ready();
-    expect(following.load().suggested.single.id, 'city:freetown');
+    // Suggestions are unfollowed topics, popular first; the seeded city is no
+    // longer offered because locations left the app.
+    final List<FollowTarget> suggested = following.load().suggested;
+    expect(suggested.map((FollowTarget target) => target.id), <String>[
+      'topic:politics',
+    ]);
     expect((await notifications.history()).single.id, 'n1');
     expect((await weather.current(SlLocations.fallback)).temperatureC, 30);
     expect((await ads.units()).single.id, 'ad-1');

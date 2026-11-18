@@ -26,12 +26,6 @@ void main() {
     label: 'Bo',
     isPopular: true,
   );
-  const FollowTarget koidu = FollowTarget(
-    id: 'city:koidu',
-    kind: FollowKind.location,
-    label: 'Koidu',
-    isPopular: true,
-  );
   const FollowTarget politics = FollowTarget(
     id: 'topic:politics',
     kind: FollowKind.topic,
@@ -55,8 +49,6 @@ void main() {
       );
 
       expect(viewModel.sports, isEmpty);
-      expect(viewModel.locations, isEmpty);
-      expect(viewModel.popularLocations, isEmpty);
       expect(viewModel.topics, isEmpty);
       expect(viewModel.publishers, isEmpty);
       expect(viewModel.unreadNotifications, isZero);
@@ -74,9 +66,6 @@ void main() {
 
       expect(viewModel.sports.map((FollowTarget t) => t.id), <String>[
         'team:lal',
-      ]);
-      expect(viewModel.locations.map((FollowTarget t) => t.id), <String>[
-        'city:freetown',
       ]);
       expect(viewModel.topics.map((FollowTarget t) => t.id), <String>[
         'topic:politics',
@@ -98,7 +87,6 @@ void main() {
       expect(viewModel.sports.map((FollowTarget t) => t.label), <String>[
         'Los Angeles Lakers',
       ]);
-      expect(viewModel.locations, isEmpty);
       expect(viewModel.topics, isEmpty);
     });
 
@@ -116,7 +104,6 @@ void main() {
         );
 
         expect(viewModel.sports, isEmpty);
-        expect(viewModel.locations, isEmpty);
         expect(viewModel.topics, isEmpty);
         expect(viewModel.hasAnyGroup, isFalse);
       },
@@ -157,28 +144,36 @@ void main() {
         'Arsenal',
         'zebras',
       ]);
-      expect(viewModel.locations.map((FollowTarget t) => t.label), <String>[
-        'Bo',
-        'Freetown',
+      expect(viewModel.topics.map((FollowTarget t) => t.label), <String>[
+        'Politics',
       ]);
     });
 
-    test(
-      'popular suggestions exclude followed locations and non-location kinds',
-      () {
-        const FollowingViewModel viewModel = FollowingViewModel(
-          snapshot: FollowingSnapshot(
-            followed: <FollowTarget>[freetown],
-            suggested: <FollowTarget>[freetown, bo, koidu, lakers, politics],
-          ),
-        );
+    test('suggested topics keep the repository ranking and drop followed ones', () {
+      const FollowTarget music = FollowTarget(
+        id: 'topic:music',
+        kind: FollowKind.topic,
+        label: 'Music',
+        isPopular: true,
+      );
+      const FollowTarget business = FollowTarget(
+        id: 'topic:business',
+        kind: FollowKind.topic,
+        label: 'Business',
+      );
+      const FollowingViewModel viewModel = FollowingViewModel(
+        snapshot: FollowingSnapshot(
+          followed: <FollowTarget>[politics],
+          // Popular first, then alphabetical: the view model must not re-sort.
+          suggested: <FollowTarget>[music, politics, business],
+        ),
+      );
 
-        expect(
-          viewModel.popularLocations.map((FollowTarget t) => t.id),
-          <String>['city:bo', 'city:koidu'],
-        );
-      },
-    );
+      expect(viewModel.suggestedTopics.map((FollowTarget t) => t.id), <String>[
+        'topic:music',
+        'topic:business',
+      ]);
+    });
 
     test('counts unread notifications only', () {
       final FollowingViewModel viewModel = FollowingViewModel(
