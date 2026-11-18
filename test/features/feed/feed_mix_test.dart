@@ -14,6 +14,15 @@ const Publisher international = Publisher(
   id: 'bbcafrica',
   name: 'BBC News Africa',
   wordmark: 'BBC',
+  country: 'United Kingdom',
+);
+
+/// The scraper API sends no country; the app records that as an empty value.
+const Publisher unknown = Publisher(
+  id: 'publisher:new-outlet',
+  name: 'New Outlet',
+  wordmark: 'NO',
+  country: '',
 );
 
 Article article({
@@ -21,10 +30,13 @@ Article article({
   required Publisher publisher,
   String categoryId = 'top',
   DateTime? publishedAt,
+  String? title,
+  String summary = '',
 }) {
   return Article(
     id: id,
-    title: id,
+    title: title ?? id,
+    summary: summary,
     publisher: publisher,
     categoryId: categoryId,
     publishedAt: publishedAt ?? DateTime(2026, 11, 12),
@@ -60,6 +72,73 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'locality comes from the publisher country, with a keyword fallback',
+    () {
+      // A local outlet is local even when the headline says nothing about
+      // Sierra Leone — the old id/name lists were what made this work, and they
+      // missed outlets whose ids differed between the API and the registry.
+      expect(
+        FeedMix.isSierraLeone(article(id: 'quiet-local', publisher: local)),
+        isTrue,
+      );
+
+      // A foreign outlet stays international unless the headline is about SL.
+      expect(
+        FeedMix.isSierraLeone(
+          article(id: 'world-news', publisher: international),
+        ),
+        isFalse,
+      );
+      expect(
+        FeedMix.isSierraLeone(
+          article(
+            id: 'wire',
+            publisher: international,
+            title: 'Freetown port expansion wins backing',
+          ),
+        ),
+        isTrue,
+      );
+
+      // A summary mention alone is not enough for a known foreign outlet.
+      expect(
+        FeedMix.isSierraLeone(
+          article(
+            id: 'passing',
+            publisher: international,
+            title: 'Regional summit closes',
+            summary: 'Delegates met in Freetown earlier this year.',
+          ),
+        ),
+        isFalse,
+      );
+
+      // Unknown provenance falls back to the whole story text.
+      expect(
+        FeedMix.isSierraLeone(
+          article(
+            id: 'unknown-quiet',
+            publisher: unknown,
+            title: 'New outlet launches',
+          ),
+        ),
+        isFalse,
+      );
+      expect(
+        FeedMix.isSierraLeone(
+          article(
+            id: 'unknown-local',
+            publisher: unknown,
+            title: 'New outlet launches',
+            summary: 'Reporting from Bo and Freetown.',
+          ),
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test(
     'home feed is Sierra Leone-first, international-second and sports-last',

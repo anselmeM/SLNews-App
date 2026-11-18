@@ -11,6 +11,10 @@ Publisher _publisherFor(String sourceName, Publisher unknown) {
     name: name,
     wordmark: shortEnough ? name.toUpperCase() : _initials(name),
     isWire: isWire,
+    // The scraper API sends no country. An empty value marks unknown
+    // provenance, so the home feed falls back to the story text instead of
+    // assuming a foreign outlet is local.
+    country: '',
   );
 }
 

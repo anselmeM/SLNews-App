@@ -66,6 +66,7 @@ class SlNewsApiSource implements FeedSource {
     id: 'publisher:unknown',
     name: 'Unknown source',
     wordmark: 'SLNEWS',
+    country: '',
   );
 
   /// One page of stories, or `[]` when disabled or the API failed.

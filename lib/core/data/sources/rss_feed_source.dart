@@ -207,5 +207,6 @@ abstract final class RssParser {
     wordmark: config.wordmark,
     websiteUrl: config.websiteUrl,
     isWire: config.isWire,
+    country: config.country,
   );
 }

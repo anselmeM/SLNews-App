@@ -164,7 +164,7 @@ abstract final class JsonArticleMapper {
           wordmark: _nullableString(json['wordmark']) ?? config.wordmark,
           logoUrl: _nullableString(json['logoUrl']),
           websiteUrl: _nullableString(json['websiteUrl']) ?? config.websiteUrl,
-          country: _nullableString(json['country']) ?? 'Sierra Leone',
+          country: _nullableString(json['country']) ?? config.country,
           isWire: json['isWire'] is bool
               ? json['isWire'] as bool
               : config.isWire,
@@ -179,6 +179,7 @@ abstract final class JsonArticleMapper {
         wordmark: config.wordmark,
         websiteUrl: config.websiteUrl,
         isWire: config.isWire,
+        country: config.country,
       );
     }
     // Missing publisher: fall back to the outlet the endpoint belongs to.
@@ -188,6 +189,7 @@ abstract final class JsonArticleMapper {
       wordmark: config.wordmark,
       websiteUrl: config.websiteUrl,
       isWire: config.isWire,
+      country: config.country,
     );
   }
 

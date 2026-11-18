@@ -41,6 +41,7 @@ class FeedSourceConfig {
     this.authorityScore = 1.0,
     this.isWire = false,
     this.summaryOnly = false,
+    this.country = 'Sierra Leone',
   });
 
   /// Stable slug, e.g. `awoko`.
@@ -72,6 +73,11 @@ class FeedSourceConfig {
   /// Wire services are labelled and skip the follow toggle.
   final bool isWire;
 
+  /// Country the outlet reports from, e.g. `Sierra Leone` or `United
+  /// Kingdom`. The home feed's Sierra Leone-first ordering reads this instead
+  /// of matching publisher ids by hand.
+  final String country;
+
   /// Keep only the feed summary in the reader and send the reader to the
   /// publisher for the full piece. Used for syndicated wires whose licence does
   /// not allow republishing the whole body.
@@ -90,6 +96,7 @@ class FeedSourceConfig {
     'authorityScore': authorityScore,
     'isWire': isWire,
     'summaryOnly': summaryOnly,
+    'country': country,
   };
 
   /// Rebuilds a configuration from seed JSON, tolerating missing optional keys.
@@ -107,6 +114,7 @@ class FeedSourceConfig {
         authorityScore: (json['authorityScore'] as num?)?.toDouble() ?? 1.0,
         isWire: json['isWire'] as bool? ?? false,
         summaryOnly: json['summaryOnly'] as bool? ?? false,
+        country: json['country'] as String? ?? 'Sierra Leone',
       );
 
   @override

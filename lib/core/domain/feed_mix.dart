@@ -10,52 +10,34 @@ enum FeedAudience { sierraLeone, international, sports }
 /// while Sierra Leone reporting falls below the fold. The rule is deliberately
 /// simple and testable: local first, international second, sport last (and only
 /// a small number of sport stories outside the Sports tab).
+///
+/// Locality comes from the publisher's own [Publisher.country], which the outlet
+/// registry supplies, rather than a hand-maintained list of ids and names: the
+/// old lists mixed two id formats (`awoko` and `awoko-newspaper`) and a typo in
+/// one of them silently mis-ranked an outlet. Keyword matching is now only the
+/// fallback for publishers whose country is unknown.
 abstract final class FeedMix {
-  /// Local outlet ids, both the RSS registry ids and the API publisher ids.
-  static const Set<String> _localPublisherIds = <String>{
-    'sltelegraph',
-    'sierraloaded',
-    'awoko',
-    'concordtimes',
-    'politicosl',
-    'standardtimes',
-    'kallon',
-    'footballssierraleone',
-    'slnews',
-    'publisher:the-sierra-leone-telegraph',
-    'publisher:sierraloaded',
-    'publisher:awoko-newspaper',
-    'publisher:concord-times',
-    'publisher:politico-sl',
-    'publisher:standard-times',
-    'publisher:kallons-newswire',
-    'publisher:football-sierra-leone',
-    'publisher:slnews',
-  };
-
-  static const Set<String> _localPublisherNames = <String>{
-    'The Sierra Leone Telegraph',
-    'Sierraloaded',
-    'Awoko Newspaper',
-    'Concord Times',
-    'Politico SL',
-    'Standard Times',
-    "Kallon's Newswire",
-    'Football Sierra Leone',
-    'SLNews',
-  };
+  static const String _sierraLeone = 'sierra leone';
 
   static bool isSports(Article article) =>
       article.categoryId == 'sports' ||
       article.tags.any((String tag) => tag.toLowerCase() == 'sports');
 
   static bool isSierraLeone(Article article) {
-    if (_localPublisherIds.contains(article.publisher.id) ||
-        _localPublisherNames.contains(article.publisher.name)) {
-      return true;
-    }
-    final String text = '${article.title} ${article.summary}'.toLowerCase();
-    return text.contains('sierra leone') || text.contains('freetown');
+    final String country = article.publisher.country.trim().toLowerCase();
+    if (country == _sierraLeone) return true;
+    // A known foreign outlet still belongs in the local bucket when the story
+    // itself is about Sierra Leone (wires covering Freetown). The headline is
+    // the stronger signal — a summary can mention the country in passing.
+    if (country.isNotEmpty) return _mentions(article.title);
+    // Unknown provenance: the scraper API names the outlet but sends no
+    // country, so the story text is the only signal available.
+    return _mentions('${article.title} ${article.summary}');
+  }
+
+  static bool _mentions(String text) {
+    final String lower = text.toLowerCase();
+    return lower.contains(_sierraLeone) || lower.contains('freetown');
   }
 
   static FeedAudience audienceOf(Article article) {
