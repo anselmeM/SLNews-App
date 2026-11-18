@@ -46,6 +46,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          # Gradle dependency cache (~/.gradle/caches + wrapper), keyed on the
+          # Android build files. The build itself dominates the job (~12 min
+          # warm otherwise), so this is the step worth caching.
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
