@@ -22,7 +22,9 @@ class _WebVideoPlayer extends StatefulWidget {
 
 class _WebVideoPlayerState extends State<_WebVideoPlayer> {
   late final WebViewController _controller;
+  String? _url;
   bool _failed = false;
+  bool _loading = true;
 
   String get _syncScript =>
       "(function(){var v=document.querySelector('video');if(!v)return;"
@@ -33,10 +35,11 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    final String? url = widget.playback.embedUrl;
+    _url = widget.playback.embedUrl;
     _controller = WebViewController();
-    if (url == null) {
+    if (_url == null) {
       _failed = true;
+      _loading = false;
       return;
     }
     // Android requires a user gesture before media may start. The reel is a
@@ -55,14 +58,36 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
       ..setBackgroundColor(Colors.black)
       ..setNavigationDelegate(
         NavigationDelegate(
+          onPageStarted: (String _) => _update(() => _loading = true),
           // Autoplay and muted state only stick once the player page is up.
-          onPageFinished: (String _) => _controller.runJavaScript(_syncScript),
-          onWebResourceError: (WebResourceError error) {
-            if (mounted) setState(() => _failed = true);
+          onPageFinished: (String _) {
+            _update(() => _loading = false);
+            _controller.runJavaScript(_syncScript);
           },
+          onWebResourceError: (WebResourceError error) =>
+              _update(() => _failed = true),
         ),
-      )
-      ..loadRequest(Uri.parse(url));
+      );
+    _load();
+  }
+
+  void _update(VoidCallback change) {
+    if (!mounted) return;
+    setState(change);
+  }
+
+  void _load() {
+    final String? url = _url;
+    if (url == null) return;
+    _controller.loadRequest(Uri.parse(url));
+  }
+
+  void _retry() {
+    setState(() {
+      _failed = false;
+      _loading = true;
+    });
+    _load();
   }
 
   @override
@@ -76,13 +101,38 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_failed) {
-      return const Center(
-        child: Text(
-          'This video is unavailable right now.',
-          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Text(
+                'This video is unavailable right now.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextButton(onPressed: _retry, child: const Text('Try again')),
+            ],
+          ),
         ),
       );
     }
-    return WebViewWidget(controller: _controller);
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        WebViewWidget(controller: _controller),
+        if (_loading)
+          const Center(
+            child: CircularProgressIndicator.adaptive(
+              backgroundColor: Colors.white24,
+            ),
+          ),
+      ],
+    );
   }
 }
