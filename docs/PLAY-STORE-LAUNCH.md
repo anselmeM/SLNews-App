@@ -96,6 +96,15 @@ terms, a licence-based source (e.g. a wire service), or a switch to owned/CC con
 launch. Publisher logos in `PublisherMark` need the same permission. This decision gates
 the listing claims and possibly the app itself.
 
+Audit and options are now written up in [CONTENT-RIGHTS.md](CONTENT-RIGHTS.md). The
+finding that matters: three publishers have their **full article bodies** extracted and
+shown, not just headlines, and article images are hotlinked; robots.txt is not checked.
+The memo recommends **link-out by default, full text only for publishers who sign**
+(option C), with the outreach template in [CONTENT-OUTREACH.md](CONTENT-OUTREACH.md) and
+the public page copy in [CONTENT-POLICY-DRAFT.md](CONTENT-POLICY-DRAFT.md). Engineering
+follow-up after the choice: per-source `contentMode`, a permission register, robots
+compliance and a removal/suppression path. **Owner decision required before launch.**
+
 ### B5. Crash reporting + release monitoring — M (needs a vendor account)
 Zero crash or error telemetry today. For a launch, at minimum: crash/ANR reporting
 (Sentry, Firebase Crashlytics or equivalent), a release-health dashboard, and either
