@@ -44,15 +44,76 @@ class VideoPlayback {
   bool get isPlayable => kind != VideoPlaybackKind.unsupported;
 }
 
+/// Origin the player is attributed to.
+///
+/// YouTube refuses embeds that arrive without a referer (error 153), so the
+/// reel serves the player from a document with this base URL and passes the same
+/// origin to the embed. Must match the `baseUrl` in the web view.
+const String videoPlayerOrigin = 'https://slnews.sl/';
+
 /// YouTube's privacy-friendly player, with inline playback for a web view.
 ///
 /// `playsinline=1` keeps iOS from going full-screen, `rel=0` hides unrelated
-/// videos and `modestbranding=1` keeps the chrome minimal — the reference player
-/// shows only the clip. `mute=1` is deliberate: the reel starts muted so
-/// autoplay is allowed on every platform, and the reader unmutes from the rail.
+/// videos, `modestbranding=1` keeps the chrome minimal and `mute=1` lets the
+/// reel autoplay. `enablejsapi=1` + `origin` let the reel drive play/mute
+/// through the IFrame API instead of reaching into the player's DOM.
 String youTubeEmbedUrl(String id) =>
     'https://www.youtube-nocookie.com/embed/$id'
-    '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=1';
+    '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=1'
+    '&enablejsapi=1&origin=${Uri.encodeComponent(videoPlayerOrigin)}';
+
+/// The document the reel loads for a YouTube clip.
+///
+/// The embed used to be loaded top-level. Android WebView sends no `Referer` for
+/// that load, and YouTube now answers error 153 ("Video player configuration
+/// error") when the referer is missing. Serving this wrapper from
+/// [videoPlayerOrigin] with `referrerpolicy` gives the iframe a valid referer,
+/// while the IFrame API keeps pause/mute working from the reel's controls.
+String youTubePlayerDocument(String id) {
+  final String src = youTubeEmbedUrl(id).replaceAll('&', '&amp;');
+  return '''
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
+  iframe { width: 100%; height: 100%; border: 0; display: block; }
+</style>
+</head>
+<body>
+<iframe id="yt"
+  src="$src"
+  title="SLNews video"
+  allow="autoplay; encrypted-media; picture-in-picture"
+  allowfullscreen
+  referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  var slnewsDesired = { paused: false, muted: true };
+  var slnewsPlayer = null;
+
+  function slnewsApply() {
+    if (!slnewsPlayer || !slnewsPlayer.pauseVideo) return;
+    slnewsDesired.muted ? slnewsPlayer.mute() : slnewsPlayer.unMute();
+    slnewsDesired.paused ? slnewsPlayer.pauseVideo() : slnewsPlayer.playVideo();
+  }
+
+  function onYouTubeIframeAPIReady() {
+    slnewsPlayer = new YT.Player('yt', { events: { onReady: slnewsApply } });
+  }
+
+  // Called by the app after the page finishes and whenever a control changes.
+  window.slnewsSync = function (paused, muted) {
+    slnewsDesired.paused = paused;
+    slnewsDesired.muted = muted;
+    slnewsApply();
+  };
+</script>
+</body>
+</html>
+''';
+}
 
 /// Extracts the video id from every YouTube URL shape the outlets use.
 String? youTubeIdFrom(String rawUrl) {

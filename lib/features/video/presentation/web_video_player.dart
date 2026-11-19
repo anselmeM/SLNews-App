@@ -26,11 +26,18 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
   bool _failed = false;
   bool _loading = true;
 
-  String get _syncScript =>
-      "(function(){var v=document.querySelector('video');if(!v)return;"
-      'v.muted=${widget.muted};'
-      "${widget.paused ? 'v.pause();' : 'if(v.paused){v.play&&v.play();}'}"
-      '})();';
+  String get _syncScript {
+    if (widget.playback.kind == VideoPlaybackKind.youtube) {
+      // The YouTube document owns the player; its IFrame API bridge applies the
+      // paused/muted state even if the API is not ready yet.
+      return 'window.slnewsSync && window.slnewsSync('
+          '${widget.paused}, ${widget.muted});';
+    }
+    return "(function(){var v=document.querySelector('video');if(!v)return;"
+        'v.muted=${widget.muted};'
+        "${widget.paused ? 'v.pause();' : 'if(v.paused){v.play&&v.play();}'}"
+        '})();';
+  }
 
   @override
   void initState() {
@@ -79,6 +86,17 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
   void _load() {
     final String? url = _url;
     if (url == null) return;
+    final String? youtubeId = widget.playback.youtubeId;
+    if (widget.playback.kind == VideoPlaybackKind.youtube &&
+        youtubeId != null) {
+      // Load a document from a real origin instead of the bare embed: YouTube
+      // needs a Referer, and a top-level WebView load has none (error 153).
+      _controller.loadHtmlString(
+        youTubePlayerDocument(youtubeId),
+        baseUrl: videoPlayerOrigin,
+      );
+      return;
+    }
     _controller.loadRequest(Uri.parse(url));
   }
 
