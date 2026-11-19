@@ -110,7 +110,12 @@ class _FeedSliver extends ConsumerWidget {
         if (briefing.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
               child: DailyBriefingCard(
                 title: briefingTitleFor(DateTime.now()),
                 articles: briefing,

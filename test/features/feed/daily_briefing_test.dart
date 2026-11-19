@@ -31,6 +31,12 @@ void main() {
 
     expect(find.text('Evening briefing'), findsOneWidget);
     expect(find.text('Macron reacts to protests'), findsOneWidget);
+    // Numbered rows and the evening glyph are part of the card's look.
+    expect(find.text('01'), findsOneWidget);
+    expect(find.text('02'), findsOneWidget);
+    expect(find.text('03'), findsOneWidget);
+    expect(find.byIcon(Icons.nights_stay_outlined), findsOneWidget);
+    expect(find.text('3 stories'), findsOneWidget);
 
     await tester.tap(find.text('Macron reacts to protests'));
     await tester.pumpAndSettle();
