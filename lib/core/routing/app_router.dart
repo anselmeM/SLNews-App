@@ -22,6 +22,7 @@ import '../../features/sports/presentation/team_page.dart';
 import '../../features/video/presentation/video_reel_page.dart';
 import '../shell/app_shell.dart';
 import 'app_routes.dart';
+import 'deep_link_uri.dart';
 import '../../features/markets/presentation/stocks_page.dart';
 import '../../features/search/presentation/search_page.dart';
 import '../../features/feed/presentation/top_stories_section_page.dart';
@@ -38,6 +39,12 @@ GoRouter createAppRouter() {
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.forYou,
     debugLogDiagnostics: false,
+    // Incoming App Links carry a scheme and host; internal navigation does not.
+    // Normalising here keeps the route table free of platform URI shapes.
+    redirect: (BuildContext context, GoRouterState state) {
+      final Uri normalized = normalizeDeepLink(state.uri);
+      return normalized == state.uri ? null : normalized.toString();
+    },
     routes: <RouteBase>[
       GoRoute(
         path: '/',

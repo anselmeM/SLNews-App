@@ -191,11 +191,13 @@ Before a public release:
 4. Sign in on a device, then confirm a `MobileDevice` row exists for that
    reader — that row is what the token fan-out uses.
 
-### B11. HTTPS App Links are not declared (custom scheme only)
-The manifest declares `slnews://article/<id>` and **no** HTTPS intent filter, so shared
-`https://` links open the browser. Fixing it needs a domain under your control, an
-`https` filter in the manifest and a served `assetlinks.json` carrying the Play
-app-signing fingerprint. Not a submission blocker; a launch-quality item.
+### B11. HTTPS App Links — **code ready, waiting for the domain**
+The manifest now declares `slnews://article/<id>` and
+`https://slnews.sl/article/<id>` (`autoVerify`), the router normalises both to
+`/article/:id`, and the web app serves `/.well-known/assetlinks.json` with the
+upload-key fingerprint. Verification activates as soon as the domain resolves and
+the Play signing fingerprint is added — see [APP-LINKS.md](APP-LINKS.md). Not a
+submission blocker; a launch-quality item.
 
 ## 3. Should fix before launch (quality, not gates)
 

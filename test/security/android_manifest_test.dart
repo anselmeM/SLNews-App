@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:slnews_mobile/core/routing/deep_link_uri.dart';
 import 'package:xml/xml.dart';
 
 /// Security invariants of the shipped Android manifest.
@@ -65,20 +66,59 @@ void main() {
     });
   });
 
-  test('deep links stay on the custom scheme', () {
-    // An HTTPS autoVerify filter without a served assetlinks.json would let the
-    // app claim a domain it does not control; the custom scheme is deliberate.
-    // (`<queries>` also carries an https scheme for url_launcher, so only the
-    // intent filters are in scope here.)
-    final Iterable<XmlElement> data = manifest
-        .findAllElements('intent-filter')
-        .expand((XmlElement filter) => filter.findAllElements('data'))
+  test('deep links claim the custom scheme and one verified HTTPS host', () {
+    // `https://slnews.sl/article/<id>` is an App Link: autoVerify must be on and
+    // the host comes from the Gradle placeholder, so the manifest cannot drift
+    // from the assetlinks route. `<queries>` also carries an https scheme for
+    // url_launcher, so only the intent filters are in scope here.
+    final Iterable<XmlElement> filters = manifest.findAllElements(
+      'intent-filter',
+    );
+    final List<XmlElement> linkFilters = filters
         .where(
-          (XmlElement node) => node.getAttribute('android:scheme') != null,
-        );
-    expect(data, isNotEmpty);
-    for (final XmlElement node in data) {
-      expect(node.getAttribute('android:scheme'), 'slnews');
-    }
+          (XmlElement filter) => filter
+              .findAllElements('data')
+              .any(
+                (XmlElement data) =>
+                    data.getAttribute('android:scheme') == 'slnews' ||
+                    data.getAttribute('android:scheme') == 'https',
+              ),
+        )
+        .toList(growable: false);
+
+    final XmlElement customScheme = linkFilters.singleWhere(
+      (XmlElement filter) => filter
+          .findAllElements('data')
+          .any(
+            (XmlElement data) =>
+                data.getAttribute('android:scheme') == 'slnews',
+          ),
+    );
+    expect(customScheme.getAttribute('android:autoVerify'), 'false');
+    expect(
+      customScheme.findAllElements('data').single.getAttribute('android:host'),
+      'article',
+    );
+
+    final XmlElement httpsLink = linkFilters.singleWhere(
+      (XmlElement filter) => filter
+          .findAllElements('data')
+          .any(
+            (XmlElement data) => data.getAttribute('android:scheme') == 'https',
+          ),
+    );
+    expect(httpsLink.getAttribute('android:autoVerify'), 'true');
+    final XmlElement httpsData = httpsLink.findAllElements('data').single;
+    expect(httpsData.getAttribute('android:host'), r'${deepLinkHost}');
+    expect(httpsData.getAttribute('android:pathPrefix'), '/article/');
+
+    // The placeholder must be defined, and to the same host the app claims.
+    final File gradle = File('android/app/build.gradle.kts');
+    final String gradleText = gradle.readAsStringSync();
+    expect(
+      gradleText,
+      contains('manifestPlaceholders["deepLinkHost"] = "slnews.sl"'),
+    );
+    expect(appLinkHosts, <String>{'slnews.sl'});
   });
 }
