@@ -304,7 +304,9 @@ class SelectedCategoryController extends Notifier<String> {
 final Provider<SlNewsVideoSource?> slNewsVideoSourceProvider =
     Provider<SlNewsVideoSource?>((Ref ref) => null, name: 'slNewsVideoSource');
 
-const String _videoCacheKey = 'video_moments.cache.v1';
+// v2: v1 caches could hold search/channel URLs from the old seed, which opened
+// a YouTube page instead of a clip. Reading it again would resurrect that bug.
+const String _videoCacheKey = 'video_moments.cache.v2';
 
 /// Video moments for the For You rail.
 ///

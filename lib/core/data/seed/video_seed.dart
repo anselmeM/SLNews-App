@@ -2,72 +2,85 @@ import '../../domain/models/video_moment.dart';
 
 /// Offline "Video moments" rotation.
 ///
-/// The rail must render with no network (the app's whole premise), so a bundled
-/// set mirrors what the scraper's `/v1/videos` returns for Sierra Leone
-/// broadcasters. Live entries replace these whenever the API is configured and
-/// returns data.
+/// These are **real, playable clips** from the channels the scraper follows,
+/// used only until the live `/v1/videos` payload replaces them (or when the
+/// build has no API key, which is the case for signed-out readers today).
+/// Every entry carries a `youtubeId`, so the reel can always rebuild a watch
+/// URL even if the stored one rots.
+///
+/// Earlier revisions used `youtube.com/results?...` search URLs and stock
+/// photos; tapping one opened a YouTube search page instead of a clip. Never
+/// put a channel, search or playlist URL here: the rail is for videos.
+///
+/// Refresh this list when the clips age out (they are recent uploads as of
+/// 2026-11-19); the live feed is the source of truth.
 abstract final class SlVideos {
   static final List<VideoMoment> all = <VideoMoment>[
     VideoMoment(
-      id: 'video:leone-stars-training',
-      title: 'Leone Stars step up training ahead of AFCON qualifier',
-      source: 'SLBC Sports',
-      thumbnailUrl: 'https://picsum.photos/seed/slnews-video-leone/720/1280',
-      url: 'https://www.youtube.com/results?search_query=leone+stars+training',
-      summary: 'The squad trained in Freetown ahead of the away leg.',
-      category: 'sports',
-      publishedAt: DateTime.utc(2026, 10, 15, 7, 30),
+      id: 'video:slbc-news-bulletin',
+      title: 'SLBC News bulletin: Esther Neneh Fpu',
+      source: 'SLBC News',
+      thumbnailUrl: 'https://i4.ytimg.com/vi/wuE24NT7TcE/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=wuE24NT7TcE',
+      summary: 'The evening news bulletin from the state broadcaster.',
+      category: 'news',
+      publishedAt: DateTime.utc(2026, 11, 19, 15, 56),
+      youtubeId: 'wuE24NT7TcE',
     ),
     VideoMoment(
-      id: 'video:freetown-flooding',
-      title: 'Freetown residents assess damage after overnight flooding',
+      id: 'video:president-youth-summit',
+      title: 'President Bio opens the national youth summit',
       source: 'SLBC News',
-      thumbnailUrl: 'https://picsum.photos/seed/slnews-video-flood/720/1280',
-      url: 'https://www.youtube.com/results?search_query=freetown+flooding',
-      summary: 'Kissy and Lumley were the worst affected wards.',
+      thumbnailUrl: 'https://i3.ytimg.com/vi/fRQBa04XGbU/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=fRQBa04XGbU',
+      summary: 'Opening remarks from the youth gathering in Freetown.',
       category: 'politics',
-      publishedAt: DateTime.utc(2026, 10, 15, 5, 10),
+      publishedAt: DateTime.utc(2026, 11, 19, 15, 56),
+      youtubeId: 'fRQBa04XGbU',
     ),
     VideoMoment(
-      id: 'video:bo-rangers-celebration',
-      title: 'Bo Rangers fans celebrate after the late winner',
-      source: 'SLBC Sports',
-      thumbnailUrl: 'https://picsum.photos/seed/slnews-video-rangers/720/1280',
-      url: 'https://www.youtube.com/results?search_query=bo+rangers+celebrate',
-      summary: 'A stoppage-time goal kept the title race alive.',
-      category: 'sports',
-      publishedAt: DateTime.utc(2026, 10, 15, 2, 45),
+      id: 'video:agriculture-investment-plan',
+      title: 'Agriculture minister unveils \$1bn investment plan',
+      source: 'Sierraloaded TV',
+      thumbnailUrl: 'https://i2.ytimg.com/vi/yB7PoWDXMbg/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=yB7PoWDXMbg',
+      summary: 'The plan targets 120,000 jobs across the sector.',
+      category: 'news',
+      publishedAt: DateTime.utc(2026, 11, 19, 16, 18),
+      youtubeId: 'yB7PoWDXMbg',
     ),
     VideoMoment(
-      id: 'video:parliament-budget',
-      title: 'Parliament passes the 2027 budget after a long sitting',
-      source: 'SLBC News',
-      thumbnailUrl:
-          'https://picsum.photos/seed/slnews-video-parliament/720/1280',
-      url: 'https://www.youtube.com/results?search_query=sierra+leone+budget',
-      summary: 'Finance minister says spending targets education and health.',
+      id: 'video:water-supply-threat',
+      title: 'Illegal mining and cable theft threaten the water supply',
+      source: 'Sierraloaded TV',
+      thumbnailUrl: 'https://i4.ytimg.com/vi/s_4fN03XahM/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=s_4fN03XahM',
+      summary: 'SALWACO warns that vandalism is cutting supply to communities.',
+      category: 'news',
+      publishedAt: DateTime.utc(2026, 11, 19, 15, 52),
+      youtubeId: 's_4fN03XahM',
+    ),
+    VideoMoment(
+      id: 'video:apc-veteran-interview',
+      title: 'APC veteran defends Samura Kamara meeting with President Bio',
+      source: 'Sierraloaded TV',
+      thumbnailUrl: 'https://i2.ytimg.com/vi/ey0dnzy71bU/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=ey0dnzy71bU',
+      summary: 'Reaction after the opposition leader met the president.',
       category: 'politics',
-      publishedAt: DateTime.utc(2026, 10, 14, 20, 0),
+      publishedAt: DateTime.utc(2026, 11, 19, 15, 13),
+      youtubeId: 'ey0dnzy71bU',
     ),
     VideoMoment(
-      id: 'video:markets-traders',
-      title: 'Market traders on the new levy: "we need clarity"',
-      source: 'SLBC News',
-      thumbnailUrl: 'https://picsum.photos/seed/slnews-video-market/720/1280',
-      url: 'https://www.youtube.com/results?search_query=freetown+market+traders',
-      summary: 'Traders in Freetown react to the revised levy.',
-      category: 'business',
-      publishedAt: DateTime.utc(2026, 10, 14, 16, 20),
-    ),
-    VideoMoment(
-      id: 'video:music-festival',
-      title: 'Lumley beach music festival draws a record crowd',
-      source: 'SLNews Culture',
-      thumbnailUrl: 'https://picsum.photos/seed/slnews-video-music/720/1280',
-      url: 'https://www.youtube.com/results?search_query=lumley+beach+festival',
-      summary: 'Three days of performances on the peninsula.',
-      category: 'entertainment',
-      publishedAt: DateTime.utc(2026, 10, 14, 9, 0),
+      id: 'video:ayv-primetime-news',
+      title: 'AYV primetime news at nine',
+      source: 'AYV Media Empire',
+      thumbnailUrl: 'https://i1.ytimg.com/vi/D_PcfWwCLNs/hqdefault.jpg',
+      url: 'https://www.youtube.com/watch?v=D_PcfWwCLNs',
+      summary: 'The full primetime bulletin from AYV.',
+      category: 'news',
+      publishedAt: DateTime.utc(2026, 11, 15, 9, 52),
+      youtubeId: 'D_PcfWwCLNs',
     ),
   ];
 }

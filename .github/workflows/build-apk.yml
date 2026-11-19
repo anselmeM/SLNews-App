@@ -22,6 +22,9 @@ jobs:
       # Publishable by design. Without it the app is anonymous, which also turns
       # off push registration: the devices endpoint needs a session token.
       CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+      # The scraper key that makes /v1/videos (and API-backed news) available to
+      # signed-out readers. Empty means the rail falls back to the bundled clips.
+      SLNEWS_API_KEY: ${{ secrets.SLNEWS_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -114,6 +117,11 @@ jobs:
             DEFINES="$DEFINES --dart-define=CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY"
           else
             echo "::warning::CLERK_PUBLISHABLE_KEY is not set; the app runs anonymously"
+          fi
+          if [ -n "$SLNEWS_API_KEY" ]; then
+            DEFINES="$DEFINES --dart-define=SLNEWS_API_KEY=$SLNEWS_API_KEY"
+          else
+            echo "::warning::SLNEWS_API_KEY is not set; /v1/videos is unavailable to signed-out readers and the rail uses the bundled clips"
           fi
           flutter build apk --release --split-per-abi $DEFINES
 

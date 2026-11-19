@@ -3,7 +3,7 @@ description: "SLNews - Sierra Leone news aggregation app (Flutter, iOS + Android
 publish_to: 'none' # Private application; never published to pub.dev.
 
 # versionName / versionCode for Android, CFBundleShortVersionString / CFBundleVersion for iOS.
-version: 1.0.0+68
+version: 1.0.0+69
 
 environment:
   sdk: ^3.13.5
@@ -48,6 +48,9 @@ dependencies:
   # Article actions.
   url_launcher: ^6.3.3
   webview_flutter: ^4.14.1
+  # Needed directly to relax Android's media-gesture requirement, without which
+  # the reel's YouTube embed never autoplays.
+  webview_flutter_android: ^4.14.1
   share_plus: ^13.3.1
   sentry_flutter: 10.4.0
   firebase_core: ^5.1.0

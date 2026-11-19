@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../../../core/data/seed/video_seed.dart';
 import '../../../core/domain/models/video_moment.dart';
@@ -77,7 +81,10 @@ class _VideoReelPageState extends ConsumerState<VideoReelPage> {
   late final PageController _controller;
   int _index = 0;
   bool _paused = false;
-  bool _muted = false;
+
+  /// Start muted: browsers only allow autoplay when it is silent, and the reel
+  /// is an autoplay surface. The rail's speaker control unmutes on demand.
+  bool _muted = true;
   bool _immersive = false;
 
   @override

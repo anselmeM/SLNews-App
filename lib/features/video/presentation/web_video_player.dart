@@ -39,6 +39,17 @@ class _WebVideoPlayerState extends State<_WebVideoPlayer> {
       _failed = true;
       return;
     }
+    // Android requires a user gesture before media may start. The reel is a
+    // deliberate autoplay surface (muted), so relax the requirement for this
+    // controller only; without it the embed opens paused and the JS play() call
+    // is rejected.
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        _controller.platform is AndroidWebViewController) {
+      unawaited(
+        (_controller.platform as AndroidWebViewController)
+            .setMediaPlaybackRequiresUserGesture(false),
+      );
+    }
     _controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
