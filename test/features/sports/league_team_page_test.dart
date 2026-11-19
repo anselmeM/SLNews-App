@@ -37,13 +37,6 @@ void main() {
     homeScore: 2,
     startsAt: DateTime.utc(2026, 10, 14, 17),
   );
-  const TeamStanding standing = TeamStanding(
-    team: home,
-    leagueId: 'spl',
-    leagueLabel: 'Sierra Leone Premier League',
-    record: '12-4-2',
-    rank: 1,
-  );
   final Article story = testArticle(
     id: 'sports-1',
     title: 'Blackpool win the derby',
@@ -51,10 +44,7 @@ void main() {
     categoryId: 'sports',
   );
 
-  List<Override> overrides({
-    List<TeamStanding>? standings,
-    Map<String, List<GameScore>>? gamesByTeam,
-  }) {
+  List<Override> overrides({Map<String, List<GameScore>>? gamesByTeam}) {
     return <Override>[
       articleRepositoryProvider.overrideWithValue(
         FakeArticleRepository(
@@ -70,9 +60,6 @@ void main() {
             providerLabel: 'test',
             updatedAt: DateTime.utc(2026, 10, 15),
           ),
-          standingsByLeague: <String, List<TeamStanding>>{
-            'spl': standings ?? <TeamStanding>[standing],
-          },
           gamesByTeam: gamesByTeam,
         ),
       ),
@@ -81,7 +68,7 @@ void main() {
     ];
   }
 
-  testWidgets('league page shows standings, fixtures and stories', (
+  testWidgets('league page shows fixtures and stories', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -99,9 +86,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sierra Leone Premier League'), findsWidgets);
-    expect(find.text('Standings'), findsOneWidget);
-    expect(find.text('Mighty Blackpool'), findsOneWidget);
-    expect(find.text('12-4-2'), findsOneWidget);
+    // Standings were removed: the tables were incomplete for most competitions.
+    expect(find.text('Standings'), findsNothing);
     expect(find.text('Fixtures & results'), findsOneWidget);
     expect(find.text('Blackpool win the derby'), findsOneWidget);
   });

@@ -24,7 +24,7 @@ import 'widgets/team_crest.dart';
 
 /// A team surface (`/sports/team/:id`): follow control, fixtures and stories.
 ///
-/// Reached from the followed-teams row, the standings table and fixtures. The
+/// Reached from the followed-teams row and fixtures. The
 /// name comes in as route extra when a row pushes it; a deep link falls back to
 /// a title-cased id.
 class TeamPage extends ConsumerWidget {
