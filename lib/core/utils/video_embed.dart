@@ -48,10 +48,11 @@ class VideoPlayback {
 ///
 /// `playsinline=1` keeps iOS from going full-screen, `rel=0` hides unrelated
 /// videos and `modestbranding=1` keeps the chrome minimal — the reference player
-/// shows only the clip.
+/// shows only the clip. `mute=1` is deliberate: the reel starts muted so
+/// autoplay is allowed on every platform, and the reader unmutes from the rail.
 String youTubeEmbedUrl(String id) =>
     'https://www.youtube-nocookie.com/embed/$id'
-    '?autoplay=1&playsinline=1&rel=0&modestbranding=1&controls=1';
+    '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=1';
 
 /// Extracts the video id from every YouTube URL shape the outlets use.
 String? youTubeIdFrom(String rawUrl) {
@@ -126,10 +127,33 @@ VideoPlayback resolvePlayback(String rawUrl, {String? knownId}) {
     );
   }
 
+  // A YouTube URL that is not a video (channel, @handle, search, playlist).
+  // Loading it in the reel's web view shows a channel profile or a search page
+  // instead of a clip — exactly the behaviour the rail must never produce.
+  // Keep the URL for "Open in browser" but do not pretend it is playable.
+  if (_isYouTubeHost(uri.host)) {
+    return VideoPlayback(
+      kind: VideoPlaybackKind.unsupported,
+      uri: null,
+      externalUrl: url,
+    );
+  }
+
   return VideoPlayback(
     kind: VideoPlaybackKind.web,
     uri: uri,
     embedUrl: url,
     externalUrl: url,
   );
+}
+
+bool _isYouTubeHost(String rawHost) {
+  final String host = rawHost.toLowerCase();
+  return host == 'youtu.be' ||
+      host == 'youtube.com' ||
+      host == 'www.youtube.com' ||
+      host == 'm.youtube.com' ||
+      host.endsWith('.youtube.com') ||
+      host == 'youtube-nocookie.com' ||
+      host == 'www.youtube-nocookie.com';
 }

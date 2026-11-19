@@ -62,6 +62,23 @@ class _ReelPage extends StatelessWidget {
             fit: StackFit.expand,
             children: <Widget>[
               ColoredBox(color: Colors.black, child: media),
+              // A channel/search URL is never loaded as if it were a clip; say
+              // so and point at the overflow sheet, which opens it in a browser.
+              if (!playback.isPlayable)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      'This clip cannot play in the reel.\n'
+                      'Use the ⋮ menu to open it on YouTube.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               // Tap anywhere on the clip to play or pause, like the reference.
               if (playback.isPlayable)
                 GestureDetector(

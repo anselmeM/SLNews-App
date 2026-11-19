@@ -59,6 +59,8 @@ void main() {
       );
       // Inline playback matters: without it iOS takes the clip full-screen.
       expect(playback.embedUrl, contains('playsinline=1'));
+      // Muted start is what makes autoplay legal on every platform.
+      expect(playback.embedUrl, contains('mute=1'));
       expect(playback.externalUrl, 'https://youtu.be/dQw4w9WgXcQ');
       expect(playback.isPlayable, isTrue);
     });
@@ -86,6 +88,24 @@ void main() {
         expect(playback.isPlayable, isFalse, reason: url);
       }
     });
+
+    test(
+      'a YouTube channel, handle or search page is never played in the reel',
+      () {
+        for (final String url in <String>[
+          'https://www.youtube.com/@AYVMedia',
+          'https://www.youtube.com/channel/UCAAeZ5UM1LURZSWPGhteWpw',
+          'https://www.youtube.com/results?search_query=leone+stars',
+          'https://www.youtube.com/playlist?list=PL123',
+        ]) {
+          final VideoPlayback playback = resolvePlayback(url);
+          expect(playback.kind, VideoPlaybackKind.unsupported, reason: url);
+          expect(playback.isPlayable, isFalse, reason: url);
+          // The reader can still open it deliberately from the overflow sheet.
+          expect(playback.externalUrl, url, reason: url);
+        }
+      },
+    );
   });
 
   test('falls back to the known id when the URL is a channel page', () {

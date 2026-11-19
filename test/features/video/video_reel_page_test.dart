@@ -97,7 +97,7 @@ void main() {
   ) async {
     await pumpReel(tester);
 
-    expect(find.byIcon(Icons.volume_up), findsOneWidget);
+    expect(find.byIcon(Icons.volume_off), findsOneWidget);
     expect(find.byIcon(Icons.open_in_full), findsOneWidget);
     expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
   });
@@ -105,10 +105,11 @@ void main() {
   testWidgets('mute toggles from the rail', (WidgetTester tester) async {
     await pumpReel(tester);
 
-    await tester.tap(find.byIcon(Icons.volume_up));
+    // The reel starts muted so autoplay is permitted.
+    await tester.tap(find.byIcon(Icons.volume_off));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.volume_off), findsOneWidget);
+    expect(find.byIcon(Icons.volume_up), findsOneWidget);
   });
 
   testWidgets('like toggles and fills the thumb', (WidgetTester tester) async {
