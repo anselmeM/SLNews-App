@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/pressable_ink_well.dart';
+import 'market_data_notice.dart';
 import 'sparkline.dart';
 
 /// The Stocks section of the For You feed: index rows in one card, with the
@@ -173,32 +174,38 @@ class _BoardFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String status = board.isOpen ? 'Market is open' : 'Market is closed';
-    return Row(
+    final TextStyle faint = context.typography.caption.copyWith(
+      color: context.colors.onSurfaceFaint,
+      fontSize: 10,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Flexible(
-          child: Text(
-            'Powered by ${board.sourceLabel}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.typography.caption.copyWith(
-              color: context.colors.onSurfaceFaint,
-              fontSize: 10,
+        Row(
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                'Data via ${MarketDataNotice.friendlySource(board.sourceLabel)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: faint,
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Flexible(
-          child: Text(
-            status,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
-            style: context.typography.caption.copyWith(
-              color: context.colors.onSurfaceFaint,
-              fontSize: 10,
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                status,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: faint,
+              ),
             ),
-          ),
+          ],
         ),
+        const SizedBox(height: 1),
+        Text('Not investment advice. Quotes may be delayed.', style: faint),
       ],
     );
   }

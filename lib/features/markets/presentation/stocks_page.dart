@@ -7,6 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/category_pills.dart';
 import '../../../core/widgets/state_views.dart';
+import 'widgets/market_data_notice.dart';
 import 'widgets/sparkline.dart';
 import 'widgets/stocks_card.dart';
 
@@ -122,7 +123,7 @@ class _StocksPageState extends ConsumerState<StocksPage> {
                   children: <Widget>[
                     Expanded(
                       child: Text(
-                        'Powered by ${board.sourceLabel}',
+                        board.updatedLabel,
                         style: context.typography.caption.copyWith(
                           color: context.colors.onSurfaceFaint,
                         ),
@@ -136,13 +137,8 @@ class _StocksPageState extends ConsumerState<StocksPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  board.updatedLabel,
-                  style: context.typography.caption.copyWith(
-                    color: context.colors.onSurfaceFaint,
-                  ),
-                ),
+                const SizedBox(height: AppSpacing.xs),
+                MarketDataNotice(sourceLabel: board.sourceLabel),
               ],
             ),
     );
