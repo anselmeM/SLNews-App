@@ -7,34 +7,40 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/app.dart';
+import 'package:slnews_mobile/core/domain/models/follow_models.dart';
+import 'package:slnews_mobile/core/domain/repositories/following_repository.dart';
 import 'package:slnews_mobile/core/providers/app_bootstrap.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/routing/app_router.dart';
 import 'package:slnews_mobile/core/routing/app_routes.dart';
+import 'package:slnews_mobile/core/widgets/sl_network_image.dart';
 
 /// Writes clean device renders for the Play listing.
 ///
 /// Opt-in, because it writes PNGs instead of comparing them:
 ///
-///     S L N E W S _ S T O R E _ C A P T U R E S = 1 \
-///         flutter test test/store/screenshot_capture_test.dart
+///     $env:SLNEWS_STORE_CAPTURES = '1'
+///     flutter test test/store/screenshot_capture_test.dart
 ///
-/// (the variable is read without spaces above; the underscore form is used in
-/// the command). Output goes to `store/play/captures/`, where
+/// Output goes to `store/play/captures/`, where
 /// `tools/generate_store_assets.py` composes it into listing screenshots.
 ///
-/// The offline banner is scrolled past before capture: it is honest in the app
-/// but reads as a defect on a store listing. Remote images still render as the
-/// design-system placeholder under `flutter test`, so a real-device capture is
-/// the better final source - drop files with the same names into
-/// `store/play/captures/` and regenerate.
+/// Widget tests cannot perform network requests, so the photos come from
+/// `test/store/images/` through [SlNetworkImage.debugImageProvider]. They are
+/// illustrative fixtures, not the publisher photography a real device shows;
+/// for final listing art drop real captures with the same names into
+/// `store/play/captures/` and rerun the generator. `docs/STORE-SCREENSHOTS.md`
+/// has the device procedure.
 void main() {
   final bool enabled = Platform.environment['SLNEWS_STORE_CAPTURES'] == '1';
+  tearDownAll(() => SlNetworkImage.debugImageProvider = null);
   final GlobalKey captureKey = GlobalKey();
   late ProviderContainer container;
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    _installFixtureImages();
     final String tempDir = Directory.systemTemp
         .createTempSync('slnews_capture_')
         .path;
@@ -77,6 +83,7 @@ void main() {
     );
     container = bootstrap.container;
     addTearDown(container.dispose);
+    await _seedRealisticFollowing(container);
 
     await tester.pumpWidget(
       RepaintBoundary(
@@ -93,6 +100,12 @@ void main() {
 
   Future<void> writeCapture(WidgetTester tester, String name) async {
     drain(tester);
+    // MemoryImage decodes off the fake clock; give it real time, then pump the
+    // decoded frame into the widget tree before capturing.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 1800)),
+    );
+    await settle(tester);
     final RenderRepaintBoundary boundary =
         captureKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     // toImage/PNG encoding are real async engine work; inside the fake async zone
@@ -169,8 +182,68 @@ void main() {
     container.read(appRouterProvider).go(AppRoutes.search);
     await settle(tester);
     await tester.enterText(find.byType(TextField), 'leone');
-    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump(const Duration(milliseconds: 1800));
     await settle(tester);
     await writeCapture(tester, 'search');
   }, skip: !enabled);
+}
+
+/// Serves the fixture photos to every remote image request. Widget tests cannot
+/// use `CachedNetworkImage`, so the capture build swaps in local file images.
+void _installFixtureImages() {
+  final Directory dir = Directory('test/store/images');
+  if (!dir.existsSync()) return;
+  final List<File> files = dir.listSync().whereType<File>().where((File file) {
+    final String path = file.path.toLowerCase();
+    return path.endsWith('.jpg') || path.endsWith('.png');
+  }).toList()..sort((File a, File b) => a.path.compareTo(b.path));
+  if (files.isEmpty) return;
+
+  // MemoryImage, not FileImage: a widget test's fake async zone can leave file
+  // reads pending, while pre-read bytes decode reliably.
+  final Map<String, Uint8List> bySeed = <String, Uint8List>{
+    for (final File file in files)
+      file.uri.pathSegments.last.replaceAll(RegExp(r'\.(jpg|png)$'), ''): file
+          .readAsBytesSync(),
+  };
+  final Uint8List first = bySeed.values.first;
+
+  // Fixture files are named after the seed URL segment (`.../seed/<seed>/...`),
+  // so the same story always gets the same photo across captures. Bytes are
+  // pre-read because a widget test's fake async zone can leave file reads
+  // pending, while MemoryImage decodes reliably.
+  SlNetworkImage.debugImageProvider = (String url) {
+    final Uri? uri = Uri.tryParse(url);
+    final List<String> segments = uri?.pathSegments ?? const <String>[];
+    final int seedIndex = segments.indexOf('seed');
+    final String? seed = seedIndex >= 0 && seedIndex + 1 < segments.length
+        ? segments[seedIndex + 1]
+        : null;
+    final Uint8List? bytes = seed == null ? null : bySeed[seed];
+    return MemoryImage(bytes ?? first);
+  };
+}
+
+/// A believable reader state: four local teams, a league, three topics and two
+/// publishers. The old capture followed the entire catalogue, which made every
+/// row say "Following" — a bug that had already been fixed in the app.
+Future<void> _seedRealisticFollowing(ProviderContainer container) async {
+  final FollowingRepository repository = container.read(
+    followingRepositoryProvider,
+  );
+  Iterable<FollowTarget> ofKind(FollowKind kind, int count) => repository
+      .catalogue
+      .where((FollowTarget target) => target.kind == kind)
+      .take(count);
+
+  final List<FollowTarget> targets = <FollowTarget>[
+    ...ofKind(FollowKind.team, 4),
+    ...ofKind(FollowKind.league, 1),
+    ...ofKind(FollowKind.topic, 3),
+    ...ofKind(FollowKind.publisher, 2),
+  ];
+  for (final FollowTarget target in targets) {
+    await repository.follow(target);
+  }
+  container.invalidate(followingControllerProvider);
 }
