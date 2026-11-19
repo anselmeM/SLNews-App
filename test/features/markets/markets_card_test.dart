@@ -13,9 +13,11 @@ import 'package:slnews_mobile/core/data/sources/market_rate_source.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/index_quote.dart';
 import 'package:slnews_mobile/core/domain/models/market_snapshot.dart';
+import 'package:slnews_mobile/core/config/legal_links.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/feed/presentation/for_you_page.dart';
+import 'package:slnews_mobile/features/markets/presentation/widgets/market_data_notice.dart';
 
 import '../feed/support/fakes.dart';
 import '../feed/support/test_harness.dart';
@@ -100,6 +102,7 @@ void main() {
     WidgetTester tester, {
     required bool interactiveContent,
     IndexBoard? indexBoard,
+    List<String>? openedUrls,
   }) async {
     await useTallSurface(tester, size: const Size(390, 2600));
     final GoRouter router = GoRouter(
@@ -134,6 +137,11 @@ void main() {
           preferencesStoreProvider.overrideWithValue(
             InMemoryPreferencesStore(),
           ),
+          if (openedUrls != null)
+            externalUrlOpenerProvider.overrideWithValue((String url) async {
+              openedUrls.add(url);
+              return true;
+            }),
         ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
@@ -164,8 +172,28 @@ void main() {
     expect(find.text('26,140.03'), findsOneWidget);
     expect(find.text('-3.94%'), findsOneWidget);
     expect(find.text('+0.10%'), findsOneWidget);
-    expect(find.textContaining('Powered by yahoo/finance'), findsOneWidget);
+    expect(find.text('Data via Yahoo Finance'), findsOneWidget);
     expect(find.text('Market is closed'), findsOneWidget);
+    expect(find.textContaining('Not investment advice'), findsOneWidget);
+  });
+
+  testWidgets('the Stocks page attributes the data and links to the source', (
+    WidgetTester tester,
+  ) async {
+    final List<String> openedUrls = <String>[];
+    await pumpForYou(tester, interactiveContent: true, openedUrls: openedUrls);
+    await tester.tap(find.text('Nasdaq Comp'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Market data via Yahoo Finance'), findsOneWidget);
+    expect(
+      find.text('Not investment advice. Quotes may be delayed or indicative.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Market data via Yahoo Finance'));
+    await tester.pump();
+    expect(openedUrls, <String>[MarketDataNotice.sourceUrl]);
   });
 
   testWidgets('tapping the card slides the Stocks panel up', (
