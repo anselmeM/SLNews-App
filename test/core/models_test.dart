@@ -109,11 +109,10 @@ void main() {
       const AppSettings settings = AppSettings();
       final AppSettings updated = settings.copyWith(
         themeMode: AppThemeMode.dark,
-        activeLocationId: 'city:bo',
+        textScale: 1.3,
       );
       expect(updated.themeMode, AppThemeMode.dark);
-      expect(updated.activeLocationId, 'city:bo');
-      expect(updated.textScale, settings.textScale);
+      expect(updated.textScale, 1.3);
       expect(updated.breakingNewsAlertsEnabled, isTrue);
     });
 

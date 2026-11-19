@@ -263,8 +263,8 @@ final notificationsProvider = FutureProvider<List<NotificationItem>>(
 ///
 /// The location id is read from the persisted user state rather than from
 /// `settingsControllerProvider`, which lives in `controllers.dart` and would
-/// create an import cycle. `SettingsController.setActiveLocation` invalidates
-/// this provider when the reader switches cities.
+/// create an import cycle. The feed itself no longer has a city concept: this is
+/// the weather location only, and the app offers no picker for it today.
 final activeWeatherProvider = FutureProvider<WeatherSnapshot>((Ref ref) {
   final String locationId = ref.watch(userStateProvider).activeLocationId;
   final NewsLocation location = SlLocations.all.firstWhere(

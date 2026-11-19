@@ -215,9 +215,6 @@ abstract final class ForYouViewModel {
 final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   Ref ref,
 ) {
-  final String locationId = ref
-      .watch(settingsControllerProvider)
-      .activeLocationId;
   final AsyncValue<List<Article>> top = ref.watch(topStoriesProvider);
   final AsyncValue<List<Article>> extra = ref.watch(
     categoryFeedProvider('top'),
@@ -228,10 +225,10 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   if (top.hasError || extra.hasError) return null;
   if (top.isLoading || extra.isLoading) return null;
 
-  final NewsLocation location = SlLocations.all.firstWhere(
-    (NewsLocation candidate) => candidate.id == locationId,
-    orElse: () => SlLocations.fallback,
-  );
+  // Weather only: the reader-facing feed covers Sierra Leone as a whole, and
+  // there is no city picker. Keeping the location out of [AppSettings] stops a
+  // second, inert copy of it drifting back in.
+  final NewsLocation location = ref.watch(activeLocationProvider);
 
   // A bare ProviderScope (widget test) leaves the repository un-overridden and
   // it throws `UnimplementedError`; treat that as "no offline signal yet".
