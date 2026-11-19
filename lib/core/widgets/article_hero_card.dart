@@ -69,12 +69,15 @@ class ArticleHeroCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
+                        // Darkens from 45% of the card: real publisher photos
+                        // are often bright behind the headline, and the old
+                        // scrim only covered the final quarter.
                         colors: <Color>[
                           Color(0x00171717),
-                          Color(0x05171717),
-                          Color(0xB3171717),
+                          Color(0x66171717),
+                          Color(0xCC171717),
                         ],
-                        stops: <double>[0, 0.752, 1],
+                        stops: <double>[0, 0.45, 1],
                       ),
                     ),
                   ),
@@ -95,7 +98,15 @@ class ArticleHeroCard extends StatelessWidget {
                           article.title,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: context.typography.heroTitle,
+                          style: context.typography.heroTitle.copyWith(
+                            shadows: const <Shadow>[
+                              Shadow(
+                                color: Color(0x73000000),
+                                blurRadius: 10,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
                         ),
                         if (showSummary &&
                             article.summary.isNotEmpty) ...<Widget>[
@@ -105,7 +116,10 @@ class ArticleHeroCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: context.typography.meta.copyWith(
-                              color: const Color(0xCCFFFFFF),
+                              color: const Color(0xE6FFFFFF),
+                              shadows: const <Shadow>[
+                                Shadow(color: Color(0x73000000), blurRadius: 6),
+                              ],
                             ),
                           ),
                         ],

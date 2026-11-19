@@ -73,9 +73,33 @@ class SlNetworkImage extends StatelessWidget {
   /// content and dead direct URLs. Enabled per build, not required.
   static const String _proxyBase = String.fromEnvironment('SLNEWS_IMAGE_PROXY');
 
+  /// Test-only image source.
+  ///
+  /// Widget tests cannot make network requests, so the store-capture harness
+  /// substitutes local fixture photos here. Production leaves this null and
+  /// every image goes through [CachedNetworkImage] as usual.
+  @visibleForTesting
+  static ImageProvider Function(String url)? debugImageProvider;
+
   Widget _buildRemote(BuildContext context) {
+    final String url = _secureUrl!;
+    final ImageProvider Function(String url)? override = debugImageProvider;
+    if (override != null) {
+      return Image(
+        image: override(url),
+        width: width,
+        height: height,
+        fit: fit,
+        alignment: alignment,
+        errorBuilder: (
+          BuildContext context,
+          Object error,
+          StackTrace? stackTrace,
+        ) => _buildFallback(context),
+      );
+    }
     return CachedNetworkImage(
-      imageUrl: _secureUrl!,
+      imageUrl: url,
       width: width,
       height: height,
       fit: fit,

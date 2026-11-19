@@ -116,8 +116,8 @@ Tell us what to improve: privacy@slnews.sl
 | --- | --- |
 | Icon 512×512 | `store/play/icon-512.png` |
 | Feature graphic 1024×500 | `store/play/feature-graphic-1024x500.png` |
-| Phone screenshots ×7 | `store/play/screenshots/phone-*.png` |
-| Landscape promo (web/social) | `store/play/promo-panels-1350x800.png` |
+| Phone screenshots ×7 | **pending real-device capture** — see `screenshots/README.md` |
+| Landscape promo (web/social) | regenerate after the phone captures (removed with the mocked art) |
 
 Screenshot order and captions:
 
@@ -127,7 +127,7 @@ Screenshot order and captions:
 4. **Read without the clutter** — article reader and action bar
 5. **Top stories, all of them** — pushed section with photo header
 6. **Search every story** — results grouped into stories and videos
-7. **Follow what matters** — Following with teams, locations and topics
+7. **Follow what matters** — Following with teams and topics
 
 ## Copy rules for this listing
 
