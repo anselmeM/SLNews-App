@@ -12,7 +12,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import '../../../core/data/seed/video_seed.dart';
 import '../../../core/domain/models/video_moment.dart';
 import '../../../core/providers/app_providers.dart';
-import '../../../core/providers/controllers.dart';
+import '../../../core/providers/video_likes_provider.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/video_embed.dart';
@@ -158,7 +158,7 @@ class _VideoReelPageState extends ConsumerState<VideoReelPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Set<String> liked = ref.watch(likesControllerProvider);
+    final Set<String> liked = ref.watch(videoLikesProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -189,7 +189,7 @@ class _VideoReelPageState extends ConsumerState<VideoReelPage> {
             onToggleMute: () => setState(() => _muted = !_muted),
             onToggleImmersive: _toggleImmersive,
             onLike: () =>
-                ref.read(likesControllerProvider.notifier).toggle(video.id),
+                ref.read(videoLikesProvider.notifier).toggle(video.id),
             onBack: () => Navigator.of(context).maybePop(),
             onMore: () => _moreSheet(video),
           );
