@@ -238,13 +238,6 @@ final teamGamesProvider = FutureProvider.family<List<GameScore>, String>(
   name: 'teamGames',
 );
 
-/// Standings for one league.
-final standingsProvider = FutureProvider.family<List<TeamStanding>, String>(
-  (Ref ref, String leagueId) =>
-      ref.watch(sportsRepositoryProvider).standings(leagueId),
-  name: 'standings',
-);
-
 /// Ad rotation for a placement key (`sports_stream`, `feed`).
 final adUnitsProvider = FutureProvider.family<List<AdUnit>, String>(
   (Ref ref, String placement) =>

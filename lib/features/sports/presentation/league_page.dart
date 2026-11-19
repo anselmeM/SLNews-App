@@ -20,13 +20,13 @@ import '../domain/league_stories.dart';
 import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/sports_fixture_row.dart';
-import 'widgets/standings_table.dart';
 
-/// A league surface (`/sports/league/:id`): table, fixtures and stories.
+/// A league surface (`/sports/league/:id`): fixtures and stories.
 ///
 /// The reference groups sports content by competition and gives each group a
 /// "More … stories" doorway; this is that destination, also reachable by tapping
-/// a league chip on the Sports tab.
+/// a league chip on the Sports tab. Standings were removed: the feed's tables
+/// were incomplete for most competitions and read as broken data.
 class LeaguePage extends ConsumerWidget {
   const LeaguePage({super.key, required this.leagueId, this.leagueLabel});
 
@@ -48,9 +48,6 @@ class LeaguePage extends ConsumerWidget {
       SportsLinks.leagueIdForLabel(label),
       for (final SportsLeague member in members) member.id,
     };
-    final AsyncValue<List<TeamStanding>> standings = ref.watch(
-      standingsProvider(leagueId),
-    );
     final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(
       scoreboardProvider,
     );
@@ -111,12 +108,7 @@ class LeaguePage extends ConsumerWidget {
                   style: themed.typography.groupTitle,
                 ),
               ),
-              if (members.isEmpty) ...<Widget>[
-                const SliverToBoxAdapter(
-                  child: SectionHeader(title: 'Standings', compact: true),
-                ),
-                _standingsSliver(themed, ref, standings, label),
-              ] else ...<Widget>[
+              if (members.isNotEmpty) ...<Widget>[
                 const SliverToBoxAdapter(
                   child: SectionHeader(title: 'Leagues', compact: true),
                 ),
@@ -198,39 +190,6 @@ class LeaguePage extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _standingsSliver(
-    BuildContext context,
-    WidgetRef ref,
-    AsyncValue<List<TeamStanding>> standings,
-    String label,
-  ) {
-    return standings.when(
-      data: (List<TeamStanding> rows) {
-        if (rows.isEmpty) {
-          return _notice(context, 'No standings published for $label yet.');
-        }
-        return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          sliver: SliverToBoxAdapter(
-            child: StandingsTable(
-              rows: rows,
-              onTeamTap: (TeamStanding row) => context.push(
-                AppRoutes.teamFor(row.team.id),
-                extra: row.team.name,
-              ),
-            ),
-          ),
-        );
-      },
-      loading: () => _notice(context, 'Loading standings…'),
-      error: (Object error, StackTrace stack) => _notice(
-        context,
-        'Standings are unavailable right now.',
-        onRetry: () => ref.invalidate(standingsProvider),
       ),
     );
   }
