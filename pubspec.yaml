@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
 
 
   # State management (MVVM view models) + dependency injection.
@@ -37,7 +37,7 @@ dependencies:
   # vector_graphics_compiler caps it there. The RSS/Atom parser only uses the
   # stable document/element API, and test/data/rss_parser_test.dart guards the
   # behaviour after any change here.
-  xml: ^6.6.1
+  xml: ^7.0.1
   html: ^0.15.7
 
   # Identity: Clerk's community-maintained (beta) Flutter SDK. Quarantined behind
