@@ -17,7 +17,13 @@ Three facts drive the risk:
 
 1. **Full-text reproduction without documented permission.** The ingestion pipeline fetches the publisher's HTML page and stores its paragraphs; the reader shows them in full, not as a teaser. This is the highest-exposure behaviour.
 2. **Images are hotlinked, not licensed.** We store the publisher's image URL (with a cache-busting fingerprint) and the app requests it directly. That is both a rights question and a bandwidth/terms question for the publisher.
-3. **No robots.txt check.** The crawler sends a custom User-Agent but never consults `robots.txt` before fetching article pages or sitemaps. That is a factual compliance gap regardless of the legal analysis.
+3. **No robots.txt check, and a browser-like User-Agent.** The crawler sends Chrome's
+   User-Agent string (overridable with `SCRAPER_USER_AGENT`) and never consults
+   `robots.txt` before fetching article pages or sitemaps. Checked on 2026-11-19, all
+   three publishers' robots files allow article paths (only `/wp-admin` or Joomla
+   internals are disallowed), so honouring robots would **not** reduce ingestion today —
+   but the check is a compliance requirement, and a bot identity with a contact URL is
+   the honest default.
 
 What we do **not** do: bypass paywalls, republish user-generated content, strip bylines, or rehost images on our own storage.
 
@@ -85,7 +91,11 @@ Per-source disposition at launch:
 
 1. **`contentMode` per source** (`link` | `excerpt` | `full`), enforced at ingestion *and* at render, with `excerpt` truncation (≤ 280 chars, sentence boundary).
 2. **Licence register** — a table or config recording publisher, contact, signed date, scope (text/images/archive), revocation date. The switch reads it; no code deploy to change a source.
-3. **Robots.txt compliance** — fetch and cache `robots.txt` per host, honour `Disallow`, and identify the crawler with a contact URL in the User-Agent. This is a defect fix, independent of the decision.
+3. **Robots.txt compliance** — fetch and cache `robots.txt` per host, honour
+   `Disallow`, and replace the browser-like User-Agent with a descriptive bot
+   identity carrying a contact URL. This is a defect fix, independent of the
+   decision; the 2026-11-19 check shows it will not cut off the current three
+   publishers.
 4. **Image policy** — for `link` sources, use a neutral placeholder or publisher logo instead of the article image; for licensed sources, keep hotlinking only if the licence allows it.
 5. **Removal workflow** — a public page and an inbox alias; unpublish within 48 h, record the request, and prevent re-ingestion by URL. The scraper needs a suppression list keyed by canonical URL and publisher id.
 6. **Attribution standard** — byline, outlet name, "Read the full story" link, and a visible content-policy link wherever excerpts appear.
