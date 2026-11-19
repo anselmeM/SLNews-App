@@ -1,12 +1,11 @@
 part of 'for_you_page.dart';
 
-/// The populated feed: carousel, local stream, then the reference screen's
-/// rails â€” Latest, ad, Video moments, Picks for you, Your next read â€” with a
-/// "More â€¦" link on the rails that lead somewhere.
+/// The populated feed: carousel, then the reference screen's rails — Latest,
+/// ad, Video moments, Picks for you, Your next read — with a "More …" link on
+/// the rails that lead somewhere.
 class _FeedSliver extends ConsumerWidget {
   const _FeedSliver({
     required this.feed,
-    required this.localStories,
     required this.videos,
     required this.ads,
     required this.indexBoard,
@@ -15,7 +14,6 @@ class _FeedSliver extends ConsumerWidget {
   });
 
   final ForYouFeed feed;
-  final List<Article> localStories;
   final List<VideoMoment> videos;
   final List<AdUnit> ads;
   final IndexBoard? indexBoard;
@@ -29,11 +27,8 @@ class _FeedSliver extends ConsumerWidget {
   /// Four topic cards for the "Following" rail: the categories that have a
   /// usable story image first, so the mosaic never shows empty blocks above
   /// categories that do. Labels come from the curated category set.
-  static List<TopicMosaicItem> _mosaicItems(
-    ForYouFeed feed,
-    List<Article> localStories,
-  ) {
-    final List<Article> all = <Article>[...feed.stream, ...localStories];
+  static List<TopicMosaicItem> _mosaicItems(ForYouFeed feed) {
+    final List<Article> all = feed.stream;
     final List<TopicMosaicItem> items = <TopicMosaicItem>[];
     for (final NewsCategory category in NewsCategories.all) {
       if (category.id == 'top') continue;
@@ -70,17 +65,8 @@ class _FeedSliver extends ConsumerWidget {
     // Local so the null check promotes inside the sliver list.
     final IndexBoard? board = indexBoard;
 
-    final Set<String> localIds = <String>{
-      for (final Article article in localStories) article.id,
-    };
-    final List<Article> localStream = feed.stream
-        .where((Article article) => localIds.contains(article.id))
-        .toList(growable: false);
-    // Rails partition the remaining stories so the same headline never appears
-    // twice on one screen.
-    final List<Article> rest = feed.stream
-        .where((Article article) => !localIds.contains(article.id))
-        .toList(growable: false);
+    // Rails partition the stream so the same headline never appears twice.
+    final List<Article> rest = feed.stream;
     final List<Article> latestStream = rest
         .take(railSize)
         .toList(growable: false);
@@ -104,7 +90,6 @@ class _FeedSliver extends ConsumerWidget {
     final Set<String> shownIds = <String>{
       for (final Article article in <Article>[
         ...feed.hero,
-        ...localStream,
         ...latestStream,
         ...picks,
         ...nextRead,
@@ -141,18 +126,6 @@ class _FeedSliver extends ConsumerWidget {
                 context.push(AppRoutes.articleFor(article.id)),
           ),
         ),
-        if (localStream.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(title: 'From ${feed.activeLocation.label}'),
-          ),
-          _ArticleTileSliver(articles: localStream),
-          SliverToBoxAdapter(
-            child: MoreStoriesLink(
-              label: 'More ${feed.activeLocation.label} stories',
-              onPressed: () => context.go(AppRoutes.news),
-            ),
-          ),
-        ],
         if (latestStream.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             child: SectionHeader(
@@ -163,7 +136,7 @@ class _FeedSliver extends ConsumerWidget {
           ),
           _ArticleTileSliver(articles: latestStream),
         ],
-        if (_mosaicItems(feed, localStories).isNotEmpty) ...<Widget>[
+        if (_mosaicItems(feed).isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             // "Following â€º" in the reference: the chevron comes from onTap, and
             // no "More" label, so the rail reads as a doorway rather than a list.
@@ -176,7 +149,7 @@ class _FeedSliver extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: TopicMosaic(
-                items: _mosaicItems(feed, localStories),
+                items: _mosaicItems(feed),
                 onOpen: (TopicMosaicItem item) => context.push(
                   AppRoutes.sectionFor(item.id),
                   extra: item.label,

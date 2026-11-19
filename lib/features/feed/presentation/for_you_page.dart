@@ -86,10 +86,6 @@ class ForYouPage extends ConsumerWidget {
     } else {
       content = _FeedSliver(
         feed: feed,
-        // No city-scoped rail: the feed covers Sierra Leone as a whole for now.
-        // The rail machinery stays so a localised stream can return without a
-        // rewrite once a reader can pick a city again.
-        localStories: const <Article>[],
         videos: videos,
         ads: ads,
         indexBoard: indexBoard,

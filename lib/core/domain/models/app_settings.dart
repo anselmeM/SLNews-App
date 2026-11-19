@@ -33,7 +33,6 @@ class AppSettings {
   const AppSettings({
     this.themeMode = AppThemeMode.system,
     this.textScale = 1,
-    this.activeLocationId = 'city:freetown',
     this.breakingNewsAlertsEnabled = true,
     this.editorsPicksEnabled = false,
     this.interactiveContentEnabled = true,
@@ -48,7 +47,6 @@ class AppSettings {
   /// Multiplier applied to the system text scale by the article reader's `aA`.
   final double textScale;
 
-  final String activeLocationId;
   final bool breakingNewsAlertsEnabled;
 
   /// Notification categories the reader can switch on or off.
@@ -86,7 +84,6 @@ class AppSettings {
   AppSettings copyWith({
     AppThemeMode? themeMode,
     double? textScale,
-    String? activeLocationId,
     bool? breakingNewsAlertsEnabled,
     bool? editorsPicksEnabled,
     bool? interactiveContentEnabled,
@@ -98,7 +95,6 @@ class AppSettings {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
       textScale: textScale ?? this.textScale,
-      activeLocationId: activeLocationId ?? this.activeLocationId,
       breakingNewsAlertsEnabled:
           breakingNewsAlertsEnabled ?? this.breakingNewsAlertsEnabled,
       editorsPicksEnabled: editorsPicksEnabled ?? this.editorsPicksEnabled,
@@ -121,7 +117,6 @@ class AppSettings {
       other is AppSettings &&
       other.themeMode == themeMode &&
       other.textScale == textScale &&
-      other.activeLocationId == activeLocationId &&
       other.breakingNewsAlertsEnabled == breakingNewsAlertsEnabled &&
       other.editorsPicksEnabled == editorsPicksEnabled &&
       other.interactiveContentEnabled == interactiveContentEnabled &&
@@ -134,7 +129,6 @@ class AppSettings {
   int get hashCode => Object.hash(
     themeMode,
     textScale,
-    activeLocationId,
     breakingNewsAlertsEnabled,
     editorsPicksEnabled,
     interactiveContentEnabled,

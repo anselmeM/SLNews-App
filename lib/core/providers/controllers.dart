@@ -28,7 +28,6 @@ class SettingsController extends Notifier<AppSettings> {
     return AppSettings(
       themeMode: AppThemeMode.fromWire(repository.themeMode),
       textScale: repository.textScale,
-      activeLocationId: repository.activeLocationId,
       breakingNewsAlertsEnabled: repository.breakingNewsAlertsEnabled,
       editorsPicksEnabled: repository.editorsPicksEnabled,
       interactiveContentEnabled: repository.interactiveContentEnabled,
@@ -51,12 +50,6 @@ class SettingsController extends Notifier<AppSettings> {
 
   /// Advances the reader's `aA` control to the next step.
   Future<void> cycleTextScale() => setTextScale(state.nextTextScale);
-
-  Future<void> setActiveLocation(String locationId) async {
-    await ref.read(userStateProvider).setActiveLocationId(locationId);
-    state = state.copyWith(activeLocationId: locationId);
-    ref.invalidate(activeWeatherProvider);
-  }
 
   Future<void> setBreakingNewsAlertsEnabled(bool enabled) async {
     await ref.read(userStateProvider).setBreakingNewsAlertsEnabled(enabled);
