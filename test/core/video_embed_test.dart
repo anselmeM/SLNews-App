@@ -61,6 +61,9 @@ void main() {
       expect(playback.embedUrl, contains('playsinline=1'));
       // Muted start is what makes autoplay legal on every platform.
       expect(playback.embedUrl, contains('mute=1'));
+      // The IFrame API bridge the reel's pause/mute controls talk to.
+      expect(playback.embedUrl, contains('enablejsapi=1'));
+      expect(playback.embedUrl, contains('origin=https%3A%2F%2Fslnews.sl'));
       expect(playback.externalUrl, 'https://youtu.be/dQw4w9WgXcQ');
       expect(playback.isPlayable, isTrue);
     });
@@ -115,5 +118,20 @@ void main() {
     );
     expect(playback.kind, VideoPlaybackKind.youtube);
     expect(playback.embedUrl, contains('3f4Y2N4w1bY'));
+  });
+
+  test('the YouTube document gives the embed a referer and an API bridge', () {
+    final String document = youTubePlayerDocument('dQw4w9WgXcQ');
+
+    // Error 153 is a missing Referer; the policy plus the document origin fix it.
+    expect(
+      document,
+      contains('referrerpolicy="strict-origin-when-cross-origin"'),
+    );
+    expect(document, contains('youtube.com/iframe_api'));
+    expect(document, contains('slnewsSync'));
+    expect(document, contains('enablejsapi=1'));
+    expect(document, contains('youtube-nocookie.com/embed/dQw4w9WgXcQ'));
+    expect(videoPlayerOrigin, 'https://slnews.sl/');
   });
 }
