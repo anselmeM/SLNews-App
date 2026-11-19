@@ -43,15 +43,29 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep links: slnews://article/<id> (custom scheme, works today) and an
-                 HTTPS App Link for slnews.sl once that domain resolves and serves
-                 /.well-known/assetlinks.json with the Play app-signing fingerprint.
-                 The Flutter router maps both to /article/:id. -->
+            <!-- Deep links: slnews://article/<id> (custom scheme) and the HTTPS
+                 App Link https://<deepLinkHost>/article/<id>. The router
+                 normalises both to /article/:id in core/routing/deep_link_uri.dart.
+                 Verification only succeeds once the domain serves
+                 /.well-known/assetlinks.json; docs/APP-LINKS.md is the flip
+                 checklist. -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="slnews" android:host="article"/>
+            </intent-filter>
+
+            <!-- autoVerify claims the host at install time; a mismatch only
+                 leaves the link opening in the browser, never in the app. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="https"
+                    android:host="${deepLinkHost}"
+                    android:pathPrefix="/article/"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

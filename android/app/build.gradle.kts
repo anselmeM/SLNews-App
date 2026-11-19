@@ -43,6 +43,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // The HTTPS App Link host, substituted into AndroidManifest.xml. Keep in
+        // step with core/routing/deep_link_uri.dart and the web assetlinks route.
+        manifestPlaceholders["deepLinkHost"] = "slnews.sl"
     }
 
     signingConfigs {
