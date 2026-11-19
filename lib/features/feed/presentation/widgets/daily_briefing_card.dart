@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/domain/models/article.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/pressable_ink_well.dart';
 
-/// "Morning/Afternoon/Evening briefing" band.
+/// "Morning/Afternoon/Evening briefing" card at the top of For You.
 ///
-/// Modelled on Samsung News' briefing: a full-bleed gradient section with a
-/// large white heading and three bullet headlines — no card chrome, no numbers,
-/// so it reads as an editorial front page rather than another feed card.
+/// Styled like the rest of the feed — a surface card with the standard radius,
+/// a tinted icon tile and numbered rows — instead of the old full-bleed gradient
+/// band, which read as a different product bolted onto the feed.
 class DailyBriefingCard extends StatelessWidget {
   const DailyBriefingCard({
     super.key,
@@ -24,97 +26,138 @@ class DailyBriefingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (articles.isEmpty) return const SizedBox.shrink();
 
-    final Color ink = context.colors.onSurfaceInverse;
-    final Color deep = context.colors.accentGradientEnd;
-    final Color lift = context.colors.accentGradientStart;
-
-    return Semantics(
-      header: true,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              Color.lerp(deep, Colors.black, 0.28)!,
-              deep,
-              Color.lerp(lift, deep, 0.35)!,
-            ],
-            stops: const <double>[0, 0.55, 1],
-          ),
+    return Material(
+      color: context.colors.surface,
+      borderRadius: AppRadius.cardRadius,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.xs,
         ),
-        padding: const EdgeInsets.fromLTRB(20, 30, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              title,
-              style: context.typography.screenTitle.copyWith(
-                color: ink,
-                fontSize: 32,
-                height: 1.08,
-                letterSpacing: -0.8,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: context.colors.surfaceMuted,
+                    borderRadius: AppRadius.pillRadius,
+                  ),
+                  child: Icon(
+                    _iconFor(title),
+                    size: 20,
+                    color: context.colors.primary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        'DAILY BRIEFING',
+                        style: context.typography.overline.copyWith(
+                          color: context.colors.onSurfaceVariant,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          title,
+                          style: context.typography.groupTitle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${articles.length} ${articles.length == 1 ? 'story' : 'stories'}',
+                  style: context.typography.caption.copyWith(
+                    color: context.colors.onSurfaceFaint,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: AppSpacing.sm),
             for (int i = 0; i < articles.length; i++) ...<Widget>[
-              _BriefingBullet(
+              _BriefingRow(
+                index: i,
                 article: articles[i],
-                ink: ink,
                 onTap: onOpen == null ? null : () => onOpen!(articles[i]),
               ),
-              if (i != articles.length - 1) const SizedBox(height: 18),
+              if (i != articles.length - 1)
+                Divider(height: 1, color: context.colors.divider, indent: 30),
             ],
           ],
         ),
       ),
     );
   }
+
+  static IconData _iconFor(String title) {
+    final String lower = title.toLowerCase();
+    if (lower.contains('evening') || lower.contains('night')) {
+      return Icons.nights_stay_outlined;
+    }
+    return Icons.wb_sunny_outlined;
+  }
 }
 
-class _BriefingBullet extends StatelessWidget {
-  const _BriefingBullet({required this.article, required this.ink, this.onTap});
+class _BriefingRow extends StatelessWidget {
+  const _BriefingRow({required this.index, required this.article, this.onTap});
 
+  final int index;
   final Article article;
-  final Color ink;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableInkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: ink.withValues(alpha: 0.9),
+            SizedBox(
+              width: 22,
+              child: Text(
+                '${index + 1}'.padLeft(2, '0'),
+                style: context.typography.overline.copyWith(
+                  color: context.colors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
                 ),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 article.title,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: context.typography.cardTitle.copyWith(
-                  color: ink,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
-                  letterSpacing: -0.2,
-                ),
+                style: context.typography.cardTitleSmall.copyWith(height: 1.35),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: context.colors.onSurfaceFaint,
               ),
             ),
           ],
