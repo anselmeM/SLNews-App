@@ -199,6 +199,25 @@ class ApiClient {
     return _payload(response);
   }
 
+  /// Decoded JSON from a PUT request.
+  Future<dynamic> putJson(
+    String url,
+    Map<String, dynamic> body, {
+    Map<String, String>? headers,
+  }) async {
+    final Response<dynamic> response = await _send(
+      () async => _dio.put<dynamic>(
+        url,
+        data: body,
+        options: (await _options(
+          url: url,
+          headers: headers,
+        )).copyWith(contentType: Headers.jsonContentType),
+      ),
+    );
+    return _payload(response);
+  }
+
   /// Decoded JSON from a DELETE request (the account-deletion endpoint answers
   /// with a small JSON body).
   Future<dynamic> deleteJson(String url, {Map<String, dynamic>? body}) async {

@@ -11,6 +11,7 @@ import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
+import '../../../core/domain/models/digest_preferences.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/providers/sync_repository_provider.dart';
@@ -142,6 +143,34 @@ class SettingsPage extends ConsumerWidget {
                       value: settings.sportsAlertsEnabled,
                       onChanged: controller.setSportsAlertsEnabled,
                     ),
+                    SettingsSwitchRow(
+                      title: 'Daily digest',
+                      subtitle:
+                          'One summary a day of the topics and newspapers you '
+                          'follow.',
+                      value: settings.digestEnabled,
+                      onChanged: controller.setDigestEnabled,
+                    ),
+                    if (settings.digestEnabled)
+                      SettingsValueRow(
+                        title: 'Quiet hours',
+                        subtitle: 'Pause the daily digest during these hours.',
+                        value: _quietHoursLabel(settings),
+                        onTap: () =>
+                            _pickQuietHours(context, controller, settings),
+                      ),
+                    if (settings.digestEnabled &&
+                        settings.quietHoursStart != null &&
+                        settings.quietHoursEnd != null)
+                      SettingsValueRow(
+                        title: 'Turn off quiet hours',
+                        onTap: () async {
+                          await controller.setQuietHours();
+                          if (context.mounted) {
+                            _showSnack(context, 'Quiet hours turned off.');
+                          }
+                        },
+                      ),
                   ],
                 ),
                 const SettingsSectionLabel('News'),
@@ -349,6 +378,50 @@ class SettingsPage extends ConsumerWidget {
       selected: settings.themeMode,
       onSelected: controller.setThemeMode,
     );
+  }
+
+  String _quietHoursLabel(AppSettings settings) {
+    final String? start = DigestPreferences.clockLabel(
+      settings.quietHoursStart,
+    );
+    final String? end = DigestPreferences.clockLabel(settings.quietHoursEnd);
+    if (start == null || end == null) return 'Off';
+    return '$start – $end';
+  }
+
+  Future<void> _pickQuietHours(
+    BuildContext context,
+    SettingsController controller,
+    AppSettings settings,
+  ) async {
+    final TimeOfDay? start = await showTimePicker(
+      context: context,
+      initialTime: _timeOfDay(settings.quietHoursStart, fallbackHour: 22),
+      helpText: 'Quiet hours start',
+    );
+    if (start == null || !context.mounted) return;
+    final TimeOfDay? end = await showTimePicker(
+      context: context,
+      initialTime: _timeOfDay(settings.quietHoursEnd, fallbackHour: 7),
+      helpText: 'Quiet hours end',
+    );
+    if (end == null || !context.mounted) return;
+
+    final int startMinutes = start.hour * 60 + start.minute;
+    final int endMinutes = end.hour * 60 + end.minute;
+    if (startMinutes == endMinutes) {
+      _showSnack(context, 'Choose different start and end times.');
+      return;
+    }
+    await controller.setQuietHours(start: startMinutes, end: endMinutes);
+    if (context.mounted) _showSnack(context, 'Quiet hours saved.');
+  }
+
+  TimeOfDay _timeOfDay(int? minutes, {required int fallbackHour}) {
+    if (minutes == null || minutes < 0 || minutes >= 24 * 60) {
+      return TimeOfDay(hour: fallbackHour, minute: 0);
+    }
+    return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
   }
 
   Future<void> _pickTextScale(

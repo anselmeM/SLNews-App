@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/sources/notification_preferences_source.dart';
 import '../domain/models/app_settings.dart';
 import '../push/push_service.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
+import '../domain/models/digest_preferences.dart';
 import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
 import '../domain/sync/sync_repository.dart';
@@ -34,6 +36,9 @@ class SettingsController extends Notifier<AppSettings> {
       sportsAlertsEnabled: repository.sportsAlertsEnabled,
       followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
+      digestEnabled: repository.digestEnabled,
+      quietHoursStart: repository.quietHoursStart,
+      quietHoursEnd: repository.quietHoursEnd,
       onboardingCompleted: repository.onboardingCompleted,
     );
   }
@@ -119,6 +124,47 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setWeatherForecastEnabled(bool enabled) async {
     await ref.read(userStateProvider).setWeatherForecastEnabled(enabled);
     state = state.copyWith(weatherForecastEnabled: enabled);
+  }
+
+  /// Enables or disables the daily follow digest, on this device and server-side.
+  Future<void> setDigestEnabled(bool enabled) async {
+    await ref.read(userStateProvider).setDigestEnabled(enabled);
+    state = state.copyWith(digestEnabled: enabled);
+    await _syncDigestPreferences();
+  }
+
+  /// Sets or clears (both null) the digest quiet-hours window.
+  Future<void> setQuietHours({int? start, int? end}) async {
+    await ref.read(userStateProvider).setQuietHours(start: start, end: end);
+    final bool clear = start == null || end == null || start == end;
+    state = state.copyWith(
+      quietHoursStart: clear ? null : start,
+      quietHoursEnd: clear ? null : end,
+      clearQuietHours: clear,
+    );
+    await _syncDigestPreferences();
+  }
+
+  /// Digest delivery is decided by the server, so push the local choice there.
+  /// A failure is an offline device, not a lost setting: the next change retries.
+  Future<void> _syncDigestPreferences() async {
+    final DigestPreferencesSink? source = ref.read(
+      notificationPreferencesSourceProvider,
+    );
+    if (source == null) return;
+    try {
+      final AppSettings current = state;
+      await source.save(
+        DigestPreferences(
+          digestEnabled: current.digestEnabled,
+          quietHoursStart: current.quietHoursStart,
+          quietHoursEnd: current.quietHoursEnd,
+          timezoneOffsetMinutes: DateTime.now().timeZoneOffset.inMinutes,
+        ),
+      );
+    } catch (error) {
+      AppLog.debug('SettingsController: digest preference sync failed: $error');
+    }
   }
 
   /// Marks the first-run picker as done and persists it.

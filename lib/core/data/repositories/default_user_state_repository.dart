@@ -24,6 +24,9 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String followedTopicAlertsKey = 'settings.followedTopicAlerts';
   static const String weatherForecastKey = 'settings.weatherForecast';
   static const String onboardingKey = 'settings.onboardingCompleted';
+  static const String digestEnabledKey = 'settings.digestEnabled';
+  static const String quietStartKey = 'settings.quietStartMinutes';
+  static const String quietEndKey = 'settings.quietEndMinutes';
 
   /// Defaults applied when a key has never been written.
   static const String defaultThemeMode = 'system';
@@ -36,6 +39,7 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const bool defaultFollowedTopicAlerts = true;
   static const bool defaultWeatherForecast = true;
   static const bool defaultOnboardingCompleted = false;
+  static const bool defaultDigestEnabled = true;
 
   final PreferencesStore _store;
 
@@ -133,6 +137,31 @@ class DefaultUserStateRepository implements UserStateRepository {
   @override
   bool get weatherForecastEnabled =>
       _store.boolean(weatherForecastKey) ?? defaultWeatherForecast;
+
+  @override
+  bool get digestEnabled =>
+      _store.boolean(digestEnabledKey) ?? defaultDigestEnabled;
+
+  @override
+  Future<void> setDigestEnabled(bool enabled) =>
+      _store.putBool(digestEnabledKey, enabled);
+
+  @override
+  int? get quietHoursStart => int.tryParse(_store.string(quietStartKey) ?? '');
+
+  @override
+  int? get quietHoursEnd => int.tryParse(_store.string(quietEndKey) ?? '');
+
+  @override
+  Future<void> setQuietHours({int? start, int? end}) async {
+    if (start == null || end == null || start == end) {
+      await _store.remove(quietStartKey);
+      await _store.remove(quietEndKey);
+      return;
+    }
+    await _store.putString(quietStartKey, start.toString());
+    await _store.putString(quietEndKey, end.toString());
+  }
 
   @override
   Future<void> setWeatherForecastEnabled(bool enabled) =>

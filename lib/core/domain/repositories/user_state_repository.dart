@@ -63,4 +63,16 @@ abstract interface class UserStateRepository {
   bool get weatherForecastEnabled;
 
   Future<void> setWeatherForecastEnabled(bool enabled);
+
+  /// Whether the daily follow digest is delivered.
+  bool get digestEnabled;
+
+  Future<void> setDigestEnabled(bool enabled);
+
+  /// Quiet-hours window in minutes since local midnight; null when disabled.
+  int? get quietHoursStart;
+  int? get quietHoursEnd;
+
+  /// Sets or clears (both null) the quiet-hours window.
+  Future<void> setQuietHours({int? start, int? end});
 }

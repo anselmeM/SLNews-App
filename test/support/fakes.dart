@@ -284,6 +284,29 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   Future<void> setWeatherForecastEnabled(bool enabled) async =>
       weatherForecastEnabled = enabled;
+
+  @override
+  bool digestEnabled = true;
+
+  @override
+  Future<void> setDigestEnabled(bool enabled) async => digestEnabled = enabled;
+
+  @override
+  int? quietHoursStart;
+
+  @override
+  int? quietHoursEnd;
+
+  @override
+  Future<void> setQuietHours({int? start, int? end}) async {
+    if (start == null || end == null || start == end) {
+      quietHoursStart = null;
+      quietHoursEnd = null;
+      return;
+    }
+    quietHoursStart = start;
+    quietHoursEnd = end;
+  }
 }
 
 /// Deterministic weather; `throwOnCurrent` exercises the header fallback.
