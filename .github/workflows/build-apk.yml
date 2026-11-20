@@ -7,12 +7,23 @@ on:
       - 'docs/**'
       - '**/*.md'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'store/play/screenshots/**'
   workflow_dispatch:
+
+concurrency:
+  # A fix pushed five minutes after the first push cancels the older run instead
+  # of paying for both. Required-check evaluations use the latest run.
+  group: build-apk-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Analyze, test and package the release APK
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     # Secrets cannot be referenced from a step-level `if:` — GitHub rejects the
     # whole workflow ("Unrecognized named-value: 'secrets'"), which is why the
     # keystore is routed through env and the step tests env instead.
@@ -123,7 +134,14 @@ jobs:
           else
             echo "::warning::SLNEWS_API_KEY is not set; /v1/videos is unavailable to signed-out readers and the rail uses the bundled clips"
           fi
-          flutter build apk --release --split-per-abi $DEFINES
+          # Pull requests only need to prove a release APK compiles, so build one
+          # universal APK instead of three per-ABI outputs. Split builds stay on
+          # master where the artefacts are the ones people install.
+          SPLIT=""
+          if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
+            SPLIT="--split-per-abi"
+          fi
+          flutter build apk --release ${SPLIT} $DEFINES
 
       - name: Checksums
         run: sha256sum build/app/outputs/flutter-apk/*.apk

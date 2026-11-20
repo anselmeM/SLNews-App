@@ -2,26 +2,34 @@ name: Build AAB
 
 # Produces the Play Store artefact. Play rejects APK uploads for new apps, so this
 # is the workflow a release is cut from; build-apk.yml stays for device installs.
+#
+# Deliberately NOT triggered by pull requests: the APK workflow already runs the
+# full test/analyze/coverage gate on every PR, so building and testing the bundle
+# again there doubled CI minutes for the same commit. The bundle is now built
+# only on master/tags, and it skips the test suite because the APK gate that ran
+# on the same commit (or the PR that produced it) already did that work.
 on:
   push:
     branches: [master, main]
+    tags: ['v*']
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
-  pull_request:
   workflow_dispatch:
+
+concurrency:
+  # A newer push to the same ref cancels the older bundle build.
+  group: build-aab-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   bundle:
-    name: Analyze, test and package the release app bundle
-    # Dependabot PR workflows do not receive repository secrets, so the signed
-    # bundle step cannot pass there. Dependency PRs are validated by the
-    # secret-free Dependency check and the APK build; the AAB gate still runs on
-    # every push to master (including the auto-merge commit).
-    if: >
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.user.login != 'dependabot[bot]'
+    name: Build release app bundle
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
       # Secrets cannot be read from a step-level `if:`; route through env like the
       # APK workflow does.
@@ -40,9 +48,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # The new-file coverage gate diffs against the PR base commit.
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
@@ -67,45 +72,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Secret scan
-        shell: pwsh
-        run: ./scripts/check-secrets.ps1
-
-      - name: Test with coverage (4 workers, 5.8 min vs 11 serial)
-        run: flutter test test/core test/data test/features test/sync test/push test/security --coverage --concurrency=4
-
-      - name: Enforce app quality gates
-        run: python3 scripts/check_app_coverage.py
-
-      - name: Enforce new-file coverage
-        if: github.event_name == 'pull_request'
-        run: python3 scripts/check_new_file_coverage.py --base "${{ github.event.pull_request.base.sha }}"
-
-      # Real config from the repository secret; PR builds use the non-secret
-      # placeholder because pull-request workflows do not receive secrets.
+      # Real config from the repository secret. Master/tag builds require it;
+      # a workflow_dispatch run without secrets fails loudly rather than shipping
+      # an anonymous bundle.
       - name: Restore Firebase client config
         env:
           FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
         run: |
           if [ -n "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" ]; then
             printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
-          elif [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            cp android/app/google-services.json.example android/app/google-services.json
-            echo "::warning::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 is not set; PR build uses the placeholder Firebase config."
           else
             echo "::error::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 is not set; refusing to build a release without Firebase config."
             exit 1
           fi
-
-      # Goldens are a local visual-review harness: the PNGs are host-renderer
-      # dependent (Flutter's Linux rasterizer differs from Windows), so they are
-      # intentionally not a CI gate.
 
       - name: Restore upload keystore
         if: env.ANDROID_KEYSTORE_BASE64 != ''
