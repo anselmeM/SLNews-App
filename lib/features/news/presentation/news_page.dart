@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/header_actions.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +17,7 @@ import '../../../core/widgets/overflow_menu_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
+import '../../feed/presentation/widgets/article_actions.dart';
 import '../../../core/widgets/state_views.dart';
 import 'viewmodels/category_feed_view_model.dart';
 import 'widgets/category_pill_header.dart';
@@ -134,6 +138,7 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
     return SlPageScaffold(
       title: 'News',
       brandMark: 'SLNews',
+      actions: const <Widget>[HeaderActions()],
       bottom: CategoryPillHeader(
         categories: NewsCategories.all,
         selectedId: selectedCategoryId,
@@ -141,8 +146,6 @@ class _NewsViewHostState extends ConsumerState<_NewsViewHost> {
         showIcons: false,
       ),
       onRefresh: ref.read(refreshFeedsProvider),
-      onOverflowSelected: (ArticleAction action) =>
-          _showSnack(context, action.label),
       slivers: <Widget>[
         _NewsFeed(
           // Keying the stream by category gives the scroll view a clean
@@ -400,32 +403,14 @@ void _toggleLike(WidgetRef ref, String articleId) {
   ref.read(likesControllerProvider.notifier).toggle(articleId);
 }
 
-/// Routes the per-article kebab actions the News tab can perform locally.
-void _handleAction(
+/// Routes the per-article kebab actions through the shared handler, so the
+/// News tab saves, shares, opens and follows exactly like the feed does.
+Future<void> _handleAction(
   BuildContext context,
   WidgetRef ref,
   Article article,
   ArticleAction action,
-) {
-  switch (action) {
-    case ArticleAction.bookmark:
-      ref.read(bookmarksControllerProvider.notifier).toggle(article.id);
-      _showSnack(context, 'Saved to your stories');
-    case ArticleAction.removeBookmark:
-      ref.read(bookmarksControllerProvider.notifier).toggle(article.id);
-      _showSnack(context, 'Removed from saved');
-    case ArticleAction.share:
-      _showSnack(context, 'Sharing is available from the story view');
-    case ArticleAction.openInBrowser:
-      _showSnack(context, 'Opening the original publisher…');
-    case ArticleAction.followPublisher:
-      _showSnack(context, 'Following ${article.publisher.name}');
-    case ArticleAction.hide:
-      _showSnack(context, 'Hidden — you will see fewer stories like this');
-    case ArticleAction.report:
-      _showSnack(context, 'Thanks — this story has been reported');
-  }
-}
+) => handleArticleAction(context, ref, article, action);
 
 /// Shows a short confirmation SnackBar, replacing any current one.
 void _showSnack(BuildContext context, String message) {

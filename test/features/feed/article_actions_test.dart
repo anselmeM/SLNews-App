@@ -81,44 +81,6 @@ void main() {
     expect(find.text('Removed from saved'), findsOneWidget);
   });
 
-  testWidgets('hide action confirms with a SnackBar and changes no state', (
-    WidgetTester tester,
-  ) async {
-    final FakeUserStateRepository userState = FakeUserStateRepository();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: feedTestOverrides(
-          articles: FakeArticleRepository(topStories: <Article>[article]),
-          userState: userState,
-        ),
-        child: themedChild(
-          Consumer(
-            builder: (BuildContext context, WidgetRef ref, Widget? child) =>
-                Scaffold(
-                  body: ElevatedButton(
-                    onPressed: () => handleArticleAction(
-                      context,
-                      ref,
-                      article,
-                      ArticleAction.hide,
-                    ),
-                    child: const Text('hide'),
-                  ),
-                ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('hide'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Story hidden from your feed'), findsOneWidget);
-    expect(userState.bookmarkedIds, isEmpty);
-    expect(userState.likedIds, isEmpty);
-  });
-
   testWidgets('openInBrowser without a link reports instead of throwing', (
     WidgetTester tester,
   ) async {
@@ -153,12 +115,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('report action acknowledges without a backend call', (
+  testWidgets('follow publisher subscribes through the shared controller', (
     WidgetTester tester,
   ) async {
+    final FakeFollowingRepository following = FakeFollowingRepository();
+
     await tester.pumpWidget(
       ProviderScope(
-        overrides: feedTestOverrides(articles: FakeArticleRepository()),
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(),
+          following: following,
+        ),
         child: themedChild(
           Consumer(
             builder: (BuildContext context, WidgetRef ref, Widget? child) =>
@@ -168,9 +135,9 @@ void main() {
                       context,
                       ref,
                       article,
-                      ArticleAction.report,
+                      ArticleAction.followPublisher,
                     ),
-                    child: const Text('report'),
+                    child: const Text('follow'),
                   ),
                 ),
           ),
@@ -178,9 +145,10 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('report'));
+    await tester.tap(find.text('follow'));
     await tester.pumpAndSettle();
 
-    expect(find.text("Thanks — we'll review this story"), findsOneWidget);
+    expect(following.isFollowed('publisher:awoko'), isTrue);
+    expect(find.text('Following Awoko Newspaper'), findsOneWidget);
   });
 }

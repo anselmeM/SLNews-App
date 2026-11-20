@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/article.dart';
-import '../../../core/domain/models/follow_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/providers/reading_history_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/fade_slide_in.dart';
@@ -59,6 +59,14 @@ class ArticlePage extends ConsumerWidget {
                 icon: Icons.article_outlined,
               ),
             );
+          }
+          final List<String> history = ref.read(readingHistoryProvider);
+          if (history.isEmpty || history.first != story.id) {
+            // Record after the frame: the notifier writes preferences, which
+            // must not happen during build.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(readingHistoryProvider.notifier).record(story.id);
+            });
           }
           return _ReaderBody(article: story);
         },
@@ -282,11 +290,3 @@ class _ReaderSkeleton extends StatelessWidget {
     );
   }
 }
-
-/// Builds the follow target that represents a publisher.
-FollowTarget publisherFollowTarget(Article article) => FollowTarget(
-  id: 'publisher:${article.publisher.id}',
-  kind: FollowKind.publisher,
-  label: article.publisher.name,
-  subtitle: article.publisher.country,
-);

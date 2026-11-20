@@ -126,8 +126,9 @@ class _SlPageScaffoldState extends ConsumerState<SlPageScaffold>
                         size: 22,
                         items: const <ArticleAction>[
                           ArticleAction.bookmark,
-                          ArticleAction.hide,
-                          ArticleAction.report,
+                          ArticleAction.share,
+                          ArticleAction.openInBrowser,
+                          ArticleAction.followPublisher,
                         ],
                         onSelected: widget.onOverflowSelected,
                       )

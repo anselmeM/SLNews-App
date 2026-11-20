@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/header_actions.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -25,6 +28,7 @@ import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/daily_briefing_card.dart';
+import 'widgets/recently_read_rail.dart';
 import '../../markets/presentation/stocks_page.dart';
 import '../../markets/presentation/widgets/stocks_card.dart';
 import 'widgets/sport_spotlight_card.dart';
@@ -97,6 +101,7 @@ class ForYouPage extends ConsumerWidget {
     return SlPageScaffold(
       title: 'Top stories',
       brandMark: 'SLNews',
+      actions: const <Widget>[HeaderActions()],
       onRefresh: ref.watch(refreshFeedsProvider),
       slivers: <Widget>[
         if (feed != null) ...<Widget>[

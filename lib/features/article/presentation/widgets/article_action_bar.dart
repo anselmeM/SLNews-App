@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/domain/follow_targets.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
 import '../../../../core/domain/models/follow_models.dart';
@@ -13,7 +14,6 @@ import '../../../../core/widgets/follow_chip.dart';
 import 'translate_sheet.dart';
 import '../../../../core/widgets/like_button.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
-import '../article_page.dart';
 
 /// Persistent floating action bar of the reader.
 ///
@@ -151,7 +151,6 @@ class ArticleActionBar extends ConsumerWidget {
                     ArticleAction.bookmark,
                     ArticleAction.followPublisher,
                     ArticleAction.openInBrowser,
-                    ArticleAction.report,
                   ],
                   onSelected: (ArticleAction action) =>
                       _handle(context, ref, action),
@@ -189,9 +188,6 @@ class ArticleActionBar extends ConsumerWidget {
         await _share(context);
       case ArticleAction.openInBrowser:
         await _openSource(context);
-      case ArticleAction.hide:
-      case ArticleAction.report:
-        _snack(context, 'Thanks — this helps us improve your feed');
     }
   }
 
