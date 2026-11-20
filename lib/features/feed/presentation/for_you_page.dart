@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/header_actions.dart';
@@ -25,6 +27,7 @@ import '../../../core/widgets/overflow_menu_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
+import '../../../core/widgets/store_widget.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/daily_briefing_card.dart';
@@ -54,6 +57,14 @@ class ForYouPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ForYouFeed? feed = ref.watch(forYouFeedProvider);
+    if (feed != null) {
+      unawaited(
+        syncStoreWidget(
+          top: feed.hero.isEmpty ? null : feed.hero.first,
+          breakingCount: feed.breakingCount,
+        ),
+      );
+    }
     final AsyncValue<List<Article>> topStories = ref.watch(topStoriesProvider);
     final AppSettings settings = ref.watch(settingsControllerProvider);
     // Both rails degrade to "absent" rather than erroring the page: video

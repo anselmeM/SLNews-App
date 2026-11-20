@@ -86,19 +86,25 @@ void main() {
         )
         .toList(growable: false);
 
-    final XmlElement customScheme = linkFilters.singleWhere(
+    final Set<String> customHosts = <String>{
+      for (final XmlElement filter in linkFilters)
+        for (final XmlElement data in filter.findAllElements('data'))
+          if (data.getAttribute('android:scheme') == 'slnews')
+            data.getAttribute('android:host') ?? '',
+    };
+    // Article deep links plus the three launcher shortcuts.
+    expect(customHosts, <String>{'article', 'search', 'saved', 'following'});
+
+    final XmlElement articleLink = linkFilters.singleWhere(
       (XmlElement filter) => filter
           .findAllElements('data')
           .any(
             (XmlElement data) =>
-                data.getAttribute('android:scheme') == 'slnews',
+                data.getAttribute('android:scheme') == 'slnews' &&
+                data.getAttribute('android:host') == 'article',
           ),
     );
-    expect(customScheme.getAttribute('android:autoVerify'), 'false');
-    expect(
-      customScheme.findAllElements('data').single.getAttribute('android:host'),
-      'article',
-    );
+    expect(articleLink.getAttribute('android:autoVerify'), 'false');
 
     final XmlElement httpsLink = linkFilters.singleWhere(
       (XmlElement filter) => filter

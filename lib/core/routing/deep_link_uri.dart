@@ -29,6 +29,18 @@ Uri normalizeDeepLink(Uri uri) {
     return _articleRoute(first, uri);
   }
 
+  // Launcher shortcuts open a tab directly.
+  if (uri.scheme == 'slnews') {
+    switch (uri.host) {
+      case 'search':
+        return Uri(path: '/search');
+      case 'saved':
+        return Uri(path: '/saved');
+      case 'following':
+        return Uri(path: '/following');
+    }
+  }
+
   // HTTPS App Link: `https://<host>/article/<id>`.
   if (uri.scheme == 'https' &&
       appLinkHosts.contains(uri.host) &&

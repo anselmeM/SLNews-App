@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_search">Search stories</string>
+    <string name="shortcut_saved">Saved stories</string>
+    <string name="shortcut_following">Following</string>
+    <string name="widget_brand">SLNEWS</string>
+    <string name="widget_empty_title">Top stories are loading</string>
+    <string name="widget_meta_default">Tap to open SLNews</string>
+    <string name="widget_description">The latest SLNews headline on your home screen.</string>
+</resources>
