@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -177,6 +179,11 @@ class SettingsPage extends ConsumerWidget {
                 SettingsCard(
                   children: <Widget>[
                     SettingsValueRow(
+                      title: 'Send feedback',
+                      subtitle: 'Report a bug or suggest an improvement.',
+                      onTap: () => _sendFeedback(context, ref),
+                    ),
+                    SettingsValueRow(
                       title: 'Privacy policy',
                       onTap: () => _openLegal(context, ref, LegalLinks.privacy),
                     ),
@@ -301,6 +308,21 @@ class SettingsPage extends ConsumerWidget {
         );
       }
     }
+  }
+
+  void _sendFeedback(BuildContext context, WidgetRef ref) {
+    final String device =
+        '${defaultTargetPlatform.name} · ${Platform.operatingSystemVersion}';
+    final Uri uri = Uri(
+      scheme: 'mailto',
+      path: LegalLinks.supportEmail,
+      queryParameters: <String, String>{
+        'subject': 'SLNews feedback ($appVersion)',
+        'body': '\n\n---\nApp: $appVersion\nDevice: $device\n',
+      },
+    );
+    ref.read(externalUrlOpenerProvider)(uri.toString());
+    _showSnack(context, 'Opening your mail app…');
   }
 
   void _showSnack(BuildContext context, String message) {

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/domain/follow_targets.dart';
 import '../../../../core/domain/models/article.dart';
+import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/controllers.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
 
@@ -14,8 +16,8 @@ import '../../../../core/widgets/overflow_menu_button.dart';
 ///
 /// Every platform call (share sheet, URL launch) is best-effort: a device
 /// without a share target or browser shows a SnackBar instead of surfacing an
-/// unhandled exception. Bookmarking is the only state change and it is applied
-/// through [bookmarksControllerProvider] so the whole app stays in sync.
+/// unhandled exception. State changes (bookmark, publisher follow) go through
+/// the shared controllers so every surface stays in sync.
 Future<void> handleArticleAction(
   BuildContext context,
   WidgetRef ref,
@@ -34,12 +36,8 @@ Future<void> handleArticleAction(
       await _share(article, messenger);
     case ArticleAction.openInBrowser:
       await _openInBrowser(article, messenger);
-    case ArticleAction.hide:
-      _showMessage(messenger, 'Story hidden from your feed');
-    case ArticleAction.report:
-      _showMessage(messenger, "Thanks — we'll review this story");
     case ArticleAction.followPublisher:
-      _showMessage(messenger, 'Following ${article.publisher.name}');
+      await _runFollowPublisher(ref, article, messenger);
   }
 }
 
@@ -110,6 +108,24 @@ Future<void> _openInBrowser(
     if (!launched) _showMessage(messenger, "Couldn't open this story");
   } on Object {
     _showMessage(messenger, "Couldn't open this story");
+  }
+}
+
+Future<void> _runFollowPublisher(
+  WidgetRef ref,
+  Article article,
+  ScaffoldMessengerState messenger,
+) async {
+  final FollowTarget target = publisherFollowTarget(article);
+  if (ref.read(followingControllerProvider).isFollowed(target.id)) {
+    _showMessage(messenger, 'Already following ${target.label}');
+    return;
+  }
+  try {
+    await ref.read(followingControllerProvider.notifier).follow(target);
+    _showMessage(messenger, 'Following ${target.label}');
+  } on Object {
+    _showMessage(messenger, "Couldn't follow ${target.label}");
   }
 }
 

@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/header_actions.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -96,6 +99,7 @@ class SportsPage extends ConsumerWidget {
     final Widget content = (!hasContent && scoreboard.hasError)
         ? SlPageScaffold(
             title: 'Sports',
+            actions: const <Widget>[HeaderActions()],
             onRefresh: onRefresh,
             slivers: <Widget>[
               SliverFillRemaining(
@@ -112,6 +116,7 @@ class SportsPage extends ConsumerWidget {
           )
         : SlPageScaffold(
             title: 'Sports',
+            actions: const <Widget>[HeaderActions()],
             onRefresh: onRefresh,
             slivers: <Widget>[
               const SliverToBoxAdapter(child: ScoreboardStrip()),

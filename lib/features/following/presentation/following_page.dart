@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/header_actions.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,6 +62,7 @@ class FollowingPage extends ConsumerWidget {
 
     return SlPageScaffold(
       title: 'Following',
+      actions: const <Widget>[HeaderActions()],
       onRefresh: () async {
         await ref.read(refreshFeedsProvider)();
         await ref.read(notificationsControllerProvider.notifier).reload();

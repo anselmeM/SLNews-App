@@ -10,6 +10,9 @@ abstract final class LegalLinks {
   static const String privacy = 'https://sl-news.vercel.app/privacy';
   static const String terms = 'https://sl-news.vercel.app/terms';
 
+  /// Support address used by Terms, FAQ and in-app feedback.
+  static const String supportEmail = 'contact@slnews.sl';
+
   /// The public deletion page (works without the app installed).
   static const String deleteAccount =
       'https://sl-news.vercel.app/delete-account';
