@@ -143,6 +143,18 @@ class FakeArticleRepository implements ArticleRepository {
   }
 
   @override
+  Future<List<Article>> byPublisher(
+    String publisherId, {
+    int limit = 30,
+  }) async {
+    final List<Article> rows = <Article>[
+      for (final Article article in all)
+        if (article.publisher.id == publisherId) article,
+    ]..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
+    return rows.take(limit).toList(growable: false);
+  }
+
+  @override
   Future<Article?> byId(String id) async {
     for (final Article article in all) {
       if (article.id == id) return article;

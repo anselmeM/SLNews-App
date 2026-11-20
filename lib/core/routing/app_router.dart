@@ -19,6 +19,7 @@ import '../../features/settings/presentation/settings_page.dart';
 import '../../features/sports/presentation/league_page.dart';
 import '../../features/sports/presentation/sports_page.dart';
 import '../../features/sports/presentation/team_page.dart';
+import '../../features/publisher/presentation/publisher_page.dart';
 import '../../features/video/presentation/video_reel_page.dart';
 import '../shell/app_shell.dart';
 import 'app_routes.dart';
@@ -207,6 +208,18 @@ GoRouter createAppRouter() {
           return TeamPage(
             teamId: state.pathParameters['id'] ?? '',
             teamName: extra is String ? extra : null,
+          );
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.publisher}/:id',
+        name: RouteNames.publisherName,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) {
+          final Object? extra = state.extra;
+          return PublisherPage(
+            publisherId: state.pathParameters['id'] ?? '',
+            publisherLabel: extra is String ? extra : null,
           );
         },
       ),

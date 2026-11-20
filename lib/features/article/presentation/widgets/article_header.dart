@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/news_category.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/time_ago.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/widgets/publisher_mark.dart';
 
 /// Reader header: section label, outlet attribution, headline, byline and
@@ -40,10 +42,20 @@ class ArticleHeader extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
-        PublisherMark(
-          publisher: article.publisher,
-          logoHeight: 22,
-          maxWidth: 200,
+        Align(
+          alignment: Alignment.centerLeft,
+          child: InkWell(
+            onTap: () => context.push(
+              AppRoutes.publisherFor(article.publisher.id),
+              extra: article.publisher.name,
+            ),
+            borderRadius: AppRadius.pillRadius,
+            child: PublisherMark(
+              publisher: article.publisher,
+              logoHeight: 22,
+              maxWidth: 200,
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(article.title, style: context.typography.articleTitle),

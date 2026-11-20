@@ -42,6 +42,7 @@ abstract final class AppRoutes {
 
   /// Pushed team surface (`/sports/team/:id`): follow, fixtures, stories.
   static const String team = '/sports/team';
+  static const String publisher = '/publisher';
 
   /// Notification history, nested inside the Following tab so the bottom
   /// navigation bar stays visible.
@@ -64,6 +65,10 @@ abstract final class AppRoutes {
 
   /// `/sports/team/:id` for a club or national side.
   static String teamFor(String id) => '$team/${Uri.encodeComponent(id)}';
+
+  /// `/publisher/:id` for an outlet's profile and latest stories.
+  static String publisherFor(String id) =>
+      '$publisher/${Uri.encodeComponent(id)}';
 
   /// `/following/sports/:leagueId` for one competition's team list.
   static String leagueTeamsFor(String id) =>
@@ -104,4 +109,5 @@ abstract final class RouteNames {
   static const String manageSports = 'manage_sports';
   static const String manageLeagueTeams = 'manage_league_teams';
   static const String video = 'video';
+  static const String publisherName = 'publisher';
 }

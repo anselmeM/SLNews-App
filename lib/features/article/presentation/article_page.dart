@@ -8,6 +8,7 @@ import '../../../core/domain/models/article.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/providers/reading_history_provider.dart';
+import '../../../core/tts/tts_controller.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/fade_slide_in.dart';
@@ -96,6 +97,17 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     with ScrollToTopStateMixin<_ReaderBody> {
   @override
   double get scrollToTopThreshold => ScrollToTopButton.threshold;
+
+  @override
+  void dispose() {
+    // Leaving the reader must not leave the phone talking.
+    try {
+      ref.read(articleTtsProvider.notifier).stop();
+    } catch (_) {
+      // The container may already be gone during teardown.
+    }
+    super.dispose();
+  }
 
   @override
   bool get tracksReadingProgress => true;

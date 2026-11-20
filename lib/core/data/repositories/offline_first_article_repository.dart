@@ -124,6 +124,21 @@ class OfflineFirstArticleRepository implements ArticleRepository {
   }
 
   @override
+  Future<List<Article>> byPublisher(
+    String publisherId, {
+    int limit = 30,
+  }) async {
+    final String id = publisherId.trim();
+    if (id.isEmpty) return const <Article>[];
+    final List<Article> articles = await _resolve();
+    final List<Article> rows = <Article>[
+      for (final Article article in articles)
+        if (article.publisher.id == id) article,
+    ]..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
+    return rows.take(limit).toList(growable: false);
+  }
+
+  @override
   Future<Article?> byId(String id) async {
     for (final Article article in await _resolve()) {
       if (article.id == id) return article;

@@ -8,6 +8,7 @@ import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/tts/tts_controller.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/follow_chip.dart';
@@ -32,6 +33,8 @@ class ArticleActionBar extends ConsumerWidget {
     final bool isFollowing = ref
         .watch(followingControllerProvider)
         .isFollowed(target.id);
+    final bool speaking = ref.watch(articleTtsProvider);
+    final bool canListen = ref.watch(ttsServiceProvider) != null;
     final bool isLiked = ref
         .watch(likesControllerProvider)
         .contains(article.id);
@@ -106,6 +109,30 @@ class ArticleActionBar extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (canListen)
+                  Semantics(
+                    button: true,
+                    label: speaking ? 'Stop listening' : 'Listen to story',
+                    child: Tooltip(
+                      message: speaking ? 'Stop listening' : 'Listen to story',
+                      child: InkResponse(
+                        radius: 24,
+                        onTap: () => ref
+                            .read(articleTtsProvider.notifier)
+                            .toggle(article),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xs),
+                          child: Icon(
+                            speaking
+                                ? Icons.stop_circle_outlined
+                                : Icons.headphones_outlined,
+                            size: 21,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 LikeButton(
                   isLiked: isLiked,
                   size: 22,
