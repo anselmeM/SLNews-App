@@ -12,6 +12,12 @@ abstract interface class ArticleRepository {
   /// Latest stories for a category slug (`top`, `politics`, ...).
   Future<List<Article>> byCategory(String categoryId, {int limit = 30});
 
+  /// Latest stories from one outlet, newest first.
+  ///
+  /// Used by the publisher page; a publisher with no local stories returns an
+  /// empty list rather than throwing.
+  Future<List<Article>> byPublisher(String publisherId, {int limit = 30});
+
   /// Single story for the reader; `null` when it is unknown locally.
   Future<Article?> byId(String id);
 

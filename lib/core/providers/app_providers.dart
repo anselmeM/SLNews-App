@@ -196,6 +196,13 @@ final topStoriesProvider = FutureProvider<List<Article>>(
 );
 
 /// Latest stories for a category slug.
+/// Latest stories from one publisher, for the publisher page.
+final publisherArticlesProvider = FutureProvider.family<List<Article>, String>(
+  (Ref ref, String publisherId) =>
+      ref.watch(articleRepositoryProvider).byPublisher(publisherId),
+  name: 'publisherArticles',
+);
+
 final categoryFeedProvider = FutureProvider.family<List<Article>, String>((
   Ref ref,
   String categoryId,

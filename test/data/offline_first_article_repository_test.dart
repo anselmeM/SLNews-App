@@ -6,6 +6,7 @@ import 'package:slnews_mobile/core/data/seed/seed_loader.dart';
 import 'package:slnews_mobile/core/data/sources/api_client.dart';
 import 'package:slnews_mobile/core/data/sources/feed_source.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
+import 'package:slnews_mobile/core/domain/models/publisher.dart';
 
 import 'fakes.dart';
 
@@ -421,6 +422,40 @@ void main() {
         fetchById: (String id) async => null,
       );
       expect(await empty.byId('missing'), isNull);
+    });
+  });
+
+  group('byPublisher', () {
+    Article by(String id, String publisherId, DateTime publishedAt) => Article(
+      id: id,
+      title: id,
+      publisher: Publisher(id: publisherId, name: publisherId),
+      publishedAt: publishedAt,
+    );
+
+    test('returns one outlet newest first, honours limit and blanks', () async {
+      final OfflineFirstArticleRepository repository = build(
+        sources: const <FeedSource>[],
+        seed: seedData(
+          articles: <Article>[
+            by('awoko-old', 'awoko', DateTime.utc(2026, 11, 18)),
+            by('bbc-1', 'bbc', DateTime.utc(2026, 11, 19)),
+            by('awoko-new', 'awoko', DateTime.utc(2026, 11, 19)),
+          ],
+        ),
+      );
+
+      final List<Article> rows = await repository.byPublisher('awoko');
+      expect(rows.map((Article a) => a.id), <String>['awoko-new', 'awoko-old']);
+
+      final List<Article> limited = await repository.byPublisher(
+        'awoko',
+        limit: 1,
+      );
+      expect(limited.single.id, 'awoko-new');
+
+      expect(await repository.byPublisher(''), isEmpty);
+      expect(await repository.byPublisher('unknown'), isEmpty);
     });
   });
 }
