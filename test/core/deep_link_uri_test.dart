@@ -38,6 +38,18 @@ void main() {
     }
   });
 
+  test('app shortcut links map to their tabs', () {
+    expect(
+      normalizeDeepLink(Uri.parse('slnews://search')),
+      Uri.parse('/search'),
+    );
+    expect(normalizeDeepLink(Uri.parse('slnews://saved')), Uri.parse('/saved'));
+    expect(
+      normalizeDeepLink(Uri.parse('slnews://following')),
+      Uri.parse('/following'),
+    );
+  });
+
   test('unknown hosts and schemes are left for the not-found route', () {
     expect(
       normalizeDeepLink(Uri.parse('https://example.com/article/abc')),

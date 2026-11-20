@@ -56,6 +56,20 @@
                 <data android:scheme="slnews" android:host="article"/>
             </intent-filter>
 
+            <!-- Launcher shortcuts open a tab directly. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="slnews" android:host="search"/>
+                <data android:scheme="slnews" android:host="saved"/>
+                <data android:scheme="slnews" android:host="following"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts"/> 
+
             <!-- autoVerify claims the host at install time; a mismatch only
                  leaves the link opening in the browser, never in the app. -->
             <intent-filter android:autoVerify="true">
@@ -68,6 +82,19 @@
                     android:pathPrefix="/article/"/>
             </intent-filter>
         </activity>
+
+        <!-- Home-screen widget: top headline, refreshed by the app. -->
+        <receiver
+            android:name=".SlNewsWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/slnews_widget_info"/>
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
