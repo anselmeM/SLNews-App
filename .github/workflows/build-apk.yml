@@ -1,5 +1,10 @@
 name: Build APK
 
+# PRs, and pushes to the protected default branches. Tags deliberately do NOT
+# trigger anything: a tag can be pointed at an arbitrary commit, and checking out
+# that commit with the signing key in scope would let any tag-pusher produce a
+# signed, unreviewed release. Releases are cut from a protected branch commit
+# that already passed this gate.
 on:
   push:
     branches: [master, main]
@@ -7,10 +12,6 @@ on:
       - 'docs/**'
       - '**/*.md'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'store/play/screenshots/**'
   workflow_dispatch:
 
 concurrency:
@@ -19,23 +20,21 @@ concurrency:
   group: build-apk-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Analyze, test and package the release APK
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    # Secrets cannot be referenced from a step-level `if:` — GitHub rejects the
-    # whole workflow ("Unrecognized named-value: 'secrets'"), which is why the
-    # keystore is routed through env and the step tests env instead.
-    env:
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      # Publishable by design. Without it the app is anonymous, which also turns
-      # off push registration: the devices endpoint needs a session token.
-      CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
-      # The scraper key that makes /v1/videos (and API-backed news) available to
-      # signed-out readers. Empty means the rail falls back to the bundled clips.
-      SLNEWS_API_KEY: ${{ secrets.SLNEWS_API_KEY }}
+    # A manual dispatch may only build the protected default branch: dispatching
+    # an arbitrary branch would run this workflow's secrets against unreviewed
+    # code. Tags have no trigger at all (see the header).
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      github.ref == 'refs/heads/master' ||
+      github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,7 +42,45 @@ jobs:
           # The new-file coverage gate diffs against the PR base commit.
           fetch-depth: 0
 
+      # Drop-in pull requests that only touch docs/markdown/screenshots do not
+      # need a 12-minute Flutter build, but the job must still run: it is a
+      # required check, and skipping the workflow entirely leaves that check
+      # pending forever. The secret scan below runs in every case.
+      - name: Classify pull request changes
+        id: changes
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          CHANGED="$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD)"
+          NON_DOC="$(printf '%s\n' "$CHANGED" | grep -Ev '^(docs/|.*\.md$|store/play/screenshots/)' || true)"
+          if [ -z "$NON_DOC" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Run the base branch's scanner, not the PR checkout's copy: a PR could
+      # otherwise weaken the check that is supposed to inspect it.
+      - name: Secret scan
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "pull_request") {
+            $baseSha = "${{ github.event.pull_request.base.sha }}"
+            $scriptDir = Join-Path $env:GITHUB_WORKSPACE ".ci"
+            New-Item -ItemType Directory -Path $scriptDir -Force | Out-Null
+            $script = Join-Path $scriptDir "check-secrets.ps1"
+            $content = git show "${baseSha}:scripts/check-secrets.ps1"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Could not read the base branch secret scanner ($baseSha)."
+            }
+            $content | Set-Content -Path $script -Encoding utf8
+            & $script
+          } else {
+            & (Join-Path $env:GITHUB_WORKSPACE "scripts/check-secrets.ps1")
+          }
+
       - name: Set up JDK 17
+        if: steps.changes.outputs.docs_only != 'true'
         uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
@@ -57,6 +94,7 @@ jobs:
             android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Set up Flutter
+        if: steps.changes.outputs.docs_only != 'true'
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: '3.47.7'
@@ -64,34 +102,44 @@ jobs:
           cache: true
 
       - name: Install dependencies
+        if: steps.changes.outputs.docs_only != 'true'
         run: flutter pub get
 
+      # Generated l10n output is committed for deterministic builds; fail if an
+      # ARB edit forgot to regenerate it.
+      - name: Verify generated localization is current
+        if: steps.changes.outputs.docs_only != 'true'
+        run: |
+          flutter gen-l10n
+          git diff --exit-code -- lib/l10n
+
       - name: Verify formatting
+        if: steps.changes.outputs.docs_only != 'true'
         run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
+        if: steps.changes.outputs.docs_only != 'true'
         run: flutter analyze
 
       # test/golden is excluded on purpose: its pixels depend on the host
       # renderer, so it is a local visual-review harness rather than a gate.
-      - name: Secret scan
-        shell: pwsh
-        run: ./scripts/check-secrets.ps1
-
       - name: Test with coverage (4 workers, 5.8 min vs 11 serial)
+        if: steps.changes.outputs.docs_only != 'true'
         run: flutter test test/core test/data test/features test/sync test/push test/security --coverage --concurrency=4
 
       - name: Enforce app quality gates
+        if: steps.changes.outputs.docs_only != 'true'
         run: python3 scripts/check_app_coverage.py
 
       - name: Enforce new-file coverage
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.changes.outputs.docs_only != 'true'
         run: python3 scripts/check_new_file_coverage.py --base "${{ github.event.pull_request.base.sha }}"
 
       # The real Firebase client config is a repository secret. PRs from
       # Dependabot/forks do not receive secrets, so they compile against the
       # non-secret placeholder; master pushes require the real config.
       - name: Restore Firebase client config
+        if: steps.changes.outputs.docs_only != 'true'
         env:
           FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
         run: |
@@ -105,20 +153,42 @@ jobs:
             exit 1
           fi
 
-      # Goldens are a local visual-review harness: the PNGs are host-renderer
-      # dependent (Flutter's Linux rasterizer differs from Windows), so they are
-      # intentionally not a CI gate.
-
+      # Signing secrets exist only on protected-branch builds. PR code never sees
+      # them (job-level secrets were removed), and the keystore is decoded only
+      # for reviewed master/main pushes. PR builds fall back to the debug key and
+      # exist to prove the release build compiles.
       - name: Decode release keystore
-        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        if: github.event_name != 'pull_request' && steps.changes.outputs.docs_only != 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set; refusing to produce an unsigned release build."
+            exit 1
+          fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/slnews-release.jks
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../slnews-release.jks\n' \
-            "${{ secrets.ANDROID_STORE_PASSWORD }}" \
-            "${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            "${{ secrets.ANDROID_KEY_ALIAS }}" > android/key.properties
+            "$ANDROID_STORE_PASSWORD" \
+            "$ANDROID_KEY_PASSWORD" \
+            "$ANDROID_KEY_ALIAS" > android/key.properties
 
-      - name: Build release APK
+      - name: Build release APK (pull request, unsigned)
+        if: github.event_name == 'pull_request' && steps.changes.outputs.docs_only != 'true'
+        env:
+          # Compile-validation only. Gradle rejects a debug-signed release
+          # unless this opt-in is explicit; the PR artefact is never published.
+          SLNEWS_ALLOW_DEBUG_SIGNED_RELEASE: 'true'
+        run: flutter build apk --release
+
+      - name: Build release APK (protected branch, signed)
+        if: github.event_name != 'pull_request' && steps.changes.outputs.docs_only != 'true'
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          SLNEWS_API_KEY: ${{ secrets.SLNEWS_API_KEY }}
         run: |
           DEFINES=""
           if [ -n "$SENTRY_DSN" ]; then
@@ -134,22 +204,113 @@ jobs:
           else
             echo "::warning::SLNEWS_API_KEY is not set; /v1/videos is unavailable to signed-out readers and the rail uses the bundled clips"
           fi
-          # Pull requests only need to prove a release APK compiles, so build one
-          # universal APK instead of three per-ABI outputs. Split builds stay on
-          # master where the artefacts are the ones people install.
-          SPLIT=""
-          if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
-            SPLIT="--split-per-abi"
-          fi
-          flutter build apk --release ${SPLIT} $DEFINES
+          flutter build apk --release --split-per-abi $DEFINES
 
       - name: Checksums
+        if: steps.changes.outputs.docs_only != 'true'
         run: sha256sum build/app/outputs/flutter-apk/*.apk
 
       - name: Upload APK artefacts
+        if: steps.changes.outputs.docs_only != 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: slnews-release-apk
           path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
           retention-days: 30
+
+  bundle:
+    name: Build release app bundle
+    # Runs only after the APK gate on the same commit succeeds, so a bundle can
+    # never be produced from an unvalidated commit. No tag builds: see the
+    # workflow header.
+    needs: build
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+      SLNEWS_API_KEY: ${{ secrets.SLNEWS_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Restore Firebase client config
+        env:
+          FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -n "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" ]; then
+            printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
+          else
+            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 is not set; refusing to build a release without Firebase config."
+            exit 1
+          fi
+
+      - name: Restore upload keystore
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/slnews-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../slnews-release.jks\n' \
+            "$ANDROID_STORE_PASSWORD" \
+            "$ANDROID_KEY_PASSWORD" \
+            "$ANDROID_KEY_ALIAS" > android/key.properties
+
+      - name: Fail without a signing key
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: |
+          echo "ANDROID_KEYSTORE_BASE64 is not set: the bundle would be debug-signed and Play would reject it." >&2
+          exit 1
+
+      - name: Build app bundle
+        run: |
+          DEFINES=""
+          if [ -n "$SENTRY_DSN" ]; then
+            DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+          else
+            echo "::warning::SENTRY_DSN is not set; building without crash reporting"
+          fi
+          if [ -n "$CLERK_PUBLISHABLE_KEY" ]; then
+            DEFINES="$DEFINES --dart-define=CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY"
+          else
+            echo "::warning::CLERK_PUBLISHABLE_KEY is not set; the app runs anonymously, so sign-in, account sync and push registration stay off"
+          fi
+          if [ -n "$SLNEWS_API_KEY" ]; then
+            DEFINES="$DEFINES --dart-define=SLNEWS_API_KEY=$SLNEWS_API_KEY"
+          else
+            echo "::warning::SLNEWS_API_KEY is not set; /v1/videos is unavailable to signed-out readers and the rail uses the bundled clips"
+          fi
+          flutter build appbundle --release $DEFINES
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: slnews-appbundle
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error

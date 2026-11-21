@@ -32,7 +32,7 @@ temporary mailbox cover. Everything else on this list is independent of the doma
 | 16 KB page-size alignment | `zipalign -c -P 16` passes |
 | Release signing from `android/key.properties` (`CN=SLNews`) | APK + AAB signature verified |
 | Play-ready AAB builds | `scripts/build_aab.ps1` → `SLNews-1.0.0-2.aab`, 62.4 MB, signature verified |
-| CI builds the bundle with the keystore secret | `.github/workflows/build-aab.yml` |
+| CI builds the bundle with the keystore secret | `.github/workflows/build-apk.yml` (`bundle` job) |
 | Launcher icon, adaptive + monochrome layers, splash | generated + verified inside the bundle |
 | 486 tests, 9 golden renders, analyzer clean | `flutter test`, `flutter analyze` |
 | Legal pages live: `/privacy`, `/terms`, `/delete-account` | sl-news.vercel.app, verified 2026-10-18 |

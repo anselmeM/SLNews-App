@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/article.dart';
+import '../utils/app_log.dart';
 import 'app_providers.dart';
 
 /// Preferences key holding the reader's recently opened story ids, newest first.
@@ -36,7 +37,8 @@ class ReadingHistoryController extends Notifier<List<String>> {
         for (final Object? entry in decoded)
           if (entry is String && entry.trim().isNotEmpty) entry.trim(),
       ].take(limit).toList(growable: false);
-    } catch (_) {
+    } catch (error) {
+      AppLog.debug('Reading history: unreadable cache: $error');
       return const <String>[];
     }
   }
@@ -55,8 +57,9 @@ class ReadingHistoryController extends Notifier<List<String>> {
       await ref
           .read(preferencesStoreProvider)
           .putString(readingHistoryKey, jsonEncode(next));
-    } catch (_) {
+    } catch (error) {
       // History is best-effort; reading must never fail because of it.
+      AppLog.debug('Reading history: record failed: $error');
     }
   }
 
@@ -64,7 +67,10 @@ class ReadingHistoryController extends Notifier<List<String>> {
     state = const <String>[];
     try {
       await ref.read(preferencesStoreProvider).remove(readingHistoryKey);
-    } catch (_) {}
+    } catch (error) {
+      // Clearing is best-effort too.
+      AppLog.debug('Reading history: clear failed: $error');
+    }
   }
 }
 

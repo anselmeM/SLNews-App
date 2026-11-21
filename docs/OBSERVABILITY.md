@@ -38,7 +38,7 @@ Sources of truth:
 - **Local builds**: `$env:SENTRY_DSN` is picked up by `scripts/build_apk.ps1`; the AAB
   script reads it directly and stamps the release.
 - **CI**: repository secret `SENTRY_DSN`, passed to the build as a dart-define by
-  `.github/workflows/build-aab.yml` and `build-apk.yml`. A build without the secret logs
+  the `bundle` job in `build-apk.yml` and the protected-branch APK step. A build without the secret logs
   a warning and ships without reporting — it does not fail.
 
 ## Creating the Sentry projects (org `firstmiledevs`)

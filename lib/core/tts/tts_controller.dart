@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/article.dart';
+import '../utils/app_log.dart';
 import 'tts_service.dart';
 
 /// The speech engine for this build, or null where audio is unsupported.
@@ -26,7 +27,8 @@ class ArticleTtsController extends Notifier<bool> {
   TtsService? get _service {
     try {
       return ref.read(ttsServiceProvider);
-    } catch (_) {
+    } catch (error) {
+      AppLog.debug('TTS: service unavailable: $error');
       return null;
     }
   }
@@ -42,7 +44,8 @@ class ArticleTtsController extends Notifier<bool> {
     state = true;
     try {
       await service.speak(text);
-    } catch (_) {
+    } catch (error) {
+      AppLog.debug('TTS: speak failed: $error');
       state = false;
     }
   }
@@ -51,8 +54,9 @@ class ArticleTtsController extends Notifier<bool> {
     state = false;
     try {
       await _service?.stop();
-    } catch (_) {
+    } catch (error) {
       // A failing engine must not surface as a reader error.
+      AppLog.debug('TTS: stop failed: $error');
     }
   }
 }

@@ -67,6 +67,8 @@ try {
 
     if (-not (Test-Path 'android/key.properties')) {
         Write-Warning 'android/key.properties not found - the release APK will be signed with the debug key.'
+        # Gradle requires an explicit opt-in for debug-signed release builds.
+        $env:SLNEWS_ALLOW_DEBUG_SIGNED_RELEASE = 'true'
     }
 
     # --- Compile-time configuration ----------------------------------------------
