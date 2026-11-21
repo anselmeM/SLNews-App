@@ -76,9 +76,6 @@ class AppSettings {
   /// True once the first-run topic/location picker has been completed.
   final bool onboardingCompleted;
 
-  /// Language and region shown on the settings screen. The app ships one locale.
-  static const String languageRegion = 'English (Sierra Leone)';
-
   /// Steps the reader's `aA` control walks through.
   static const List<double> textScaleSteps = <double>[0.9, 1, 1.15, 1.3, 1.5];
 

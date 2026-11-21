@@ -285,27 +285,30 @@ class FakeUserStateRepository implements UserStateRepository {
   Future<void> setWeatherForecastEnabled(bool enabled) async =>
       weatherForecastEnabled = enabled;
 
-  @override
-  bool digestEnabled = true;
+  final Map<String, String> digestCache = <String, String>{};
+  final Map<String, String> pendingDigestCache = <String, String>{};
 
   @override
-  Future<void> setDigestEnabled(bool enabled) async => digestEnabled = enabled;
+  String? digestPreferencesFor(String accountId) => digestCache[accountId];
 
   @override
-  int? quietHoursStart;
+  Future<void> setDigestPreferencesFor(String accountId, String json) async =>
+      digestCache[accountId] = json;
 
   @override
-  int? quietHoursEnd;
+  String? pendingDigestPreferencesFor(String accountId) =>
+      pendingDigestCache[accountId];
 
   @override
-  Future<void> setQuietHours({int? start, int? end}) async {
-    if (start == null || end == null || start == end) {
-      quietHoursStart = null;
-      quietHoursEnd = null;
-      return;
+  Future<void> setPendingDigestPreferencesFor(
+    String accountId,
+    String? json,
+  ) async {
+    if (json == null) {
+      pendingDigestCache.remove(accountId);
+    } else {
+      pendingDigestCache[accountId] = json;
     }
-    quietHoursStart = start;
-    quietHoursEnd = end;
   }
 }
 

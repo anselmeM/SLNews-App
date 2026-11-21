@@ -80,6 +80,24 @@ void main() {
     expect(fake.adapter.requests.single.data.toString(), contains('articles'));
   });
 
+  test('putJson sends a JSON patch and decodes the response', () async {
+    final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith(
+      (RequestOptions options) async => jsonBody('{"digestCadence":"off"}'),
+    );
+    final ApiClient client = ApiClient(dio: fake.dio);
+
+    final Object? payload = await client.putJson(
+      'https://example.test/preferences',
+      <String, dynamic>{'digestCadence': 'off'},
+    );
+
+    expect((payload! as Map<String, dynamic>)['digestCadence'], 'off');
+    expect(fake.adapter.requests.single.method, 'PUT');
+    expect(fake.adapter.requests.single.data, <String, dynamic>{
+      'digestCadence': 'off',
+    });
+  });
+
   test(
     'maps a non-2xx response to ApiException carrying the status code',
     () async {

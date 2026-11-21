@@ -102,7 +102,7 @@ void main() {
     // News group.
     expect(find.text('News'), findsOneWidget);
     expect(find.text('Language and region'), findsOneWidget);
-    expect(find.text('English (Sierra Leone)'), findsOneWidget);
+    expect(find.text('System default'), findsOneWidget);
     expect(find.text('Show weather forecast'), findsOneWidget);
     // City personalisation is parked: the feed is Sierra Leone-wide, so there
     // is no location to manage or to show as followed.
@@ -215,5 +215,36 @@ void main() {
     // Newspaper follows share this toggle: both are "things you follow".
     expect(find.text('Topics and newspapers'), findsOneWidget);
     expect(find.textContaining('new story in a topic or from'), findsOneWidget);
+  });
+
+  testWidgets('the language picker changes the selected language row', (
+    WidgetTester tester,
+  ) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Language and region'));
+    await tester.pumpAndSettle();
+    expect(find.text('Français'), findsOneWidget);
+
+    await tester.tap(find.text('Français').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Français'), findsOneWidget);
+  });
+
+  testWidgets('the quiet-hours picker saves a window', (
+    WidgetTester tester,
+  ) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Quiet hours'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quiet hours saved.'), findsOneWidget);
+    expect(find.text('22:00 – 07:00'), findsOneWidget);
   });
 }

@@ -24,9 +24,12 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String followedTopicAlertsKey = 'settings.followedTopicAlerts';
   static const String weatherForecastKey = 'settings.weatherForecast';
   static const String onboardingKey = 'settings.onboardingCompleted';
-  static const String digestEnabledKey = 'settings.digestEnabled';
-  static const String quietStartKey = 'settings.quietStartMinutes';
-  static const String quietEndKey = 'settings.quietEndMinutes';
+
+  /// Base keys only: every digest read/write appends the authenticated account
+  /// id via [_digestKey], so accounts never share a cached preference document.
+  static const String digestPreferencesKey = 'settings.digestPreferences';
+  static const String pendingDigestPreferencesKey =
+      'settings.digestPreferencesPending';
 
   /// Defaults applied when a key has never been written.
   static const String defaultThemeMode = 'system';
@@ -39,7 +42,6 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const bool defaultFollowedTopicAlerts = true;
   static const bool defaultWeatherForecast = true;
   static const bool defaultOnboardingCompleted = false;
-  static const bool defaultDigestEnabled = true;
 
   final PreferencesStore _store;
 
@@ -138,29 +140,32 @@ class DefaultUserStateRepository implements UserStateRepository {
   bool get weatherForecastEnabled =>
       _store.boolean(weatherForecastKey) ?? defaultWeatherForecast;
 
-  @override
-  bool get digestEnabled =>
-      _store.boolean(digestEnabledKey) ?? defaultDigestEnabled;
+  String _digestKey(String base, String accountId) =>
+      '$base.${accountId.trim().isEmpty ? 'local' : accountId.trim()}';
 
   @override
-  Future<void> setDigestEnabled(bool enabled) =>
-      _store.putBool(digestEnabledKey, enabled);
+  String? digestPreferencesFor(String accountId) =>
+      _store.string(_digestKey(digestPreferencesKey, accountId));
 
   @override
-  int? get quietHoursStart => int.tryParse(_store.string(quietStartKey) ?? '');
+  Future<void> setDigestPreferencesFor(String accountId, String json) =>
+      _store.putString(_digestKey(digestPreferencesKey, accountId), json);
 
   @override
-  int? get quietHoursEnd => int.tryParse(_store.string(quietEndKey) ?? '');
+  String? pendingDigestPreferencesFor(String accountId) =>
+      _store.string(_digestKey(pendingDigestPreferencesKey, accountId));
 
   @override
-  Future<void> setQuietHours({int? start, int? end}) async {
-    if (start == null || end == null || start == end) {
-      await _store.remove(quietStartKey);
-      await _store.remove(quietEndKey);
-      return;
+  Future<void> setPendingDigestPreferencesFor(
+    String accountId,
+    String? json,
+  ) async {
+    final String key = _digestKey(pendingDigestPreferencesKey, accountId);
+    if (json == null) {
+      await _store.remove(key);
+    } else {
+      await _store.putString(key, json);
     }
-    await _store.putString(quietStartKey, start.toString());
-    await _store.putString(quietEndKey, end.toString());
   }
 
   @override

@@ -64,15 +64,13 @@ abstract interface class UserStateRepository {
 
   Future<void> setWeatherForecastEnabled(bool enabled);
 
-  /// Whether the daily follow digest is delivered.
-  bool get digestEnabled;
+  /// Digest preferences cached for [accountId], encoded as JSON.
+  String? digestPreferencesFor(String accountId);
 
-  Future<void> setDigestEnabled(bool enabled);
+  Future<void> setDigestPreferencesFor(String accountId, String json);
 
-  /// Quiet-hours window in minutes since local midnight; null when disabled.
-  int? get quietHoursStart;
-  int? get quietHoursEnd;
+  /// The last save for [accountId] that has not reached the server.
+  String? pendingDigestPreferencesFor(String accountId);
 
-  /// Sets or clears (both null) the quiet-hours window.
-  Future<void> setQuietHours({int? start, int? end});
+  Future<void> setPendingDigestPreferencesFor(String accountId, String? json);
 }
