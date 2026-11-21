@@ -16,7 +16,6 @@ import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/sports_links.dart';
-import '../domain/league_stories.dart';
 import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/sports_fixture_row.dart';
@@ -51,32 +50,12 @@ class LeaguePage extends ConsumerWidget {
     final AsyncValue<ScoreboardSnapshot> scoreboard = ref.watch(
       scoreboardProvider,
     );
-    final AsyncValue<List<Article>> allStories = ref.watch(
-      categoryFeedProvider('sports'),
-    );
-    final List<GameScore> leagueGames =
-        scoreboard.asData?.value.games
-            .where(
-              (GameScore game) => fixtureLeagueIds.contains(
-                SportsLinks.leagueIdForLabel(game.leagueLabel),
-              ),
-            )
-            .toList(growable: false) ??
-        const <GameScore>[];
     final AsyncValue<List<Article>> leagueFeed = ref.watch(
       leagueNewsProvider('league:${SportsLinks.leagueIdForLabel(label)}'),
     );
-    final AsyncValue<List<Article>> stories =
-        leagueFeed.asData?.value.isNotEmpty == true
-        ? leagueFeed
-        : allStories.whenData(
-            (List<Article> articles) => LeagueStories.forLeague(
-              label,
-              articles,
-              games: leagueGames,
-              limit: 6,
-            ),
-          );
+    // Only this league's own feed feeds this page. No generic sports fallback:
+    // an empty league stays empty rather than borrowing another competition.
+    final AsyncValue<List<Article>> stories = leagueFeed;
 
     return Theme(
       data: AppTheme.dark(),

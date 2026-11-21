@@ -148,6 +148,7 @@ void main() {
           ads ?? FakeAdRepository(units: <AdUnit>[sportsAd]),
         ),
         userStateProvider.overrideWithValue(FakeUserStateRepository()),
+        liveSportsFeedsProvider.overrideWithValue(false),
       ],
       child: MaterialApp.router(
         theme: AppTheme.light(),

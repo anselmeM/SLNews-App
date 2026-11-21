@@ -1,5 +1,4 @@
 import '../../domain/models/article.dart';
-import '../../../features/sports/domain/league_stories.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
 import 'rss_feed_source.dart';
@@ -9,8 +8,10 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 /// League-specific news, never the generic sports feed.
 ///
 /// US leagues use their Yahoo Sports RSS channel; competitions without a Yahoo
-/// channel use a Google News query. Results are passed through [LeagueStories]
-/// again, so even a broad query cannot leak an NBA story into the MLB block.
+/// channel use a Google News query. The feed itself is the authoritative league
+/// label: an NBA endpoint can only return NBA stories, so no keyword matching is
+/// applied here. Anything else would reintroduce the cross-league guessing this
+/// replaced.
 class LeagueNewsSource {
   LeagueNewsSource({required this.client});
 
@@ -24,7 +25,6 @@ class LeagueNewsSource {
       publisherId: 'yahoo-sports',
       wordmark: 'YAHOO',
       website: 'https://sports.yahoo.com/nba/',
-      label: 'NBA',
     ),
     'nfl': _LeagueFeed(
       url: 'https://sports.yahoo.com/nfl/rss.xml',
@@ -32,7 +32,6 @@ class LeagueNewsSource {
       publisherId: 'yahoo-sports',
       wordmark: 'YAHOO',
       website: 'https://sports.yahoo.com/nfl/',
-      label: 'NFL',
     ),
     'mlb': _LeagueFeed(
       url: 'https://sports.yahoo.com/mlb/rss.xml',
@@ -40,7 +39,6 @@ class LeagueNewsSource {
       publisherId: 'yahoo-sports',
       wordmark: 'YAHOO',
       website: 'https://sports.yahoo.com/mlb/',
-      label: 'MLB',
     ),
     'nhl': _LeagueFeed(
       url: 'https://sports.yahoo.com/nhl/rss.xml',
@@ -48,7 +46,6 @@ class LeagueNewsSource {
       publisherId: 'yahoo-sports',
       wordmark: 'YAHOO',
       website: 'https://sports.yahoo.com/nhl/',
-      label: 'NHL',
     ),
     'epl': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Premier+League%22&hl=en-US&gl=US&ceid=US:en',
@@ -56,7 +53,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Premier League',
     ),
     'spl': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Sierra+Leone+Premier+League%22&hl=en-US&gl=US&ceid=US:en',
@@ -64,7 +60,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Sierra Leone Premier League',
     ),
     'afcon': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=AFCON&hl=en-US&gl=US&ceid=US:en',
@@ -72,7 +67,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'AFCON',
     ),
     'champions-league': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22UEFA+Champions+League%22&hl=en-US&gl=US&ceid=US:en',
@@ -80,7 +74,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'UEFA Champions League',
     ),
     'la-liga': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22La+Liga%22&hl=en-US&gl=US&ceid=US:en',
@@ -88,7 +81,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'La Liga',
     ),
     'serie-a': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Serie+A%22&hl=en-US&gl=US&ceid=US:en',
@@ -96,7 +88,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Serie A',
     ),
     'bundesliga': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=Bundesliga&hl=en-US&gl=US&ceid=US:en',
@@ -104,7 +95,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Bundesliga',
     ),
     'ligue-1': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Ligue+1%22&hl=en-US&gl=US&ceid=US:en',
@@ -112,7 +102,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Ligue 1',
     ),
     'european-leagues': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22European+Leagues%22&hl=en-US&gl=US&ceid=US:en',
@@ -120,7 +109,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'European Leagues',
     ),
     'f1': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=%22Formula+1%22&hl=en-US&gl=US&ceid=US:en',
@@ -128,7 +116,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Formula 1',
     ),
     'tennis': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=tennis&hl=en-US&gl=US&ceid=US:en',
@@ -136,7 +123,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Tennis',
     ),
     'cricket': _LeagueFeed(
       url: 'https://news.google.com/rss/search?q=cricket&hl=en-US&gl=US&ceid=US:en',
@@ -144,7 +130,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Cricket',
     ),
     'golf': _LeagueFeed(
       url:
@@ -153,7 +138,6 @@ class LeagueNewsSource {
       publisherId: 'google-news',
       wordmark: 'NEWS',
       website: 'https://news.google.com/',
-      label: 'Golf',
     ),
   };
 
@@ -198,12 +182,10 @@ class LeagueNewsSource {
         config: config,
         limit: 16,
       );
-      final List<Article> filtered = LeagueStories.forLeague(
-        feed.label,
-        parsed,
-        limit: limit,
+      // The endpoint is league-scoped; take its stories as they come.
+      final List<Article> result = List<Article>.unmodifiable(
+        parsed.take(limit),
       );
-      final List<Article> result = List<Article>.unmodifiable(filtered);
       _cache[slug] = result;
       return result;
     } catch (error) {
@@ -261,7 +243,7 @@ class LeagueNewsSource {
         config: config,
         limit: 16,
       );
-      return LeagueStories.forLeague(feed.label, parsed, limit: 16);
+      return parsed.take(16).toList(growable: false);
     } catch (error) {
       AppLog.debug('LeagueNewsSource($slug, combined): $error');
       return const <Article>[];
@@ -276,7 +258,6 @@ class _LeagueFeed {
     required this.publisherId,
     required this.wordmark,
     required this.website,
-    required this.label,
   });
 
   final String url;
@@ -284,7 +265,6 @@ class _LeagueFeed {
   final String publisherId;
   final String wordmark;
   final String website;
-  final String label;
 }
 
 /// True for stories that must open on the publisher, not in the local reader.

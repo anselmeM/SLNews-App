@@ -44,8 +44,15 @@ void main() {
     categoryId: 'sports',
   );
 
-  List<Override> overrides({Map<String, List<GameScore>>? gamesByTeam}) {
+  List<Override> overrides({
+    Map<String, List<GameScore>>? gamesByTeam,
+    List<Article>? leagueStories,
+  }) {
     return <Override>[
+      if (leagueStories != null)
+        leagueNewsProvider.overrideWith(
+          (Ref ref, String id) async => leagueStories,
+        ),
       articleRepositoryProvider.overrideWithValue(
         FakeArticleRepository(
           feeds: <String, List<Article>>{
@@ -65,6 +72,7 @@ void main() {
       ),
       followingRepositoryProvider.overrideWithValue(FakeFollowingRepository()),
       userStateProvider.overrideWithValue(FakeUserStateRepository()),
+      liveSportsFeedsProvider.overrideWithValue(false),
     ];
   }
 
@@ -73,7 +81,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: overrides(),
+        overrides: overrides(leagueStories: <Article>[story]),
         child: MaterialApp(
           theme: AppTheme.light(),
           home: const LeaguePage(
@@ -90,6 +98,28 @@ void main() {
     expect(find.text('Standings'), findsNothing);
     expect(find.text('Fixtures & results'), findsOneWidget);
     expect(find.text('Blackpool win the derby'), findsOneWidget);
+  });
+
+  testWidgets('league page never borrows the generic sports feed', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: overrides(),
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const LeaguePage(
+            leagueId: 'spl',
+            leagueLabel: 'Sierra Leone Premier League',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The repository has a generic sports story, but this league's own feed is
+    // empty: showing that story would be the cross-league leak again.
+    expect(find.text('Blackpool win the derby'), findsNothing);
   });
 
   testWidgets('the merged European section lists its four leagues', (

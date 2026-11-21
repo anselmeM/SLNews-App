@@ -34,7 +34,11 @@ class _ReelPage extends StatelessWidget {
   final VoidCallback onLike;
   final VoidCallback onBack;
   final VoidCallback onMore;
-  final Widget Function(BuildContext context, VideoPlayback playback)?
+  final Widget Function(
+    BuildContext context,
+    VideoPlayback playback,
+    VoidCallback onTogglePause,
+  )?
   playerBuilder;
 
   @override
@@ -49,8 +53,13 @@ class _ReelPage extends StatelessWidget {
       media = _ReelThumbnail(url: video.thumbnailUrl);
     } else if (active) {
       media =
-          playerBuilder?.call(context, playback) ??
-          _WebVideoPlayer(playback: playback, paused: paused, muted: muted);
+          playerBuilder?.call(context, playback, onTogglePause) ??
+          _ReelMedia(
+            playback: playback,
+            paused: paused,
+            muted: muted,
+            onTogglePause: onTogglePause,
+          );
     } else {
       media = _ReelThumbnail(url: video.thumbnailUrl);
     }
@@ -78,13 +87,6 @@ class _ReelPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-              // Tap anywhere on the clip to play or pause, like the reference.
-              if (playback.isPlayable)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onTogglePause,
-                  child: const SizedBox.expand(),
                 ),
               Positioned.fill(
                 child: IgnorePointer(
@@ -357,6 +359,64 @@ class _ReelCaptionStrip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Whether the reel should use the native YouTube surface for [playback].
+@visibleForTesting
+bool canUseNativeYoutubePlayer(VideoPlayback playback) =>
+    playback.kind == VideoPlaybackKind.youtube && playback.youtubeId != null;
+
+/// Chooses the native YouTube surface for clips it can address, with the
+/// WebView document kept as the fallback for non-YouTube pages and plugin
+/// errors. Built as a stateful wrapper so a failed native player can swap in the
+/// fallback without rebuilding the whole reel page.
+class _ReelMedia extends StatefulWidget {
+  const _ReelMedia({
+    required this.playback,
+    required this.paused,
+    required this.muted,
+    required this.onTogglePause,
+  });
+
+  final VideoPlayback playback;
+  final bool paused;
+  final bool muted;
+  final VoidCallback onTogglePause;
+
+  @override
+  State<_ReelMedia> createState() => _ReelMediaState();
+}
+
+class _ReelMediaState extends State<_ReelMedia> {
+  bool _useNative = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? videoId = widget.playback.youtubeId;
+    final bool canUseNative =
+        _useNative &&
+        canUseNativeYoutubePlayer(widget.playback) &&
+        videoId != null;
+
+    if (canUseNative) {
+      return _YoutubeReelPlayer(
+        videoId: videoId,
+        active: true,
+        paused: widget.paused,
+        muted: widget.muted,
+        onTogglePause: widget.onTogglePause,
+        onUnavailable: () {
+          if (mounted) setState(() => _useNative = false);
+        },
+      );
+    }
+    return _WebVideoPlayer(
+      playback: widget.playback,
+      paused: widget.paused,
+      muted: widget.muted,
+      onTogglePause: widget.onTogglePause,
     );
   }
 }

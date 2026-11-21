@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/article_cache.dart';
@@ -35,6 +36,8 @@ import '../data/sources/index_quote_source.dart';
 import '../domain/models/index_quote.dart';
 
 import 'package:slnews_mobile/core/utils/app_log.dart';
+
+part 'app_providers_market.dart';
 
 /// Infrastructure providers.
 ///
@@ -78,14 +81,20 @@ final Provider<LeagueNewsSource> leagueNewsSourceProvider =
       name: 'leagueNewsSource',
     );
 
+/// Whether public live sports feeds (league RSS, ESPN team news) may be
+/// fetched. Tests override this to stay offline without relying on a compile
+/// flag that is not reliable at runtime.
+final Provider<bool> liveSportsFeedsProvider = Provider<bool>(
+  (Ref ref) => true,
+  name: 'liveSportsFeeds',
+);
+
 /// League-specific news feed (Yahoo/Google), empty offline or in tests.
 final leagueNewsProvider = FutureProvider.family<List<Article>, String>((
   Ref ref,
   String leagueId,
 ) async {
-  if (!const bool.fromEnvironment('THESPORTSDB_ENABLED')) {
-    return const <Article>[];
-  }
+  if (!ref.watch(liveSportsFeedsProvider)) return const <Article>[];
   return ref.watch(leagueNewsSourceProvider).fetch(leagueId);
 }, name: 'leagueNews');
 
@@ -94,10 +103,7 @@ final teamNewsProvider = FutureProvider.family<List<Article>, String>((
   Ref ref,
   String teamId,
 ) async {
-  // Tests and key-less builds stay offline when live sports are disabled.
-  if (!const bool.fromEnvironment('THESPORTSDB_ENABLED')) {
-    return const <Article>[];
-  }
+  if (!ref.watch(liveSportsFeedsProvider)) return const <Article>[];
   if (!EspnSource.supportsTeamId(teamId)) return const <Article>[];
   return ref.watch(espnSourceProvider).teamNews(teamId);
 }, name: 'teamNews');
@@ -192,11 +198,11 @@ final Provider<UserStateRepository> userStateProvider =
 
 /// Writes digest preferences to the PWA API; null when this build has no sync
 /// backend, in which case settings stay local and the UI hides no controls.
-final Provider<DigestPreferencesSink?> notificationPreferencesSourceProvider =
-    Provider<DigestPreferencesSink?>(
-      (Ref ref) => null,
-      name: 'notificationPreferencesSource',
-    );
+final Provider<DigestPreferencesGateway?>
+notificationPreferencesSourceProvider = Provider<DigestPreferencesGateway?>(
+  (Ref ref) => null,
+  name: 'notificationPreferencesSource',
+);
 
 /// Breaking/staff-picked stories for the For You hero carousel.
 final topStoriesProvider = FutureProvider<List<Article>>(
@@ -365,16 +371,19 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
   Future<void> _refresh() async {
     final SlNewsVideoSource? source = ref.read(slNewsVideoSourceProvider);
     if (source == null) return;
-    final List<VideoMoment> live = await source.latest(limit: 30);
+    // Fetch a deeper page than the rail shows: the rail stays short, but the
+    // reel can swipe through the day's fuller upload set.
+    final List<VideoMoment> live = await source.latest(limit: 50);
     if (live.isEmpty) return;
-    state = live;
+    final List<VideoMoment> ordered = interleaveVideos(live);
+    state = ordered;
     try {
       await ref
           .read(preferencesStoreProvider)
           .putString(
             _videoCacheKey,
             jsonEncode(<Map<String, dynamic>>[
-              for (final VideoMoment v in live) v.toJson(),
+              for (final VideoMoment v in ordered) v.toJson(),
             ]),
           );
     } catch (error) {
@@ -383,117 +392,34 @@ class VideoMomentsController extends Notifier<List<VideoMoment>> {
   }
 }
 
-/// Ads rotated into the For You feed, one per section break.
-final FutureProvider<List<AdUnit>> forYouAdsProvider =
-    FutureProvider<List<AdUnit>>(
-      (Ref ref) => ref.watch(adRepositoryProvider).units(placement: 'feed'),
-      name: 'forYouAds',
-    );
-
-/// Reads the Markets currency board.
+/// De-duplicates by video id and interleaves sources so one prolific channel
+/// cannot fill the rail/reel with consecutive uploads.
 ///
-/// Keyless endpoint, so the only dependency is the shared [ApiClient] that
-/// AppBootstrap already owns (and every test already overrides/replaces).
-final Provider<MarketRateSource> marketRateSourceProvider =
-    Provider<MarketRateSource>(
-      (Ref ref) => MarketRateSource(ref.watch(apiClientProvider)),
-      name: 'marketRateSource',
-    );
-
-/// Preference key holding the last board we managed to read.
-const String marketCacheKey = 'markets.lastSnapshot';
-
-/// The Markets board for the interactive card: fresh rates when the service
-/// answers, otherwise the last board we saw, otherwise `null`.
-///
-/// Never throws: the module is a bonus surface, so an offline reader sees the
-/// most recent rates (with their timestamp) instead of an error.
-final FutureProvider<MarketSnapshot?> marketSnapshotProvider =
-    FutureProvider<MarketSnapshot?>((Ref ref) async {
-      PreferencesStore? store;
-      try {
-        store = ref.watch(preferencesStoreProvider);
-      } on UnimplementedError {
-        // A bare test scope without storage: still useful, just uncached.
-        store = null;
-      }
-
-      final MarketSnapshot? cached = _cachedBoard(store);
-      final MarketSnapshot? fresh = await ref
-          .watch(marketRateSourceProvider)
-          .fetch();
-      if (fresh != null) {
-        if (store != null) {
-          await store.putString(marketCacheKey, jsonEncode(fresh.toJson()));
-        }
-        return fresh;
-      }
-      return cached;
-    }, name: 'marketSnapshot');
-
-MarketSnapshot? _cachedBoard(PreferencesStore? store) {
-  final String? raw = store?.string(marketCacheKey);
-  if (raw == null || raw.isEmpty) return null;
-  try {
-    final Object? decoded = jsonDecode(raw);
-    if (decoded is Map) {
-      return MarketSnapshot.fromJson(<String, dynamic>{
-        for (final MapEntry<Object?, Object?> entry in decoded.entries)
-          '${entry.key}': entry.value,
-      });
-    }
-  } catch (error) {
-    AppLog.debug('marketSnapshot: cached board unreadable ($error)');
+/// Each source keeps its newest-first order; the output alternates sources until
+/// every unique clip is placed.
+@visibleForTesting
+List<VideoMoment> interleaveVideos(List<VideoMoment> videos) {
+  final Set<String> seen = <String>{};
+  final Map<String, List<VideoMoment>> bySource = <String, List<VideoMoment>>{};
+  for (final VideoMoment video in videos) {
+    final String identity = video.youtubeId?.trim().isNotEmpty == true
+        ? video.youtubeId!.trim()
+        : video.id;
+    if (identity.isEmpty || !seen.add(identity)) continue;
+    bySource.putIfAbsent(video.source, () => <VideoMoment>[]).add(video);
   }
-  return null;
+
+  final List<VideoMoment> ordered = <VideoMoment>[];
+  bool added = true;
+  while (added) {
+    added = false;
+    for (final List<VideoMoment> queue in bySource.values) {
+      if (queue.isEmpty) continue;
+      ordered.add(queue.removeAt(0));
+      added = true;
+    }
+  }
+  return List<VideoMoment>.unmodifiable(ordered);
 }
 
-/// Reads the Stocks index board (keyless chart endpoint, cached).
-final Provider<IndexQuoteSource> indexQuoteSourceProvider =
-    Provider<IndexQuoteSource>(
-      (Ref ref) => IndexQuoteSource(ref.watch(apiClientProvider)),
-      name: 'indexQuoteSource',
-    );
-
-/// Preference key holding the last index board we managed to read.
-const String indexBoardCacheKey = 'stocks.lastBoard';
-
-/// The board for the Stocks section and page: fresh quotes when the service
-/// answers, otherwise the last board we saw, otherwise `null` (the section then
-/// hides instead of inventing numbers).
-final FutureProvider<IndexBoard?> indexBoardProvider =
-    FutureProvider<IndexBoard?>((Ref ref) async {
-      PreferencesStore? store;
-      try {
-        store = ref.watch(preferencesStoreProvider);
-      } on UnimplementedError {
-        store = null;
-      }
-
-      IndexBoard? cached;
-      final String? raw = store?.string(indexBoardCacheKey);
-      if (raw != null && raw.isNotEmpty) {
-        try {
-          final Object? decoded = jsonDecode(raw);
-          if (decoded is Map) {
-            cached = IndexBoard.fromJson(<String, dynamic>{
-              for (final MapEntry<Object?, Object?> entry in decoded.entries)
-                '${entry.key}': entry.value,
-            });
-          }
-        } catch (error) {
-          AppLog.debug('indexBoard: cached board unreadable ($error)');
-        }
-      }
-
-      final IndexBoard? fresh = await ref
-          .watch(indexQuoteSourceProvider)
-          .fetch();
-      if (fresh != null) {
-        if (store != null) {
-          await store.putString(indexBoardCacheKey, jsonEncode(fresh.toJson()));
-        }
-        return fresh;
-      }
-      return cached;
-    }, name: 'indexBoard');
+/// Ads rotated into the For You feed, one per section break.

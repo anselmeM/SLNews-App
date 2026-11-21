@@ -57,10 +57,16 @@ void main() {
                       videos: reels(),
                       videoId: videoId,
                       // Platform views cannot run in widget tests.
-                      playerBuilder: (
-                        BuildContext context,
-                        VideoPlayback playback,
-                      ) => const ColoredBox(color: Colors.black12),
+                      playerBuilder:
+                          (
+                            BuildContext context,
+                            VideoPlayback playback,
+                            VoidCallback onTogglePause,
+                          ) => GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: onTogglePause,
+                            child: const ColoredBox(color: Colors.black12),
+                          ),
                     ),
                   ),
                 ),
