@@ -69,14 +69,32 @@ class SponsorshipTracker {
         try {
           await _post(_url(), event);
           await _removeFromOutbox(store, event['eventId'] as String?);
-        } catch (_) {
-          // Keep the event for the next launch; stop flooding a dead network.
+        } catch (error) {
+          if (_isPermanentFailure(error)) {
+            // An expired token or an invalid event can never succeed on retry.
+            // Drop it and keep delivering the events behind it.
+            await _removeFromOutbox(store, event['eventId'] as String?);
+            continue;
+          }
+          // Transient network/server failure: keep the queue for the next launch.
           break;
         }
       }
     } finally {
       _flushing = false;
     }
+  }
+
+  /// True for client errors that a retry cannot fix (expired token, rejected
+  /// event). 408/429 are explicitly transient.
+  static bool _isPermanentFailure(Object error) {
+    if (error is! ApiException) return false;
+    final int? status = error.statusCode;
+    return status != null &&
+        status >= 400 &&
+        status < 500 &&
+        status != 408 &&
+        status != 429;
   }
 
   void _send(AdUnit unit, String type, {VoidCallback? onFailure}) {
@@ -96,6 +114,15 @@ class SponsorshipTracker {
       _post(_url(), body).then<void>(
         (Object? _) => _removeFromOutbox(store, eventId),
         onError: (Object error, StackTrace stack) {
+          if (_isPermanentFailure(error)) {
+            // Do not leave an unsendable event at the head of the outbox or
+            // retry it for the rest of the session.
+            unawaited(_removeFromOutbox(store, eventId));
+            AppLog.debug(
+              'SponsorshipTracker: $type permanently rejected: $error',
+            );
+            return;
+          }
           onFailure?.call();
           AppLog.debug('SponsorshipTracker: $type not counted: $error');
         },

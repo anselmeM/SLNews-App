@@ -125,7 +125,7 @@ jobs:
       # renderer, so it is a local visual-review harness rather than a gate.
       - name: Test with coverage (4 workers, 5.8 min vs 11 serial)
         if: steps.changes.outputs.docs_only != 'true'
-        run: flutter test test/core test/data test/features test/sync test/push test/security --coverage --concurrency=4
+        run: flutter test test/core test/contracts test/data test/features test/sync test/push test/security --coverage --concurrency=4
 
       - name: Enforce app quality gates
         if: steps.changes.outputs.docs_only != 'true'
@@ -190,9 +190,10 @@ jobs:
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
           SLNEWS_API_KEY: ${{ secrets.SLNEWS_API_KEY }}
         run: |
-          DEFINES=""
+          VERSION="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1)"
+          DEFINES="--dart-define=SLNEWS_RELEASE=slnews-mobile@$VERSION"
           if [ -n "$SENTRY_DSN" ]; then
-            DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+            DEFINES="$DEFINES --dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
           fi
           if [ -n "$CLERK_PUBLISHABLE_KEY" ]; then
             DEFINES="$DEFINES --dart-define=CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY"
@@ -290,9 +291,10 @@ jobs:
 
       - name: Build app bundle
         run: |
-          DEFINES=""
+          VERSION="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1)"
+          DEFINES="--dart-define=SLNEWS_RELEASE=slnews-mobile@$VERSION"
           if [ -n "$SENTRY_DSN" ]; then
-            DEFINES="--dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
+            DEFINES="$DEFINES --dart-define=SENTRY_DSN=$SENTRY_DSN --dart-define=SENTRY_ENV=production"
           else
             echo "::warning::SENTRY_DSN is not set; building without crash reporting"
           fi

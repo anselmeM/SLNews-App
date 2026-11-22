@@ -20,14 +20,14 @@ void main() {
       const SentrySettings settings = SentrySettings(
         dsn: 'https://public@o1.ingest.sentry.io/2',
         environment: 'production',
-        release: 'slnews-mobile@1.0.0+2',
+        release: 'slnews-mobile@dev',
       );
 
       expect(settings.isEnabled, isTrue);
       final Map<String, Object?> options = settings.toOptionsMap();
       expect(options['dsn'], settings.dsn);
       expect(options['environment'], 'production');
-      expect(options['release'], 'slnews-mobile@1.0.0+2');
+      expect(options['release'], 'slnews-mobile@dev');
       expect(options['tracesSampleRate'], 0.05);
       expect(options['sendDefaultPii'], isFalse);
       expect(options['attachStacktrace'], isTrue);
