@@ -47,7 +47,8 @@ const Map<String, dynamic> adUnitContractFixture = <String, dynamic>{
   "brandAccentHex": "#2E9BF5",
   "assetLabel": "NLe 20",
   "disclosure": "Sponsored by Contract Partner",
-  "imageUrl": "https://store.public.blob.vercel-storage.com/sponsorships/contract.jpg",
+  "imageUrl":
+      "https://store.public.blob.vercel-storage.com/sponsorships/contract.jpg",
   "altText": "Contract Partner logo",
   "targetUrl": "https://example.com/offer",
   "eventToken": "signed-event-token",
