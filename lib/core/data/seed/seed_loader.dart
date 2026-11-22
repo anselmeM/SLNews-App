@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../../domain/breaking_news_policy.dart';
 import '../../domain/models/ad_unit.dart';
 import '../../domain/models/article.dart';
 import '../../domain/models/follow_models.dart';
@@ -121,7 +122,9 @@ class AssetSeedLoader implements SeedLoader {
           .subtract(Duration(minutes: minutesAgo))
           .toIso8601String();
     }
-    return Article.fromJson(normalised);
+    final Article parsed = Article.fromJson(normalised);
+    // Demo seed flags are illustrative only; the policy must earn the tag.
+    return BreakingNewsPolicy.normalize(parsed, now: now);
   }
 
   static NotificationItem _notification(

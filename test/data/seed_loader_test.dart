@@ -106,7 +106,9 @@ void main() {
         if (article.bodyHtml.contains('<blockquote>')) quoted++;
       }
 
-      expect(breaking, 3);
+      // The demo seed no longer fabricates breaking flags: routine review and
+      // service stories must not raise the breaking banner.
+      expect(breaking, 0);
       expect(live, 1);
       expect(quoted, greaterThanOrEqualTo(2));
     },

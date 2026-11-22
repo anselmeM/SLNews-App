@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../domain/breaking_news_policy.dart';
 import '../../domain/models/article.dart';
 import '../../domain/repositories/article_repository.dart';
 import '../local/article_cache.dart';
@@ -284,7 +285,12 @@ class OfflineFirstArticleRepository implements ArticleRepository {
 
     final List<Article> cached = _articleCache.read(allCacheKey);
     if (cached.isNotEmpty) {
-      _memory = cached;
+      // Cached rows may predate the breaking policy; re-score them before the
+      // first frame so an upgrade cannot resurrect an old BREAKING banner.
+      _memory = <Article>[
+        for (final Article article in cached)
+          BreakingNewsPolicy.normalize(article),
+      ];
       _lastSyncedAt = _articleCache.syncedAt(allCacheKey);
       return;
     }

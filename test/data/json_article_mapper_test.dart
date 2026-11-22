@@ -102,7 +102,7 @@ void main() {
             'country': 'Sierra Leone',
             'isWire': true,
           },
-          'publishedAt': '2026-11-14T09:30:00Z',
+          'publishedAt': '2026-11-15T11:30:00Z',
           'categoryId': 'business',
           'tags': <Object?>['budget', 'parliament', 'budget'],
           'isBreaking': true,
@@ -126,10 +126,11 @@ void main() {
       expect(article.publisher.name, 'Politico SL');
       expect(article.publisher.id, 'politico');
       expect(article.publisher.isWire, isTrue);
-      expect(article.publishedAt, DateTime.utc(2026, 11, 14, 9, 30));
+      expect(article.publishedAt, DateTime.utc(2026, 11, 15, 11, 30));
       expect(article.categoryId, 'business');
       expect(article.tags, <String>['budget', 'parliament']);
-      expect(article.isBreaking, isTrue);
+      // The feed flag is only a signal; a routine budget story is not breaking.
+      expect(article.isBreaking, isFalse);
       expect(article.isLive, isTrue);
       expect(article.readingMinutes, 4);
     });
