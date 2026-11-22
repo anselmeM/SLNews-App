@@ -128,6 +128,24 @@ void main() {
       expect(articles.first.categoryId, 'politics');
     });
 
+    test(
+      'classifies a business headline when the feed has no category tag',
+      () {
+        const String document = '''
+<rss version="2.0"><channel><item>
+  <title>Bank of Sierra Leone holds policy rate as inflation cools</title>
+  <link>https://politicosl.com/business/policy-rate</link>
+  <description>The central bank kept its benchmark rate unchanged.</description>
+</item></channel></rss>''';
+        final Article article = RssParser.parse(
+          document,
+          config: politicoConfig,
+          now: now,
+        ).single;
+        expect(article.categoryId, 'business');
+      },
+    );
+
     test('parses the RFC-822 date', () {
       expect(
         articles.first.publishedAt,

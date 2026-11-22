@@ -79,7 +79,7 @@ void main() {
       expect(find.byType(GridView), findsNothing);
     });
 
-    testWidgets('shows the empty-state copy for a category with no stories', (
+    testWidgets('falls back to latest stories for a category with no stories', (
       WidgetTester tester,
     ) async {
       await pumpNewsPage(tester);
@@ -87,12 +87,10 @@ void main() {
       await tester.tap(find.text('Cars and Vehicles'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(EmptyStateView), findsOneWidget);
-      expect(find.text('Nothing here yet'), findsOneWidget);
-      expect(
-        find.text('No cars and vehicles stories right now — check back soon.'),
-        findsOneWidget,
-      );
+      // A quiet category must never leave the tab blank; the page shows the
+      // latest feed under the selected category heading instead.
+      expect(find.byType(EmptyStateView), findsNothing);
+      expect(find.text(topHeadline), findsOneWidget);
     });
 
     testWidgets('inserts one in-stream ad after the third Latest row', (

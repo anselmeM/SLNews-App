@@ -19,7 +19,13 @@
       "isWire": false
     },
     "categoryId": "politics",
-    "tags": ["stelco", "steel", "ottawa", "freetown", "regulation"],
+    "tags": [
+      "stelco",
+      "steel",
+      "ottawa",
+      "freetown",
+      "regulation"
+    ],
     "isBreaking": true,
     "isLive": false,
     "publishedMinutesAgo": 12,
@@ -45,7 +51,13 @@
       "isWire": false
     },
     "categoryId": "politics",
-    "tags": ["parliament", "mining", "royalties", "kono", "finance"],
+    "tags": [
+      "parliament",
+      "mining",
+      "royalties",
+      "kono",
+      "finance"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 320,
@@ -71,7 +83,12 @@
       "isWire": false
     },
     "categoryId": "politics",
-    "tags": ["freetown", "city council", "waste", "sanitation"],
+    "tags": [
+      "freetown",
+      "city council",
+      "waste",
+      "sanitation"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 1400,
@@ -97,7 +114,13 @@
       "isWire": false
     },
     "categoryId": "business",
-    "tags": ["diamonds", "exports", "kono", "mining", "trade"],
+    "tags": [
+      "diamonds",
+      "exports",
+      "kono",
+      "mining",
+      "trade"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 95,
@@ -123,7 +146,12 @@
       "isWire": false
     },
     "categoryId": "business",
-    "tags": ["inflation", "central bank", "leone", "economy"],
+    "tags": [
+      "inflation",
+      "central bank",
+      "leone",
+      "economy"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 700,
@@ -149,7 +177,13 @@
       "isWire": false
     },
     "categoryId": "mining",
-    "tags": ["koidu", "kono", "licences", "artisanal mining", "gold"],
+    "tags": [
+      "koidu",
+      "kono",
+      "licences",
+      "artisanal mining",
+      "gold"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 260,
@@ -175,7 +209,13 @@
       "isWire": false
     },
     "categoryId": "mining",
-    "tags": ["rutile", "bauxite", "exports", "roads", "moyamba"],
+    "tags": [
+      "rutile",
+      "bauxite",
+      "exports",
+      "roads",
+      "moyamba"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 1900,
@@ -201,7 +241,13 @@
       "isWire": false
     },
     "categoryId": "health",
-    "tags": ["malaria", "vaccines", "children", "bo", "kenema"],
+    "tags": [
+      "malaria",
+      "vaccines",
+      "children",
+      "bo",
+      "kenema"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 480,
@@ -227,7 +273,12 @@
       "isWire": false
     },
     "categoryId": "health",
-    "tags": ["water", "guma valley", "freetown", "infrastructure"],
+    "tags": [
+      "water",
+      "guma valley",
+      "freetown",
+      "infrastructure"
+    ],
     "isBreaking": true,
     "isLive": false,
     "publishedMinutesAgo": 55,
@@ -253,7 +304,12 @@
       "isWire": false
     },
     "categoryId": "education",
-    "tags": ["teachers", "colleges", "schools", "training"],
+    "tags": [
+      "teachers",
+      "colleges",
+      "schools",
+      "training"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 2200,
@@ -279,7 +335,12 @@
       "isWire": true
     },
     "categoryId": "world",
-    "tags": ["ecowas", "security", "abuja", "regional"],
+    "tags": [
+      "ecowas",
+      "security",
+      "abuja",
+      "regional"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 380,
@@ -305,7 +366,12 @@
       "isWire": true
     },
     "categoryId": "world",
-    "tags": ["cocoa", "commodities", "exports", "west africa"],
+    "tags": [
+      "cocoa",
+      "commodities",
+      "exports",
+      "west africa"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 3300,
@@ -331,7 +397,13 @@
       "isWire": false
     },
     "categoryId": "sports",
-    "tags": ["leone stars", "afcon", "guinea", "national stadium", "qualifier"],
+    "tags": [
+      "leone stars",
+      "afcon",
+      "guinea",
+      "national stadium",
+      "qualifier"
+    ],
     "isBreaking": true,
     "isLive": true,
     "publishedMinutesAgo": 8,
@@ -357,7 +429,13 @@
       "isWire": false
     },
     "categoryId": "sports",
-    "tags": ["premier league", "bo rangers", "mighty blackpool", "bo", "football"],
+    "tags": [
+      "premier league",
+      "bo rangers",
+      "mighty blackpool",
+      "bo",
+      "football"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 240,
@@ -383,7 +461,12 @@
       "isWire": false
     },
     "categoryId": "culture",
-    "tags": ["lantern parade", "freetown", "festival", "culture"],
+    "tags": [
+      "lantern parade",
+      "freetown",
+      "festival",
+      "culture"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 1100,
@@ -409,7 +492,13 @@
       "isWire": false
     },
     "categoryId": "music",
-    "tags": ["ecofest", "music", "freetown", "festival", "concerts"],
+    "tags": [
+      "ecofest",
+      "music",
+      "freetown",
+      "festival",
+      "concerts"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 900,
@@ -435,7 +524,12 @@
       "isWire": false
     },
     "categoryId": "tech",
-    "tags": ["mobile money", "payments", "fintech", "interoperability"],
+    "tags": [
+      "mobile money",
+      "payments",
+      "fintech",
+      "interoperability"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 1600,
@@ -461,10 +555,204 @@
       "isWire": false
     },
     "categoryId": "cars",
-    "tags": ["vehicles", "imports", "bo", "kenema", "roads"],
+    "tags": [
+      "vehicles",
+      "imports",
+      "bo",
+      "kenema",
+      "roads"
+    ],
     "isBreaking": false,
     "isLive": false,
     "publishedMinutesAgo": 2800,
     "readingMinutes": 4
+  },
+  {
+    "id": "art-cars-inspection-centre",
+    "title": "New vehicle inspection centre opens in Kissy",
+    "summary": "Drivers in the east end of Freetown can now complete roadworthiness checks at a new inspection bay, the transport authority says.",
+    "bodyHtml": "<p>The transport authority has opened a vehicle inspection centre in Kissy, adding capacity to a system that has struggled with long queues at the central Freetown depot.</p><p>The centre will handle private cars, taxis and light commercial vehicles. Officials say the first phase will operate six days a week while additional testing lanes are commissioned.</p><h2>What drivers need</h2><p>Drivers should bring their vehicle registration, current insurance and the previous inspection certificate where available. The fee schedule is unchanged.</p><p>Transport unions welcomed the extra capacity but asked for clearer public notice of the opening hours and for a separate lane for commercial passenger vehicles.</p>",
+    "author": "Aminata Sesay",
+    "imageUrl": "https://picsum.photos/seed/vehicle-inspection/1200/720",
+    "imageCaption": "Vehicles waiting for inspection in Freetown.",
+    "imageCredit": "Sierraloaded",
+    "sourceUrl": "https://sierraloaded.sl/2026/11/vehicle-inspection-kissy",
+    "publisher": {
+      "id": "sierraloaded",
+      "name": "Sierraloaded",
+      "wordmark": "SIERRA LOADED",
+      "logoUrl": null,
+      "websiteUrl": "https://sierraloaded.sl",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "cars",
+    "tags": [
+      "vehicles",
+      "transport",
+      "inspection",
+      "freetown"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 95,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-cars-import-levies",
+    "title": "Used-car imports slow as new levies take effect",
+    "summary": "Dealers at the Freetown port report fewer vehicle clearances this month as buyers adjust to the revised import charges.",
+    "bodyHtml": "<p>Used-car imports through the Queen Elizabeth II Quay have slowed as dealers and buyers adjust to revised clearing charges introduced this month.</p><p>Several dealers said buyers are waiting to see how the new schedule is applied before committing to orders. The customs authority says the changes are intended to make valuations more predictable.</p><h2>Buyers cautious</h2><p>A dealer at the port said smaller petrol cars remain the most requested, while demand for larger vehicles has weakened. Buyers are also asking more often for pre-purchase inspections.</p><p>Port officials expect clearance volumes to settle once the first full billing cycle is completed.</p>",
+    "author": "Mohamed Kamara",
+    "imageUrl": "https://picsum.photos/seed/used-cars-port/1200/720",
+    "imageCaption": "Vehicles at the Freetown port.",
+    "imageCredit": "Standard Times",
+    "sourceUrl": "https://standardtimespress.net/2026/11/used-car-imports-levies",
+    "publisher": {
+      "id": "standardtimes",
+      "name": "Standard Times",
+      "wordmark": "STANDARD TIMES",
+      "logoUrl": null,
+      "websiteUrl": "https://standardtimespress.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "cars",
+    "tags": [
+      "cars",
+      "imports",
+      "customs",
+      "port"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 260,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-music-gospel-tour",
+    "title": "Krio gospel choir announces national tour",
+    "summary": "The choir will take its Krio-language repertoire to Bo, Kenema and Makeni before a closing concert in Freetown.",
+    "bodyHtml": "<p>A Freetown Krio gospel choir has announced a national tour, with performances planned in Bo, Kenema and Makeni before a closing concert in the capital.</p><p>The programme mixes traditional hymns with new arrangements written for the tour. Organisers say the Bo and Kenema shows will feature local youth choirs as opening acts.</p><h2>Local stages</h2><p>Rehearsals are being held at a community hall in the east end, and the choir is raising money for transport and sound equipment through ticket sales.</p><p>Ticket prices were kept low for students, and a portion of the proceeds will go to a school music programme.</p>",
+    "author": "Fatmata Koroma",
+    "imageUrl": "https://picsum.photos/seed/gospel-choir/1200/720",
+    "imageCaption": "Choir rehearsal in Freetown.",
+    "imageCredit": "The Calabash",
+    "sourceUrl": "https://thecalabashnewspaper.com/2026/11/krio-gospel-tour",
+    "publisher": {
+      "id": "thecalabash",
+      "name": "The Calabash",
+      "wordmark": "CALABASH",
+      "logoUrl": null,
+      "websiteUrl": "https://thecalabashnewspaper.com",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "music",
+    "tags": [
+      "music",
+      "gospel",
+      "choir",
+      "tour",
+      "krio"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 180,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-music-streaming-payments",
+    "title": "Local music platform starts paying artists per stream",
+    "summary": "A Sierra Leonean streaming service says it will publish monthly payout statements for artists on its platform.",
+    "bodyHtml": "<p>A Sierra Leonean music streaming platform has begun paying artists per stream and says it will publish monthly payout statements for participating musicians.</p><p>The company says the move is intended to make revenue sharing more transparent for artists who mostly distribute through social media and messaging apps.</p><h2>Building a catalogue</h2><p>The platform is signing local labels and independent artists, including several Krio and Temne-language acts. Artists will retain ownership of their recordings, according to the terms.</p><p>Industry workers welcomed the payout model but said payment thresholds and reporting need to be clear enough for small acts to participate.</p>",
+    "author": "Ibrahim Conteh",
+    "imageUrl": "https://picsum.photos/seed/music-streaming/1200/720",
+    "imageCaption": "A recording session in Freetown.",
+    "imageCredit": "Sierraloaded",
+    "sourceUrl": "https://sierraloaded.sl/2026/11/music-streaming-payments",
+    "publisher": {
+      "id": "sierraloaded",
+      "name": "Sierraloaded",
+      "wordmark": "SIERRA LOADED",
+      "logoUrl": null,
+      "websiteUrl": "https://sierraloaded.sl",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "music",
+    "tags": [
+      "music",
+      "streaming",
+      "artists",
+      "payments"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 410,
+    "readingMinutes": 4
+  },
+  {
+    "id": "art-culture-museum-textiles",
+    "title": "National museum reopens textile gallery",
+    "summary": "The gallery has been closed for refurbishment and now displays country cloth and woven textile pieces from across Sierra Leone.",
+    "bodyHtml": "<p>The national museum has reopened its textile gallery after a refurbishment, putting country cloth and woven pieces from several regions back on public display.</p><p>The collection includes examples of local weaving, natural dyeing and ceremonial cloth. Curators say they are also recording the stories of the weavers and families who donated pieces.</p><h2>A living collection</h2><p>The museum plans to host weaving demonstrations and school visits during the opening season, and is asking families with historical pieces to contact its collections team.</p><p>Entry remains free for school groups, and the gallery has added labels in English and Krio.</p>",
+    "author": "Mariama Turay",
+    "imageUrl": "https://picsum.photos/seed/museum-textiles/1200/720",
+    "imageCaption": "Textile display at the national museum.",
+    "imageCredit": "Cocorioko",
+    "sourceUrl": "https://cocorioko.net/2026/11/museum-textile-gallery",
+    "publisher": {
+      "id": "cocorioko",
+      "name": "Cocorioko",
+      "wordmark": "COCORIOKO",
+      "logoUrl": null,
+      "websiteUrl": "https://cocorioko.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "culture",
+    "tags": [
+      "culture",
+      "museum",
+      "textiles",
+      "heritage"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 300,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-culture-bo-festival",
+    "title": "Bo cultural festival brings together dance and crafts",
+    "summary": "The two-day festival will feature dance groups, craft sellers and oral history sessions in the centre of Bo.",
+    "bodyHtml": "<p>A two-day cultural festival in Bo will bring together dance groups, craft sellers and oral history sessions in the city centre.</p><p>The programme includes performances from community groups across the south and a market for locally made goods. Organisers say they want younger residents involved in planning the next edition.</p><h2>Local participation</h2><p>Workshops on cloth dyeing, basket weaving and traditional music are planned alongside the main stage. Food stalls will be run by local traders.</p><p>Entry is free, and the organisers have held discussions with the city council about traffic and waste management.</p>",
+    "author": "Abdul Rahman Jalloh",
+    "imageUrl": "https://picsum.photos/seed/bo-cultural-festival/1200/720",
+    "imageCaption": "Craft sellers at a cultural festival.",
+    "imageCredit": "Cocorioko",
+    "sourceUrl": "https://cocorioko.net/2026/11/bo-cultural-festival",
+    "publisher": {
+      "id": "cocorioko",
+      "name": "Cocorioko",
+      "wordmark": "COCORIOKO",
+      "logoUrl": null,
+      "websiteUrl": "https://cocorioko.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "culture",
+    "tags": [
+      "culture",
+      "festival",
+      "bo",
+      "dance",
+      "crafts"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 470,
+    "readingMinutes": 3
   }
 ]

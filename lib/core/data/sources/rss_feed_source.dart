@@ -6,6 +6,7 @@ import '../../utils/stable_id.dart';
 import '../../utils/url_normalizer.dart';
 import 'api_client.dart';
 import 'feed_source.dart';
+import 'news_category_matcher.dart';
 import 'wire_date.dart';
 
 import 'package:slnews_mobile/core/utils/app_log.dart';
@@ -157,48 +158,24 @@ abstract final class RssParser {
     );
   }
 
-  /// Sport keywords that should move an item into the Sports tab even when its
-  /// outlet is filed under another category (the Sierra Leone outlets tag sports
-  /// posts rather than splitting their feed).
-  static const List<String> _sportWords = <String>[
-    'sport',
-    'football',
-    'soccer',
-    'volleyball',
-    'basketball',
-    'athletics',
-    'boxing',
-    'cricket',
-    'rugby',
-    'tennis',
-    'golf',
-    'cycling',
-    'formula 1',
-    'f1',
-    'darts',
-    'wrestling',
-    'judo',
-    'swimming',
-    'para',
-    'olympic',
-    'commonwealth',
-    'wafu',
-    'afcon',
-    'league',
-    'fifa',
-    'caf',
-  ];
-
   static String _categoryFor(XmlElement item, FeedSourceConfig config) {
     if (config.categoryId == 'sports') return 'sports';
-    final String haystack = <String>[
-      for (final String tag in _tags(item)) tag.toLowerCase(),
-      _firstText(item, const <String>['category'])?.toLowerCase() ?? '',
-    ].join(' ');
-    for (final String word in _sportWords) {
-      if (haystack.contains(word)) return 'sports';
-    }
-    return config.categoryId;
+    final List<String> labels = <String>[
+      ..._tags(item),
+      _firstText(item, const <String>['category']) ?? '',
+    ];
+    final String? explicit = categoryIdForTerms(labels);
+    if (explicit != null) return explicit;
+
+    // One combined outlet feed often has no category tags. Use the headline and
+    // summary as a conservative fallback, then the outlet's default category.
+    final String title = _plainText(
+      _firstText(item, const <String>['title']) ?? '',
+    );
+    final String summary = _plainText(
+      _firstText(item, const <String>['description', 'summary']) ?? '',
+    );
+    return categoryIdForTerms(<String>[title, summary]) ?? config.categoryId;
   }
 
   static Publisher _publisher(FeedSourceConfig config) => Publisher(
