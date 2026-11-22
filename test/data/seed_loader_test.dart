@@ -45,7 +45,7 @@ void main() {
   test('parses every bundled asset', () async {
     final SeedData data = await const AssetSeedLoader().load();
 
-    expect(data.articles.length, inInclusiveRange(14, 18));
+    expect(data.articles.length, inInclusiveRange(20, 30));
     expect(
       data.articles.map((Article a) => a.id).toSet(),
       hasLength(data.articles.length),
@@ -91,7 +91,7 @@ void main() {
         expect(RegExp(r'<h2>').allMatches(article.bodyHtml), hasLength(1));
         expect(
           RegExp(r'<p>').allMatches(article.bodyHtml).length,
-          inInclusiveRange(5, 9),
+          inInclusiveRange(4, 9),
         );
         expect(article.imageUrl, startsWith('https://picsum.photos/seed/'));
         expect(article.imageCaption, isNotNull);

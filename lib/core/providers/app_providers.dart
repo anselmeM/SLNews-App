@@ -224,7 +224,12 @@ final categoryFeedProvider = FutureProvider.family<List<Article>, String>((
 ) async {
   final ArticleRepository repository = ref.watch(articleRepositoryProvider);
   if (categoryId != 'sports') {
-    return repository.byCategory(categoryId);
+    final List<Article> articles = await repository.byCategory(categoryId);
+    if (articles.isNotEmpty || categoryId == 'top') return articles;
+    // A category can be temporarily empty when every matching live item is
+    // older than the current feed window. Never leave the tab blank; show the
+    // latest news under the category heading until dedicated items arrive.
+    return repository.topStories(limit: 30);
   }
   // Fetch a wider window, rank local Sierra Leone sport first, then cap. The
   // repository's own limit would otherwise let wires fill all 30 slots.
@@ -232,7 +237,9 @@ final categoryFeedProvider = FutureProvider.family<List<Article>, String>((
     categoryId,
     limit: 120,
   );
-  return rankSportsStories(pool).take(30).toList(growable: false);
+  final List<Article> ranked = rankSportsStories(pool);
+  if (ranked.isNotEmpty) return ranked.take(30).toList(growable: false);
+  return repository.topStories(limit: 30);
 }, name: 'categoryFeed');
 
 /// Story for the reader route; resolves to `null` when unknown.
