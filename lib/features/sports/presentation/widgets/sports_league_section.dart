@@ -8,7 +8,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/widgets/article_tile.dart';
 import '../../../../core/widgets/publisher_mark.dart';
+import '../../../../core/widgets/skeleton.dart';
 import '../../../../core/widgets/sl_network_image.dart';
+import 'league_look.dart';
 import 'score_card.dart';
 
 /// One Samsung-style league block in the Sports feed.
@@ -22,7 +24,6 @@ class SportsLeagueSection extends ConsumerWidget {
     required this.leagueLabel,
     required this.leagueId,
     required this.games,
-    required this.articles,
     this.preferredArticles = const <Article>[],
     required this.isFollowing,
     required this.onToggleFollow,
@@ -38,9 +39,6 @@ class SportsLeagueSection extends ConsumerWidget {
   final String leagueId;
   final List<GameScore> games;
 
-  /// Strictly filtered local fallback while the league feed loads.
-  final List<Article> articles;
-
   /// Followed-team stories take precedence over the league feed.
   final List<Article> preferredArticles;
   final bool isFollowing;
@@ -54,19 +52,31 @@ class SportsLeagueSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watched here, not in the page: a league block only starts its feed request
     // when SliverList.builder builds it near the viewport.
-    final List<Article> feed =
-        ref.watch(leagueNewsProvider('league:$leagueId')).asData?.value ??
-        const <Article>[];
+    final AsyncValue<List<Article>> leagueNews = ref.watch(
+      leagueNewsProvider('league:$leagueId'),
+    );
+    final List<Article> feed = leagueNews.asData?.value ?? const <Article>[];
+    // Only authoritative league sources feed this block: its own league feed,
+    // or the followed NBA team's league-scoped news. There is deliberately no
+    // generic-sports fallback — an empty block is better than a wrong league.
     final List<Article> stories = preferredArticles.isNotEmpty
         ? preferredArticles
-        : (feed.isNotEmpty ? feed : articles);
+        : feed;
     final List<Article> shownStories = stories.take(4).toList(growable: false);
 
     // A section with neither a fixture nor a story is noise: the catalogue
     // includes off-season leagues, and their feeds may legitimately be empty.
-    if (games.isEmpty && shownStories.isEmpty) return const SizedBox.shrink();
+    if (games.isEmpty && shownStories.isEmpty) {
+      // A league whose feed is still loading gets a placeholder instead of
+      // popping into the page later; an empty result stays hidden.
+      // Only followed leagues get a placeholder: an empty off-season block
+      // should stay hidden rather than push the rest of the page down.
+      return leagueNews.isLoading && isFollowing
+          ? _LeagueNewsSkeleton(label: leagueLabel)
+          : const SizedBox.shrink();
+    }
 
-    final _LeagueLook look = _LeagueLook.forLabel(leagueLabel);
+    final LeagueLook look = LeagueLook.forLabel(leagueLabel);
 
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.xxl),
@@ -324,138 +334,52 @@ class _HeroStory extends StatelessWidget {
   }
 }
 
-class _LeagueLook {
-  const _LeagueLook(this.icon, this.top, this.bottom);
+/// Placeholder while a league's own feed loads, so the Sports feed keeps its
+/// rhythm instead of sections appearing one by one.
+class _LeagueNewsSkeleton extends StatelessWidget {
+  const _LeagueNewsSkeleton({required this.label});
 
-  final IconData icon;
-  final Color top;
-  final Color bottom;
+  final String label;
 
-  static _LeagueLook forLabel(String label) {
-    final String value = label.toUpperCase();
-    if (value.contains('NBA')) {
-      return const _LeagueLook(
-        Icons.sports_basketball,
-        Color(0xFF0B2E6B),
-        Color(0xFF1558B0),
-      );
-    }
-    if (value.contains('NFL')) {
-      return const _LeagueLook(
-        Icons.sports_football,
-        Color(0xFF0A2A22),
-        Color(0xFF146B4A),
-      );
-    }
-    if (value.contains('MLB')) {
-      return const _LeagueLook(
-        Icons.sports_baseball,
-        Color(0xFF1C2340),
-        Color(0xFF31508E),
-      );
-    }
-    if (value.contains('NHL')) {
-      return const _LeagueLook(
-        Icons.sports_hockey,
-        Color(0xFF1A1A1E),
-        Color(0xFF3A3A42),
-      );
-    }
-    if (value.contains('SIERRA LEONE PREMIER')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF062E1C),
-        Color(0xFF0F7A43),
-      );
-    }
-    if (value.contains('EUROPEAN')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF15102E),
-        Color(0xFF3B2A7A),
-      );
-    }
-    if (value.contains('CHAMPIONS LEAGUE')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF081A4B),
-        Color(0xFF1746A2),
-      );
-    }
-    if (value.contains('LA LIGA')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF4A1010),
-        Color(0xFFB52A2A),
-      );
-    }
-    if (value.contains('SERIE A')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF102A5E),
-        Color(0xFF1D5AA6),
-      );
-    }
-    if (value.contains('BUNDESLIGA')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF4A0A0A),
-        Color(0xFFC21B1B),
-      );
-    }
-    if (value.contains('LIGUE 1')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF0A2A4A),
-        Color(0xFF1266A8),
-      );
-    }
-    if (value.contains('AFCON')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF4A3200),
-        Color(0xFFB3801A),
-      );
-    }
-    if (value.contains('FORMULA')) {
-      return const _LeagueLook(
-        Icons.sports_motorsports,
-        Color(0xFF3A0A0A),
-        Color(0xFFB01818),
-      );
-    }
-    if (value.contains('TENNIS')) {
-      return const _LeagueLook(
-        Icons.sports_tennis,
-        Color(0xFF2A3A0A),
-        Color(0xFF6B8A1A),
-      );
-    }
-    if (value.contains('CRICKET')) {
-      return const _LeagueLook(
-        Icons.sports_cricket,
-        Color(0xFF0A3A2A),
-        Color(0xFF117A5A),
-      );
-    }
-    if (value.contains('GOLF')) {
-      return const _LeagueLook(
-        Icons.golf_course,
-        Color(0xFF0A3A0A),
-        Color(0xFF1F7A1F),
-      );
-    }
-    if (value.contains('PREMIER')) {
-      return const _LeagueLook(
-        Icons.sports_soccer,
-        Color(0xFF2B0A45),
-        Color(0xFF5B1E8A),
-      );
-    }
-    return const _LeagueLook(
-      Icons.sports_soccer,
-      Color(0xFF062E1C),
-      Color(0xFF0F5A37),
+  @override
+  Widget build(BuildContext context) {
+    final LeagueLook look = LeagueLook.forLabel(label);
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.xxl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[look.top, look.bottom],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(look.icon, color: Colors.white, size: 28),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.screenTitle.copyWith(
+                    color: Colors.white,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const SkeletonBox(height: 150),
+          const SizedBox(height: AppSpacing.sm),
+          const SkeletonBox(height: 64),
+        ],
+      ),
     );
   }
 }

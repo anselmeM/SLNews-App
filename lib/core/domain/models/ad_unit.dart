@@ -18,8 +18,11 @@ class AdUnit {
     this.assetLabel,
     this.disclosure,
     this.imageUrl,
+    this.altText,
     this.targetUrl,
     this.placement,
+    this.eventToken,
+    this.eventTokenExpiresAt,
   });
 
   final String id;
@@ -48,11 +51,18 @@ class AdUnit {
   /// Optional hosted creative image (https). Sold campaigns may supply one.
   final String? imageUrl;
 
+  /// Accessible description of the sold creative.
+  final String? altText;
+
   final String? targetUrl;
 
   /// Placement of a directly sold unit; null for the seeded house rotation.
   /// Only sold units are measured.
   final String? placement;
+
+  /// Short-lived token proving this unit was served by the sponsorship API.
+  final String? eventToken;
+  final DateTime? eventTokenExpiresAt;
 
   bool get isSold => placement != null;
 
@@ -67,7 +77,10 @@ class AdUnit {
     'assetLabel': assetLabel,
     'disclosure': disclosure,
     'imageUrl': imageUrl,
+    'altText': altText,
     'targetUrl': targetUrl,
+    'eventToken': eventToken,
+    'eventTokenExpiresAt': eventTokenExpiresAt?.toIso8601String(),
   };
 
   /// Parses a directly sold unit from `/api/mobile/v1/sponsorships`.
@@ -82,8 +95,13 @@ class AdUnit {
     assetLabel: json['assetLabel'] as String?,
     disclosure: json['disclosure'] as String?,
     imageUrl: json['imageUrl'] as String?,
+    altText: json['altText'] as String?,
     targetUrl: json['targetUrl'] as String?,
     placement: json['placement'] as String?,
+    eventToken: json['eventToken'] as String?,
+    eventTokenExpiresAt: DateTime.tryParse(
+      json['eventTokenExpiresAt'] as String? ?? '',
+    ),
   );
 
   factory AdUnit.fromJson(Map<String, dynamic> json) => AdUnit(
@@ -97,6 +115,7 @@ class AdUnit {
     assetLabel: json['assetLabel'] as String?,
     disclosure: json['disclosure'] as String?,
     imageUrl: json['imageUrl'] as String?,
+    altText: json['altText'] as String?,
     targetUrl: json['targetUrl'] as String?,
   );
 

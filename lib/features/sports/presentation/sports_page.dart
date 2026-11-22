@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/ads/sponsorship_launcher.dart';
+import '../../../core/domain/models/ad_placement.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/follow_models.dart';
@@ -30,7 +32,6 @@ import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'viewmodels/sports_view_model.dart';
 import '../domain/sports_links.dart';
-import '../domain/league_stories.dart';
 import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
 import 'widgets/followed_teams_row.dart';
@@ -75,7 +76,7 @@ class SportsPage extends ConsumerWidget {
         ? ref.watch(teamNewsProvider(heroTeamId))
         : allSports;
     final AsyncValue<List<AdUnit>> ads = ref.watch(
-      adUnitsProvider('sports_stream'),
+      adUnitsProvider(AdPlacement.sportsStream.wire),
     );
     final Set<String> liked = ref.watch(likesControllerProvider);
 
@@ -148,7 +149,7 @@ class SportsPage extends ConsumerWidget {
                   onEmptyTap: () => context.go(AppRoutes.following),
                 ),
               ),
-              if (ad != null) _adSliver(context, ad),
+              if (ad != null) _adSliver(context, ref, ad),
               SliverToBoxAdapter(
                 child: SectionHeader(
                   title: 'Top stories',
@@ -156,14 +157,7 @@ class SportsPage extends ConsumerWidget {
                 ),
               ),
               ..._topStoriesSlivers(context, allSports, liked),
-              ..._leagueSections(
-                context,
-                ref,
-                viewModel,
-                allSports,
-                teamNews,
-                following,
-              ),
+              ..._leagueSections(context, ref, viewModel, teamNews, following),
               SliverToBoxAdapter(
                 child: SectionHeader(title: viewModel.newsSectionTitle),
               ),
@@ -242,7 +236,6 @@ class SportsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     SportsViewModel viewModel,
-    AsyncValue<List<Article>> allSports,
     AsyncValue<List<Article>> teamNews,
     FollowingSnapshot following,
   ) {
@@ -255,8 +248,9 @@ class SportsPage extends ConsumerWidget {
       groups.putIfAbsent(label, () => <GameScore>[]).add(game);
     }
 
-    final List<Article> generic = allSports.asData?.value ?? const <Article>[];
-    final List<Article> specific = teamNews.asData?.value ?? generic;
+    // Team news is used only when ESPN confirms it belongs to the followed
+    // team's league (Lakers -> NBA). There is no generic-sports fallback here.
+    final List<Article> specific = teamNews.asData?.value ?? const <Article>[];
     final String? heroLeague = viewModel.heroTeam == null
         ? null
         : EspnSource.leagueIdForTeam(viewModel.heroTeam!.id);
@@ -290,8 +284,9 @@ class SportsPage extends ConsumerWidget {
             leagueLabel: label,
             leagueId: slug,
             games: games,
-            preferredArticles: useSpecific ? specific : const <Article>[],
-            articles: LeagueStories.forLeague(label, generic, games: games),
+            preferredArticles: useSpecific
+                ? specific.take(4).toList(growable: false)
+                : const <Article>[],
             isFollowing: following.isFollowed(target.id),
             onToggleFollow: () =>
                 ref.read(followingControllerProvider.notifier).toggle(target),

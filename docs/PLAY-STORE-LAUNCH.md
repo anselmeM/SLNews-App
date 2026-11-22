@@ -125,7 +125,7 @@ needs the app to survive its automated crawl, which is easier to fix with teleme
   `android/key.properties`, produces the `.aab`, reports size + SHA-256 and verifies the
   signature with `jarsigner`. First bundle already built:
   `build/dist/SLNews-1.0.0-1.aab` — 62.4 MB, signature verified, **16 KB aligned**.
-- `.github/workflows/build-aab.yml` builds and uploads the bundle on push.
+- `.github/workflows/build-apk.yml` (`bundle` job) builds and uploads the bundle after the APK gate on a master/main push.
 - `scripts/bump_version.ps1` edits the single `version:` line and refuses to reuse or
   lower a `versionCode`.
 - Remaining: enrol in **Play App Signing** with the upload key on first upload, and run

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/ads/sponsorship_launcher.dart';
+import '../../../core/domain/models/ad_placement.dart';
+import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
@@ -15,6 +18,7 @@ import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/html_content.dart';
 import '../../../core/widgets/publisher_mark.dart';
+import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/scroll_to_top_button.dart';
 import '../../../core/widgets/state_views.dart';
 import '../domain/article_web_mode.dart';
@@ -228,6 +232,8 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xxl),
+                  const _ArticleEndAd(),
+                  const SizedBox(height: AppSpacing.xxl),
                   RelatedStories(articles: related),
                   const SizedBox(height: AppSpacing.xxxl),
                 ],
@@ -299,6 +305,27 @@ class _ReaderSkeleton extends StatelessWidget {
           child: CircularProgressIndicator(),
         ),
       ),
+    );
+  }
+}
+
+/// The `article_end` sold placement, rendered after the story body and before
+/// related stories. The provider is allowed to fail or stay empty: an ad must
+/// never break reading.
+class _ArticleEndAd extends ConsumerWidget {
+  const _ArticleEndAd();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<AdUnit> units =
+        ref.watch(adUnitsProvider(AdPlacement.articleEnd.wire)).asData?.value ??
+        const <AdUnit>[];
+    if (units.isEmpty) return const SizedBox.shrink();
+    final AdUnit unit = units.first;
+    return TrackedAdCard(
+      unit: unit,
+      onCtaPressed: () => openSponsorship(context, ref, unit),
+      onOpened: (AdUnit opened) => openSponsorship(context, ref, opened),
     );
   }
 }

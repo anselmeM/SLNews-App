@@ -63,4 +63,14 @@ abstract interface class UserStateRepository {
   bool get weatherForecastEnabled;
 
   Future<void> setWeatherForecastEnabled(bool enabled);
+
+  /// Digest preferences cached for [accountId], encoded as JSON.
+  String? digestPreferencesFor(String accountId);
+
+  Future<void> setDigestPreferencesFor(String accountId, String json);
+
+  /// The last save for [accountId] that has not reached the server.
+  String? pendingDigestPreferencesFor(String accountId);
+
+  Future<void> setPendingDigestPreferencesFor(String accountId, String? json);
 }

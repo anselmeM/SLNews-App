@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/domain/auth/auth_repository.dart';
+import 'core/config/l10n.dart';
 import 'core/domain/models/app_settings.dart';
 import 'core/providers/auth_providers.dart';
 import 'core/providers/controllers.dart';
+import 'core/providers/locale_provider.dart';
+import 'l10n/app_localizations.dart';
 import 'core/push/push_route.dart';
 import 'core/push/push_service.dart';
 import 'core/providers/app_providers.dart';
@@ -23,6 +27,23 @@ class SlNewsApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppSettings settings = ref.watch(settingsControllerProvider);
     final GoRouter router = ref.watch(appRouterProvider);
+    final Locale? locale = ref.watch(localeControllerProvider);
+
+    // After a sign-in, replace local defaults with the account's server-side
+    // digest choices (or push a pending offline change) before any later save
+    // can send a stale full snapshot.
+    ref.listen<AuthState>(authControllerProvider, (
+      AuthState? previous,
+      AuthState next,
+    ) {
+      if (next.isSignedIn && previous?.user?.id != next.user?.id) {
+        unawaited(
+          ref
+              .read(settingsControllerProvider.notifier)
+              .refreshDigestPreferences(),
+        );
+      }
+    });
 
     // The identity provider wraps the app in whatever scope its SDK needs; a
     // key-less build supplies the identity function, so this costs nothing when
@@ -34,10 +55,14 @@ class SlNewsApp extends ConsumerWidget {
     return authWrapper(
       MaterialApp.router(
         title: 'SLNews',
+        onGenerateTitle: (BuildContext context) => context.l10n.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: settings.themeMode.materialMode,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
         builder: (BuildContext context, Widget? child) => _PushTapHandler(
           child: _TextScaleScope(
@@ -117,6 +142,12 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
   }
 
   Future<void> _refreshOnResume() async {
+    // Retry a digest preference that could not reach the server earlier.
+    unawaited(
+      ref
+          .read(settingsControllerProvider.notifier)
+          .retryPendingDigestPreferences(),
+    );
     try {
       await ref.read(refreshFeedsProvider)();
     } catch (error) {

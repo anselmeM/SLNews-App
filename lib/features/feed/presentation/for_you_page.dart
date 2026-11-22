@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/ads/sponsorship_launcher.dart';
 import '../../../core/widgets/header_actions.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/app_settings.dart';

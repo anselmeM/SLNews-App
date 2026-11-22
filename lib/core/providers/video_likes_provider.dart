@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../utils/app_log.dart';
+
 import 'app_providers.dart';
 
 /// Preferences key holding the reader's liked video ids.
@@ -38,8 +40,9 @@ class VideoLikesController extends Notifier<Set<String>> {
       await ref
           .read(preferencesStoreProvider)
           .putStringSet(videoLikesKey, next);
-    } catch (_) {
+    } catch (error) {
       // Persistence is best-effort: the tap must still change the icon.
+      AppLog.debug('Video likes: persist failed: $error');
     }
   }
 }

@@ -24,6 +24,8 @@ Map<String, dynamic> shipped(String id) => <String, dynamic>{
   'brandHex': '#FF7900',
   'brandAccentHex': '#FFA040',
   'imageUrl': 'https://cdn.example.com/orange.jpg',
+  'altText': 'Orange logo',
+  'eventToken': 'signed-token',
 };
 
 void main() {
@@ -42,6 +44,8 @@ void main() {
       expect(units.single.advertiser, 'Orange SL');
       expect(units.single.targetUrl, 'https://example.com/offer');
       expect(units.single.imageUrl, 'https://cdn.example.com/orange.jpg');
+      expect(units.single.altText, 'Orange logo');
+      expect(units.single.eventToken, 'signed-token');
     });
 
     test('empty or failed responses yield no units and never throw', () async {

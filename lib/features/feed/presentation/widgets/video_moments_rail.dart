@@ -15,6 +15,10 @@ class VideoMomentsRail extends StatelessWidget {
   /// Card height plus the rail's own vertical breathing room.
   static const double railHeight = 268;
 
+  /// The rail is a taste, not the archive: 12 clips travel with the page, the
+  /// reel still gets the whole fetched rotation.
+  static const int maxCards = 12;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -22,7 +26,7 @@ class VideoMomentsRail extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        itemCount: videos.length,
+        itemCount: videos.length > maxCards ? maxCards : videos.length,
         separatorBuilder: (BuildContext context, int index) =>
             const SizedBox(width: AppSpacing.md),
         itemBuilder: (BuildContext context, int index) {

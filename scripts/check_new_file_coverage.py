@@ -26,6 +26,10 @@ import sys
 MIN_FILE_LINES = 40
 MIN_NEW_FILE_COVERAGE = 60.0
 
+# Flutter generates these from the ARBs. They are committed for deterministic
+# builds but are not hand-written code the tests can meaningfully exercise.
+GENERATED_PREFIXES = ("lib/l10n/",)
+
 LCOV = pathlib.Path("coverage/lcov.info")
 
 
@@ -110,6 +114,9 @@ def main() -> int:
         f">= {MIN_FILE_LINES} lines"
     )
     for rel in paths:
+        if any(rel.startswith(prefix) for prefix in GENERATED_PREFIXES):
+            print(f"  skip {rel} (generated)")
+            continue
         path = pathlib.Path(rel)
         if not path.exists():
             continue

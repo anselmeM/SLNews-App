@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_language.dart';
+import '../../../core/config/l10n.dart';
 import '../../../core/config/legal_links.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/data/sources/api_client.dart';
 import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/observability/error_reporter.dart';
@@ -17,6 +20,8 @@ import '../../../core/providers/sync_repository_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import 'widgets/language_picker.dart';
+import 'widgets/quiet_hours_picker.dart';
 import 'widgets/settings_card.dart';
 
 /// Reader settings, reconstructed from the reference "News settings" screen.
@@ -45,6 +50,10 @@ class SettingsPage extends ConsumerWidget {
     final AuthState auth = ref.watch(authControllerProvider);
     final SettingsController controller = ref.read(
       settingsControllerProvider.notifier,
+    );
+    final l10n = context.l10n;
+    final AppLanguage selectedLanguage = AppLanguage.fromLocale(
+      ref.watch(localeControllerProvider),
     );
 
     return Scaffold(
@@ -103,7 +112,7 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 SettingsCard(
-                  header: 'Notifications',
+                  header: l10n.settingsNotifications,
                   children: <Widget>[
                     SettingsSwitchRow(
                       title: 'Breaking news',
@@ -142,15 +151,41 @@ class SettingsPage extends ConsumerWidget {
                       value: settings.sportsAlertsEnabled,
                       onChanged: controller.setSportsAlertsEnabled,
                     ),
+                    SettingsSwitchRow(
+                      title: l10n.dailyDigest,
+                      subtitle: l10n.dailyDigestSubtitle,
+                      value: settings.digestEnabled,
+                      onChanged: controller.setDigestEnabled,
+                    ),
+                    if (settings.digestEnabled)
+                      SettingsValueRow(
+                        title: l10n.quietHours,
+                        subtitle: l10n.quietHoursSubtitle,
+                        value: quietHoursLabel(context, settings),
+                        onTap: () =>
+                            pickQuietHours(context, controller, settings),
+                      ),
+                    if (settings.digestEnabled &&
+                        settings.quietHoursStart != null &&
+                        settings.quietHoursEnd != null)
+                      SettingsValueRow(
+                        title: l10n.turnOffQuietHours,
+                        onTap: () async {
+                          await controller.setQuietHours();
+                          if (context.mounted) {
+                            _showSnack(context, 'Quiet hours turned off.');
+                          }
+                        },
+                      ),
                   ],
                 ),
-                const SettingsSectionLabel('News'),
+                SettingsSectionLabel(l10n.settingsNews),
                 SettingsCard(
                   children: <Widget>[
-                    const SettingsValueRow(
-                      title: 'Language and region',
-                      value: AppSettings.languageRegion,
-                      showChevron: false,
+                    SettingsValueRow(
+                      title: l10n.languageAndRegion,
+                      value: selectedLanguage.endonym,
+                      onTap: () => pickAppLanguage(context, ref),
                     ),
                     SettingsSwitchRow(
                       title: 'Show weather forecast',
@@ -159,7 +194,7 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SettingsSectionLabel('Appearance'),
+                SettingsSectionLabel(l10n.settingsAppearance),
                 SettingsCard(
                   children: <Widget>[
                     SettingsValueRow(
@@ -175,12 +210,12 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SettingsSectionLabel('About'),
+                SettingsSectionLabel(l10n.settingsAbout),
                 SettingsCard(
                   children: <Widget>[
                     SettingsValueRow(
-                      title: 'Send feedback',
-                      subtitle: 'Report a bug or suggest an improvement.',
+                      title: l10n.sendFeedback,
+                      subtitle: l10n.feedbackSubtitle,
                       onTap: () => _sendFeedback(context, ref),
                     ),
                     SettingsValueRow(

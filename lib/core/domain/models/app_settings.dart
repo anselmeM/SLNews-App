@@ -39,6 +39,9 @@ class AppSettings {
     this.sportsAlertsEnabled = true,
     this.followedTopicAlertsEnabled = true,
     this.weatherForecastEnabled = true,
+    this.digestEnabled = true,
+    this.quietHoursStart,
+    this.quietHoursEnd,
     this.onboardingCompleted = false,
   });
 
@@ -65,11 +68,13 @@ class AppSettings {
   /// When false the weather row is hidden from the feeds.
   final bool weatherForecastEnabled;
 
+  /// Daily follow-digest delivery and its local quiet window (minutes).
+  final bool digestEnabled;
+  final int? quietHoursStart;
+  final int? quietHoursEnd;
+
   /// True once the first-run topic/location picker has been completed.
   final bool onboardingCompleted;
-
-  /// Language and region shown on the settings screen. The app ships one locale.
-  static const String languageRegion = 'English (Sierra Leone)';
 
   /// Steps the reader's `aA` control walks through.
   static const List<double> textScaleSteps = <double>[0.9, 1, 1.15, 1.3, 1.5];
@@ -90,6 +95,10 @@ class AppSettings {
     bool? sportsAlertsEnabled,
     bool? followedTopicAlertsEnabled,
     bool? weatherForecastEnabled,
+    bool? digestEnabled,
+    int? quietHoursStart,
+    int? quietHoursEnd,
+    bool clearQuietHours = false,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -105,6 +114,13 @@ class AppSettings {
           followedTopicAlertsEnabled ?? this.followedTopicAlertsEnabled,
       weatherForecastEnabled:
           weatherForecastEnabled ?? this.weatherForecastEnabled,
+      digestEnabled: digestEnabled ?? this.digestEnabled,
+      quietHoursStart: clearQuietHours
+          ? null
+          : (quietHoursStart ?? this.quietHoursStart),
+      quietHoursEnd: clearQuietHours
+          ? null
+          : (quietHoursEnd ?? this.quietHoursEnd),
       // Carrying this through matters: the shell shows onboarding until it
       // flips, so dropping it here made completing onboarding a no-op for the
       // in-memory state (the flag only survived until the next app start).
@@ -123,6 +139,9 @@ class AppSettings {
       other.sportsAlertsEnabled == sportsAlertsEnabled &&
       other.followedTopicAlertsEnabled == followedTopicAlertsEnabled &&
       other.weatherForecastEnabled == weatherForecastEnabled &&
+      other.digestEnabled == digestEnabled &&
+      other.quietHoursStart == quietHoursStart &&
+      other.quietHoursEnd == quietHoursEnd &&
       other.onboardingCompleted == onboardingCompleted;
 
   @override
@@ -135,6 +154,9 @@ class AppSettings {
     sportsAlertsEnabled,
     followedTopicAlertsEnabled,
     weatherForecastEnabled,
+    digestEnabled,
+    quietHoursStart,
+    quietHoursEnd,
     onboardingCompleted,
   );
 }

@@ -1,15 +1,20 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/auth/auth_repository.dart';
 import '../domain/models/app_settings.dart';
 import '../push/push_service.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
+import '../domain/models/digest_preferences.dart';
 import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
 import '../domain/sync/sync_repository.dart';
 import 'app_providers.dart';
+import 'auth_providers.dart';
+import 'digest_preferences_sync.dart';
 import 'sync_controller.dart';
 
 import 'package:slnews_mobile/core/utils/app_log.dart';
@@ -25,6 +30,14 @@ class SettingsController extends Notifier<AppSettings> {
   @override
   AppSettings build() {
     final UserStateRepository repository = ref.watch(userStateProvider);
+    // Watching the session is what makes an account switch reload that account's
+    // scoped digest cache instead of showing the previous reader's choices.
+    final AuthState auth = ref.watch(authControllerProvider);
+    final String account =
+        auth.user?.id ?? DigestPreferencesSync.signedOutAccountId;
+    final DigestPreferences digest = ref
+        .watch(digestPreferencesSyncProvider)
+        .read(account);
     return AppSettings(
       themeMode: AppThemeMode.fromWire(repository.themeMode),
       textScale: repository.textScale,
@@ -34,6 +47,9 @@ class SettingsController extends Notifier<AppSettings> {
       sportsAlertsEnabled: repository.sportsAlertsEnabled,
       followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
+      digestEnabled: digest.digestEnabled,
+      quietHoursStart: digest.quietHoursStart,
+      quietHoursEnd: digest.quietHoursEnd,
       onboardingCompleted: repository.onboardingCompleted,
     );
   }
@@ -120,6 +136,85 @@ class SettingsController extends Notifier<AppSettings> {
     await ref.read(userStateProvider).setWeatherForecastEnabled(enabled);
     state = state.copyWith(weatherForecastEnabled: enabled);
   }
+
+  /// Enables or disables the daily follow digest, locally and server-side.
+  Future<void> setDigestEnabled(bool enabled) async {
+    final String account = ref.read(digestPreferencesSyncProvider).accountId();
+    final DigestPreferences current = ref
+        .read(digestPreferencesSyncProvider)
+        .read(account);
+    final DigestPreferences next = DigestPreferences(
+      digestEnabled: enabled,
+      quietHoursStart: current.quietHoursStart,
+      quietHoursEnd: current.quietHoursEnd,
+    );
+    await ref.read(digestPreferencesSyncProvider).writeLocal(account, next);
+    state = state.copyWith(digestEnabled: enabled);
+    await ref
+        .read(digestPreferencesSyncProvider)
+        .enqueuePatch(account, DigestPreferences.cadencePatch(enabled));
+  }
+
+  /// Sets or clears the digest quiet-hours window.
+  ///
+  /// Both endpoints must change together; a single endpoint or an equal-time
+  /// window is rejected instead of silently erasing the saved window.
+  Future<void> setQuietHours({int? start, int? end}) async {
+    if ((start == null) != (end == null)) {
+      throw ArgumentError('Quiet hours need both a start and an end');
+    }
+    if (start != null && start == end) {
+      throw ArgumentError('Quiet hours need different start and end times');
+    }
+    final String account = ref.read(digestPreferencesSyncProvider).accountId();
+    final DigestPreferences current = ref
+        .read(digestPreferencesSyncProvider)
+        .read(account);
+    final DigestPreferences next = DigestPreferences(
+      digestEnabled: current.digestEnabled,
+      quietHoursStart: start,
+      quietHoursEnd: end,
+    );
+    await ref.read(digestPreferencesSyncProvider).writeLocal(account, next);
+    state = state.copyWith(
+      quietHoursStart: start,
+      quietHoursEnd: end,
+      clearQuietHours: start == null,
+    );
+    await ref
+        .read(digestPreferencesSyncProvider)
+        .enqueuePatch(
+          account,
+          DigestPreferences.quietHoursPatch(
+            start: start,
+            end: end,
+            timezoneOffsetMinutes: DateTime.now().timeZoneOffset.inMinutes,
+          ),
+        );
+  }
+
+  /// Retries a digest change that failed while offline.
+  Future<void> retryPendingDigestPreferences() =>
+      ref.read(digestPreferencesSyncProvider).retryPending();
+
+  /// Hydrates the digest choices from the server after sign-in.
+  Future<void> refreshDigestPreferences() async {
+    final DigestPreferences? server = await ref
+        .read(digestPreferencesSyncProvider)
+        .hydrate();
+    if (server == null) return;
+    state = state.copyWith(
+      digestEnabled: server.digestEnabled,
+      quietHoursStart: server.quietHoursStart,
+      quietHoursEnd: server.quietHoursEnd,
+      clearQuietHours: server.quietHoursStart == null,
+    );
+  }
+
+  /// Waits for queued digest PUTs; used by tests and sign-out coordination.
+  @visibleForTesting
+  Future<void> flushDigestSync() =>
+      ref.read(digestPreferencesSyncProvider).flushSaves();
 
   /// Marks the first-run picker as done and persists it.
   Future<void> completeOnboarding() async {

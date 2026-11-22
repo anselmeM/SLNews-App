@@ -1,7 +1,7 @@
 part of 'sports_page.dart';
 
 /// Large Samsung-style inline ad after the Following row.
-Widget _adSliver(BuildContext context, AdUnit unit) {
+Widget _adSliver(BuildContext context, WidgetRef ref, AdUnit unit) {
   return SliverToBoxAdapter(
     child: Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -12,10 +12,8 @@ Widget _adSliver(BuildContext context, AdUnit unit) {
       ),
       child: TrackedAdCard(
         unit: unit,
-        onCtaPressed: () =>
-            _showSnack(context, 'Sponsored by ${unit.advertiser}'),
-        onOpened: (AdUnit opened) =>
-            _showSnack(context, 'Sponsored by ${opened.advertiser}'),
+        onCtaPressed: () => openSponsorship(context, ref, unit),
+        onOpened: (AdUnit opened) => openSponsorship(context, ref, opened),
       ),
     ),
   );

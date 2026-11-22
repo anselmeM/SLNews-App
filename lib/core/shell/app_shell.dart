@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/domain/auth/auth_repository.dart';
 import '../domain/models/app_settings.dart';
 import '../providers/auth_providers.dart';
+import '../config/l10n.dart';
 import '../providers/controllers.dart';
 import '../routing/app_routes.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
@@ -19,22 +20,13 @@ class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   static const List<_TabSpec> _tabs = <_TabSpec>[
-    _TabSpec(label: 'For you', icon: Icons.star_border, activeIcon: Icons.star),
+    _TabSpec(icon: Icons.star_border, activeIcon: Icons.star),
+    _TabSpec(icon: Icons.article_outlined, activeIcon: Icons.article),
     _TabSpec(
-      label: 'News',
-      icon: Icons.article_outlined,
-      activeIcon: Icons.article,
-    ),
-    _TabSpec(
-      label: 'Sports',
       icon: Icons.sports_basketball_outlined,
       activeIcon: Icons.sports_basketball,
     ),
-    _TabSpec(
-      label: 'Following',
-      icon: Icons.notifications_none,
-      activeIcon: Icons.notifications,
-    ),
+    _TabSpec(icon: Icons.notifications_none, activeIcon: Icons.notifications),
   ];
 
   @override
@@ -58,6 +50,13 @@ class AppShell extends ConsumerWidget {
     if (signedIn && !onboarded) return const OnboardingPage();
 
     final ThemeData theme = Theme.of(context);
+    final l10n = context.l10n;
+    final List<String> labels = <String>[
+      l10n.navForYou,
+      l10n.navNews,
+      l10n.navSports,
+      l10n.navFollowing,
+    ];
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: navigationShell,
@@ -74,12 +73,12 @@ class AppShell extends ConsumerWidget {
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: _onDestinationSelected,
             destinations: <Widget>[
-              for (final _TabSpec tab in _tabs)
+              for (int index = 0; index < _tabs.length; index++)
                 NavigationDestination(
-                  icon: Icon(tab.icon),
-                  selectedIcon: Icon(tab.activeIcon),
-                  label: tab.label,
-                  tooltip: tab.label,
+                  icon: Icon(_tabs[index].icon),
+                  selectedIcon: Icon(_tabs[index].activeIcon),
+                  label: labels[index],
+                  tooltip: labels[index],
                 ),
             ],
           ),
@@ -98,13 +97,8 @@ class AppShell extends ConsumerWidget {
 }
 
 class _TabSpec {
-  const _TabSpec({
-    required this.label,
-    required this.icon,
-    required this.activeIcon,
-  });
+  const _TabSpec({required this.icon, required this.activeIcon});
 
-  final String label;
   final IconData icon;
   final IconData activeIcon;
 }

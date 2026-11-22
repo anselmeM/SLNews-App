@@ -9,9 +9,9 @@ plugins {
 }
 
 // Release signing is read from android/key.properties, which is git-ignored.
-// When it is absent the release build falls back to the debug key so that
-// `flutter build apk --release` always produces an installable artefact for
-// device testing; ship with a real key for store builds.
+// Debug-signed release builds are compile-validation artefacts only: they need
+// an explicit opt-in so an accidental release build cannot silently ship the
+// debug certificate. Store builds must always use a real keystore.
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) {
@@ -19,6 +19,8 @@ val keystoreProperties = Properties().apply {
     }
 }
 val hasReleaseKeystore = keystorePropertiesFile.exists()
+val allowDebugSignedRelease =
+    System.getenv("SLNEWS_ALLOW_DEBUG_SIGNED_RELEASE") == "true"
 
 android {
     namespace = "com.slnews.mobile"
@@ -77,6 +79,26 @@ android {
         resources {
             excludes += setOf("META-INF/*.kotlin_module", "DebugProbesKt.bin")
         }
+    }
+}
+
+// Debug builds must keep working without a release keystore, so the signing
+// config above falls back to debug. This guard fails only when a release task
+// is actually requested: an accidental release build must not silently ship the
+// debug certificate, while PR compile-validation can opt in explicitly.
+gradle.taskGraph.whenReady {
+    val wantsRelease = allTasks.any { task ->
+        val name = task.name
+        name.startsWith("assembleRelease") ||
+            name.startsWith("bundleRelease") ||
+            name.startsWith("packageRelease")
+    }
+    if (wantsRelease && !hasReleaseKeystore && !allowDebugSignedRelease) {
+        throw GradleException(
+            "Release signing is not configured. Set android/key.properties, " +
+                "or set SLNEWS_ALLOW_DEBUG_SIGNED_RELEASE=true for a local " +
+                "compile-validation build. Never distribute that APK.",
+        )
     }
 }
 

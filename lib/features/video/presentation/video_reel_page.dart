@@ -15,9 +15,13 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/video_likes_provider.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/config/l10n.dart';
 import '../../../core/utils/video_embed.dart';
 import '../../../core/widgets/sl_network_image.dart';
+import '../../../core/utils/app_log.dart';
 import '../../../core/utils/motion.dart';
+
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 part 'reel_widgets.dart';
 part 'web_video_player.dart';
@@ -37,7 +41,11 @@ class VideoReelRoute extends ConsumerWidget {
   final String videoId;
 
   /// Test seam, forwarded to the page.
-  final Widget Function(BuildContext context, VideoPlayback playback)?
+  final Widget Function(
+    BuildContext context,
+    VideoPlayback playback,
+    VoidCallback onTogglePause,
+  )?
   playerBuilder;
 
   @override
@@ -70,7 +78,11 @@ class VideoReelPage extends ConsumerStatefulWidget {
 
   /// Test seam: replaces the real web-view player (platform views cannot be
   /// driven in widget tests).
-  final Widget Function(BuildContext context, VideoPlayback playback)?
+  final Widget Function(
+    BuildContext context,
+    VideoPlayback playback,
+    VoidCallback onTogglePause,
+  )?
   playerBuilder;
 
   @override

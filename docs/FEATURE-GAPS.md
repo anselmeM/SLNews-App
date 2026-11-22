@@ -274,7 +274,7 @@ the first open.
 - Sign-in (Clerk) and account-scoped sync exist, and the **account screen** shipped
   (`/account`: identity, sign in/out, **delete account** with confirmation and
   failure handling). Missing: **export data**, password/email management, device list.
-- Language and region is a static row ("English (Sierra Leone)") — not a setting.
+- **Language picker shipped for English/French** (device default, persisted); Krio is disabled pending a translator. Only shell/Settings strings are extracted so far, so most screens remain English-only.
 - No recommendation feedback ("not interested", "more like this"), and rails are positional
   slices of one stream rather than a ranking.
 - Author/publisher pages and following authors from the article kebab.
@@ -297,7 +297,7 @@ decorative images are excluded from the semantics tree while content images can 
 labelled, and a 200 %-text-scale regression test covers the settings screen. Reduce-motion
 was already implemented via `AppMotion`.
 
-Remaining: English-only strings and no `l10n`/ARB scaffolding or RTL; Krio, Mende, Temne
+Shipped: `flutter_localizations` + `intl` + ARB catalogs (en/fr) and a Settings language picker. Remaining: most screen strings are not yet extracted, and no RTL; Krio, Mende, Temne
 and French are the languages a Sierra Leonean product would consider. A full
 TalkBack/VoiceOver pass over every screen, plus contrast verification, is still to do.
 
@@ -356,10 +356,10 @@ not commitments.
 | Item | Where it stands | Real dependency | Effort | Acceptance |
 | --- | --- | --- | --- | --- |
 | **Web ↔ mobile saved-story parity** | **Mobile half done.** `MobileBookmark` already serialises `sourceUrl` and [SYNC-API.md](SYNC-API.md) documents it, so the join key already reaches the backend. The PWA has no stable key to join on (`SavedArticle.articleId` points at a PWA row). | PWA-repo change: additive `Article.sourceUrl @unique` + backfill from the scraper sync; needs owner approval for a production schema change (ROADMAP phase 5). | PWA ~2–3 d + backfill run; nothing to build in this repo | A story saved on mobile appears on the web profile and vice versa, de-duplicated by canonical URL |
-| **Localisation + RTL** | Nothing: no `flutter_localizations`, no `intl`, 0 ARB files. ~210 candidate user-visible literals in `lib/` (heuristic), heaviest in `settings_page` (24), `league_news_source` (17), `for_you_page` (17), `news_category` (12). UI is English-only and LTR; there is no RTL work or RTL test. | Product decision on the language set (Krio, Mende, Temne, French?) and who translates editorial/UI copy. | ~5–8 d scaffolding + English ARB + one second locale; ~1 d per further locale | `flutter gen-l10n` in place, no user-visible literal left in `lib/`, a second locale renders end to end, RTL screenshot test |
+| **Localisation + RTL** | **Foundation shipped**: `flutter_localizations`, `intl`, en/fr ARBs, generated delegates at the app root, and a Settings language picker (Krio disabled pending translation). Only shell/Settings strings are extracted; most screens still hardcode English. No RTL work. | Product decision on the language set (Krio, Mende, Temne, French?) and who translates editorial/UI copy. | ~5–8 d scaffolding + English ARB + one second locale; ~1 d per further locale | `flutter gen-l10n` in place, no user-visible literal left in `lib/`, a second locale renders end to end, RTL screenshot test |
 | **Richer ad formats (A6)** | One `AdUnit` shape: brand panel, optional hosted creative image, CTA, disclosure; `AdCard`/`TrackedAdCard` render it in every placement. Tracking is per sold unit with session dedupe. | Creative/design input, plus a `format` discriminator on `/api/mobile/v1/sponsorships` so a campaign picks a layout. | ~3–4 d | Two-product promo, app-install promo and full-bleed "spotlight" layouts selectable per campaign, each measured by the existing tracker |
-| **Android home-screen widget (A5)** | Absent: no provider, no `res/xml` widget metadata, no Glance dependency, and no widget-prompt card. | Data access off the Flutter engine: the cache is Hive, which a widget cannot open cheaply — needs a small JSON/snapshot file (or WorkManager) as the widget's feed. | ~5–7 d | Widget shows top headlines, refreshes on a schedule, tapping a headline deep-links via `slnews://article/<id>` |
-| **Article TTS + in-app translation (B3)** | Absent: no `flutter_tts`; translation is a hand-off to Google Translate in the browser. | TTS is self-contained. Translation needs a provider, a cost cap, and a content-licensing answer (machine-translating aggregated publisher text). | TTS ~1–2 d; translation ~3–4 d + provider cost | Listen controls (play/pause/seek) on the reader; translate renders copy in-app with a clear "machine translation" label |
+| **Android home-screen widget (A5)** | **Shipped basic widget**: Android receiver, headline + breaking-count layout, tap-through, feed-driven refresh. Missing: scheduled refresh, iOS widget, widget-prompt card. | Data access off the Flutter engine: the cache is Hive, which a widget cannot open cheaply — needs a small JSON/snapshot file (or WorkManager) as the widget's feed. | ~5–7 d | Widget shows top headlines, refreshes on a schedule, tapping a headline deep-links via `slnews://article/<id>` |
+| **Article TTS + in-app translation (B3)** | **TTS shipped**: reader Listen/Stop with an injectable engine, stops on exit. Translation is still a hand-off to Google Translate. | TTS is self-contained. Translation needs a provider, a cost cap, and a content-licensing answer (machine-translating aggregated publisher text). | TTS ~1–2 d; translation ~3–4 d + provider cost | Listen controls (play/pause/seek) on the reader; translate renders copy in-app with a clear "machine translation" label |
 | **On-device / E2E tests (B10)** | Absent: no `integration_test` dependency or `integration_test/` directory. CI runs format → analyze → secret scan → widget/unit tests → coverage ratchet only. | An emulator runner in CI and Firebase/Gradle credentials; the golden suite is deliberately host-local, so it cannot substitute. | ~4–6 d | A CI job drives a real build on an emulator through onboarding → feed → article → airplane mode, plus a push/deep-link path |
 
 **Suggested order if any of these is picked up:** parity first (cheap in this repo,

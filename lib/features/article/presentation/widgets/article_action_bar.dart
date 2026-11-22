@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/config/l10n.dart';
 import '../../../../core/domain/follow_targets.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
@@ -112,9 +113,13 @@ class ArticleActionBar extends ConsumerWidget {
                 if (canListen)
                   Semantics(
                     button: true,
-                    label: speaking ? 'Stop listening' : 'Listen to story',
+                    label: speaking
+                        ? context.l10n.stopListening
+                        : context.l10n.listen,
                     child: Tooltip(
-                      message: speaking ? 'Stop listening' : 'Listen to story',
+                      message: speaking
+                          ? context.l10n.stopListening
+                          : context.l10n.listen,
                       child: InkResponse(
                         radius: 24,
                         onTap: () => ref

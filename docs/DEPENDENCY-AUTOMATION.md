@@ -32,9 +32,12 @@ patch/minor PR it waits for both:
 Once both are green it squash-merges and deletes the branch. A failure or a
 45-minute timeout leaves the PR open.
 
-Dependabot PR workflows do not receive repository secrets, so the signed AAB job
-is skipped for Dependabot PRs. The AAB gate still runs on the `master` push
-created by the merge. This is why the AAB workflow has a `dependabot[bot]` guard.
+Dependabot PR workflows do not receive repository secrets. The AAB is no longer
+built on PRs at all: the `bundle` job in `build-apk.yml` runs on a `master` push
+only, after the APK gate has validated the same commit. This removed a duplicate
+test+build pair from every PR. There are no tag-triggered builds: a tag can be
+pointed at an unreviewed commit, and release secrets must only build code that
+passed the gate.
 
 ## Manual refresh
 
