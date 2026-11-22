@@ -1,5 +1,6 @@
 import 'package:xml/xml.dart';
 
+import '../../domain/breaking_news_policy.dart';
 import '../../domain/models/article.dart';
 import '../../domain/models/publisher.dart';
 import '../../utils/stable_id.dart';
@@ -140,6 +141,18 @@ abstract final class RssParser {
       bodyHtml = '<p>${_escapeHtml(summary)}</p>';
     }
 
+    final List<String> tags = _tags(item);
+    final String categoryId = _categoryFor(item, config);
+    final BreakingAssessment breaking = BreakingNewsPolicy.assess(
+      title: title,
+      summary: summary,
+      categoryId: categoryId,
+      tags: tags,
+      publishedAt: publishedAt,
+      isWire: config.isWire,
+      now: reference,
+    );
+
     return Article(
       id: link != null
           ? StableId.fromUrl(link)
@@ -152,8 +165,9 @@ abstract final class RssParser {
       sourceUrl: link ?? UrlNormalizer.canonical(base),
       publisher: _publisher(config),
       publishedAt: publishedAt,
-      categoryId: _categoryFor(item, config),
-      tags: _tags(item),
+      categoryId: categoryId,
+      tags: tags,
+      isBreaking: breaking.isBreaking,
       readingMinutes: _readingMinutes(bodyHtml),
     );
   }

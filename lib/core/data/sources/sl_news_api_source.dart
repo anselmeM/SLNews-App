@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/breaking_news_policy.dart';
 import '../../domain/models/article.dart';
 import '../../domain/models/news_category.dart';
 import '../../domain/models/publisher.dart';
@@ -320,6 +321,18 @@ class SlNewsApiSource implements FeedSource {
         _date(json['createdAt']) ??
         _fallbackDate(json);
 
+    final Publisher publisher = publisherFor(source);
+    final List<String> tags = categories;
+    final String categoryId = categoryIdFor(tags);
+    final BreakingAssessment breaking = BreakingNewsPolicy.assess(
+      title: title.isEmpty ? _truncate(summary) : title,
+      summary: summary,
+      categoryId: categoryId,
+      tags: tags,
+      publishedAt: publishedAt,
+      isWire: publisher.isWire,
+    );
+
     return Article(
       id: '$idPrefix${_idOf(json['id'])}',
       title: title.isEmpty ? _truncate(summary) : title,
@@ -330,11 +343,11 @@ class SlNewsApiSource implements FeedSource {
       author: _nullable(json['author']),
       imageUrl: _nullable(json['imageUrl']),
       sourceUrl: _nullable(json['url'] ?? json['link']),
-      publisher: publisherFor(source),
+      publisher: publisher,
       publishedAt: publishedAt,
-      categoryId: categoryIdFor(categories),
-      tags: categories,
-      isBreaking: false,
+      categoryId: categoryId,
+      tags: tags,
+      isBreaking: breaking.isBreaking,
       isLive: false,
     );
   }

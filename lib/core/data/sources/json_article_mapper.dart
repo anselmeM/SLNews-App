@@ -1,3 +1,4 @@
+import '../../domain/breaking_news_policy.dart';
 import '../../domain/models/article.dart';
 import '../../domain/models/publisher.dart';
 import '../../utils/stable_id.dart';
@@ -117,6 +118,28 @@ abstract final class JsonArticleMapper {
           json['excerpt'],
     );
 
+    final String categoryId =
+        _nullableString(
+          json['categoryId'] ?? json['category'] ?? json['section'],
+        ) ??
+        config.categoryId;
+    final List<String> tags = _tags(json['tags'] ?? json['keywords']);
+    final Publisher publisher = _publisher(
+      json['publisher'] ?? json['source'],
+      config,
+    );
+    final bool editorFlagged = json['isBreaking'] == true;
+    final BreakingAssessment breaking = BreakingNewsPolicy.assess(
+      title: title,
+      summary: summary.isEmpty ? _truncate(bodyHtml) : summary,
+      categoryId: categoryId,
+      tags: tags,
+      publishedAt: publishedAt,
+      isWire: publisher.isWire,
+      editorFlagged: editorFlagged,
+      now: now,
+    );
+
     return Article(
       id: id,
       title: title,
@@ -134,15 +157,11 @@ abstract final class JsonArticleMapper {
       imageCaption: _nullableString(json['imageCaption']),
       imageCredit: _nullableString(json['imageCredit']),
       sourceUrl: link,
-      publisher: _publisher(json['publisher'] ?? json['source'], config),
+      publisher: publisher,
       publishedAt: publishedAt,
-      categoryId:
-          _nullableString(
-            json['categoryId'] ?? json['category'] ?? json['section'],
-          ) ??
-          config.categoryId,
-      tags: _tags(json['tags'] ?? json['keywords']),
-      isBreaking: json['isBreaking'] == true,
+      categoryId: categoryId,
+      tags: tags,
+      isBreaking: breaking.isBreaking,
       isLive: json['isLive'] == true,
       readingMinutes: _int(json['readingMinutes']) ?? 0,
     );
