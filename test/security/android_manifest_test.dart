@@ -66,6 +66,53 @@ void main() {
     });
   });
 
+  test(
+    'FCM notification metadata is application-level and uses the status icon',
+    () {
+      final Iterable<XmlElement> fcmMeta = application
+          .findElements('meta-data')
+          .where(
+            (XmlElement node) => (node.getAttribute('android:name') ?? '')
+                .startsWith('com.google.firebase.messaging.'),
+          );
+      final Map<String, String> values = <String, String>{
+        for (final XmlElement node in fcmMeta)
+          node.getAttribute('android:name')!:
+              node.getAttribute('android:value') ??
+              node.getAttribute('android:resource') ??
+              '',
+      };
+      expect(
+        values['com.google.firebase.messaging.default_notification_channel_id'],
+        'breaking_news',
+      );
+      expect(
+        values['com.google.firebase.messaging.default_notification_icon'],
+        '@drawable/ic_stat_slnews',
+      );
+      expect(
+        values['com.google.firebase.messaging.default_notification_color'],
+        '@color/notification_accent',
+      );
+
+      final XmlElement activity = manifest
+          .findAllElements('activity')
+          .singleWhere(
+            (XmlElement node) =>
+                node.getAttribute('android:name') == '.MainActivity',
+          );
+      expect(
+        activity
+            .findAllElements('meta-data')
+            .where(
+              (XmlElement node) => (node.getAttribute('android:name') ?? '')
+                  .startsWith('com.google.firebase.messaging.'),
+            ),
+        isEmpty,
+      );
+    },
+  );
+
   test('deep links claim the custom scheme and one verified HTTPS host', () {
     // `https://slnews.sl/article/<id>` is an App Link: autoVerify must be on and
     // the host comes from the Gradle placeholder, so the manifest cannot drift
