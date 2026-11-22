@@ -6,6 +6,7 @@ import 'dart:io' show Platform;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../data/sources/api_client.dart';
@@ -386,12 +387,24 @@ class PushService {
     final FlutterLocalNotificationsPlugin plugin = _notifications ??=
         FlutterLocalNotificationsPlugin();
     const AndroidInitializationSettings android = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_stat_slnews',
     );
     const InitializationSettings settings = InitializationSettings(
       android: android,
     );
     await plugin.initialize(settings: settings);
+    await plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'breaking_news',
+            'Breaking news',
+            description: 'Breaking news and daily briefing alerts',
+            importance: Importance.high,
+          ),
+        );
     _registered ??= FirebaseMessaging.instance.onRegistered.listen((
       String token,
     ) {
@@ -412,6 +425,8 @@ class PushService {
               channelDescription: 'Breaking news and daily briefing alerts',
               importance: Importance.high,
               priority: Priority.high,
+              icon: '@drawable/ic_stat_slnews',
+              color: Color(0xFF0B6FD1),
             ),
           ),
         ),
