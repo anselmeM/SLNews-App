@@ -81,6 +81,7 @@ class AdUnit {
     'targetUrl': targetUrl,
     'eventToken': eventToken,
     'eventTokenExpiresAt': eventTokenExpiresAt?.toIso8601String(),
+    'placement': placement,
   };
 
   /// Parses a directly sold unit from `/api/mobile/v1/sponsorships`.
