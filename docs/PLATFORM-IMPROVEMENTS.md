@@ -57,3 +57,16 @@ flutter test test/contracts
 - App test parses the canonical fixture and caught a real drift: `AdUnit.toJson` was omitting `placement`; it now includes it.
 - Mobile API ownership and base URLs are documented in `SLNews-Web/docs/MOBILE-API-BOUNDARY.md`.
 - Schema workflow/migration policy is documented in `SLNews-Web/docs/SCHEMA-MIGRATIONS.md`; CI validates the Prisma schema.
+## Phase 2 — generated fixture and migration baseline
+
+| Task | Status |
+|---|---|
+| Generate the Dart contract fixture from Web `openapi.json` | [x] |
+| Replace manually copied App fixtures with the generated file | [x] |
+| Add a reproducible generator check/test | [x] |
+| Create an initial Prisma migration baseline | [x] |
+| Switch the database workflow from `db push` to `migrate deploy` | [x] |
+| Baseline the existing production database | [x] |
+
+The generated contract is `test/contracts/mobile_contract.g.dart`; regenerate
+it from the Web repo with `npm run contracts:generate`.
