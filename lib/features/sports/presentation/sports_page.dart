@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/ads/sponsorship_launcher.dart';
+import '../../../core/domain/models/ad_placement.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/follow_models.dart';
@@ -74,7 +76,7 @@ class SportsPage extends ConsumerWidget {
         ? ref.watch(teamNewsProvider(heroTeamId))
         : allSports;
     final AsyncValue<List<AdUnit>> ads = ref.watch(
-      adUnitsProvider('sports_stream'),
+      adUnitsProvider(AdPlacement.sportsStream.wire),
     );
     final Set<String> liked = ref.watch(likesControllerProvider);
 
@@ -147,7 +149,7 @@ class SportsPage extends ConsumerWidget {
                   onEmptyTap: () => context.go(AppRoutes.following),
                 ),
               ),
-              if (ad != null) _adSliver(context, ad),
+              if (ad != null) _adSliver(context, ref, ad),
               SliverToBoxAdapter(
                 child: SectionHeader(
                   title: 'Top stories',

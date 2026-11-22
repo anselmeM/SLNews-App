@@ -5,6 +5,8 @@ import '../../../core/widgets/header_actions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ads/sponsorship_launcher.dart';
+import '../../../core/domain/models/ad_placement.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
@@ -276,11 +278,7 @@ class _NewsContentSlivers extends ConsumerWidget {
             // and the card gap stays at the standard 12pt.
             const SectionHeader(title: 'Latest'),
             for (int index = 0; index < feed.list.length; index++) ...<Widget>[
-              if (index == kNewsAdAfterRow)
-                _InStreamAd(
-                  onCtaPressed: () =>
-                      _showSnack(context, 'Opening the advertiser…'),
-                ),
+              if (index == kNewsAdAfterRow) const _InStreamAd(),
               _ArticleRow(
                 article: feed.list[index],
                 onTap: () => _openArticle(context, feed.list[index]),
@@ -374,20 +372,25 @@ class NewsRowInset extends StatelessWidget {
 /// empty, or if it fails, this renders nothing at all, so an ad can never
 /// interrupt the stream with a blank card or an error.
 class _InStreamAd extends ConsumerWidget {
-  const _InStreamAd({required this.onCtaPressed});
-
-  final VoidCallback onCtaPressed;
+  const _InStreamAd();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<AdUnit>? units = ref.watch(adUnitsProvider('feed')).value;
-    if (units == null || units.isEmpty) {
+    final List<AdUnit> units =
+        ref.watch(adUnitsProvider(AdPlacement.feed.wire)).asData?.value ??
+        const <AdUnit>[];
+    if (units.isEmpty) {
       return const SizedBox.shrink();
     }
+    final AdUnit unit = units.first;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: NewsRowInset(
-        child: TrackedAdCard(unit: units.first, onCtaPressed: onCtaPressed),
+        child: TrackedAdCard(
+          unit: unit,
+          onCtaPressed: () => openSponsorship(context, ref, unit),
+          onOpened: (AdUnit opened) => openSponsorship(context, ref, opened),
+        ),
       ),
     );
   }
@@ -411,12 +414,3 @@ Future<void> _handleAction(
   Article article,
   ArticleAction action,
 ) => handleArticleAction(context, ref, article, action);
-
-/// Shows a short confirmation SnackBar, replacing any current one.
-void _showSnack(BuildContext context, String message) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-}

@@ -175,8 +175,8 @@ class _FeedSliver extends ConsumerWidget {
               ),
               child: TrackedAdCard(
                 unit: leadAd,
-                onCtaPressed: () => _openAd(context, leadAd),
-                onOpened: (AdUnit unit) => _openAd(context, unit),
+                onCtaPressed: () => openSponsorship(context, ref, leadAd),
+                onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
               ),
             ),
           ),
@@ -291,8 +291,8 @@ class _FeedSliver extends ConsumerWidget {
               ),
               child: TrackedAdCard(
                 unit: secondAd,
-                onCtaPressed: () => _openAd(context, secondAd),
-                onOpened: (AdUnit unit) => _openAd(context, unit),
+                onCtaPressed: () => openSponsorship(context, ref, secondAd),
+                onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
               ),
             ),
           ),
@@ -309,33 +309,10 @@ class _FeedSliver extends ConsumerWidget {
     );
   }
 
-  /// Ads open their landing page when one is configured; the seed rotation has
-  /// none, so the tap says so instead of doing nothing.
-  Future<void> _openAd(BuildContext context, AdUnit unit) async {
-    final String? target = unit.targetUrl;
-    if (target == null || target.trim().isEmpty) {
-      _snack(context, '${unit.advertiser}: ${unit.ctaLabel}');
-      return;
-    }
-    final bool opened = await launchUrl(
-      Uri.parse(target),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && context.mounted) {
-      _snack(context, 'Could not open the ad');
-    }
-  }
-
   void _openVideo(BuildContext context, VideoMoment video) {
     // In-app reel: handing the clip to the system browser left the app and broke
     // the reference's watch-then-swipe flow.
     context.push(AppRoutes.videoFor(video.id));
-  }
-
-  void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

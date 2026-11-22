@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -291,7 +293,15 @@ class AppBootstrap {
           ttsServiceProvider.overrideWithValue(FlutterTtsService()),
           adRepositoryProvider.overrideWithValue(adRepository),
           sponsorshipTrackerProvider.overrideWithValue(
-            SponsorshipTracker(client: client, baseUrl: webApiBase),
+            (() {
+              final tracker = SponsorshipTracker(
+                client: client,
+                baseUrl: webApiBase,
+                store: preferences,
+              );
+              unawaited(tracker.flush());
+              return tracker;
+            })(),
           ),
           pushServiceProvider.overrideWithValue(
             PushService(

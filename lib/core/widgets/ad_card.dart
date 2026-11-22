@@ -73,6 +73,7 @@ class AdCard extends StatelessWidget {
                           url: unit.imageUrl,
                           fit: BoxFit.cover,
                           placeholderLabel: unit.advertiser,
+                          semanticLabel: unit.altText,
                           seed: unit.id,
                         ),
                       ),
