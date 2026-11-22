@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
+import 'package:slnews_mobile/core/data/sources/api_client.dart';
 import 'package:slnews_mobile/core/data/sources/sponsorship_tracker.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 
@@ -106,6 +107,36 @@ void main() {
     tracker.impression(sold);
     await Future<void>.delayed(Duration.zero);
   });
+  test('drops a permanently rejected event and continues the queue', () async {
+    final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+    final SponsorshipTracker first = SponsorshipTracker.forPoster(
+      (_, _) async => throw StateError('offline'),
+      store: store,
+    );
+    first.impression(sold);
+    first.tap(sold);
+    await Future<void>.delayed(Duration.zero);
+
+    final List<Map<String, dynamic>> sent = <Map<String, dynamic>>[];
+    var calls = 0;
+    final SponsorshipTracker second = SponsorshipTracker.forPoster((
+      _,
+      body,
+    ) async {
+      calls++;
+      if (calls == 1) {
+        throw ApiException('token expired', statusCode: 401);
+      }
+      sent.add(body);
+      return null;
+    }, store: store);
+    await second.flush();
+
+    expect(calls, 2);
+    expect(sent, hasLength(1));
+    expect(store.string(SponsorshipTracker.outboxKey), '[]');
+  });
+
   test('queues a failed event and flushes it on the next run', () async {
     final InMemoryPreferencesStore store = InMemoryPreferencesStore();
     final List<Map<String, dynamic>> sent = <Map<String, dynamic>>[];

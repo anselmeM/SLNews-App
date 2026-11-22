@@ -27,7 +27,7 @@ class SentrySettings {
     ),
     release: const String.fromEnvironment(
       'SLNEWS_RELEASE',
-      defaultValue: 'slnews-mobile@1.0.0+2',
+      defaultValue: 'slnews-mobile@dev',
     ),
   );
 

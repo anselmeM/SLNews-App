@@ -129,6 +129,8 @@ class PushService {
       StreamController<Map<String, dynamic>>.broadcast();
   FlutterLocalNotificationsPlugin? _notifications;
   StreamSubscription<RemoteMessage>? _foreground;
+  StreamSubscription<RemoteMessage>? _opened;
+  bool _initialMessageHandled = false;
   late final Future<void> Function(String topic) _subscribeTopic;
   late final Future<void> Function(String topic) _unsubscribeTopic;
   final Future<void> Function(Set<String>)? _persistTopics;
@@ -415,11 +417,16 @@ class PushService {
         ),
       );
     });
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((
+      RemoteMessage message,
+    ) {
       if (message.data.isNotEmpty) _taps.add(message.data);
     });
-    final RemoteMessage? initial = await FirebaseMessaging.instance
-        .getInitialMessage();
-    if (initial != null && initial.data.isNotEmpty) _taps.add(initial.data);
+    if (!_initialMessageHandled) {
+      _initialMessageHandled = true;
+      final RemoteMessage? initial = await FirebaseMessaging.instance
+          .getInitialMessage();
+      if (initial != null && initial.data.isNotEmpty) _taps.add(initial.data);
+    }
   }
 }
