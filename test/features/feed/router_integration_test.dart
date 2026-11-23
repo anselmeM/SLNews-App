@@ -14,14 +14,43 @@ import 'support/test_harness.dart';
 /// The focused widget tests use a hand-built router so they stay independent of
 /// the other feature modules; this one proves the frozen wiring still works.
 void main() {
+  testWidgets('first run shows onboarding even while signed out', (
+    WidgetTester tester,
+  ) async {
+    await useTallSurface(tester);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(
+            topStories: <Article>[
+              testArticle(id: 'a', title: 'Integration headline'),
+            ],
+          ),
+        ),
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: createAppRouter(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Make the feed yours'), findsOneWidget);
+    expect(find.text('Integration headline'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the shared router renders the For You feed', (
     WidgetTester tester,
   ) async {
     await useTallSurface(tester);
 
+    final FakeUserStateRepository userState = FakeUserStateRepository()
+      ..onboardingCompleted = true;
     await tester.pumpWidget(
       ProviderScope(
         overrides: feedTestOverrides(
+          userState: userState,
           articles: FakeArticleRepository(
             topStories: <Article>[
               testArticle(id: 'a', title: 'Integration headline'),

@@ -25,11 +25,8 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String weatherForecastKey = 'settings.weatherForecast';
   static const String onboardingKey = 'settings.onboardingCompleted';
 
-  /// Base keys only: every digest read/write appends the authenticated account
-  /// id via [_digestKey], so accounts never share a cached preference document.
+  /// Digest preferences are one device-local document; they are not synced.
   static const String digestPreferencesKey = 'settings.digestPreferences';
-  static const String pendingDigestPreferencesKey =
-      'settings.digestPreferencesPending';
 
   /// Defaults applied when a key has never been written.
   static const String defaultThemeMode = 'system';
@@ -144,29 +141,12 @@ class DefaultUserStateRepository implements UserStateRepository {
       '$base.${accountId.trim().isEmpty ? 'local' : accountId.trim()}';
 
   @override
-  String? digestPreferencesFor(String accountId) =>
-      _store.string(_digestKey(digestPreferencesKey, accountId));
+  String? digestPreferencesFor(String deviceKey) =>
+      _store.string(_digestKey(digestPreferencesKey, deviceKey));
 
   @override
-  Future<void> setDigestPreferencesFor(String accountId, String json) =>
-      _store.putString(_digestKey(digestPreferencesKey, accountId), json);
-
-  @override
-  String? pendingDigestPreferencesFor(String accountId) =>
-      _store.string(_digestKey(pendingDigestPreferencesKey, accountId));
-
-  @override
-  Future<void> setPendingDigestPreferencesFor(
-    String accountId,
-    String? json,
-  ) async {
-    final String key = _digestKey(pendingDigestPreferencesKey, accountId);
-    if (json == null) {
-      await _store.remove(key);
-    } else {
-      await _store.putString(key, json);
-    }
-  }
+  Future<void> setDigestPreferencesFor(String deviceKey, String json) =>
+      _store.putString(_digestKey(digestPreferencesKey, deviceKey), json);
 
   @override
   Future<void> setWeatherForecastEnabled(bool enabled) =>
