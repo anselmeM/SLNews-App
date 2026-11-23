@@ -41,6 +41,8 @@ class FeedSourceConfig {
     this.authorityScore = 1.0,
     this.isWire = false,
     this.summaryOnly = false,
+    this.allowsFullText = false,
+    this.allowsRemoteImages = false,
     this.country = 'Sierra Leone',
   });
 
@@ -78,10 +80,23 @@ class FeedSourceConfig {
   /// of matching publisher ids by hand.
   final String country;
 
-  /// Keep only the feed summary in the reader and send the reader to the
-  /// publisher for the full piece. Used for syndicated wires whose licence does
-  /// not allow republishing the whole body.
+  /// Legacy explicit switch: keep only the feed summary. Kept for older seed
+  /// JSON; [allowsFullText] is the positive form new sources should use.
   final bool summaryOnly;
+
+  /// Whether SLNews holds permission to republish this outlet's full body.
+  ///
+  /// False for every current external outlet; the reader then shows a short
+  /// excerpt and links to the publisher. Only set this after a signed licence
+  /// or explicit written permission is recorded.
+  final bool allowsFullText;
+
+  /// Whether publisher-hosted images may be shown and downloaded. False for
+  /// every current external outlet; feed cards fall back to the publisher mark.
+  final bool allowsRemoteImages;
+
+  /// Effective reader posture for this outlet.
+  bool get isPreviewOnly => summaryOnly || !allowsFullText;
 
   /// Serialises this configuration for seed storage.
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -96,6 +111,8 @@ class FeedSourceConfig {
     'authorityScore': authorityScore,
     'isWire': isWire,
     'summaryOnly': summaryOnly,
+    'allowsFullText': allowsFullText,
+    'allowsRemoteImages': allowsRemoteImages,
     'country': country,
   };
 
@@ -114,6 +131,8 @@ class FeedSourceConfig {
         authorityScore: (json['authorityScore'] as num?)?.toDouble() ?? 1.0,
         isWire: json['isWire'] as bool? ?? false,
         summaryOnly: json['summaryOnly'] as bool? ?? false,
+        allowsFullText: json['allowsFullText'] as bool? ?? false,
+        allowsRemoteImages: json['allowsRemoteImages'] as bool? ?? false,
         country: json['country'] as String? ?? 'Sierra Leone',
       );
 

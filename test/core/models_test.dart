@@ -46,6 +46,7 @@ void main() {
         tags: const <String>['stelco', 'ottawa'],
         isLive: true,
         readingMinutes: 4,
+        previewOnly: true,
       );
 
       final Article restored = Article.fromJson(original.toJson());
@@ -56,6 +57,7 @@ void main() {
       expect(restored.publisher.mark, 'CBC NEWS');
       expect(restored.isBreaking, isTrue);
       expect(restored.isLive, isTrue);
+      expect(restored.previewOnly, isTrue);
     });
 
     test('estimates reading time from the body when the feed omits it', () {

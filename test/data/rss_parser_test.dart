@@ -89,6 +89,34 @@ const FeedSourceConfig politicoConfig = FeedSourceConfig(
   websiteUrl: 'https://politicosl.com',
 );
 
+/// Same outlets with recorded permission to republish body and imagery. Used
+/// only to keep the sanitizer/parser tests meaningful; production outlets are
+/// excerpt-only until a licence exists.
+const FeedSourceConfig licensedTelegraphConfig = FeedSourceConfig(
+  id: 'sltelegraph',
+  outlet: 'The Sierra Leone Telegraph',
+  publisherId: 'sltelegraph',
+  wordmark: 'SLT',
+  url: 'https://www.thesierraleonetelegraph.com/feed/',
+  kind: FeedSourceKind.rss,
+  categoryId: 'politics',
+  websiteUrl: 'https://www.thesierraleonetelegraph.com',
+  allowsFullText: true,
+  allowsRemoteImages: true,
+);
+
+const FeedSourceConfig licensedPoliticoConfig = FeedSourceConfig(
+  id: 'politicosl',
+  outlet: 'Politico SL',
+  publisherId: 'politicosl',
+  wordmark: 'POLITICO',
+  url: 'https://politicosl.com/feed/',
+  kind: FeedSourceKind.rss,
+  websiteUrl: 'https://politicosl.com',
+  allowsFullText: true,
+  allowsRemoteImages: true,
+);
+
 void main() {
   final DateTime now = DateTime.utc(2026, 10, 15, 12);
 
@@ -157,8 +185,25 @@ void main() {
       expect(articles.first.summary, 'Proceedings resumed this morning.');
     });
 
-    test('sanitises the body: no scripts, styles or inline images', () {
-      final String body = articles.first.bodyHtml;
+    test('default outlet is excerpt-only with no remote image', () {
+      expect(articles.first.previewOnly, isTrue);
+      expect(articles.first.imageUrl, isNull);
+      expect(
+        articles.first.bodyHtml,
+        '<p>Proceedings resumed this morning.</p>',
+      );
+      expect(articles[1].previewOnly, isTrue);
+      expect(articles[1].imageUrl, isNull);
+    });
+
+    test('sanitises the body when the outlet has a full-text licence', () {
+      final List<Article> licensed = RssParser.parse(
+        rssFixture,
+        config: licensedTelegraphConfig,
+        now: now,
+      );
+      expect(licensed.first.previewOnly, isFalse);
+      final String body = licensed.first.bodyHtml;
       expect(body, contains('<h2>What happens next</h2>'));
       expect(
         body,
@@ -173,9 +218,14 @@ void main() {
       expect(body, isNot(contains('<img')));
     });
 
-    test('uses the media thumbnail as the hero image', () {
+    test('uses the media thumbnail when remote images are licensed', () {
+      final List<Article> licensed = RssParser.parse(
+        rssFixture,
+        config: licensedTelegraphConfig,
+        now: now,
+      );
       expect(
-        articles.first.imageUrl,
+        licensed.first.imageUrl,
         'https://i0.wp.com/example.com/photo.jpg',
       );
     });
@@ -187,7 +237,12 @@ void main() {
     });
 
     test('falls back to guid, enclosure image and now for sparse items', () {
-      final Article second = articles[1];
+      final List<Article> licensed = RssParser.parse(
+        rssFixture,
+        config: licensedTelegraphConfig,
+        now: now,
+      );
+      final Article second = licensed[1];
       expect(
         second.sourceUrl,
         'https://www.thesierraleonetelegraph.com/export-figures',
@@ -248,9 +303,14 @@ void main() {
     });
 
     test('reads the nested author name and unescapes html content', () {
+      final List<Article> licensed = RssParser.parse(
+        atomFixture,
+        config: licensedPoliticoConfig,
+        now: now,
+      );
       expect(articles.first.author, 'Isatu Bangura');
       expect(
-        articles.first.bodyHtml,
+        licensed.first.bodyHtml,
         contains('<p>The committee approved the amendments.</p>'),
       );
       expect(
@@ -340,7 +400,7 @@ void main() {
 </item></channel></rss>''';
       final Article article = RssParser.parse(
         document,
-        config: telegraphConfig,
+        config: licensedTelegraphConfig,
         now: now,
       ).single;
       expect(

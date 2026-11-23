@@ -27,6 +27,28 @@ Three facts drive the risk:
 
 What we do **not** do: bypass paywalls, republish user-generated content, strip bylines, or rehost images on our own storage.
 
+## 1a. Adopted posture (2026-11-23)
+
+The app now implements **Option A: excerpt + link-out** for every external
+outlet. Until a signed licence or written permission is recorded:
+
+- Ingestion keeps only the feed summary; full body markup is discarded for RSS
+  and JSON sources.
+- Publisher-hosted images and publisher logos are not requested or displayed.
+  Cards fall back to the publisher mark; the reader has no hero image.
+- The reader shows a **Preview** card with the short excerpt, attribution and a
+  single **Read full story** hand-off to the publisher.
+- Bundled seed content remains full because it is owned/demo content.
+- The feed cache key was versioned so a pre-policy full-text cache is never
+  rendered after upgrade.
+- `FeedSourceConfig.allowsFullText` / `allowsRemoteImages` are the only switches
+  that can enable full text or remote art; `test/data/outlet_rights_test.dart`
+  fails if a production outlet is accidentally marked licensed.
+
+Still required before public launch: legal review of the excerpt length, a
+recorded permission/licence register per outlet, robots.txt/User-Agent policy in
+the scraper, and refreshed store copy that does not imply full in-app articles.
+
 ## 2. Legal frame (not legal advice)
 
 - **Sierra Leone**: the Copyright Act 2011 protects original literary and artistic works. Fair dealing covers reporting current events and criticism/review, but it is a defence applied case-by-case — it is not a licence to reproduce whole articles or to build an archive.

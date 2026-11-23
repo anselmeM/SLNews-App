@@ -126,7 +126,6 @@ abstract final class RssParser {
     // A declared media element still wins over whatever the body embedded.
     final _InlineImage scan = _extractInlineImage(bodyHtml, base);
     bodyHtml = scan.body;
-    final String? imageUrl = _mediaImage(item, base) ?? scan.src;
 
     final String summary = _summarise(
       _plainText(
@@ -135,11 +134,15 @@ abstract final class RssParser {
       fallback: bodyHtml,
     );
 
-    if (config.summaryOnly) {
-      // Keep the feed's own summary and route the reader to the publisher for
-      // the full article (syndication != republication rights).
+    // Default posture is excerpt + link-out. Full body and publisher-hosted
+    // imagery are only used when the source carries an explicit licence.
+    final bool previewOnly = config.isPreviewOnly;
+    if (previewOnly) {
       bodyHtml = '<p>${_escapeHtml(summary)}</p>';
     }
+    final String? imageUrl = config.allowsRemoteImages
+        ? _mediaImage(item, base) ?? scan.src
+        : null;
 
     final List<String> tags = _tags(item);
     final String categoryId = _categoryFor(item, config);
@@ -169,6 +172,7 @@ abstract final class RssParser {
       tags: tags,
       isBreaking: breaking.isBreaking,
       readingMinutes: _readingMinutes(bodyHtml),
+      previewOnly: previewOnly,
     );
   }
 

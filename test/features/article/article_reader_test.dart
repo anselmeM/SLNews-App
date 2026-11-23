@@ -240,6 +240,39 @@ void main() {
     );
   });
 
+  testWidgets('a preview story offers one publisher hand-off', (
+    WidgetTester tester,
+  ) async {
+    final Article preview = Article(
+      id: 'preview-1',
+      title: 'A story we may only preview',
+      summary: 'The opening two sentences are shown here.',
+      publisher: testPublisher,
+      publishedAt: DateTime.utc(2026, 10, 16, 19, 30),
+      sourceUrl: 'https://example.com/preview',
+      previewOnly: true,
+    );
+
+    await pumpReader(tester, preview);
+
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text(preview.summary), findsOneWidget);
+    expect(
+      find.text('Full story at ${preview.publisher.name}.'),
+      findsOneWidget,
+    );
+    expect(find.text('Read full story'), findsOneWidget);
+  });
+
+  testWidgets('a licensed full story has no preview hand-off', (
+    WidgetTester tester,
+  ) async {
+    await pumpReader(tester, story());
+
+    expect(find.text('Preview'), findsNothing);
+    expect(find.text('Read full story'), findsNothing);
+  });
+
   group('time-zone label', () {
     test('reduces platform names to an abbreviation', () {
       expect(

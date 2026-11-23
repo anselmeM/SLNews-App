@@ -27,6 +27,7 @@ class Article {
     this.isBreaking = false,
     this.isLive = false,
     this.readingMinutes = 0,
+    this.previewOnly = false,
   });
 
   /// Deterministic id derived from the canonical link when the feed omits one.
@@ -62,6 +63,11 @@ class Article {
   /// Estimated reading time in minutes; 0 when unknown.
   final int readingMinutes;
 
+  /// True when only an excerpt may be shown and the reader must open the full
+  /// story at the publisher. Set for external sources by default; bundled and
+  /// owned content stays full until a licence explicitly allows republication.
+  final bool previewOnly;
+
   /// "3 hours ago" style label, resolved against the current clock.
   String get relativeAge => TimeAgo.format(publishedAt);
 
@@ -93,6 +99,7 @@ class Article {
     bool? isBreaking,
     bool? isLive,
     int? readingMinutes,
+    bool? previewOnly,
   }) {
     return Article(
       id: id,
@@ -111,6 +118,7 @@ class Article {
       isBreaking: isBreaking ?? this.isBreaking,
       isLive: isLive ?? this.isLive,
       readingMinutes: readingMinutes ?? this.readingMinutes,
+      previewOnly: previewOnly ?? this.previewOnly,
     );
   }
 
@@ -131,6 +139,7 @@ class Article {
     'isBreaking': isBreaking,
     'isLive': isLive,
     'readingMinutes': readingMinutes,
+    'previewOnly': previewOnly,
   };
 
   factory Article.fromJson(Map<String, dynamic> json) => Article(
@@ -150,6 +159,7 @@ class Article {
     isBreaking: json['isBreaking'] as bool? ?? false,
     isLive: json['isLive'] as bool? ?? false,
     readingMinutes: (json['readingMinutes'] as num?)?.toInt() ?? 0,
+    previewOnly: json['previewOnly'] as bool? ?? false,
   );
 
   @override

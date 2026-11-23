@@ -20,6 +20,19 @@ void main() {
     websiteUrl: 'https://awoko.org',
   );
 
+  const FeedSourceConfig licensedConfig = FeedSourceConfig(
+    id: 'awoko',
+    outlet: 'Awoko Newspaper',
+    publisherId: 'awoko',
+    wordmark: 'AWOKO',
+    url: 'https://awoko.org/api/news',
+    kind: FeedSourceKind.restJson,
+    categoryId: 'politics',
+    websiteUrl: 'https://awoko.org',
+    allowsFullText: true,
+    allowsRemoteImages: true,
+  );
+
   final DateTime fixedNow = DateTime.utc(2026, 11, 15, 12);
 
   group('JsonArticleMapper.extractEntries', () {
@@ -109,7 +122,7 @@ void main() {
           'isLive': true,
           'readingMinutes': 4,
         },
-        config,
+        licensedConfig,
         now: fixedNow,
       )!;
 
@@ -133,6 +146,26 @@ void main() {
       expect(article.isBreaking, isFalse);
       expect(article.isLive, isTrue);
       expect(article.readingMinutes, 4);
+    });
+
+    test('default outlet is excerpt-only with no remote image', () {
+      final Article article = JsonArticleMapper.map(
+        <String, Object?>{
+          'title': 'Budget passes',
+          'summary': 'The budget passed.',
+          'bodyHtml': '<p>Long body that must not survive.</p>',
+          'imageUrl': 'https://cdn.example/a.jpg',
+          'imageCaption': 'Parliament',
+        },
+        config,
+        now: fixedNow,
+      )!;
+
+      expect(article.previewOnly, isTrue);
+      expect(article.bodyHtml, isEmpty);
+      expect(article.imageUrl, isNull);
+      expect(article.imageCaption, isNull);
+      expect(article.summary, 'The budget passed.');
     });
 
     test('accepts the headline/name aliases', () {

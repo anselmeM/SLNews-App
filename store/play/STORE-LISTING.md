@@ -22,9 +22,10 @@ Alternates:
 ```
 SLNews brings Sierra Leone's newsrooms into one calm, fast feed.
 
-Headlines from Awoko, SLBC, Politico, Concord Times, Sierra Telegraph and other
-Sierra Leonean and international outlets, collected in one place and linked back to
-the original reporting — so you always read the full story at the source.
+Headlines and short excerpts from Awoko, SLBC, Politico, Concord Times, Sierra
+Telegraph and other Sierra Leonean and international outlets, collected in one place.
+Every story links back to the original reporting, so the full story always opens at
+the publisher.
 
 BUILT FOR THE WAY PEOPLE READ HERE
 • A clean feed that opens instantly and works on slow connections
@@ -35,7 +36,7 @@ BUILT FOR THE WAY PEOPLE READ HERE
 TOP STORIES AND SECTIONS
 • A swipeable lead carousel for the day's biggest stories
 • Browse by section: Top stories, Politics, Business, Cars and Vehicles, Music,
-  Culture, Sports, Health, Tech, Education, Mining, World
+  Culture, Sports, Health, Tech, Education, World
 • Trending now, picks for you and your next read
 
 SPORTS
@@ -57,7 +58,7 @@ READER
 • Section label, byline and publication time, exactly as the source reports it
 • Floating bar with follow, text size, like, translate and share
 • Keyword tags, related stories and back-to-top
-• Reading progress, so you know how far you have left
+• Reading progress for the excerpt, so you know how far you have left
 
 FIND ANYTHING
 • Search every story and video, with recent searches kept on your device
@@ -65,6 +66,7 @@ FIND ANYTHING
 YOURS
 • Save stories and like posts; follow teams, topics and locations
 • Sign in (optional) to sync saved stories, likes and follows across devices
+• Read without an account: headlines, search, previews and video are public
 • Choose your location to get local headlines and weather
 • Notification preferences for breaking news, editor's picks and sports
 
