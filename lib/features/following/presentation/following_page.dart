@@ -69,7 +69,7 @@ class FollowingPage extends ConsumerWidget {
       },
       slivers: <Widget>[
         // Account first: the reference app keeps one obvious identity surface,
-        // and signing in is what makes saved stories and alerts portable.
+        // and signing in is what makes saved stories, likes and follows portable.
         const SliverToBoxAdapter(child: AccountCard()),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(

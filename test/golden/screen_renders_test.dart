@@ -98,6 +98,8 @@ void main() {
     );
     container = bootstrap.container;
     addTearDown(container.dispose);
+    // The screen goldens capture the established app, not first-run onboarding.
+    await container.read(userStateProvider).setOnboardingCompleted(true);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(container: container, child: const SlNewsApp()),

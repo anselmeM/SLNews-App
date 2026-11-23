@@ -83,6 +83,7 @@ void main() {
     );
     container = bootstrap.container;
     addTearDown(container.dispose);
+    await container.read(userStateProvider).setOnboardingCompleted(true);
     await _seedRealisticFollowing(container);
 
     await tester.pumpWidget(

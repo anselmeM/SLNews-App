@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'core/domain/auth/auth_repository.dart';
 import 'core/config/l10n.dart';
 import 'core/domain/models/app_settings.dart';
 import 'core/providers/auth_providers.dart';
@@ -28,22 +27,6 @@ class SlNewsApp extends ConsumerWidget {
     final AppSettings settings = ref.watch(settingsControllerProvider);
     final GoRouter router = ref.watch(appRouterProvider);
     final Locale? locale = ref.watch(localeControllerProvider);
-
-    // After a sign-in, replace local defaults with the account's server-side
-    // digest choices (or push a pending offline change) before any later save
-    // can send a stale full snapshot.
-    ref.listen<AuthState>(authControllerProvider, (
-      AuthState? previous,
-      AuthState next,
-    ) {
-      if (next.isSignedIn && previous?.user?.id != next.user?.id) {
-        unawaited(
-          ref
-              .read(settingsControllerProvider.notifier)
-              .refreshDigestPreferences(),
-        );
-      }
-    });
 
     // The identity provider wraps the app in whatever scope its SDK needs; a
     // key-less build supplies the identity function, so this costs nothing when
@@ -142,12 +125,6 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
   }
 
   Future<void> _refreshOnResume() async {
-    // Retry a digest preference that could not reach the server earlier.
-    unawaited(
-      ref
-          .read(settingsControllerProvider.notifier)
-          .retryPendingDigestPreferences(),
-    );
     try {
       await ref.read(refreshFeedsProvider)();
     } catch (error) {

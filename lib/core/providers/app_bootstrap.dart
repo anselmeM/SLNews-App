@@ -25,7 +25,6 @@ import '../data/sources/sl_news_api_source.dart';
 import '../data/sources/sl_news_video_source.dart';
 import '../data/sources/espn_source.dart';
 import '../data/sources/league_news_source.dart';
-import '../data/sources/notification_preferences_source.dart';
 import '../tts/flutter_tts_service.dart';
 import '../tts/tts_controller.dart';
 import '../data/sources/the_sports_db_source.dart';
@@ -323,14 +322,6 @@ class AppBootstrap {
           // (and URL host allow-list), so a test or a staging build overrides one
           // place and everything follows.
           syncApiConfigProvider.overrideWithValue(syncConfig),
-          notificationPreferencesSourceProvider.overrideWithValue(
-            syncConfig.isConfigured
-                ? DigestPreferencesSource(
-                    client: client,
-                    baseUrl: syncConfig.baseUrl,
-                  )
-                : null,
-          ),
           // Identity is only overridden when a provider is actually configured;
           // otherwise the default (unconfigured, signed-out) stand-ins apply.
           if (auth != null) authRepositoryProvider.overrideWithValue(auth),

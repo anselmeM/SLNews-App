@@ -286,7 +286,6 @@ class FakeUserStateRepository implements UserStateRepository {
       weatherForecastEnabled = enabled;
 
   final Map<String, String> digestCache = <String, String>{};
-  final Map<String, String> pendingDigestCache = <String, String>{};
 
   @override
   String? digestPreferencesFor(String accountId) => digestCache[accountId];
@@ -294,22 +293,6 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   Future<void> setDigestPreferencesFor(String accountId, String json) async =>
       digestCache[accountId] = json;
-
-  @override
-  String? pendingDigestPreferencesFor(String accountId) =>
-      pendingDigestCache[accountId];
-
-  @override
-  Future<void> setPendingDigestPreferencesFor(
-    String accountId,
-    String? json,
-  ) async {
-    if (json == null) {
-      pendingDigestCache.remove(accountId);
-    } else {
-      pendingDigestCache[accountId] = json;
-    }
-  }
 }
 
 /// Deterministic weather; `throwOnCurrent` exercises the header fallback.

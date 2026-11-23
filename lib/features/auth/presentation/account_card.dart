@@ -164,7 +164,7 @@ class _SignedOutRow extends StatelessWidget {
                 style: context.typography.groupTitle.copyWith(fontSize: 17),
               ),
               Text(
-                'Sync saved stories and alerts with the SLNews web app',
+                'Sync saved stories, likes and follows with the SLNews web app',
                 maxLines: 2,
                 style: context.typography.caption,
               ),

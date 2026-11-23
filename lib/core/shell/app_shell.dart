@@ -41,13 +41,14 @@ class AppShell extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator.adaptive()),
       );
     }
-    final bool signedIn = auth.isSignedIn;
     final bool onboarded = ref.watch(
       settingsControllerProvider.select(
         (AppSettings settings) => settings.onboardingCompleted,
       ),
     );
-    if (signedIn && !onboarded) return const OnboardingPage();
+    // First run is a device fact, not an identity fact: signed-out readers get
+    // the same topic picker, and signing in later never reopens it.
+    if (!onboarded) return const OnboardingPage();
 
     final ThemeData theme = Theme.of(context);
     final l10n = context.l10n;

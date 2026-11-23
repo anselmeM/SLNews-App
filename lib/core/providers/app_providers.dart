@@ -14,7 +14,6 @@ import '../data/sources/feed_source.dart';
 import '../data/sources/espn_source.dart';
 import '../data/sources/league_news_source.dart';
 import '../data/sources/market_rate_source.dart';
-import '../data/sources/notification_preferences_source.dart';
 import '../data/sources/sl_news_video_source.dart';
 import '../domain/models/ad_unit.dart';
 import '../domain/models/market_snapshot.dart';
@@ -195,14 +194,6 @@ final Provider<UserStateRepository> userStateProvider =
       ),
       name: 'userState',
     );
-
-/// Writes digest preferences to the PWA API; null when this build has no sync
-/// backend, in which case settings stay local and the UI hides no controls.
-final Provider<DigestPreferencesGateway?>
-notificationPreferencesSourceProvider = Provider<DigestPreferencesGateway?>(
-  (Ref ref) => null,
-  name: 'notificationPreferencesSource',
-);
 
 /// Breaking/staff-picked stories for the For You hero carousel.
 final topStoriesProvider = FutureProvider<List<Article>>(
