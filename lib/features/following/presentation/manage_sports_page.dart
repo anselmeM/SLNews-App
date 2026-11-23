@@ -22,7 +22,7 @@ import 'widgets/follow_section.dart';
 ///
 /// "European Leagues" stays a single followable section, matching the Sports
 /// feed's merged block; tapping it reveals the four competitions it contains,
-/// each of which opens its own league page.
+/// each of which opens its own team selector.
 class ManageSportsPage extends ConsumerStatefulWidget {
   const ManageSportsPage({super.key});
 
@@ -178,7 +178,7 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
 
   /// "European Leagues" is one followable section, so the tick follows the
   /// section as a whole; the rest of the row expands to name the competitions
-  /// inside it, and each name opens that league's page.
+  /// inside it, and each name opens that league's team selector.
   Widget _mergedLeagueRow(
     FollowingSnapshot snapshot,
     FollowTarget target,
@@ -246,7 +246,7 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
               label: 'Open ${member.label}',
               child: InkWell(
                 onTap: () => context.push(
-                  AppRoutes.leagueFor(member.id),
+                  AppRoutes.leagueTeamsFor(member.id),
                   extra: member.label,
                 ),
                 child: Padding(

@@ -114,6 +114,29 @@ void main() {
     },
   );
 
+  test('every team-based league has its complete roster', () async {
+    final SeedData data = await const AssetSeedLoader().load();
+    int teamsFor(String league) => data.followables
+        .where((FollowTarget target) => target.kind == FollowKind.team)
+        .where(
+          (FollowTarget target) =>
+              target.subtitle?.endsWith(' · $league') ?? false,
+        )
+        .length;
+
+    expect(teamsFor('NBA'), 30);
+    expect(teamsFor('NFL'), 32);
+    expect(teamsFor('MLB'), 30);
+    expect(teamsFor('NHL'), 32);
+    expect(teamsFor('Premier League'), 20);
+    expect(teamsFor('Sierra Leone Premier League'), 18);
+    expect(teamsFor('La Liga'), 20);
+    expect(teamsFor('Serie A'), 20);
+    expect(teamsFor('Bundesliga'), 18);
+    expect(teamsFor('Ligue 1'), 18);
+    expect(teamsFor('UEFA Champions League'), 36);
+  });
+
   test('every category pill has seeded content', () async {
     final SeedData data = await const AssetSeedLoader().load();
 

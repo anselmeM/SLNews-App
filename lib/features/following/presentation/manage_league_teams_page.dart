@@ -18,7 +18,8 @@ import 'widgets/catalogue_list.dart';
 /// follow tick, and its chevron opens this page to pick individual clubs.
 ///
 /// A merged competition ("European Leagues") has no single team list — its four
-/// member leagues do — so it lists those instead, each opening its league page.
+/// member leagues do — so it lists those instead, each opening its own team
+/// selector.
 class ManageLeagueTeamsPage extends ConsumerWidget {
   const ManageLeagueTeamsPage({super.key, required this.leagueId, this.label});
 
@@ -61,7 +62,7 @@ class ManageLeagueTeamsPage extends ConsumerWidget {
             child: Text(
               members.isEmpty
                   ? 'Select the teams you want to follow.'
-                  : 'Followed as one section. Pick a league to see its page.',
+                  : 'Pick a league to choose its teams.',
               style: context.typography.caption,
             ),
           ),
@@ -100,7 +101,7 @@ class ManageLeagueTeamsPage extends ConsumerWidget {
                 label: 'Open ${member.label}',
                 child: InkWell(
                   onTap: () => context.push(
-                    AppRoutes.leagueFor(member.id),
+                    AppRoutes.leagueTeamsFor(member.id),
                     extra: member.label,
                   ),
                   child: Padding(

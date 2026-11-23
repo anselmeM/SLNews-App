@@ -25,6 +25,12 @@ void main() {
     label: 'Bo Rangers',
     subtitle: 'Football · Sierra Leone Premier League',
   );
+  const FollowTarget bayern = FollowTarget(
+    id: 'team:bundesliga-bayern',
+    kind: FollowKind.team,
+    label: 'Bayern Munich',
+    subtitle: 'Football · Bundesliga',
+  );
 
   late InMemoryFollowingRepository following;
   late ProviderContainer container;
@@ -32,7 +38,7 @@ void main() {
   setUp(() {
     following = InMemoryFollowingRepository(
       followed: <FollowTarget>[lakers],
-      catalogue: <FollowTarget>[lakers, rangers],
+      catalogue: <FollowTarget>[lakers, rangers, bayern],
     );
     container = ProviderContainer(
       overrides: [
@@ -65,6 +71,14 @@ void main() {
           path: '/sports/league/:id',
           builder: (BuildContext context, GoRouterState state) =>
               Scaffold(body: Text('league:${state.pathParameters['id']}')),
+        ),
+        GoRoute(
+          path: '/following/sports/:leagueId',
+          builder: (BuildContext context, GoRouterState state) =>
+              ManageLeagueTeamsPage(
+                leagueId: state.pathParameters['leagueId'] ?? '',
+                label: state.extra is String ? state.extra! as String : null,
+              ),
         ),
       ],
     );
@@ -127,10 +141,7 @@ void main() {
       label: 'European Leagues',
     );
 
-    expect(
-      find.text('Followed as one section. Pick a league to see its page.'),
-      findsOneWidget,
-    );
+    expect(find.text('Pick a league to choose its teams.'), findsOneWidget);
     for (final String league in <String>[
       'La Liga',
       'Serie A',
@@ -143,6 +154,7 @@ void main() {
     await tester.tap(find.text('Bundesliga'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('league:bundesliga'), findsOneWidget);
+    expect(find.text('Select the teams you want to follow.'), findsOneWidget);
+    expect(find.text('Bayern Munich'), findsOneWidget);
   });
 }
