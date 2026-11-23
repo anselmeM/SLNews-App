@@ -1,7 +1,7 @@
 # Play Console walkthrough — code 6 to production
 
 Paste-ready fields, in the order Play asks for them. Companion docs:
-[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) (gates), [PLAY-STORE-LAUNCH.md](PLAY-STORE-LAUNCH.md)
+[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) (gates), [PLAY-STORE-LAUNCH.md](../PLAY-STORE-LAUNCH.md)
 (assessment), `store/play/STORE-LISTING.md` (copy), `store/play/DATA-SAFETY.md` (answers).
 
 **Build to upload:** `build/dist/SLNews-1.0.0-6.aab`
