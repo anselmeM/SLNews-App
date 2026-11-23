@@ -31,7 +31,6 @@ import '../../../core/widgets/store_widget.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/breaking_alert_banner.dart';
-import 'widgets/daily_briefing_card.dart';
 import 'widgets/recently_read_rail.dart';
 import '../../markets/presentation/stocks_page.dart';
 import '../../markets/presentation/widgets/stocks_card.dart';
@@ -40,7 +39,7 @@ import 'widgets/top_stories_carousel.dart';
 import 'widgets/topic_mosaic.dart';
 import 'widgets/trending_now.dart';
 import 'widgets/video_moments_rail.dart';
-import 'widgets/weather_alert_header.dart';
+import 'widgets/weather_briefing_card.dart';
 import 'viewmodels/for_you_view_model.dart';
 
 part 'feed_slivers.dart';
@@ -117,25 +116,8 @@ class ForYouPage extends ConsumerWidget {
       onRefresh: ref.watch(refreshFeedsProvider),
       slivers: <Widget>[
         if (feed != null) ...<Widget>[
-          // The weather row is its own row above the title: on the reference
-          // screen the title never competes with it for width. Breaking news
-          // is a separate, dismissible row rather than a permanent weather tag.
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.sm,
-                AppSpacing.lg,
-                0,
-              ),
-              child: WeatherAlertHeader(
-                location: feed.activeLocation,
-                // "Show weather forecast" in Settings hides the weather row;
-                // breaking alerts have their own dismissible row below.
-                showWeather: settings.weatherForecastEnabled,
-              ),
-            ),
-          ),
+          // Breaking is editorial and separate from weather: a dismissible
+          // alert row, never a permanent tag inside the weather section.
           if (feed.breakingAlert != null)
             SliverToBoxAdapter(
               child: BreakingAlertBanner(
@@ -145,6 +127,15 @@ class ForYouPage extends ConsumerWidget {
                     context.push(AppRoutes.articleFor(feed.breakingAlert!.id)),
               ),
             ),
+          SliverToBoxAdapter(
+            child: WeatherBriefingCard(
+              location: feed.activeLocation,
+              showWeather: settings.weatherForecastEnabled,
+              briefing: feed.briefing,
+              onOpenArticle: (Article article) =>
+                  context.push(AppRoutes.articleFor(article.id)),
+            ),
+          ),
           SliverToBoxAdapter(
             child: SlPageTitle(
               title: 'Top stories',

@@ -65,8 +65,14 @@ class _FeedSliver extends ConsumerWidget {
     // Local so the null check promotes inside the sliver list.
     final IndexBoard? board = indexBoard;
 
-    // Rails partition the stream so the same headline never appears twice.
-    final List<Article> rest = feed.stream;
+    // The top briefing card owns its stories; rails start after them so the
+    // same headline never appears twice on one screen.
+    final Set<String> briefingIds = <String>{
+      for (final Article article in feed.briefing) article.id,
+    };
+    final List<Article> rest = feed.stream
+        .where((Article article) => !briefingIds.contains(article.id))
+        .toList(growable: false);
     final List<Article> latestStream = rest
         .take(railSize)
         .toList(growable: false);
@@ -85,45 +91,11 @@ class _FeedSliver extends ConsumerWidget {
       rest.skip(railSize * 3).toList(growable: false),
     );
 
-    // Briefing bullets: stories no rail on this screen already shows, so a
-    // headline never appears twice.
-    final Set<String> shownIds = <String>{
-      for (final Article article in <Article>[
-        ...feed.hero,
-        ...latestStream,
-        ...picks,
-        ...nextRead,
-        ...trending,
-      ])
-        article.id,
-    };
-    final List<Article> briefing = rest
-        .where((Article article) => !shownIds.contains(article.id))
-        .take(3)
-        .toList(growable: false);
-
     final AdUnit? leadAd = ads.isNotEmpty ? ads.first : null;
     final AdUnit? secondAd = ads.length > 1 ? ads[1] : null;
 
     return SliverMainAxisGroup(
       slivers: <Widget>[
-        if (briefing.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: DailyBriefingCard(
-                title: briefingTitleFor(DateTime.now()),
-                articles: briefing,
-                onOpen: (Article article) =>
-                    context.push(AppRoutes.articleFor(article.id)),
-              ),
-            ),
-          ),
         SliverToBoxAdapter(
           child: TopStoriesCarousel(
             articles: feed.hero,
