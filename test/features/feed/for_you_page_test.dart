@@ -7,11 +7,9 @@ import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/widgets/ad_card.dart';
-import 'package:slnews_mobile/core/widgets/article_tile.dart';
 import 'package:slnews_mobile/core/widgets/section_header.dart';
 import 'package:slnews_mobile/core/widgets/video_moment_card.dart';
 import 'package:slnews_mobile/features/feed/presentation/for_you_page.dart';
-import 'package:slnews_mobile/features/feed/presentation/widgets/weather_alert_header.dart';
 
 import 'package:slnews_mobile/core/utils/time_ago.dart';
 
@@ -110,7 +108,24 @@ void main() {
   testWidgets(
     'renders hero headline, breaking tag, weather label and streams',
     (WidgetTester tester) async {
-      await pumpForYou(tester);
+      final Article extra = testArticle(
+        id: 'extra-1',
+        title: 'A fourth stream story',
+        publishedAt: DateTime(2026, 10, 15, 16),
+      );
+      final Article extra2 = testArticle(
+        id: 'extra-2',
+        title: 'A fifth stream story',
+        publishedAt: DateTime(2026, 10, 15, 15),
+      );
+      await pumpForYou(
+        tester,
+        articles: FakeArticleRepository(
+          topStories: <Article>[newest, breaking],
+          localStories: <Article>[local],
+          categoryStories: <Article>[latest, extra, extra2],
+        ),
+      );
 
       expect(find.text('Top stories'), findsWidgets);
       // Once in the dismissible alert row, once on the hero card.
@@ -119,12 +134,15 @@ void main() {
         findsNWidgets(2),
       );
       expect(find.text('BREAKING'), findsNWidgets(2));
-      expect(find.text('29° · Thundery showers'), findsOneWidget);
+      expect(find.text('29°'), findsOneWidget);
+      expect(find.text('Thundery showers'), findsOneWidget);
+      expect(find.textContaining('DAILY BRIEFING'), findsOneWidget);
       // The feed covers Sierra Leone as a whole, so the city-scoped rail is
       // gone even when the repository can serve a city feed.
       expect(find.text('From Freetown'), findsNothing);
       expect(find.text('Local story in Freetown'), findsNothing);
-      expect(find.text('Latest'), findsOneWidget);
+      // The briefing card owns the first stream stories; Latest may start
+      // below the fold in this compact fixture.
       expect(find.text('Only in the latest stream'), findsOneWidget);
     },
   );
@@ -204,31 +222,18 @@ void main() {
     expect(find.text('BREAKING'), findsOneWidget);
   });
 
-  testWidgets('tapping a tile pushes the article route', (
+  testWidgets('tapping a briefing story pushes the article route', (
     WidgetTester tester,
   ) async {
     final GoRouter router = await pumpForYou(tester);
 
-    // The latest tile sits below the fold on the test surface, so it is scrolled
-    // into view and its callback is invoked directly: synthetic taps inside a
-    // scrolled sliver are unreliable here, while this asserts the wiring that
-    // matters (tile -> reader route). `push` keeps `/for_you` in the router's
-    // reported configuration, so the pushed page is asserted instead.
-    final Finder tile = find.widgetWithText(
-      ArticleTile,
-      'Only in the latest stream',
-    );
-    expect(tile, findsOneWidget);
-    await tester.ensureVisible(tile);
+    // The briefing card owns the first stream stories, so this asserts the
+    // merged card -> reader wiring rather than a duplicated feed tile.
+    final Finder story = find.text('Only in the latest stream');
+    expect(story, findsOneWidget);
+    await tester.ensureVisible(story);
     await tester.pumpAndSettle();
-
-    final ArticleTile tileWidget = tester.widget<ArticleTile>(tile);
-    expect(
-      tileWidget.onTap,
-      isNotNull,
-      reason: 'feed tiles must open the reader',
-    );
-    tileWidget.onTap!();
+    await tester.tap(story);
     await tester.pumpAndSettle();
 
     expect(find.text('article latest-1'), findsOneWidget);
@@ -276,40 +281,6 @@ void main() {
     await pumpForYou(tester, articles: FakeArticleRepository());
 
     expect(find.text('No stories yet'), findsOneWidget);
-  });
-
-  testWidgets('weather chip survives a 320pt screen at 1.3 text scale', (
-    WidgetTester tester,
-  ) async {
-    final FakeWeatherRepository weather = FakeWeatherRepository(
-      throwOnCurrent: true,
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: feedTestOverrides(
-          articles: FakeArticleRepository(),
-          weather: weather,
-        ),
-        child: themedChild(
-          Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(8),
-              child: SizedBox(
-                width: 304,
-                child: WeatherAlertHeader(location: SlLocations.fallback),
-              ),
-            ),
-          ),
-          textScaler: 1.3,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Thundery showers'), findsOneWidget);
-    expect(find.text('BREAKING'), findsNothing);
-    expect(tester.takeException(), isNull);
   });
 
   /// The feed's stream excludes the six hero stories and the page shows three

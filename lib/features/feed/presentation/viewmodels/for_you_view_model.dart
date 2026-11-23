@@ -15,6 +15,7 @@ class ForYouFeed {
   const ForYouFeed({
     required this.hero,
     required this.stream,
+    this.briefing = const <Article>[],
     required this.breakingCount,
     this.breakingAlert,
     required this.activeLocation,
@@ -28,6 +29,12 @@ class ForYouFeed {
   /// Tile stream: the location feed first, then every other story, newest first.
   final List<Article> stream;
 
+  /// Up to three stories promoted into the merged weather/briefing card.
+  ///
+  /// They are taken from [stream], so the carousel is never duplicated. The
+  /// breaking alert story is excluded because it already has its own row.
+  final List<Article> briefing;
+
   /// The one fresh breaking story that may be promoted to the alert row.
   ///
   /// This is deliberately a single story, not a feed-wide boolean: a stale
@@ -37,7 +44,7 @@ class ForYouFeed {
   /// Number of fresh breaking stories in the merged stream.
   final int breakingCount;
 
-  /// Location driving the local section header and the weather chip.
+  /// Location driving the weather module in the briefing card.
   final NewsLocation activeLocation;
 
   final bool isOffline;
@@ -222,11 +229,27 @@ abstract final class ForYouViewModel {
             (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
           );
 
+    final List<Article> stream = <Article>[
+      ...localStream,
+      ...latestStream,
+      ...sportsStream,
+    ];
+    final Article? breakingAlert = activeBreaking.isEmpty
+        ? null
+        : activeBreaking.first;
+    final List<Article> briefing = <Article>[];
+    for (final Article article in stream) {
+      if (article.id == breakingAlert?.id) continue;
+      briefing.add(article);
+      if (briefing.length == 3) break;
+    }
+
     return ForYouFeed(
       hero: hero,
-      stream: <Article>[...localStream, ...latestStream, ...sportsStream],
+      stream: stream,
+      briefing: List<Article>.unmodifiable(briefing),
       breakingCount: activeBreaking.length,
-      breakingAlert: activeBreaking.isEmpty ? null : activeBreaking.first,
+      breakingAlert: breakingAlert,
       activeLocation: activeLocation,
       isOffline: isOffline,
       lastSyncedAt: lastSyncedAt,
