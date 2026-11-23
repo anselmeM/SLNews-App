@@ -262,16 +262,8 @@ class EspnSource {
     final String? sourceUrl = links is Map && links['web'] is Map
         ? (links['web'] as Map)['href']?.toString()
         : null;
-    final Object? images = json['images'];
-    String? imageUrl;
-    if (images is List) {
-      for (final Object? image in images) {
-        if (image is Map && image['url'] is String) {
-          imageUrl = image['url'] as String;
-          break;
-        }
-      }
-    }
+    // ESPN is an unlicensed external wire: the card carries the headline and
+    // excerpt, and the story opens at ESPN. No publisher-hosted art is embedded.
     final DateTime published =
         DateTime.tryParse((json['published'] ?? '').toString()) ??
         DateTime.now().toUtc();
@@ -287,10 +279,10 @@ class EspnSource {
         country: 'United States',
       ),
       publishedAt: published,
-      imageUrl: imageUrl,
       sourceUrl: sourceUrl,
       categoryId: 'sports',
       tags: const <String>['sports'],
+      previewOnly: true,
     );
   }
 }

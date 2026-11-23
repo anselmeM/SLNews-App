@@ -1,7 +1,7 @@
 # Play Console declarations — answer sheet
 
 Copy these answers into Play Console. They describe the **Android app as built**
-(`com.slnews.mobile`, version 1.0.0+61), not the website: the app has no analytics or
+(`com.slnews.mobile`, version 1.0.0 (current)), not the website: the app has no analytics or
 advertising SDK and no advertising identifier. It does send **crash diagnostics to
 Sentry** (added for the launch build), configured without IP storage, account
 identifiers, content or screenshots. It stores an **FCM registration token** when the

@@ -362,7 +362,9 @@ class SlNewsApiSource implements FeedSource {
       // summary and links out to the publisher.
       bodyHtml: '',
       author: _nullable(json['author']),
-      imageUrl: _nullable(json['imageUrl']),
+      // Summary-only contract: no body and no publisher-hosted image until a
+      // source-specific licence is recorded.
+      imageUrl: null,
       sourceUrl: _nullable(json['url'] ?? json['link']),
       publisher: publisher,
       publishedAt: publishedAt,
@@ -370,6 +372,7 @@ class SlNewsApiSource implements FeedSource {
       tags: tags,
       isBreaking: breaking.isBreaking,
       isLive: false,
+      previewOnly: true,
     );
   }
 

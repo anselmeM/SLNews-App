@@ -38,7 +38,10 @@ class OfflineFirstArticleRepository implements ArticleRepository {
        _fetchById = fetchById;
 
   /// Cache key holding the merged feed from the last successful refresh.
-  static const String allCacheKey = 'all';
+  ///
+  /// Versioned so a cache written before the excerpt-only rights posture is
+  /// never rendered again after an app update.
+  static const String allCacheKey = 'all:v2-preview';
 
   /// Per-source budget; a slow outlet must not hold the whole refresh open.
   static const Duration sourceTimeout = Duration(seconds: 8);

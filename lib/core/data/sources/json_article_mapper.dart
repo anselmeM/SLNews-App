@@ -140,22 +140,29 @@ abstract final class JsonArticleMapper {
       now: now,
     );
 
+    final bool previewOnly = config.isPreviewOnly;
     return Article(
       id: id,
       title: title,
       summary: summary.isEmpty ? _truncate(bodyHtml) : summary,
-      bodyHtml: bodyHtml,
+      bodyHtml: previewOnly ? '' : bodyHtml,
       author: _nullableString(
         json['author'] ?? json['byline'] ?? json['creator'],
       ),
-      imageUrl: _nullableString(
-        json['imageUrl'] ??
-            json['image'] ??
-            json['thumbnail'] ??
-            json['image_url'],
-      ),
-      imageCaption: _nullableString(json['imageCaption']),
-      imageCredit: _nullableString(json['imageCredit']),
+      imageUrl: config.allowsRemoteImages
+          ? _nullableString(
+              json['imageUrl'] ??
+                  json['image'] ??
+                  json['thumbnail'] ??
+                  json['image_url'],
+            )
+          : null,
+      imageCaption: config.allowsRemoteImages
+          ? _nullableString(json['imageCaption'])
+          : null,
+      imageCredit: config.allowsRemoteImages
+          ? _nullableString(json['imageCredit'])
+          : null,
       sourceUrl: link,
       publisher: publisher,
       publishedAt: publishedAt,
@@ -164,6 +171,7 @@ abstract final class JsonArticleMapper {
       isBreaking: breaking.isBreaking,
       isLive: json['isLive'] == true,
       readingMinutes: _int(json['readingMinutes']) ?? 0,
+      previewOnly: previewOnly,
     );
   }
 
@@ -181,7 +189,9 @@ abstract final class JsonArticleMapper {
               : _string(json['id']),
           name: name,
           wordmark: _nullableString(json['wordmark']) ?? config.wordmark,
-          logoUrl: _nullableString(json['logoUrl']),
+          logoUrl: config.allowsRemoteImages
+              ? _nullableString(json['logoUrl'])
+              : null,
           websiteUrl: _nullableString(json['websiteUrl']) ?? config.websiteUrl,
           country: _nullableString(json['country']) ?? config.country,
           isWire: json['isWire'] is bool

@@ -580,7 +580,7 @@ void main() {
     });
   });
   group('/api/news mapping', () {
-    test('keeps author and image, ignores paragraphs', () async {
+    test('keeps author, drops paragraphs and remote images', () async {
       final Harness harness = Harness(
         (RequestOptions options) async => Harness.json(
           <Map<String, dynamic>>[legacyRow()],
@@ -601,7 +601,8 @@ void main() {
       expect(article.summary, 'Trade halted for a second day.');
       expect(article.bodyHtml, isEmpty);
       expect(article.author, 'A. Kamara');
-      expect(article.imageUrl, 'https://example.test/img/7.jpg');
+      expect(article.previewOnly, isTrue);
+      expect(article.imageUrl, isNull);
       expect(article.sourceUrl, 'https://example.test/story/7');
       expect(article.categoryId, 'business');
       expect(article.tags, <String>['Business']);

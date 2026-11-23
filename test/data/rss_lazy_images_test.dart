@@ -11,6 +11,8 @@ const FeedSourceConfig config = FeedSourceConfig(
   url: 'https://example.com/feed',
   kind: FeedSourceKind.rss,
   categoryId: 'news',
+  allowsFullText: true,
+  allowsRemoteImages: true,
 );
 
 String fixture(String imageTag) {

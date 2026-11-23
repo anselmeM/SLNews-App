@@ -196,17 +196,24 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
                   const SizedBox(height: AppSpacing.lg),
                   ArticleHeroMedia(article: article),
                   const SizedBox(height: AppSpacing.xl),
-                  // Shown only when the outlet did not simply repeat the standfirst
-                  // as the body's opening paragraph.
-                  if (article.summary.isNotEmpty &&
-                      !HtmlBlocks.opensWith(
-                        article.bodyHtml,
-                        article.summary,
-                      )) ...<Widget>[
-                    Text(article.summary, style: context.typography.lead),
-                    const SizedBox(height: AppSpacing.lg),
+                  if (article.previewOnly)
+                    _PreviewStoryCard(
+                      article: article,
+                      onReadFullStory: () => _openOriginal(context, article),
+                    )
+                  else ...<Widget>[
+                    // Shown only when the outlet did not simply repeat the
+                    // standfirst as the body's opening paragraph.
+                    if (article.summary.isNotEmpty &&
+                        !HtmlBlocks.opensWith(
+                          article.bodyHtml,
+                          article.summary,
+                        )) ...<Widget>[
+                      Text(article.summary, style: context.typography.lead),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    HtmlContent(html: article.bodyHtml),
                   ],
-                  HtmlContent(html: article.bodyHtml),
                   if (article.tags.isNotEmpty) ...<Widget>[
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
@@ -289,6 +296,76 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
       ..showSnackBar(
         SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
       );
+  }
+}
+
+/// Reader card for a story whose publisher has not licensed full-text
+/// republication. It shows the excerpt and one clear hand-off to the publisher.
+class _PreviewStoryCard extends StatelessWidget {
+  const _PreviewStoryCard({
+    required this.article,
+    required this.onReadFullStory,
+  });
+
+  final Article article;
+  final VoidCallback onReadFullStory;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? sourceUrl = article.sourceUrl?.trim();
+    final bool canOpen = sourceUrl != null && sourceUrl.isNotEmpty;
+    final String excerpt = article.summary.trim().isNotEmpty
+        ? article.summary.trim()
+        : 'This story is available at ${article.publisher.name}.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceMuted,
+        borderRadius: AppRadius.cardRadius,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(
+                Icons.article_outlined,
+                size: 18,
+                color: context.colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Preview',
+                style: context.typography.caption.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(excerpt, style: context.typography.lead),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Full story at ${article.publisher.name}.',
+            style: context.typography.caption.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: canOpen ? onReadFullStory : null,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: const Text('Read full story'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -62,7 +62,10 @@ void main() {
         cache: cache,
       );
       await online.refresh();
-      expect(cache.syncedAt('all'), isNotNull);
+      expect(
+        cache.syncedAt(OfflineFirstArticleRepository.allCacheKey),
+        isNotNull,
+      );
 
       final OfflineFirstArticleRepository offline = build(
         sources: <FeedSource>[
@@ -389,7 +392,9 @@ void main() {
         expect((await online.byId('deep-link-1'))?.id, 'deep-link-1');
         expect(calls, 1);
         expect(
-          cache.read('all').map((Article a) => a.id),
+          cache
+              .read(OfflineFirstArticleRepository.allCacheKey)
+              .map((Article a) => a.id),
           contains('deep-link-1'),
           reason: 'the fetched story is cached for the next offline open',
         );
