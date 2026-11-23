@@ -7,9 +7,6 @@ import 'package:slnews_mobile/core/domain/models/video_moment.dart';
 /// The `/v1/videos` parsing contract: the rail must survive a malformed row and
 /// an unconfigured build, and must never throw into the feed page.
 void main() {
-  SlNewsApiConfig config({String key = 'test-key'}) =>
-      SlNewsApiConfig(baseUrl: 'https://api.test', apiKey: key);
-
   group('parse', () {
     test('reads the versioned payload and keeps the fields the card needs', () {
       final List<VideoMoment> videos = SlNewsVideoSource.parse(
@@ -93,7 +90,7 @@ void main() {
   group('latest', () {
     test('an unconfigured build never touches the network', () async {
       final SlNewsVideoSource source = SlNewsVideoSource(
-        config(key: ''),
+        const SlNewsApiConfig(baseUrl: '', apiKey: ''),
         ApiClient(),
       );
 

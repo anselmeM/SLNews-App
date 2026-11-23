@@ -28,6 +28,9 @@ class SlNewsVideoSource {
   /// twin: videos are newer than `/api/v1`, so there is nothing to fall back to.
   static const String path = '/v1/videos';
 
+  /// Public read-only variant used when the reader has no session token.
+  static const String publicPath = '/v1/public/videos';
+
   /// Newest videos, or an empty list when unconfigured, empty or failing.
   ///
   /// Never throws: the feed page must render whether or not the rail has data.
@@ -35,7 +38,7 @@ class SlNewsVideoSource {
     if (!isConfigured) return const <VideoMoment>[];
 
     final String base = _config.baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
-    final String url = '$base$path?page_size=${limit.clamp(1, 100)}';
+    final int pageSize = limit.clamp(1, 100);
 
     try {
       // The rail is decorative: never let a cold Render instance delay the
@@ -44,14 +47,24 @@ class SlNewsVideoSource {
       // ApiClient attaches to the allow-listed scraper host. Sending an empty
       // "Bearer " here would override that token and 401 the request.
       final String key = _config.apiKey.trim();
-      final ApiResponse response = await _api
-          .get(
-            url,
-            headers: key.isEmpty
-                ? null
-                : <String, String>{'Authorization': 'Bearer $key'},
-          )
-          .timeout(const Duration(seconds: 4));
+      final ApiResponse response;
+      try {
+        response = await _api
+            .get(
+              '$base$path?page_size=$pageSize',
+              headers: key.isEmpty
+                  ? null
+                  : <String, String>{'Authorization': 'Bearer $key'},
+            )
+            .timeout(const Duration(seconds: 4));
+      } on ApiException catch (error) {
+        if (error.statusCode != 401 && error.statusCode != 403) rethrow;
+        // Anonymous readers and expired sessions use the public read-only rail.
+        final ApiResponse publicResponse = await _api
+            .get('$base$publicPath?page_size=$pageSize')
+            .timeout(const Duration(seconds: 4));
+        return parse(publicResponse.data).take(limit).toList(growable: false);
+      }
       return parse(response.data).take(limit).toList(growable: false);
     } catch (error) {
       AppLog.debug('SlNewsVideoSource: /v1/videos unavailable ($error)');

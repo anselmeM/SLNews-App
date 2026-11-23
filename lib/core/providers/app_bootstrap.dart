@@ -20,6 +20,7 @@ import '../data/repositories/offline_first_article_repository.dart';
 import '../data/seed/outlet_registry.dart';
 import '../data/seed/seed_loader.dart';
 import '../data/sources/api_client.dart';
+import '../domain/auth/account_scope.dart';
 import '../data/sources/feed_source.dart';
 import '../data/sources/sl_news_api_source.dart';
 import '../data/sources/sl_news_video_source.dart';
@@ -231,6 +232,7 @@ class AppBootstrap {
         DefaultFollowingRepository(
           preferences: preferences,
           seedLoader: seedLoader,
+          accountId: () => localAccountIdFor(auth?.currentUser?.id),
         );
     final DefaultNotificationRepository notificationRepository =
         DefaultNotificationRepository(
@@ -246,7 +248,10 @@ class AppBootstrap {
       ),
     );
     final DefaultUserStateRepository userStateRepository =
-        DefaultUserStateRepository(preferences: preferences);
+        DefaultUserStateRepository(
+          preferences: preferences,
+          accountId: () => localAccountIdFor(auth?.currentUser?.id),
+        );
     // Sold sponsorships and their counters live on the marketing/API host, not
     // the scraper host. Pointing them at SyncApiConfig sent these calls to
     // Render, where the route does not exist, so every feed fell back to seed ads.

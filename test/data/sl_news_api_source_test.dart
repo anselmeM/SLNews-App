@@ -181,7 +181,7 @@ Map<String, dynamic> legacyRow([
 
 void main() {
   group('SlNewsApiConfig', () {
-    test('is unconfigured without a key and never prints the key', () {
+    test('is configured by host alone and never prints the key', () {
       const SlNewsApiConfig missing = SlNewsApiConfig(
         baseUrl: testBaseUrl,
         apiKey: '',
@@ -191,7 +191,7 @@ void main() {
         apiKey: 'secret',
       );
 
-      expect(missing.isConfigured, isFalse);
+      expect(missing.isConfigured, isTrue);
       expect(blankHost.isConfigured, isFalse);
 
       final String rendered = const SlNewsApiConfig(
@@ -209,7 +209,7 @@ void main() {
       // No --dart-define is present when this suite runs.
       expect(config.baseUrl, SlNewsApiConfig.defaultBaseUrl);
       expect(config.apiKey, isEmpty);
-      expect(config.isConfigured, isFalse);
+      expect(config.isConfigured, isTrue);
       expect(config.pageSize, SlNewsApiConfig.defaultPageSize);
     });
 
@@ -615,7 +615,7 @@ void main() {
   group('degraded paths', () {
     test('unconfigured source issues no HTTP request at all', () async {
       final SlNewsApiConfig disabled = const SlNewsApiConfig(
-        baseUrl: testBaseUrl,
+        baseUrl: '   ',
         apiKey: '',
       );
       final Harness harness = Harness(
@@ -631,21 +631,23 @@ void main() {
       expect(harness.adapter.requests, isEmpty);
     });
 
-    test(
-      'a 401 on /v1/news does not fall back and yields an empty page',
-      () async {
-        final Harness harness = Harness(
-          (RequestOptions options) async => Harness.error(401),
-        );
+    test('a signed-out 401 falls back to the public read-only feed', () async {
+      final Harness harness = Harness(
+        (RequestOptions options) async =>
+            options.uri.path == SlNewsApiSource.publicVersionedPath
+            ? Harness.json(v1Envelope())
+            : Harness.error(401),
+      );
 
-        final SlNewsApiPage page = await harness.source.fetchPage();
+      final SlNewsApiPage page = await harness.source.fetchPage();
 
-        expect(harness.paths, <String>['/v1/news']);
-        expect(page.articles, isEmpty);
-        expect(page.total, 0);
-        expect(page.hasMore, isFalse);
-      },
-    );
+      expect(harness.paths, <String>[
+        '/v1/news',
+        SlNewsApiSource.publicVersionedPath,
+      ]);
+      expect(page.articles, hasLength(1));
+      expect(page.articles.single.title, 'Bo district clinic reopens');
+    });
 
     test('a 403 on /api/news yields an empty page without throwing', () async {
       final Harness harness = Harness(
@@ -859,18 +861,15 @@ void main() {
       apiKey: '',
     );
 
-    test(
-      'a build without an embedded key is configured when identity exists',
-      () {
-        expect(keyless.isConfigured, isTrue);
-        expect(keylessNoIdentity.isConfigured, isFalse);
-        expect(keyless.copyWith(apiKey: 'next').apiKey, 'next');
-        expect(
-          keyless.copyWith(sessionTokenAvailable: false).isConfigured,
-          isFalse,
-        );
-      },
-    );
+    test('read-only content is configured without a key or identity', () {
+      expect(keyless.isConfigured, isTrue);
+      expect(keylessNoIdentity.isConfigured, isTrue);
+      expect(keyless.copyWith(apiKey: 'next').apiKey, 'next');
+      expect(
+        keyless.copyWith(sessionTokenAvailable: false).isConfigured,
+        isTrue,
+      );
+    });
 
     test(
       'the session token authenticates the request when no key is embedded',

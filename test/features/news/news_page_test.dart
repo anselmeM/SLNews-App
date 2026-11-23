@@ -91,6 +91,12 @@ void main() {
       // latest feed under the selected category heading instead.
       expect(find.byType(EmptyStateView), findsNothing);
       expect(find.text(topHeadline), findsOneWidget);
+      expect(
+        find.textContaining(
+          'No cars and vehicles stories right now — showing the latest news.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('inserts one in-stream ad after the third Latest row', (

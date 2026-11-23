@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 /// Reader-controlled delivery settings for the daily follow digest.
 ///
-/// The server is the source of truth for sending, so every change is also
-/// pushed there; this copy exists so Settings renders instantly and offline.
+/// These choices are deliberately device-local and are never sent to an SLNews
+/// account or server; signing in only syncs saved stories, likes and follows.
 @immutable
 class DigestPreferences {
   const DigestPreferences({
@@ -23,34 +23,13 @@ class DigestPreferences {
   /// The device's UTC offset when the preference was saved.
   final int timezoneOffsetMinutes;
 
-  /// Wire and cache field names, kept in one place so a patch and its decoder
-  /// cannot drift apart.
-  static const String digestCadenceField = 'digestCadence';
+  /// Local document field names.
   static const String enabledField = 'digestEnabled';
   static const String quietHoursStartField = 'quietHoursStart';
   static const String quietHoursEndField = 'quietHoursEnd';
   static const String timezoneOffsetField = 'timezoneOffsetMinutes';
 
-  static const String dailyCadence = 'daily';
-  static const String offCadence = 'off';
-
-  /// A patch containing only the digest switch.
-  static Map<String, dynamic> cadencePatch(bool enabled) => <String, dynamic>{
-    digestCadenceField: enabled ? dailyCadence : offCadence,
-  };
-
-  /// A patch containing only the quiet-hours pair and its timezone offset.
-  static Map<String, dynamic> quietHoursPatch({
-    int? start,
-    int? end,
-    required int timezoneOffsetMinutes,
-  }) => <String, dynamic>{
-    quietHoursStartField: start,
-    quietHoursEndField: end,
-    timezoneOffsetField: timezoneOffsetMinutes,
-  };
-
-  /// Local cache payload, scoped to one account by the repository.
+  /// Device-local document payload.
   Map<String, dynamic> toJson() => <String, dynamic>{
     enabledField: digestEnabled,
     quietHoursStartField: quietHoursStart,
@@ -72,31 +51,11 @@ class DigestPreferences {
     );
   }
 
-  /// Server payload decoder (GET /notification-preferences).
-  factory DigestPreferences.fromServerJson(Map<String, dynamic> json) {
-    final Object? start = json[quietHoursStartField];
-    final Object? end = json[quietHoursEndField];
-    final Object? offset = json[timezoneOffsetField];
-    return DigestPreferences(
-      digestEnabled: json[digestCadenceField] != offCadence,
-      quietHoursStart: start is num ? start.toInt() : null,
-      quietHoursEnd: end is num ? end.toInt() : null,
-      timezoneOffsetMinutes: offset is num ? offset.toInt() : 0,
-    );
-  }
-
   bool get hasQuietHours =>
       digestEnabled &&
       quietHoursStart != null &&
       quietHoursEnd != null &&
       quietHoursStart != quietHoursEnd;
-
-  Map<String, dynamic> toServerJson() => <String, dynamic>{
-    digestCadenceField: digestEnabled ? dailyCadence : offCadence,
-    quietHoursStartField: quietHoursStart,
-    quietHoursEndField: quietHoursEnd,
-    timezoneOffsetField: timezoneOffsetMinutes,
-  };
 
   /// `HH:MM` label for a minute-of-day, or null when unset.
   static String? clockLabel(int? minutes) {

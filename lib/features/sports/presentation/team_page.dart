@@ -49,7 +49,8 @@ class TeamPage extends ConsumerWidget {
     final AsyncValue<List<GameScore>> fixtures = ref.watch(
       teamGamesProvider(teamId),
     );
-    final AsyncValue<List<Article>> stories = EspnSource.supportsTeamId(teamId)
+    final bool hasDedicatedNews = EspnSource.supportsTeamId(teamId);
+    final AsyncValue<List<Article>> stories = hasDedicatedNews
         ? ref.watch(teamNewsProvider(teamId))
         : ref.watch(categoryFeedProvider('sports'));
 
@@ -117,9 +118,19 @@ class TeamPage extends ConsumerWidget {
             child: SectionHeader(title: 'Fixtures & results', compact: true),
           ),
           _fixturesSliver(context, ref, fixtures),
-          const SliverToBoxAdapter(
-            child: SectionHeader(title: 'Latest stories', compact: true),
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: hasDedicatedNews
+                  ? 'Latest stories'
+                  : 'Latest sports stories',
+              compact: true,
+            ),
           ),
+          if (!hasDedicatedNews)
+            _notice(
+              context,
+              'No dedicated $name coverage yet — showing latest sports stories.',
+            ),
           _storiesSliver(context, ref, stories, name),
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
         ],

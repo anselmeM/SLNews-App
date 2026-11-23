@@ -22,7 +22,10 @@ part 'sync_status.dart';
 /// `failed` status without a [SyncFailure], or `synced` without a server clock).
 
 final Provider<LocalSyncLedger> syncLedgerProvider = Provider<LocalSyncLedger>(
-  (Ref ref) => LocalSyncLedger(ref.watch(preferencesStoreProvider)),
+  (Ref ref) => LocalSyncLedger(
+    ref.watch(preferencesStoreProvider),
+    accountId: () => ref.read(activeAccountKeyProvider),
+  ),
   name: 'syncLedger',
 );
 
@@ -42,6 +45,7 @@ class SyncController extends Notifier<SyncStatus> {
   Timer? _retryTimer;
   int _retryAttempt = 0;
   DateTime? _lastPushedAt;
+  bool _merging = false;
 
   /// Bounded retry ladder for a failed push. A transient outage should not
   /// leave the account card stuck on `failed` until the next local edit.
@@ -53,12 +57,26 @@ class SyncController extends Notifier<SyncStatus> {
 
   @override
   SyncStatus build() {
+    // Resetting on identity changes keeps A's sync status and timers from
+    // leaking into B or into the signed-out reader.
+    ref.watch(activeAccountKeyProvider);
     ref.onDispose(() {
       _debounce?.cancel();
       _retryTimer?.cancel();
+      _merging = false;
     });
     final SyncRepository repository = ref.watch(syncRepositoryProvider);
     return repository.isConfigured ? const SyncIdle() : const SyncDisabled();
+  }
+
+  /// Clears account-bound status immediately when the reader signs out.
+  void onSignedOut() {
+    _debounce?.cancel();
+    _clearRetry();
+    _lastPushedAt = null;
+    _merging = false;
+    final SyncRepository repository = ref.read(syncRepositoryProvider);
+    state = repository.isConfigured ? const SyncIdle() : const SyncDisabled();
   }
 
   void _clearRetry() {
@@ -98,6 +116,16 @@ class SyncController extends Notifier<SyncStatus> {
   ///
   /// Safe to call repeatedly (on every sign-in and on app start while signed in).
   Future<void> mergeOnSignIn() async {
+    if (_merging) return;
+    _merging = true;
+    try {
+      await _mergeOnSignIn();
+    } finally {
+      _merging = false;
+    }
+  }
+
+  Future<void> _mergeOnSignIn() async {
     final SyncRepository repository = ref.read(syncRepositoryProvider);
     if (!repository.isConfigured) {
       _clearRetry();

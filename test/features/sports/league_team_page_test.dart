@@ -209,7 +209,11 @@ void main() {
 
     expect(find.text('Mighty Blackpool'), findsWidgets);
     expect(find.text('Fixtures & results'), findsOneWidget);
-    expect(find.text('Latest stories'), findsOneWidget);
+    expect(find.text('Latest sports stories'), findsOneWidget);
+    expect(
+      find.textContaining('No dedicated Mighty Blackpool coverage yet'),
+      findsOneWidget,
+    );
     expect(find.text('Follow'), findsOneWidget);
   });
 }

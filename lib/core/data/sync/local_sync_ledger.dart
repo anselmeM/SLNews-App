@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../domain/auth/account_scope.dart';
 import '../local/preferences_store.dart';
 import '../../domain/sync/sync_repository.dart';
 
@@ -18,12 +19,23 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 /// three collections disagreeing about their version.
 class LocalSyncLedger {
   /// Creates a ledger over [store].
-  LocalSyncLedger(this._store);
+  ///
+  /// [accountId] is read on every access so a sign-out switches to the
+  /// anonymous ledger immediately.
+  LocalSyncLedger(this._store, {String Function()? accountId})
+    : _accountId = accountId ?? (() => anonymousAccountId);
 
-  /// Preferences key holding the whole document.
+  /// Legacy global key, migrated into the account-scoped ledger on first read.
   static const String storageKey = 'sync.ledger.v1';
 
   final PreferencesStore _store;
+  final String Function() _accountId;
+
+  /// Storage key for one account; `anonymous` for a signed-out reader.
+  static String storageKeyFor(String accountId) =>
+      '$storageKey.${localAccountIdFor(accountId)}';
+
+  String get _scopedKey => storageKeyFor(_accountId());
 
   /// Change instants per collection, tombstoned rows included.
   Map<String, DateTime> updatedAt(String collection) {
@@ -139,8 +151,27 @@ class LocalSyncLedger {
       deleted(collection).contains(id);
 
   Map<String, dynamic> _read() {
-    final String? raw = _store.string(storageKey);
-    if (raw == null || raw.trim().isEmpty) return <String, dynamic>{};
+    String? raw = _store.string(_scopedKey);
+    if (raw == null || raw.trim().isEmpty) {
+      final String? legacy = _store.string(storageKey);
+      if (legacy != null && legacy.trim().isNotEmpty) {
+        raw = legacy;
+        _store.putString(_scopedKey, legacy);
+        _store.remove(storageKey);
+      } else {
+        final String account = localAccountIdFor(_accountId());
+        if (account != anonymousAccountId) {
+          final String anonymousKey = storageKeyFor(anonymousAccountId);
+          final String? anonymous = _store.string(anonymousKey);
+          if (anonymous != null && anonymous.trim().isNotEmpty) {
+            raw = anonymous;
+            _store.putString(_scopedKey, anonymous);
+            _store.remove(anonymousKey);
+          }
+        }
+      }
+      if (raw == null || raw.trim().isEmpty) return <String, dynamic>{};
+    }
     try {
       final Object? decoded = jsonDecode(raw);
       return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
@@ -154,7 +185,7 @@ class LocalSyncLedger {
   }
 
   Future<void> _write(Map<String, dynamic> document) async {
-    await _store.putString(storageKey, jsonEncode(document));
+    await _store.putString(_scopedKey, jsonEncode(document));
   }
 
   static Map<String, dynamic> _section(

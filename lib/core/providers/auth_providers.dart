@@ -7,6 +7,7 @@ import '../auth/sign_in_surface.dart';
 import '../../features/auth/data/account_deletion_service.dart';
 import 'app_providers.dart';
 import 'sync_repository_provider.dart';
+import '../domain/auth/account_scope.dart';
 import '../domain/auth/auth_repository.dart';
 
 export '../auth/sign_in_surface.dart';
@@ -54,6 +55,16 @@ final Provider<AccountDeletionService> accountDeletionServiceProvider =
       ),
       name: 'accountDeletion',
     );
+
+/// Storage namespace for the active reader.
+///
+/// This changes on sign-in, sign-out and account switch; reader-state
+/// controllers watch it so saved stories, likes and follows never bleed across
+/// identities on a shared device.
+final Provider<String> activeAccountKeyProvider = Provider<String>((Ref ref) {
+  final AuthState auth = ref.watch(authControllerProvider);
+  return localAccountIdFor(auth.user?.id);
+}, name: 'activeAccountKey');
 
 /// Session state for widgets.
 final NotifierProvider<AuthController, AuthState> authControllerProvider =

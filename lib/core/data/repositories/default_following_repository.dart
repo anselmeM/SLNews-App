@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../domain/auth/account_scope.dart';
 import '../../domain/models/follow_models.dart';
 import '../../domain/repositories/following_repository.dart';
 import '../local/preferences_store.dart';
@@ -20,13 +21,15 @@ class DefaultFollowingRepository implements FollowingRepository {
   DefaultFollowingRepository({
     required PreferencesStore preferences,
     required SeedLoader seedLoader,
+    String Function()? accountId,
   }) : _store = preferences,
-       _seeds = seedLoader {
+       _seeds = seedLoader,
+       _accountId = accountId ?? (() => anonymousAccountId) {
     // Start the catalogue load immediately; load() must not block on it.
     unawaited(_ready);
   }
 
-  /// Followed ids, stored as a `List<String>` of `FollowTarget.id`s.
+  /// Legacy followed-id key, migrated into the account-scoped key on read.
   static const String followedIdsKey = 'following.ids';
 
   /// Last known catalogue, stored as JSON so labels survive a cold start.
@@ -36,6 +39,7 @@ class DefaultFollowingRepository implements FollowingRepository {
 
   final PreferencesStore _store;
   final SeedLoader _seeds;
+  final String Function() _accountId;
 
   List<FollowTarget> _catalogue = const <FollowTarget>[];
 
@@ -57,10 +61,38 @@ class DefaultFollowingRepository implements FollowingRepository {
     return _snapshot();
   }
 
+  String get _followedIdsKey =>
+      '$followedIdsKey.${localAccountIdFor(_accountId())}';
+
+  /// Reads the active account's followed ids, migrating the global legacy set
+  /// once so existing installs keep their subscriptions.
+  Set<String> _readFollowedIds() {
+    final Set<String> current = _store.stringSet(_followedIdsKey);
+    if (current.isNotEmpty) return current;
+    final Set<String> legacy = _store.stringSet(followedIdsKey);
+    if (legacy.isNotEmpty) {
+      unawaited(_store.putStringSet(_followedIdsKey, legacy));
+      unawaited(_store.remove(followedIdsKey));
+      return legacy;
+    }
+
+    final String account = localAccountIdFor(_accountId());
+    if (account != anonymousAccountId) {
+      final String anonymousKey = '$followedIdsKey.$anonymousAccountId';
+      final Set<String> anonymous = _store.stringSet(anonymousKey);
+      if (anonymous.isNotEmpty) {
+        unawaited(_store.putStringSet(_followedIdsKey, anonymous));
+        unawaited(_store.remove(anonymousKey));
+        return anonymous;
+      }
+    }
+    return current;
+  }
+
   @override
   Future<FollowingSnapshot> follow(FollowTarget target) async {
     await _ready;
-    final Set<String> ids = _store.stringSet(followedIdsKey)..add(target.id);
+    final Set<String> ids = _readFollowedIds()..add(target.id);
     if (!_catalogue.any((FollowTarget existing) => existing.id == target.id)) {
       // The catalogue is seeded, but the leagues screen follows competitions the
       // seed does not carry (NFL, Formula 1, ...). Keep the target and persist
@@ -70,15 +102,15 @@ class DefaultFollowingRepository implements FollowingRepository {
       _catalogue = <FollowTarget>[..._catalogue, target];
       await _persistCatalogue();
     }
-    await _store.putStringSet(followedIdsKey, ids);
+    await _store.putStringSet(_followedIdsKey, ids);
     return _snapshot();
   }
 
   @override
   Future<FollowingSnapshot> unfollow(String targetId) async {
     await _ready;
-    final Set<String> ids = _store.stringSet(followedIdsKey)..remove(targetId);
-    await _store.putStringSet(followedIdsKey, ids);
+    final Set<String> ids = _readFollowedIds()..remove(targetId);
+    await _store.putStringSet(_followedIdsKey, ids);
     return _snapshot();
   }
 
@@ -87,8 +119,7 @@ class DefaultFollowingRepository implements FollowingRepository {
       isFollowed(target.id) ? unfollow(target.id) : follow(target);
 
   @override
-  bool isFollowed(String targetId) =>
-      _store.stringSet(followedIdsKey).contains(targetId);
+  bool isFollowed(String targetId) => _readFollowedIds().contains(targetId);
 
   Future<void> _hydrate() async {
     final List<FollowTarget> cached = _readCachedCatalogue();
@@ -116,7 +147,7 @@ class DefaultFollowingRepository implements FollowingRepository {
     final Set<String> seededIds = seeded
         .map((FollowTarget target) => target.id)
         .toSet();
-    final Set<String> followedIds = _store.stringSet(followedIdsKey);
+    final Set<String> followedIds = _readFollowedIds();
     final List<FollowTarget> extras = <FollowTarget>[
       for (final FollowTarget target in cached)
         if (!seededIds.contains(target.id) && followedIds.contains(target.id))
@@ -166,7 +197,7 @@ class DefaultFollowingRepository implements FollowingRepository {
   }
 
   FollowingSnapshot _snapshot() {
-    final Set<String> followedIds = _store.stringSet(followedIdsKey);
+    final Set<String> followedIds = _readFollowedIds();
 
     final List<FollowTarget> followed = <FollowTarget>[
       for (final FollowTarget target in _catalogue)

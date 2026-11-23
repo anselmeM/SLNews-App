@@ -56,6 +56,9 @@ class SlNewsApiSource implements FeedSource {
   /// Path of the versioned, metadata-only route.
   static const String versionedPath = '/v1/news';
 
+  /// Public read-only variant used when the reader has no session token.
+  static const String publicVersionedPath = '/v1/public/news';
+
   /// Path of the legacy raw-row route.
   static const String legacyPath = '/api/news';
 
@@ -103,6 +106,23 @@ class SlNewsApiSource implements FeedSource {
           query: query,
         );
       } on ApiException catch (error) {
+        if (error.statusCode == 401 || error.statusCode == 403) {
+          try {
+            return await _fetchVersioned(
+              page: page,
+              pageSize: size,
+              source: source,
+              query: query,
+              path: publicVersionedPath,
+            );
+          } catch (publicError) {
+            AppLog.debug(
+              'SlNewsApiSource(${config.id}): public news fallback failed '
+              '($publicError)',
+            );
+            return SlNewsApiPage.empty(page: page, pageSize: size);
+          }
+        }
         if (error.statusCode != 404) {
           AppLog.debug(
             'SlNewsApiSource(${config.id}): /v1/news failed ($error)',
@@ -204,9 +224,10 @@ class SlNewsApiSource implements FeedSource {
     required int pageSize,
     String? source,
     String? query,
+    String path = versionedPath,
   }) async {
     final ApiResponse response = await _api.get(
-      '${_base()}$versionedPath',
+      '${_base()}$path',
       query: <String, dynamic>{
         'page': page,
         'page_size': pageSize,

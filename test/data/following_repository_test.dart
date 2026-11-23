@@ -53,6 +53,54 @@ void main() {
       expect(snapshot.followedIds, isEmpty);
     });
 
+    test('adopts anonymous follows once when the reader signs in', () async {
+      String account = 'anonymous';
+      final DefaultFollowingRepository repository = DefaultFollowingRepository(
+        preferences: InMemoryPreferencesStore(),
+        seedLoader: InMemorySeedLoader(catalogue()),
+        accountId: () => account,
+      );
+      await repository.ready();
+      final FollowTarget lakers = target(
+        'team:lal',
+        label: 'Los Angeles Lakers',
+      );
+      await repository.follow(lakers);
+
+      account = 'user-a';
+      expect(repository.isFollowed('team:lal'), isTrue);
+
+      account = 'anonymous';
+      expect(repository.isFollowed('team:lal'), isFalse);
+    });
+
+    test('follows are isolated per account and from anonymous state', () async {
+      String account = 'user-a';
+      final DefaultFollowingRepository repository = DefaultFollowingRepository(
+        preferences: InMemoryPreferencesStore(),
+        seedLoader: InMemorySeedLoader(catalogue()),
+        accountId: () => account,
+      );
+      await repository.ready();
+      final FollowTarget lakers = target(
+        'team:lal',
+        label: 'Los Angeles Lakers',
+      );
+
+      await repository.follow(lakers);
+      expect(repository.isFollowed('team:lal'), isTrue);
+
+      account = 'user-b';
+      expect(repository.isFollowed('team:lal'), isFalse);
+      expect(repository.load().followed, isEmpty);
+
+      account = 'user-a';
+      expect(repository.isFollowed('team:lal'), isTrue);
+
+      account = 'anonymous';
+      expect(repository.isFollowed('team:lal'), isFalse);
+    });
+
     test(
       'follow, unfollow and toggle persist through the preferences store',
       () async {
@@ -70,10 +118,9 @@ void main() {
 
         await repository.follow(lakers);
         expect(repository.isFollowed('team:lal'), isTrue);
-        expect(
-          preferences.stringSet(DefaultFollowingRepository.followedIdsKey),
-          <String>{'team:lal'},
-        );
+        expect(preferences.stringSet('following.ids.anonymous'), <String>{
+          'team:lal',
+        });
         expect(repository.load().followed.single.id, 'team:lal');
         expect(repository.load().isFollowed('team:lal'), isTrue);
 
@@ -83,10 +130,7 @@ void main() {
 
         await repository.unfollow('team:lal');
         expect(repository.isFollowed('team:lal'), isFalse);
-        expect(
-          preferences.stringSet(DefaultFollowingRepository.followedIdsKey),
-          isEmpty,
-        );
+        expect(preferences.stringSet('following.ids.anonymous'), isEmpty);
 
         await repository.toggle(lakers);
         expect(repository.isFollowed('team:lal'), isTrue);
