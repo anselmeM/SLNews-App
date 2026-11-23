@@ -110,6 +110,7 @@ void main() {
     FakeFollowingRepository? following,
     FakeAdRepository? ads,
     double textScale = 1,
+    ThemeMode themeMode = ThemeMode.light,
   }) {
     final GoRouter router = GoRouter(
       initialLocation: '/sports',
@@ -152,6 +153,8 @@ void main() {
       ],
       child: MaterialApp.router(
         theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode,
         routerConfig: router,
         builder: (BuildContext context, Widget? child) => MediaQuery(
           data: MediaQuery.of(context)
@@ -168,6 +171,23 @@ void main() {
     await tester.pump();
     await tester.pump();
   }
+
+  testWidgets('sports page follows the reader theme', (
+    WidgetTester tester,
+  ) async {
+    for (final ThemeMode mode in <ThemeMode>[ThemeMode.light, ThemeMode.dark]) {
+      await tester.pumpWidget(buildApp(themeMode: mode));
+      await settle(tester);
+      final BuildContext pageContext = tester.element(
+        find.text('Sports').first,
+      );
+      expect(
+        Theme.of(pageContext).brightness,
+        mode == ThemeMode.dark ? Brightness.dark : Brightness.light,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
 
   testWidgets(
     'scoreboard strip renders team codes, scores and the FINAL label',

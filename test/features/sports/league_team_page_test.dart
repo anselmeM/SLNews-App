@@ -76,6 +76,36 @@ void main() {
     ];
   }
 
+  testWidgets('league page follows the reader theme', (
+    WidgetTester tester,
+  ) async {
+    for (final ThemeMode mode in <ThemeMode>[ThemeMode.light, ThemeMode.dark]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: overrides(leagueStories: <Article>[story]),
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: mode,
+            home: const LeaguePage(
+              leagueId: 'spl',
+              leagueLabel: 'Sierra Leone Premier League',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final BuildContext pageContext = tester.element(
+        find.text('Sierra Leone Premier League').first,
+      );
+      expect(
+        Theme.of(pageContext).brightness,
+        mode == ThemeMode.dark ? Brightness.dark : Brightness.light,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
+
   testWidgets('league page shows fixtures and stories', (
     WidgetTester tester,
   ) async {
