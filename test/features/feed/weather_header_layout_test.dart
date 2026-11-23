@@ -28,10 +28,7 @@ void main() {
                   alignment: Alignment.topLeft,
                   child: SizedBox(
                     width: 320,
-                    child: WeatherAlertHeader(
-                      location: SlLocations.all[3],
-                      hasBreaking: true,
-                    ),
+                    child: WeatherAlertHeader(location: SlLocations.all[3]),
                   ),
                 ),
               ),
@@ -42,7 +39,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('BREAKING'), findsOneWidget);
+      expect(find.text('BREAKING'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }

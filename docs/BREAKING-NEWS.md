@@ -23,6 +23,13 @@ Promotion requires a score of at least **5** and one of:
 - at least one impact term worth **3+**, or
 - an urgency term in a hard-news category.
 
+## Displayed as an alert, not a weather label
+
+The feed exposes at most one `breakingAlert` — the newest qualifying story from
+the last **6 hours**. It appears in its own dismissible row below the weather,
+opens the story on tap, and disappears when the story goes stale. The weather
+row itself no longer renders a `BREAKING` chip.
+
 ## Applied to
 
 - RSS parsing (`rss_feed_source.dart`)
