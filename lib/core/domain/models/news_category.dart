@@ -67,7 +67,6 @@ abstract final class NewsCategories {
     NewsCategory(id: 'health', label: 'Health', icon: 'health'),
     NewsCategory(id: 'tech', label: 'Tech', icon: 'tech'),
     NewsCategory(id: 'education', label: 'Education', icon: 'education'),
-    NewsCategory(id: 'mining', label: 'Mining', icon: 'mining'),
     NewsCategory(id: 'world', label: 'World', icon: 'world'),
   ];
 

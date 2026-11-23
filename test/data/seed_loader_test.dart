@@ -45,7 +45,7 @@ void main() {
   test('parses every bundled asset', () async {
     final SeedData data = await const AssetSeedLoader().load();
 
-    expect(data.articles.length, inInclusiveRange(20, 30));
+    expect(data.articles.length, inInclusiveRange(24, 40));
     expect(
       data.articles.map((Article a) => a.id).toSet(),
       hasLength(data.articles.length),

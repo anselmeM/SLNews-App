@@ -89,9 +89,12 @@ void main() {
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
 
+    // Asset loading uses real async I/O; testWidgets runs in a fake-async zone,
+    // so load the frozen seed through runAsync before bootstrap.
+    final SeedLoader frozenSeed = (await tester.runAsync(_frozenSeedLoader))!;
     final AppBootstrap bootstrap = await AppBootstrap.create(
       allowPersistence: false,
-      seedLoaderOverride: await _frozenSeedLoader(),
+      seedLoaderOverride: frozenSeed,
     );
     container = bootstrap.container;
     addTearDown(container.dispose);
