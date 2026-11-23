@@ -177,7 +177,7 @@ void main() {
     expect(find.text('La Liga'), findsNothing);
   });
 
-  testWidgets('a member league opens its own league page', (
+  testWidgets('a member league opens its team list', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(390, 2400);
@@ -195,6 +195,14 @@ void main() {
           path: '/sports/league/:id',
           builder: (BuildContext context, GoRouterState state) =>
               Scaffold(body: Text('league:${state.pathParameters['id']}')),
+        ),
+        GoRoute(
+          path: '/following/sports/:leagueId',
+          builder: (BuildContext context, GoRouterState state) =>
+              ManageLeagueTeamsPage(
+                leagueId: state.pathParameters['leagueId'] ?? '',
+                label: state.extra is String ? state.extra! as String : null,
+              ),
         ),
       ],
     );
@@ -217,7 +225,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('league:serie-a'), findsOneWidget);
+    expect(find.byType(ManageLeagueTeamsPage), findsOneWidget);
+    expect(find.text('Pick a league to choose its teams.'), findsNothing);
   });
 
   testWidgets('a league chevron drills into its teams', (

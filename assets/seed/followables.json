@@ -295,5 +295,2426 @@
     "imageUrl": null,
     "emojiOrGlyph": "newspaper",
     "isPopular": false
+  },
+  {
+    "id": "team:atl",
+    "kind": "team",
+    "label": "Atlanta Hawks",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-bos",
+    "kind": "team",
+    "label": "Boston Celtics",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-bkn",
+    "kind": "team",
+    "label": "Brooklyn Nets",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-cha",
+    "kind": "team",
+    "label": "Charlotte Hornets",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-chi",
+    "kind": "team",
+    "label": "Chicago Bulls",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-cle",
+    "kind": "team",
+    "label": "Cleveland Cavaliers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-dal",
+    "kind": "team",
+    "label": "Dallas Mavericks",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:den",
+    "kind": "team",
+    "label": "Denver Nuggets",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-det",
+    "kind": "team",
+    "label": "Detroit Pistons",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:gsw",
+    "kind": "team",
+    "label": "Golden State Warriors",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-hou",
+    "kind": "team",
+    "label": "Houston Rockets",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-ind",
+    "kind": "team",
+    "label": "Indiana Pacers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-lac",
+    "kind": "team",
+    "label": "LA Clippers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-mem",
+    "kind": "team",
+    "label": "Memphis Grizzlies",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-mia",
+    "kind": "team",
+    "label": "Miami Heat",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-mil",
+    "kind": "team",
+    "label": "Milwaukee Bucks",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-min",
+    "kind": "team",
+    "label": "Minnesota Timberwolves",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-nop",
+    "kind": "team",
+    "label": "New Orleans Pelicans",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-nyk",
+    "kind": "team",
+    "label": "New York Knicks",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-okc",
+    "kind": "team",
+    "label": "Oklahoma City Thunder",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-orl",
+    "kind": "team",
+    "label": "Orlando Magic",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-phi",
+    "kind": "team",
+    "label": "Philadelphia 76ers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-phx",
+    "kind": "team",
+    "label": "Phoenix Suns",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-por",
+    "kind": "team",
+    "label": "Portland Trail Blazers",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-sac",
+    "kind": "team",
+    "label": "Sacramento Kings",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-sas",
+    "kind": "team",
+    "label": "San Antonio Spurs",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-tor",
+    "kind": "team",
+    "label": "Toronto Raptors",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-uta",
+    "kind": "team",
+    "label": "Utah Jazz",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nba-was",
+    "kind": "team",
+    "label": "Washington Wizards",
+    "subtitle": "Basketball · NBA",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_basketball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-ari",
+    "kind": "team",
+    "label": "Arizona Cardinals",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-atl",
+    "kind": "team",
+    "label": "Atlanta Falcons",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-bal",
+    "kind": "team",
+    "label": "Baltimore Ravens",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-buf",
+    "kind": "team",
+    "label": "Buffalo Bills",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-car",
+    "kind": "team",
+    "label": "Carolina Panthers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-chi",
+    "kind": "team",
+    "label": "Chicago Bears",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-cin",
+    "kind": "team",
+    "label": "Cincinnati Bengals",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-cle",
+    "kind": "team",
+    "label": "Cleveland Browns",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-dal",
+    "kind": "team",
+    "label": "Dallas Cowboys",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-den",
+    "kind": "team",
+    "label": "Denver Broncos",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-det",
+    "kind": "team",
+    "label": "Detroit Lions",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-gb",
+    "kind": "team",
+    "label": "Green Bay Packers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-hou",
+    "kind": "team",
+    "label": "Houston Texans",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-ind",
+    "kind": "team",
+    "label": "Indianapolis Colts",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-jax",
+    "kind": "team",
+    "label": "Jacksonville Jaguars",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-kc",
+    "kind": "team",
+    "label": "Kansas City Chiefs",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-lv",
+    "kind": "team",
+    "label": "Las Vegas Raiders",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-lac",
+    "kind": "team",
+    "label": "Los Angeles Chargers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-lar",
+    "kind": "team",
+    "label": "Los Angeles Rams",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-mia",
+    "kind": "team",
+    "label": "Miami Dolphins",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-min",
+    "kind": "team",
+    "label": "Minnesota Vikings",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-ne",
+    "kind": "team",
+    "label": "New England Patriots",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-no",
+    "kind": "team",
+    "label": "New Orleans Saints",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-nyg",
+    "kind": "team",
+    "label": "New York Giants",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-nyj",
+    "kind": "team",
+    "label": "New York Jets",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-phi",
+    "kind": "team",
+    "label": "Philadelphia Eagles",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-pit",
+    "kind": "team",
+    "label": "Pittsburgh Steelers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-sf",
+    "kind": "team",
+    "label": "San Francisco 49ers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-sea",
+    "kind": "team",
+    "label": "Seattle Seahawks",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-tb",
+    "kind": "team",
+    "label": "Tampa Bay Buccaneers",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-ten",
+    "kind": "team",
+    "label": "Tennessee Titans",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:nfl-was",
+    "kind": "team",
+    "label": "Washington Commanders",
+    "subtitle": "American Football · NFL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_football",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-ari",
+    "kind": "team",
+    "label": "Arizona Diamondbacks",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-ath",
+    "kind": "team",
+    "label": "Athletics",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-atl",
+    "kind": "team",
+    "label": "Atlanta Braves",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-bal",
+    "kind": "team",
+    "label": "Baltimore Orioles",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-bos",
+    "kind": "team",
+    "label": "Boston Red Sox",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-chc",
+    "kind": "team",
+    "label": "Chicago Cubs",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-cws",
+    "kind": "team",
+    "label": "Chicago White Sox",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-cin",
+    "kind": "team",
+    "label": "Cincinnati Reds",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-cle",
+    "kind": "team",
+    "label": "Cleveland Guardians",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-col",
+    "kind": "team",
+    "label": "Colorado Rockies",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-det",
+    "kind": "team",
+    "label": "Detroit Tigers",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-hou",
+    "kind": "team",
+    "label": "Houston Astros",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-kc",
+    "kind": "team",
+    "label": "Kansas City Royals",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-laa",
+    "kind": "team",
+    "label": "Los Angeles Angels",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-lad",
+    "kind": "team",
+    "label": "Los Angeles Dodgers",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-mia",
+    "kind": "team",
+    "label": "Miami Marlins",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-mil",
+    "kind": "team",
+    "label": "Milwaukee Brewers",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-min",
+    "kind": "team",
+    "label": "Minnesota Twins",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-nym",
+    "kind": "team",
+    "label": "New York Mets",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-nyy",
+    "kind": "team",
+    "label": "New York Yankees",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-phi",
+    "kind": "team",
+    "label": "Philadelphia Phillies",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-pit",
+    "kind": "team",
+    "label": "Pittsburgh Pirates",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-sd",
+    "kind": "team",
+    "label": "San Diego Padres",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-sf",
+    "kind": "team",
+    "label": "San Francisco Giants",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-sea",
+    "kind": "team",
+    "label": "Seattle Mariners",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-stl",
+    "kind": "team",
+    "label": "St. Louis Cardinals",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-tb",
+    "kind": "team",
+    "label": "Tampa Bay Rays",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-tex",
+    "kind": "team",
+    "label": "Texas Rangers",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-tor",
+    "kind": "team",
+    "label": "Toronto Blue Jays",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:mlb-wsh",
+    "kind": "team",
+    "label": "Washington Nationals",
+    "subtitle": "Baseball · MLB",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_baseball",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-ana",
+    "kind": "team",
+    "label": "Anaheim Ducks",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-bos",
+    "kind": "team",
+    "label": "Boston Bruins",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-buf",
+    "kind": "team",
+    "label": "Buffalo Sabres",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-cgy",
+    "kind": "team",
+    "label": "Calgary Flames",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-car",
+    "kind": "team",
+    "label": "Carolina Hurricanes",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-chi",
+    "kind": "team",
+    "label": "Chicago Blackhawks",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-col",
+    "kind": "team",
+    "label": "Colorado Avalanche",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-cbj",
+    "kind": "team",
+    "label": "Columbus Blue Jackets",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-dal",
+    "kind": "team",
+    "label": "Dallas Stars",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-det",
+    "kind": "team",
+    "label": "Detroit Red Wings",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-edm",
+    "kind": "team",
+    "label": "Edmonton Oilers",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-fla",
+    "kind": "team",
+    "label": "Florida Panthers",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-lak",
+    "kind": "team",
+    "label": "Los Angeles Kings",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-min",
+    "kind": "team",
+    "label": "Minnesota Wild",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-mtl",
+    "kind": "team",
+    "label": "Montreal Canadiens",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-nsh",
+    "kind": "team",
+    "label": "Nashville Predators",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-njd",
+    "kind": "team",
+    "label": "New Jersey Devils",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-nyi",
+    "kind": "team",
+    "label": "New York Islanders",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-nyr",
+    "kind": "team",
+    "label": "New York Rangers",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-ott",
+    "kind": "team",
+    "label": "Ottawa Senators",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-phi",
+    "kind": "team",
+    "label": "Philadelphia Flyers",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-pit",
+    "kind": "team",
+    "label": "Pittsburgh Penguins",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-sjs",
+    "kind": "team",
+    "label": "San Jose Sharks",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-sea",
+    "kind": "team",
+    "label": "Seattle Kraken",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-stl",
+    "kind": "team",
+    "label": "St. Louis Blues",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-tbl",
+    "kind": "team",
+    "label": "Tampa Bay Lightning",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-tor",
+    "kind": "team",
+    "label": "Toronto Maple Leafs",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-uta",
+    "kind": "team",
+    "label": "Utah Mammoth",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-van",
+    "kind": "team",
+    "label": "Vancouver Canucks",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-vgk",
+    "kind": "team",
+    "label": "Vegas Golden Knights",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-wsh",
+    "kind": "team",
+    "label": "Washington Capitals",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:nhl-wpg",
+    "kind": "team",
+    "label": "Winnipeg Jets",
+    "subtitle": "Ice Hockey · NHL",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_hockey",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-aston-villa",
+    "kind": "team",
+    "label": "Aston Villa",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-bournemouth",
+    "kind": "team",
+    "label": "AFC Bournemouth",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-brentford",
+    "kind": "team",
+    "label": "Brentford",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-brighton",
+    "kind": "team",
+    "label": "Brighton & Hove Albion",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-burnley",
+    "kind": "team",
+    "label": "Burnley",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-chelsea",
+    "kind": "team",
+    "label": "Chelsea",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-crystal-palace",
+    "kind": "team",
+    "label": "Crystal Palace",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-everton",
+    "kind": "team",
+    "label": "Everton",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-fulham",
+    "kind": "team",
+    "label": "Fulham",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-leeds",
+    "kind": "team",
+    "label": "Leeds United",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-man-city",
+    "kind": "team",
+    "label": "Manchester City",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-man-united",
+    "kind": "team",
+    "label": "Manchester United",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-newcastle",
+    "kind": "team",
+    "label": "Newcastle United",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-nottingham",
+    "kind": "team",
+    "label": "Nottingham Forest",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-sunderland",
+    "kind": "team",
+    "label": "Sunderland",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-tottenham",
+    "kind": "team",
+    "label": "Tottenham Hotspur",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-west-ham",
+    "kind": "team",
+    "label": "West Ham United",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:epl-wolves",
+    "kind": "team",
+    "label": "Wolverhampton Wanderers",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-alaves",
+    "kind": "team",
+    "label": "Deportivo Alavés",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-athletic",
+    "kind": "team",
+    "label": "Athletic Club",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-atletico",
+    "kind": "team",
+    "label": "Atlético Madrid",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-barcelona",
+    "kind": "team",
+    "label": "Barcelona",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-celta",
+    "kind": "team",
+    "label": "Celta Vigo",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-elche",
+    "kind": "team",
+    "label": "Elche",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-espanyol",
+    "kind": "team",
+    "label": "Espanyol",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-getafe",
+    "kind": "team",
+    "label": "Getafe",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-girona",
+    "kind": "team",
+    "label": "Girona",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-levante",
+    "kind": "team",
+    "label": "Levante",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-mallorca",
+    "kind": "team",
+    "label": "Mallorca",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-osasuna",
+    "kind": "team",
+    "label": "Osasuna",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-rayo",
+    "kind": "team",
+    "label": "Rayo Vallecano",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-betis",
+    "kind": "team",
+    "label": "Real Betis",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-real-madrid",
+    "kind": "team",
+    "label": "Real Madrid",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-oviedo",
+    "kind": "team",
+    "label": "Real Oviedo",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-sociedad",
+    "kind": "team",
+    "label": "Real Sociedad",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-sevilla",
+    "kind": "team",
+    "label": "Sevilla",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-valencia",
+    "kind": "team",
+    "label": "Valencia",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:laliga-villarreal",
+    "kind": "team",
+    "label": "Villarreal",
+    "subtitle": "Football · La Liga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-atalanta",
+    "kind": "team",
+    "label": "Atalanta",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-bologna",
+    "kind": "team",
+    "label": "Bologna",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-cagliari",
+    "kind": "team",
+    "label": "Cagliari",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-como",
+    "kind": "team",
+    "label": "Como",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-cremonese",
+    "kind": "team",
+    "label": "Cremonese",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-fiorentina",
+    "kind": "team",
+    "label": "Fiorentina",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-genoa",
+    "kind": "team",
+    "label": "Genoa",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-verona",
+    "kind": "team",
+    "label": "Hellas Verona",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-inter",
+    "kind": "team",
+    "label": "Inter Milan",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-juventus",
+    "kind": "team",
+    "label": "Juventus",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-lazio",
+    "kind": "team",
+    "label": "Lazio",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-lecce",
+    "kind": "team",
+    "label": "Lecce",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-milan",
+    "kind": "team",
+    "label": "AC Milan",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-napoli",
+    "kind": "team",
+    "label": "Napoli",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-parma",
+    "kind": "team",
+    "label": "Parma",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-pisa",
+    "kind": "team",
+    "label": "Pisa",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-roma",
+    "kind": "team",
+    "label": "Roma",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-sassuolo",
+    "kind": "team",
+    "label": "Sassuolo",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-torino",
+    "kind": "team",
+    "label": "Torino",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:seriea-udinese",
+    "kind": "team",
+    "label": "Udinese",
+    "subtitle": "Football · Serie A",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-augsburg",
+    "kind": "team",
+    "label": "FC Augsburg",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-leverkusen",
+    "kind": "team",
+    "label": "Bayer Leverkusen",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-bayern",
+    "kind": "team",
+    "label": "Bayern Munich",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-dortmund",
+    "kind": "team",
+    "label": "Borussia Dortmund",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-gladbach",
+    "kind": "team",
+    "label": "Borussia Mönchengladbach",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-frankfurt",
+    "kind": "team",
+    "label": "Eintracht Frankfurt",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-freiburg",
+    "kind": "team",
+    "label": "SC Freiburg",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-hamburg",
+    "kind": "team",
+    "label": "Hamburger SV",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-heidenheim",
+    "kind": "team",
+    "label": "1. FC Heidenheim",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-hoffenheim",
+    "kind": "team",
+    "label": "TSG Hoffenheim",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-koln",
+    "kind": "team",
+    "label": "FC Köln",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-mainz",
+    "kind": "team",
+    "label": "Mainz 05",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-leipzig",
+    "kind": "team",
+    "label": "RB Leipzig",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-stpauli",
+    "kind": "team",
+    "label": "St. Pauli",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-stuttgart",
+    "kind": "team",
+    "label": "VfB Stuttgart",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-union",
+    "kind": "team",
+    "label": "Union Berlin",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-bremen",
+    "kind": "team",
+    "label": "Werder Bremen",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:bundesliga-wolfsburg",
+    "kind": "team",
+    "label": "VfL Wolfsburg",
+    "subtitle": "Football · Bundesliga",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-angers",
+    "kind": "team",
+    "label": "Angers",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-auxerre",
+    "kind": "team",
+    "label": "Auxerre",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-brest",
+    "kind": "team",
+    "label": "Brest",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-lehavre",
+    "kind": "team",
+    "label": "Le Havre",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-lens",
+    "kind": "team",
+    "label": "Lens",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-lille",
+    "kind": "team",
+    "label": "Lille",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-lorient",
+    "kind": "team",
+    "label": "Lorient",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-lyon",
+    "kind": "team",
+    "label": "Lyon",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-marseille",
+    "kind": "team",
+    "label": "Marseille",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-metz",
+    "kind": "team",
+    "label": "Metz",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-monaco",
+    "kind": "team",
+    "label": "Monaco",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-nantes",
+    "kind": "team",
+    "label": "Nantes",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-nice",
+    "kind": "team",
+    "label": "Nice",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-paris-fc",
+    "kind": "team",
+    "label": "Paris FC",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-psg",
+    "kind": "team",
+    "label": "Paris Saint-Germain",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-rennes",
+    "kind": "team",
+    "label": "Rennes",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-strasbourg",
+    "kind": "team",
+    "label": "Strasbourg",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ligue1-toulouse",
+    "kind": "team",
+    "label": "Toulouse",
+    "subtitle": "Football · Ligue 1",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:fc-kallon",
+    "kind": "team",
+    "label": "FC Kallon",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:diamond-stars",
+    "kind": "team",
+    "label": "Diamond Stars",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-wusum-stars",
+    "kind": "team",
+    "label": "Wusum Stars",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-old-edwardians",
+    "kind": "team",
+    "label": "Old Edwardians",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-ports-authority",
+    "kind": "team",
+    "label": "Ports Authority",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-freetown-city",
+    "kind": "team",
+    "label": "Freetown City",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-wilberforce",
+    "kind": "team",
+    "label": "Wilberforce Strikers",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-bai-bureh",
+    "kind": "team",
+    "label": "Bai Bureh Warriors",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-real-republicans",
+    "kind": "team",
+    "label": "Real Republicans",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-anti-drugs",
+    "kind": "team",
+    "label": "Anti Drugs Strikers",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-lamboi",
+    "kind": "team",
+    "label": "Lamboi FC",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-santigie",
+    "kind": "team",
+    "label": "Santigie Bayo",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-johansen",
+    "kind": "team",
+    "label": "FC Johansen",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:spl-central-parade",
+    "kind": "team",
+    "label": "Central Parade",
+    "subtitle": "Football · Sierra Leone Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-arsenal",
+    "kind": "team",
+    "label": "Arsenal",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-liverpool",
+    "kind": "team",
+    "label": "Liverpool",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-man-city",
+    "kind": "team",
+    "label": "Manchester City",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-tottenham",
+    "kind": "team",
+    "label": "Tottenham Hotspur",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-chelsea",
+    "kind": "team",
+    "label": "Chelsea",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-newcastle",
+    "kind": "team",
+    "label": "Newcastle United",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-barcelona",
+    "kind": "team",
+    "label": "Barcelona",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-real-madrid",
+    "kind": "team",
+    "label": "Real Madrid",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-atletico",
+    "kind": "team",
+    "label": "Atlético Madrid",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-athletic",
+    "kind": "team",
+    "label": "Athletic Club",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-villarreal",
+    "kind": "team",
+    "label": "Villarreal",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-napoli",
+    "kind": "team",
+    "label": "Napoli",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-inter",
+    "kind": "team",
+    "label": "Inter Milan",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-atalanta",
+    "kind": "team",
+    "label": "Atalanta",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-juventus",
+    "kind": "team",
+    "label": "Juventus",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-bayern",
+    "kind": "team",
+    "label": "Bayern Munich",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-leverkusen",
+    "kind": "team",
+    "label": "Bayer Leverkusen",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-frankfurt",
+    "kind": "team",
+    "label": "Eintracht Frankfurt",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-dortmund",
+    "kind": "team",
+    "label": "Borussia Dortmund",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-psg",
+    "kind": "team",
+    "label": "Paris Saint-Germain",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-marseille",
+    "kind": "team",
+    "label": "Marseille",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-monaco",
+    "kind": "team",
+    "label": "Monaco",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-psv",
+    "kind": "team",
+    "label": "PSV Eindhoven",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-sporting",
+    "kind": "team",
+    "label": "Sporting CP",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-benfica",
+    "kind": "team",
+    "label": "Benfica",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-brugge",
+    "kind": "team",
+    "label": "Club Brugge",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-union",
+    "kind": "team",
+    "label": "Union Saint-Gilloise",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-galatasaray",
+    "kind": "team",
+    "label": "Galatasaray",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-olympiacos",
+    "kind": "team",
+    "label": "Olympiacos",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-slavia",
+    "kind": "team",
+    "label": "Slavia Prague",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-bodo",
+    "kind": "team",
+    "label": "Bodø/Glimt",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-copenhagen",
+    "kind": "team",
+    "label": "Copenhagen",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-celtic",
+    "kind": "team",
+    "label": "Celtic",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-qarabag",
+    "kind": "team",
+    "label": "Qarabağ",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-kairat",
+    "kind": "team",
+    "label": "Kairat Almaty",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:ucl-pafos",
+    "kind": "team",
+    "label": "Pafos",
+    "subtitle": "Football · UEFA Champions League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:arsenal",
+    "kind": "team",
+    "label": "Arsenal",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
+  },
+  {
+    "id": "team:liverpool",
+    "kind": "team",
+    "label": "Liverpool",
+    "subtitle": "Football · Premier League",
+    "imageUrl": null,
+    "emojiOrGlyph": "sports_soccer",
+    "isPopular": false
   }
 ]
