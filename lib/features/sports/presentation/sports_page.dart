@@ -19,7 +19,6 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/article_tile.dart';
@@ -175,8 +174,8 @@ class SportsPage extends ConsumerWidget {
             ],
           );
 
-    // Samsung Sports is a dark surface even when the shell theme is light.
-    return Theme(data: AppTheme.dark(), child: content);
+    // Follow the reader's theme; the league blocks keep their own dark artwork.
+    return content;
   }
 
   /// Top stories: one full-bleed hero followed by compact story cards.

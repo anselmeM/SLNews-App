@@ -10,7 +10,6 @@ import '../../../core/domain/models/sports_models.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/article_tile.dart';
 import '../../../core/widgets/section_header.dart';
@@ -57,58 +56,47 @@ class LeaguePage extends ConsumerWidget {
     // an empty league stays empty rather than borrowing another competition.
     final AsyncValue<List<Article>> stories = leagueFeed;
 
-    return Theme(
-      data: AppTheme.dark(),
-      // The page paints itself dark whatever the reader's theme is, so every
-      // colour must be read from a context *below* this Theme. Building the
-      // body in a Builder is what guarantees that; using the outer context
-      // mixed dark section headers with light surfaces and made them
-      // illegible in light mode.
-      child: Builder(
-        builder: (BuildContext themed) => Scaffold(
-          backgroundColor: themed.colors.canvas,
-          body: CustomScrollView(
-            slivers: <Widget>[
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: themed.colors.canvas,
-                surfaceTintColor: Colors.transparent,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back',
-                  onPressed: () => themed.pop(),
-                ),
-                title: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: themed.typography.groupTitle,
-                ),
+    // Inherit the reader's theme. Sports league artwork stays dark, but the
+    // page chrome must follow the same light/dark setting as every other tab.
+    return Builder(
+      builder: (BuildContext themed) => Scaffold(
+        backgroundColor: themed.colors.canvas,
+        body: CustomScrollView(
+          slivers: <Widget>[
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: themed.colors.canvas,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back',
+                onPressed: () => themed.pop(),
               ),
-              if (members.isNotEmpty) ...<Widget>[
-                const SliverToBoxAdapter(
-                  child: SectionHeader(title: 'Leagues', compact: true),
-                ),
-                _membersSliver(themed, members),
-              ],
+              title: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: themed.typography.groupTitle,
+              ),
+            ),
+            if (members.isNotEmpty) ...<Widget>[
               const SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Fixtures & results',
-                  compact: true,
-                ),
+                child: SectionHeader(title: 'Leagues', compact: true),
               ),
-              _fixturesSliver(themed, ref, scoreboard, label, fixtureLeagueIds),
-              const SliverToBoxAdapter(
-                child: SectionHeader(title: 'Latest stories', compact: true),
-              ),
-              _storiesSliver(themed, ref, stories),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.xxxl),
-              ),
+              _membersSliver(themed, members),
             ],
-          ),
+            const SliverToBoxAdapter(
+              child: SectionHeader(title: 'Fixtures & results', compact: true),
+            ),
+            _fixturesSliver(themed, ref, scoreboard, label, fixtureLeagueIds),
+            const SliverToBoxAdapter(
+              child: SectionHeader(title: 'Latest stories', compact: true),
+            ),
+            _storiesSliver(themed, ref, stories),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxxl)),
+          ],
         ),
       ),
     );
