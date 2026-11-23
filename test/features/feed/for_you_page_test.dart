@@ -13,6 +13,8 @@ import 'package:slnews_mobile/core/widgets/video_moment_card.dart';
 import 'package:slnews_mobile/features/feed/presentation/for_you_page.dart';
 import 'package:slnews_mobile/features/feed/presentation/widgets/weather_alert_header.dart';
 
+import 'package:slnews_mobile/core/utils/time_ago.dart';
+
 import 'support/fakes.dart';
 import 'support/test_harness.dart';
 
@@ -22,10 +24,13 @@ import 'support/test_harness.dart';
 /// `createAppRouter()` so this test file only depends on the Feed feature (the
 /// shared router also mounts the other agents' tab pages).
 void main() {
+  setUp(() => appNow = () => DateTime(2026, 10, 15, 20));
+  tearDown(() => appNow = () => DateTime.now());
+
   final Article breaking = testArticle(
     id: 'breaking-1',
     title: 'Breaking: bridge closed after storm',
-    publishedAt: DateTime(2026, 10, 15, 6),
+    publishedAt: DateTime(2026, 10, 15, 17),
     isBreaking: true,
   );
   final Article newest = testArticle(
@@ -108,8 +113,11 @@ void main() {
       await pumpForYou(tester);
 
       expect(find.text('Top stories'), findsWidgets);
-      expect(find.text('Breaking: bridge closed after storm'), findsOneWidget);
-      // Once on the hero card, once in the weather/alert header.
+      // Once in the dismissible alert row, once on the hero card.
+      expect(
+        find.text('Breaking: bridge closed after storm'),
+        findsNWidgets(2),
+      );
       expect(find.text('BREAKING'), findsNWidgets(2));
       expect(find.text('29° · Thundery showers'), findsOneWidget);
       // The feed covers Sierra Leone as a whole, so the city-scoped rail is
@@ -178,7 +186,22 @@ void main() {
 
     // The newest story is the second hero page, so it must not also be a tile.
     expect(find.text('Newest story from the capital'), findsOneWidget);
+    // The alert row also renders the headline; it is not a stream duplicate.
+    expect(find.text('Breaking: bridge closed after storm'), findsNWidgets(2));
+  });
+
+  testWidgets('breaking alert row can be dismissed without hiding the hero', (
+    WidgetTester tester,
+  ) async {
+    await pumpForYou(tester);
+
+    expect(find.byTooltip('Dismiss breaking alert'), findsOneWidget);
+    await tester.tap(find.byTooltip('Dismiss breaking alert'));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Dismiss breaking alert'), findsNothing);
     expect(find.text('Breaking: bridge closed after storm'), findsOneWidget);
+    expect(find.text('BREAKING'), findsOneWidget);
   });
 
   testWidgets('tapping a tile pushes the article route', (
@@ -274,10 +297,7 @@ void main() {
               padding: const EdgeInsets.all(8),
               child: SizedBox(
                 width: 304,
-                child: WeatherAlertHeader(
-                  location: SlLocations.fallback,
-                  hasBreaking: true,
-                ),
+                child: WeatherAlertHeader(location: SlLocations.fallback),
               ),
             ),
           ),
@@ -288,7 +308,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Thundery showers'), findsOneWidget);
-    expect(find.text('BREAKING'), findsOneWidget);
+    expect(find.text('BREAKING'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

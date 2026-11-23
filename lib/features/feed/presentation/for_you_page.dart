@@ -30,6 +30,7 @@ import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/store_widget.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
+import 'widgets/breaking_alert_banner.dart';
 import 'widgets/daily_briefing_card.dart';
 import 'widgets/recently_read_rail.dart';
 import '../../markets/presentation/stocks_page.dart';
@@ -47,7 +48,7 @@ part 'feed_slivers.dart';
 /// Tab 1 â€” the personalised "Top stories" feed.
 ///
 /// Reconstructs the reference screen top to bottom: offline banner, weather and
-/// breaking strip on the title row, the paged hero carousel, the local stream,
+/// weather row and dismissible breaking alert, the paged hero carousel, the local stream,
 /// then the reference rails â€” Latest, an ad, Video moments, Picks for you, a
 /// second ad and Your next read. All ordering, merging and de-duplication lives
 /// in [ForYouViewModel] so this file only maps data to slivers.
@@ -116,8 +117,9 @@ class ForYouPage extends ConsumerWidget {
       onRefresh: ref.watch(refreshFeedsProvider),
       slivers: <Widget>[
         if (feed != null) ...<Widget>[
-          // The weather/alert header is its own row above the title: on the
-          // reference screen the title never competes with it for width.
+          // The weather row is its own row above the title: on the reference
+          // screen the title never competes with it for width. Breaking news
+          // is a separate, dismissible row rather than a permanent weather tag.
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -128,13 +130,21 @@ class ForYouPage extends ConsumerWidget {
               ),
               child: WeatherAlertHeader(
                 location: feed.activeLocation,
-                hasBreaking: feed.hasBreaking,
-                // "Show weather forecast" in Settings hides the chip; a
-                // breaking story still gets its tag.
+                // "Show weather forecast" in Settings hides the weather row;
+                // breaking alerts have their own dismissible row below.
                 showWeather: settings.weatherForecastEnabled,
               ),
             ),
           ),
+          if (feed.breakingAlert != null)
+            SliverToBoxAdapter(
+              child: BreakingAlertBanner(
+                key: ValueKey<String>(feed.breakingAlert!.id),
+                article: feed.breakingAlert!,
+                onOpen: () =>
+                    context.push(AppRoutes.articleFor(feed.breakingAlert!.id)),
+              ),
+            ),
           SliverToBoxAdapter(
             child: SlPageTitle(
               title: 'Top stories',

@@ -17,6 +17,7 @@ void main() {
     Set<String> followingIds = const <String>{},
   }) {
     return ForYouViewModel.build(
+      now: DateTime(2026, 10, 15, 20),
       followingIds: followingIds,
       topStories: topStories,
       locationStories: localStories,
@@ -164,7 +165,7 @@ void main() {
         testArticle(id: 'fresh', publishedAt: DateTime(2026, 10, 15, 18)),
         testArticle(
           id: 'alert',
-          publishedAt: DateTime(2026, 10, 15, 6),
+          publishedAt: DateTime(2026, 10, 15, 18),
           isBreaking: true,
         ),
       ],
@@ -173,6 +174,21 @@ void main() {
     expect(feed.hero.first.id, 'alert');
     expect(feed.hasBreaking, isTrue);
     expect(feed.breakingCount, 1);
+  });
+
+  test('a stale breaking row does not keep the header alert alive', () {
+    final ForYouFeed feed = build(
+      topStories: <Article>[
+        testArticle(
+          id: 'stale-alert',
+          publishedAt: DateTime(2026, 10, 13, 6),
+          isBreaking: true,
+        ),
+      ],
+    );
+
+    expect(feed.hasBreaking, isFalse);
+    expect(feed.breakingCount, 0);
   });
 
   test('caps the hero at the limit and streams the rest', () {

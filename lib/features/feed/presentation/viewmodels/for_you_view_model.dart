@@ -5,6 +5,7 @@ import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/utils/time_ago.dart';
 
 /// Immutable, render-ready snapshot of the For You screen.
 ///
@@ -15,6 +16,7 @@ class ForYouFeed {
     required this.hero,
     required this.stream,
     required this.breakingCount,
+    this.breakingAlert,
     required this.activeLocation,
     required this.isOffline,
     required this.lastSyncedAt,
@@ -26,7 +28,13 @@ class ForYouFeed {
   /// Tile stream: the location feed first, then every other story, newest first.
   final List<Article> stream;
 
-  /// Number of breaking stories across the whole merged stream.
+  /// The one fresh breaking story that may be promoted to the alert row.
+  ///
+  /// This is deliberately a single story, not a feed-wide boolean: a stale
+  /// breaking flag must not keep a permanent tag on screen.
+  final Article? breakingAlert;
+
+  /// Number of fresh breaking stories in the merged stream.
   final int breakingCount;
 
   /// Location driving the local section header and the weather chip.
@@ -38,8 +46,8 @@ class ForYouFeed {
   /// True when no story is available from any source.
   bool get isEmpty => hero.isEmpty && stream.isEmpty;
 
-  /// True when at least one merged story is flagged breaking.
-  bool get hasBreaking => breakingCount > 0;
+  /// True when a fresh breaking story should show the alert row.
+  bool get hasBreaking => breakingAlert != null;
 }
 
 /// Derives [ForYouFeed] from the four ingest-backed streams.
@@ -50,6 +58,11 @@ abstract final class ForYouViewModel {
   /// How many stories the hero carousel shows (and how many the tile stream
   /// skips so a story is never rendered twice on one screen).
   static const int heroLimit = 6;
+
+  /// A breaking story is only an *alert* while it is fresh. This also prevents
+  /// an old cached row (or a stale feed flag) from keeping the header tag on
+  /// screen indefinitely.
+  static const Duration breakingWindow = Duration(hours: 6);
 
   /// Stories one followed topic may contribute per feed build.
   ///
@@ -141,6 +154,7 @@ abstract final class ForYouViewModel {
     required NewsLocation activeLocation,
     required bool isOffline,
     DateTime? lastSyncedAt,
+    DateTime? now,
     int heroLimit = ForYouViewModel.heroLimit,
     int sportsOutsideLimit = 2,
     Set<String> followingIds = const <String>{},
@@ -150,6 +164,8 @@ abstract final class ForYouViewModel {
       locationStories: locationStories,
       extraStories: extraStories,
     );
+    final DateTime reference = now ?? appNow();
+    final DateTime breakingCutoff = reference.subtract(breakingWindow);
 
     // The home surfaces are Sierra Leone-first, then international, then a
     // small sports tail. Sports-only feeds are numerous and would otherwise
@@ -194,12 +210,23 @@ abstract final class ForYouViewModel {
       limit: sportsOutsideLimit,
     );
 
+    final List<Article> activeBreaking =
+        merged
+            .where(
+              (Article article) =>
+                  article.isBreaking &&
+                  article.publishedAt.isAfter(breakingCutoff),
+            )
+            .toList(growable: false)
+          ..sort(
+            (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
+          );
+
     return ForYouFeed(
       hero: hero,
       stream: <Article>[...localStream, ...latestStream, ...sportsStream],
-      breakingCount: merged
-          .where((Article article) => article.isBreaking)
-          .length,
+      breakingCount: activeBreaking.length,
+      breakingAlert: activeBreaking.isEmpty ? null : activeBreaking.first,
       activeLocation: activeLocation,
       isOffline: isOffline,
       lastSyncedAt: lastSyncedAt,
