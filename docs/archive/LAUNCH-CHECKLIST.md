@@ -12,10 +12,10 @@ Last updated: 18 October 2026 · repo `SLNews-App` at `b2d113d` · version `1.0.
 
 **Console walkthrough:** [PLAY-CONSOLE-WALKTHROUGH.md](PLAY-CONSOLE-WALKTHROUGH.md) — paste-ready fields in Play's order, plus the 30-minute device QA pass.
 
-Companion documents: [PLAY-STORE-LAUNCH.md](PLAY-STORE-LAUNCH.md) (assessment),
-[store/play/STORE-LISTING.md](../store/play/STORE-LISTING.md) (copy),
-[store/play/DATA-SAFETY.md](../store/play/DATA-SAFETY.md) (console answers),
-[store/play/legal/](../store/play/legal/) (policies).
+Companion documents: [PLAY-STORE-LAUNCH.md](../PLAY-STORE-LAUNCH.md) (assessment),
+[store/play/STORE-LISTING.md](../../store/play/STORE-LISTING.md) (copy),
+[store/play/DATA-SAFETY.md](../../store/play/DATA-SAFETY.md) (console answers),
+[store/play/legal/](../../store/play/legal/) (policies).
 
 Domain and mailboxes are **deferred**. Their impact is limited to the last mile: Play
 needs a *reachable* privacy URL and contact address, which the live Vercel host and a
@@ -72,7 +72,7 @@ temporary mailbox cover. Everything else on this list is independent of the doma
       Project `firstmiledevs/slnews-mobile` created, DSN in the CI secret, a direct event
       accepted (HTTP 200), and `/privacy` + Data-safety updated for diagnostics. Remaining
       human checks: disable IP storage, set a rate limit, and tap "Send test exception" on
-      the verification build. *Owner: both.* See [OBSERVABILITY.md](OBSERVABILITY.md).
+      the verification build. *Owner: both.* See [OBSERVABILITY.md](../OBSERVABILITY.md).
 - [x] **7. Version bump for the store build.** `1.0.0+1` → `1.0.0+2` via
       `scripts/bump_version.ps1`. *Owner: me.*
 - [x] **8. Rebuild the AAB after 1–2.** `SLNews-1.0.0-2.aab` — 62.4 MB, signature verified,

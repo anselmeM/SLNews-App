@@ -16,7 +16,7 @@ Final art must come from a real phone running the build under review:
    `tools/generate_store_assets.py`, which recreates `phone-*.png` here.
 
 Full details and the per-screen checklist:
-[`docs/STORE-SCREENSHOTS.md`](../../docs/STORE-SCREENSHOTS.md).
+[`docs/STORE-SCREENSHOTS.md`](../../../docs/STORE-SCREENSHOTS.md).
 
 Until that has been done, the listing has **no uploadable screenshots** — this
 directory is intentionally empty. Do not substitute the headless harness output:

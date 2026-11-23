@@ -268,7 +268,7 @@ Scraper:  npm run typecheck -> pass
 **Quick-win commits:** app `f74ce64` (AppLog + report) and `8d72f80`
 (functional fixes); web `d678381` / PR #143 (`noStoreJson` extraction);
 scraper/deploy baseline at `36efcc0`. Code 53 artifacts carry the logging
-cleanup. See `PRODUCTION-AUDIT-2026-11-13.md` for the functional remediation
+cleanup. See `archive/PRODUCTION-AUDIT-2026-11-13.md` for the functional remediation
 history.
 
 ---

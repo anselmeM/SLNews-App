@@ -1,6 +1,6 @@
 # Getting SLNews to the Play Store
 
-**Execution checklist:** [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — the ordered, owner-tagged gates to work through before upload and production.
+**Execution checklist:** [archived launch checklist](archive/LAUNCH-CHECKLIST.md) — the ordered, owner-tagged gates to work through before upload and production.
 
 Assessment date: 18 October 2026 · repo `SLNews-App` at `7918fe1` · app version
 `1.0.0+1` · package `com.slnews.mobile`.
@@ -11,7 +11,7 @@ Assessment date: 18 October 2026 · repo `SLNews-App` at `7918fe1` · app versio
 > terms / account-deletion screens shipped, account-scoped sync shipped, and a signed
 > code-61 AAB was built and verified. The readiness percentages below are the October
 > figures, not current ones. For anything actionable use
-> [PLAY-RELEASE-CHECKLIST-1.0.0+61.md](PLAY-RELEASE-CHECKLIST-1.0.0+61.md).
+> [archived code-61 release checklist](archive/PLAY-RELEASE-CHECKLIST-1.0.0+61.md).
 
 **Short answer: the app is code-launchable, but it is not submission-ready.** About
 5–7 working days of engineering (most of which I can do) plus owner decisions on
