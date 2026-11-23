@@ -84,6 +84,8 @@ void main() {
           .toSet();
       expect(ids.length, NewsCategories.all.length);
       expect(ids, containsAll(<String>['top', 'politics', 'business']));
+      // Mining remains an article topic but is no longer a newspaper tab.
+      expect(ids, isNot(contains('mining')));
     });
 
     test('falls back to the first category for an unknown id', () {

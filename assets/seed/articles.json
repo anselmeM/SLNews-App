@@ -754,5 +754,222 @@
     "isLive": false,
     "publishedMinutesAgo": 470,
     "readingMinutes": 3
+  },
+  {
+    "id": "art-education-teacher-intake",
+    "title": "Teacher training colleges expand intake in Freetown and Makeni",
+    "summary": "Two teacher training colleges will admit a larger cohort next year as the ministry tries to close staffing gaps in rural schools.",
+    "bodyHtml": "<p>Two teacher training colleges are expanding their intake for the next academic year, part of a push to place more qualified teachers in rural schools.</p><p>The expansion covers primary and junior secondary teaching courses in Freetown and Makeni. Education officials say the additional places will be targeted at applicants willing to serve in underserved districts.</p><h2>Where the places are going</h2><p>Bursaries will be available for a portion of the new places, with priority for applicants from Koinadugu, Pujehun and Karene.</p><p>Teacher unions welcomed the move but said classroom space and teaching practice placements must expand at the same pace as enrolment.</p>",
+    "author": "Isatu Bangura",
+    "imageUrl": "https://picsum.photos/seed/teacher-college/1200/720",
+    "imageCaption": "Teacher training students in a classroom.",
+    "imageCredit": "Sierraloaded",
+    "sourceUrl": "https://sierraloaded.sl/2026/11/teacher-training-intake",
+    "publisher": {
+      "id": "sierraloaded",
+      "name": "Sierraloaded",
+      "wordmark": "SIERRA LOADED",
+      "logoUrl": null,
+      "websiteUrl": "https://sierraloaded.sl",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "education",
+    "tags": [
+      "education",
+      "teachers",
+      "training",
+      "schools"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 150,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-education-waterloo-school",
+    "title": "New secondary school opens in Waterloo",
+    "summary": "A new secondary school in Waterloo has opened with space for more than 600 pupils, easing pressure on overcrowded classrooms.",
+    "bodyHtml": "<p>A new secondary school has opened in Waterloo, with space for more than 600 pupils and a science laboratory that will be shared with nearby schools.</p><p>The school was built to ease pressure on three overcrowded campuses in the area. Classes began this week for the first cohort of senior secondary pupils.</p><h2>Community support</h2><p>Local traders and a parents' association contributed furniture and books. The school is still recruiting additional science and mathematics teachers.</p><p>District education officials said they will monitor attendance and classroom sizes through the first term.</p>",
+    "author": "Aminata Sesay",
+    "imageUrl": "https://picsum.photos/seed/waterloo-school/1200/720",
+    "imageCaption": "The new school building in Waterloo.",
+    "imageCredit": "The Calabash",
+    "sourceUrl": "https://thecalabashnewspaper.com/2026/11/waterloo-secondary-school",
+    "publisher": {
+      "id": "thecalabash",
+      "name": "The Calabash",
+      "wordmark": "CALABASH",
+      "logoUrl": null,
+      "websiteUrl": "https://thecalabashnewspaper.com",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "education",
+    "tags": [
+      "education",
+      "schools",
+      "waterloo",
+      "students"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 330,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-education-girls-completion",
+    "title": "More girls complete senior secondary, exam data shows",
+    "summary": "The share of girls completing senior secondary school has risen, although gaps remain in rural districts.",
+    "bodyHtml": "<p>The share of girls completing senior secondary school has risen in the latest exam cohort, according to figures released by the examinations council.</p><p>Officials said targeted support for girls in science subjects and better transport support helped, but completion rates in some rural districts still lag behind the national average.</p><h2>What changed</h2><p>Several districts expanded school feeding and provided extra classes for candidates at risk of dropping out. The council says it will publish district-level results next month.</p><p>Education groups called for continued support for girls returning to school after pregnancy and for better data on transition to university and vocational training.</p>",
+    "author": "Mariama Turay",
+    "imageUrl": "https://picsum.photos/seed/girls-education/1200/720",
+    "imageCaption": "Senior secondary students in Freetown.",
+    "imageCredit": "Cocorioko",
+    "sourceUrl": "https://cocorioko.net/2026/11/girls-completion-rise",
+    "publisher": {
+      "id": "cocorioko",
+      "name": "Cocorioko",
+      "wordmark": "COCORIOKO",
+      "logoUrl": null,
+      "websiteUrl": "https://cocorioko.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "education",
+    "tags": [
+      "education",
+      "girls",
+      "exams",
+      "schools"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 560,
+    "readingMinutes": 4
+  },
+  {
+    "id": "art-music-live-night",
+    "title": "Freetown venue launches weekly live music night",
+    "summary": "A new weekly live music night will feature Krio, Temne and Mende-language acts in the centre of Freetown.",
+    "bodyHtml": "<p>A Freetown venue is launching a weekly live music night, with a rotating lineup of local bands and solo artists.</p><p>The first programme features a Krio highlife group, a Temne-language singer and a Mende afro-fusion band. Organisers say the venue has been set up to keep ticket prices accessible to students.</p><h2>A platform for local acts</h2><p>Musicians said regular paid gigs are still scarce in the capital, and a weekly slot could help bands build a following and sell recorded music.</p><p>The venue is working with a local sound engineer to record selected performances for a compilation later this year.</p>",
+    "author": "Ibrahim Conteh",
+    "imageUrl": "https://picsum.photos/seed/live-music-freetown/1200/720",
+    "imageCaption": "Musicians rehearsing in Freetown.",
+    "imageCredit": "Sierraloaded",
+    "sourceUrl": "https://sierraloaded.sl/2026/11/weekly-live-music-night",
+    "publisher": {
+      "id": "sierraloaded",
+      "name": "Sierraloaded",
+      "wordmark": "SIERRA LOADED",
+      "logoUrl": null,
+      "websiteUrl": "https://sierraloaded.sl",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "music",
+    "tags": [
+      "music",
+      "concert",
+      "freetown",
+      "artists"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 220,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-music-distribution-deal",
+    "title": "Salone artist signs international distribution deal",
+    "summary": "A Sierra Leonean artist has signed a distribution deal that will put a new album on major streaming platforms.",
+    "bodyHtml": "<p>A Sierra Leonean artist has signed a distribution deal that will place a new album on major streaming platforms and in selected record shops abroad.</p><p>The deal covers worldwide digital distribution and a small vinyl run. The artist retains ownership of the master recordings, according to a summary of the agreement released this week.</p><h2>What it means for the scene</h2><p>Producers said the agreement could encourage more local artists to register their work properly and keep documentation of their rights.</p><p>The album is expected in the first quarter of next year, with a launch concert planned in Freetown.</p>",
+    "author": "Fatmata Koroma",
+    "imageUrl": "https://picsum.photos/seed/artist-distribution/1200/720",
+    "imageCaption": "Recording session in Freetown.",
+    "imageCredit": "The Calabash",
+    "sourceUrl": "https://thecalabashnewspaper.com/2026/11/salone-artist-distribution",
+    "publisher": {
+      "id": "thecalabash",
+      "name": "The Calabash",
+      "wordmark": "CALABASH",
+      "logoUrl": null,
+      "websiteUrl": "https://thecalabashnewspaper.com",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "music",
+    "tags": [
+      "music",
+      "album",
+      "distribution",
+      "artists"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 500,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-cars-electric-motorcycles",
+    "title": "Electric motorcycle trial begins in Freetown",
+    "summary": "A pilot scheme is putting electric motorcycles on Freetown roads to test charging, cost and reliability for commercial riders.",
+    "bodyHtml": "<p>A pilot scheme has put a small fleet of electric motorcycles on Freetown roads, targeting commercial riders who cover long distances every day.</p><p>The trial will test battery range, charging times and maintenance costs over three months. Riders will swap depleted batteries at two charging points in the city.</p><h2>Charging and costs</h2><p>Operators say the main test is whether battery swaps are faster and cheaper than repeated fuel stops. The scheme includes training for riders and a maintenance hotline.</p><p>Transport officials said they will review safety and licensing rules if the pilot is expanded.</p>",
+    "author": "Mohamed Kamara",
+    "imageUrl": "https://picsum.photos/seed/electric-motorcycles/1200/720",
+    "imageCaption": "Electric motorcycles on display in Freetown.",
+    "imageCredit": "Standard Times",
+    "sourceUrl": "https://standardtimespress.net/2026/11/electric-motorcycle-trial",
+    "publisher": {
+      "id": "standardtimes",
+      "name": "Standard Times",
+      "wordmark": "STANDARD TIMES",
+      "logoUrl": null,
+      "websiteUrl": "https://standardtimespress.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "cars",
+    "tags": [
+      "vehicles",
+      "electric",
+      "motorcycles",
+      "transport"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 140,
+    "readingMinutes": 3
+  },
+  {
+    "id": "art-cars-waterloo-bus",
+    "title": "New bus route links Waterloo and central Freetown",
+    "summary": "A new bus route will connect Waterloo with the central Freetown terminal during peak hours.",
+    "bodyHtml": "<p>A new bus route linking Waterloo and central Freetown began operating this week, with departures scheduled around morning and evening peaks.</p><p>The service is aimed at commuters who currently change vehicles twice. Operators say the first week will be used to adjust departure times based on demand.</p><h2>Fares and stops</h2><p>Fares are in line with existing routes, and the buses will stop at three intermediate points. Passenger groups asked for clearer timetable displays at the terminal.</p><p>Transport officials said the route will be reviewed after a month before any decision on additional buses.</p>",
+    "author": "Abdul Rahman Jalloh",
+    "imageUrl": "https://picsum.photos/seed/waterloo-bus/1200/720",
+    "imageCaption": "A passenger bus in Freetown.",
+    "imageCredit": "Cocorioko",
+    "sourceUrl": "https://cocorioko.net/2026/11/waterloo-bus-route",
+    "publisher": {
+      "id": "cocorioko",
+      "name": "Cocorioko",
+      "wordmark": "COCORIOKO",
+      "logoUrl": null,
+      "websiteUrl": "https://cocorioko.net",
+      "country": "Sierra Leone",
+      "isWire": false
+    },
+    "categoryId": "cars",
+    "tags": [
+      "transport",
+      "bus",
+      "waterloo",
+      "commuters"
+    ],
+    "isBreaking": false,
+    "isLive": false,
+    "publishedMinutesAgo": 380,
+    "readingMinutes": 3
   }
 ]
