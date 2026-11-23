@@ -40,12 +40,55 @@ void main() {
       expect(repository.bookmarkedIds, <String>{'art-2'});
     });
 
+    test('keeps reader state separate per account and anonymous', () async {
+      String account = 'user-a';
+      final DefaultUserStateRepository scoped = DefaultUserStateRepository(
+        preferences: preferences,
+        accountId: () => account,
+      );
+
+      await scoped.toggleBookmark('a-story');
+      await scoped.toggleLike('a-liked');
+      expect(scoped.bookmarkedIds, <String>{'a-story'});
+      expect(scoped.likedIds, <String>{'a-liked'});
+
+      account = 'user-b';
+      expect(scoped.bookmarkedIds, isEmpty);
+      expect(scoped.likedIds, isEmpty);
+      await scoped.toggleBookmark('b-story');
+
+      account = 'user-a';
+      expect(scoped.bookmarkedIds, <String>{'a-story'});
+      expect(scoped.isBookmarked('b-story'), isFalse);
+
+      account = 'anonymous';
+      expect(scoped.bookmarkedIds, isEmpty);
+      expect(scoped.likedIds, isEmpty);
+    });
+
+    test('adopts anonymous saves once when the reader signs in', () async {
+      String account = 'anonymous';
+      final DefaultUserStateRepository scoped = DefaultUserStateRepository(
+        preferences: preferences,
+        accountId: () => account,
+      );
+      await scoped.toggleBookmark('saved-while-signed-out');
+
+      account = 'user-a';
+      expect(scoped.bookmarkedIds, <String>{'saved-while-signed-out'});
+
+      // The anonymous namespace was cleared by the adoption, so signing out
+      // cannot expose those rows to the next person on the device.
+      account = 'anonymous';
+      expect(scoped.bookmarkedIds, isEmpty);
+    });
+
     test('keeps likes separate from bookmarks', () async {
       await repository.toggleLike('art-1');
       expect(repository.isLiked('art-1'), isTrue);
       expect(repository.isBookmarked('art-1'), isFalse);
-      expect(preferences.stringSet('user.likes'), <String>{'art-1'});
-      expect(preferences.stringSet('user.bookmarks'), isEmpty);
+      expect(preferences.stringSet('user.likes.anonymous'), <String>{'art-1'});
+      expect(preferences.stringSet('user.bookmarks.anonymous'), isEmpty);
 
       await repository.toggleLike('art-1');
       expect(repository.isLiked('art-1'), isFalse);

@@ -197,6 +197,22 @@ void main() {
     },
   );
 
+  test('signing out clears the account-bound sync status', () async {
+    build(bookmarks: <String>{'b1'});
+    sync.pullState = SyncState(serverTime: t(2));
+
+    final SyncController controller = container.read(
+      syncControllerProvider.notifier,
+    );
+    await controller.mergeOnSignIn();
+    expect(container.read(syncControllerProvider), isA<SyncSynced>());
+
+    controller.onSignedOut();
+
+    expect(container.read(syncControllerProvider), isA<SyncIdle>());
+    expect(controller.state.lastSyncedAt, isNull);
+  });
+
   test(
     'pushLocalChanges sends only the rows changed since the last push',
     () async {

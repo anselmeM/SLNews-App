@@ -11,6 +11,7 @@ import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
 import '../domain/sync/sync_repository.dart';
 import 'app_providers.dart';
+import 'auth_providers.dart';
 import 'digest_preferences_store.dart';
 import 'sync_controller.dart';
 
@@ -190,7 +191,11 @@ bookmarksControllerProvider =
 
 class BookmarksController extends Notifier<Set<String>> {
   @override
-  Set<String> build() => ref.watch(userStateProvider).bookmarkedIds;
+  Set<String> build() {
+    // Rebuild on identity change; the repository reads the active scope.
+    ref.watch(activeAccountKeyProvider);
+    return ref.watch(userStateProvider).bookmarkedIds;
+  }
 
   bool isBookmarked(String articleId) => state.contains(articleId);
 
@@ -217,7 +222,10 @@ final NotifierProvider<LikesController, Set<String>> likesControllerProvider =
 
 class LikesController extends Notifier<Set<String>> {
   @override
-  Set<String> build() => ref.watch(userStateProvider).likedIds;
+  Set<String> build() {
+    ref.watch(activeAccountKeyProvider);
+    return ref.watch(userStateProvider).likedIds;
+  }
 
   bool isLiked(String articleId) => state.contains(articleId);
 
@@ -252,7 +260,10 @@ followingControllerProvider =
 
 class FollowingController extends Notifier<FollowingSnapshot> {
   @override
-  FollowingSnapshot build() => ref.watch(followingRepositoryProvider).load();
+  FollowingSnapshot build() {
+    ref.watch(activeAccountKeyProvider);
+    return ref.watch(followingRepositoryProvider).load();
+  }
 
   Future<void> toggle(FollowTarget target) async {
     state = await ref.read(followingRepositoryProvider).toggle(target);

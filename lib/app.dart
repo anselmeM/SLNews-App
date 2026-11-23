@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/domain/auth/auth_repository.dart';
 import 'core/config/l10n.dart';
 import 'core/domain/models/app_settings.dart';
 import 'core/providers/auth_providers.dart';
 import 'core/providers/controllers.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/providers/sync_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'core/push/push_route.dart';
 import 'core/push/push_service.dart';
@@ -27,6 +29,31 @@ class SlNewsApp extends ConsumerWidget {
     final AppSettings settings = ref.watch(settingsControllerProvider);
     final GoRouter router = ref.watch(appRouterProvider);
     final Locale? locale = ref.watch(localeControllerProvider);
+
+    // Sync is an app-level concern: a sign-in can come from Settings, the
+    // Following card or a restored session, and must converge exactly once.
+    ref.listen<AuthState>(authControllerProvider, (
+      AuthState? previous,
+      AuthState next,
+    ) {
+      final String? previousId = previous?.user?.id;
+      final String? nextId = next.user?.id;
+      final bool signingIn =
+          next.isSignedIn && nextId != null && nextId != previousId;
+      final bool signingOut = !next.isSignedIn && previous?.isSignedIn == true;
+      if (!signingIn && !signingOut) return;
+
+      // Provider mutations must happen after the frame that observed the auth
+      // change; doing them inside this listener trips Riverpod's build guard.
+      WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+        if (!ref.context.mounted) return;
+        if (signingIn) {
+          unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
+        } else {
+          ref.read(syncControllerProvider.notifier).onSignedOut();
+        }
+      });
+    });
 
     // The identity provider wraps the app in whatever scope its SDK needs; a
     // key-less build supplies the identity function, so this costs nothing when
@@ -96,6 +123,15 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // A restored signed-in session existed before this listener was installed;
+    // converge it once at startup. Later auth changes go through SlNewsApp's
+    // app-level listener.
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted) return;
+      if (ref.read(authControllerProvider).isSignedIn) {
+        unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
+      }
+    });
     try {
       final PushService push = ref.read(pushServiceProvider);
       unawaited(push.ensureRegisteredIfGranted());

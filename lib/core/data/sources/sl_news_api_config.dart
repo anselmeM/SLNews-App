@@ -74,14 +74,12 @@ class SlNewsApiConfig {
   /// Per-request budget for the injected [ApiClient].
   final Duration timeout;
 
-  /// True when the scraper can be reached and authenticated somehow: either a
-  /// static key is embedded, or the reader can sign in for a session token.
+  /// True when the scraper host is configured.
   ///
-  /// A configured source without either credential would only ever receive 401s,
-  /// which is why this gate exists rather than checking [apiKey] alone.
-  bool get isConfigured =>
-      baseUrl.trim().isNotEmpty &&
-      (apiKey.trim().isNotEmpty || sessionTokenAvailable);
+  /// Read-only content is public, so a build without an embedded key or an
+  /// identity still uses the public fallback routes. Authentication only adds
+  /// account sync; it is not a content gate.
+  bool get isConfigured => baseUrl.trim().isNotEmpty;
 
   /// Copy of this configuration with the given fields replaced.
   SlNewsApiConfig copyWith({

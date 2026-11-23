@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import '../../domain/auth/account_scope.dart';
 import '../../domain/repositories/user_state_repository.dart';
 import '../local/preferences_store.dart';
 
@@ -8,8 +11,14 @@ import '../local/preferences_store.dart';
 /// view model is immediately visible to every other reader.
 class DefaultUserStateRepository implements UserStateRepository {
   /// Creates a repository over [preferences].
-  DefaultUserStateRepository({required PreferencesStore preferences})
-    : _store = preferences;
+  ///
+  /// [accountId] is read on every access so the same repository follows a
+  /// sign-in, sign-out or account switch without being rebuilt.
+  DefaultUserStateRepository({
+    required PreferencesStore preferences,
+    String Function()? accountId,
+  }) : _store = preferences,
+       _accountId = accountId ?? (() => anonymousAccountId);
 
   /// Preference keys, namespaced so a later migration can find them.
   static const String bookmarksKey = 'user.bookmarks';
@@ -41,27 +50,28 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const bool defaultOnboardingCompleted = false;
 
   final PreferencesStore _store;
+  final String Function() _accountId;
 
   @override
-  Set<String> get bookmarkedIds => _store.stringSet(bookmarksKey);
+  Set<String> get bookmarkedIds =>
+      _readerIds(bookmarksKey, legacyKey: bookmarksKey);
 
   @override
-  Set<String> get likedIds => _store.stringSet(likesKey);
+  Set<String> get likedIds => _readerIds(likesKey, legacyKey: likesKey);
 
   @override
-  bool isBookmarked(String articleId) =>
-      _store.stringSet(bookmarksKey).contains(articleId);
+  bool isBookmarked(String articleId) => bookmarkedIds.contains(articleId);
 
   @override
-  bool isLiked(String articleId) =>
-      _store.stringSet(likesKey).contains(articleId);
+  bool isLiked(String articleId) => likedIds.contains(articleId);
 
   @override
   Future<void> toggleBookmark(String articleId) =>
-      _toggle(bookmarksKey, articleId);
+      _toggleReaderId(bookmarksKey, articleId);
 
   @override
-  Future<void> toggleLike(String articleId) => _toggle(likesKey, articleId);
+  Future<void> toggleLike(String articleId) =>
+      _toggleReaderId(likesKey, articleId);
 
   @override
   String get themeMode => _store.string(themeModeKey) ?? defaultThemeMode;
@@ -152,10 +162,42 @@ class DefaultUserStateRepository implements UserStateRepository {
   Future<void> setWeatherForecastEnabled(bool enabled) =>
       _store.putBool(weatherForecastKey, enabled);
 
-  Future<void> _toggle(String key, String id) async {
-    // `stringSet` hands back a fresh, growable copy of the stored list.
-    final Set<String> values = _store.stringSet(key);
+  /// Account-scoped key for reader-owned collections.
+  String _readerKey(String base) => '$base.${localAccountIdFor(_accountId())}';
+
+  /// Reads the current account's set, migrating pre-account-scope data once.
+  Set<String> _readerIds(String base, {required String legacyKey}) {
+    final String scopedKey = _readerKey(base);
+    final Set<String> current = _store.stringSet(scopedKey);
+    if (current.isNotEmpty) return current;
+
+    final Set<String> legacy = _store.stringSet(legacyKey);
+    if (legacy.isNotEmpty) {
+      // The global key belonged to whoever was active before this migration.
+      unawaited(_store.putStringSet(scopedKey, legacy));
+      unawaited(_store.remove(legacyKey));
+      return legacy;
+    }
+
+    // A reader who saved something before signing in gets those local saves
+    // adopted once by the first account they sign into. Signing out never
+    // copies account data back into the anonymous namespace.
+    final String account = localAccountIdFor(_accountId());
+    if (account != anonymousAccountId) {
+      final String anonymousKey = '$base.$anonymousAccountId';
+      final Set<String> anonymous = _store.stringSet(anonymousKey);
+      if (anonymous.isNotEmpty) {
+        unawaited(_store.putStringSet(scopedKey, anonymous));
+        unawaited(_store.remove(anonymousKey));
+        return anonymous;
+      }
+    }
+    return current;
+  }
+
+  Future<void> _toggleReaderId(String base, String id) async {
+    final Set<String> values = _readerIds(base, legacyKey: base);
     if (!values.remove(id)) values.add(id);
-    await _store.putStringSet(key, values);
+    await _store.putStringSet(_readerKey(base), values);
   }
 }

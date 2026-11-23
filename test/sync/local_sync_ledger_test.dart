@@ -34,7 +34,7 @@ void main() {
     expect(ledger.updatedAt('bookmarks').keys, <String>['b1']);
     // Stored as an ISO string under one document key.
     final Map<String, dynamic> document = jsonDecode(
-      store.string(LocalSyncLedger.storageKey)!,
+      store.string(LocalSyncLedger.storageKeyFor('anonymous'))!,
     ) as Map<String, dynamic>;
     expect(document['bookmarks'], <String, dynamic>{
       'b1': '2026-10-16T04:00:00.000Z',
@@ -90,9 +90,11 @@ void main() {
     expect(ledger.deleted('reactions'), <String>{'r2'});
 
     // An empty batch is a no-op: no document is written for nothing.
-    final String? before = store.string(LocalSyncLedger.storageKey);
+    final String? before = store.string(
+      LocalSyncLedger.storageKeyFor('anonymous'),
+    );
     await ledger.recordBatch('reactions', const <String, DateTime>{});
-    expect(store.string(LocalSyncLedger.storageKey), before);
+    expect(store.string(LocalSyncLedger.storageKeyFor('anonymous')), before);
   });
 
   test('clear removes one collection and leaves the others', () async {

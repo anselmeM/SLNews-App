@@ -12,6 +12,7 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/tracked_ad_card.dart';
 import '../../../core/widgets/article_hero_card.dart';
 import '../../../core/widgets/article_tile.dart';
@@ -217,10 +218,61 @@ class _NewsFeed extends ConsumerWidget {
                 ),
               );
             }
-            return _NewsContentSlivers(feed: model);
+            final bool usingFallback =
+                categoryId != 'top' &&
+                !articles.any(
+                  (Article article) => article.categoryId == categoryId,
+                );
+            return SliverMainAxisGroup(
+              slivers: <Widget>[
+                if (usingFallback)
+                  SliverToBoxAdapter(
+                    child: _CategoryFallbackNotice(label: label),
+                  ),
+                _NewsContentSlivers(feed: model),
+              ],
+            );
           },
         ),
       ],
+    );
+  }
+}
+
+/// Shown when the selected category has no current stories and the provider
+/// deliberately falls back to the latest general news.
+class _CategoryFallbackNotice extends StatelessWidget {
+  const _CategoryFallbackNotice({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.colors.surfaceMuted,
+          borderRadius: AppRadius.cardRadius,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Text(
+            'No ${label.toLowerCase()} stories right now — showing the latest news.',
+            style: context.typography.caption.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

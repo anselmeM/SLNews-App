@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,32 +18,13 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 /// obvious account affordance); signed in it shows who is signed in, the sync
 /// state of their saved stories and a sign-out. Identity itself lives behind
 /// [authRepositoryProvider], so this widget contains no SDK code.
-class AccountCard extends ConsumerStatefulWidget {
+class AccountCard extends ConsumerWidget {
   const AccountCard({super.key});
 
   @override
-  ConsumerState<AccountCard> createState() => _AccountCardState();
-}
-
-class _AccountCardState extends ConsumerState<AccountCard> {
-  bool _mergeRequested = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AuthState auth = ref.watch(authControllerProvider);
     final SyncStatus sync = _readSyncStatus(ref);
-
-    // First frame a reader is signed in: converge this device's local state with
-    // the account's. Guarded so a rebuild cannot start a second run, and deferred
-    // to a post-frame callback because it writes to providers.
-    if (auth.isSignedIn && !_mergeRequested && sync is SyncIdle) {
-      _mergeRequested = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
-        }
-      });
-    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
