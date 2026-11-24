@@ -1,6 +1,12 @@
 /// Ad surfaces known to the app and the backend.
+///
+/// [feed] is the For You pool: the server selects and orders at most two units
+/// for it. [newsStream], [sportsStream] and [articleEnd] are single-unit
+/// surfaces. The app renders whatever the server returns, in the order it sent;
+/// it never re-sorts or rotates sold units itself.
 enum AdPlacement {
   feed('feed'),
+  newsStream('news_stream'),
   sportsStream('sports_stream'),
   articleEnd('article_end');
 

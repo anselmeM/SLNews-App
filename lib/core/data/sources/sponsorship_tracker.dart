@@ -14,14 +14,24 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 ///
 /// Fire-and-forget by design: measurement must never delay or break a feed.
 /// House (seeded) units are ignored — the backend only knows sold campaigns.
-/// Each event gets a stable client id so an offline retry is deduplicated by the
-/// server, and sold units count at most one impression and one tap per session.
+///
+/// Measurement is one event per view: every [impression] and every [tap] creates
+/// a fresh event with a fresh `eventId`. The tracker deliberately does not
+/// deduplicate a campaign per session any more; the server's unique event ledger
+/// collapses only a retried copy of the *same* event, which is why a queued
+/// event keeps its id until it is delivered or permanently rejected.
+///
+/// Every event also carries a stable anonymous `installId`: 32 lowercase hex
+/// characters generated once per install with [Random.secure] and persisted in
+/// [PreferencesStore] under [installIdKey]. It is never derived from, or linked
+/// to, the reader's account identity.
 class SponsorshipTracker {
   SponsorshipTracker({
     required ApiClient client,
     required this.baseUrl,
     this.store,
-  }) : _post = ((String url, Map<String, dynamic> body) =>
+  }) : _newInstallId = _secureInstallId,
+       _post = ((String url, Map<String, dynamic> body) =>
            client.postJson(url, body));
 
   /// Test seam.
@@ -29,36 +39,69 @@ class SponsorshipTracker {
   SponsorshipTracker.forPoster(
     Future<Object?> Function(String url, Map<String, dynamic> body) post, {
     this.store,
+    String Function()? newInstallId,
   }) : baseUrl = 'https://example.invalid',
-       _post = post;
+       _post = post,
+       _newInstallId = newInstallId ?? _secureInstallId;
 
   static const String outboxKey = 'sponsorship_events.outbox.v1';
+
+  /// Versioned preference key holding the anonymous install id.
+  static const String installIdKey = 'sponsorship.installId.v1';
+
   static const int maxOutbox = 100;
 
   final String baseUrl;
   final PreferencesStore? store;
   final Future<Object?> Function(String url, Map<String, dynamic> body) _post;
 
-  final Set<String> _impressed = <String>{};
-  final Set<String> _tapped = <String>{};
+  /// Generates a new install id; a test seam can replace the secure default.
+  final String Function() _newInstallId;
 
-  /// A stable event id per unit/type, reused when a failed post is retried. The
-  /// server's unique event ledger makes that retry idempotent.
-  final Map<String, String> _eventIds = <String, String>{};
+  /// Resolved once per tracker and reused for every event it posts. Kept even
+  /// when persistence fails so a tracker never reports two identities.
+  String? _installId;
+
   Future<void> _outboxQueue = Future<void>.value();
   bool _flushing = false;
 
-  void impression(AdUnit unit) {
-    if (!unit.isSold || !_impressed.add(unit.id)) return;
-    _send(unit, 'impression', onFailure: () => _impressed.remove(unit.id));
+  /// Stable anonymous install id sent as `installId` on every event.
+  ///
+  /// The persisted value wins across launches and instances sharing this
+  /// [store]. When it is absent (first launch, first event) the id is generated
+  /// with [Random.secure] and written back best-effort. A tracker with no store
+  /// still caches the generated value for its own lifetime.
+  String get installId {
+    final String? cached = _installId;
+    if (cached != null) return cached;
+
+    final String? stored = store?.string(installIdKey);
+    final String id = _isValidInstallId(stored) ? stored! : _newInstallId();
+    _installId = id;
+
+    final PreferencesStore? preferences = store;
+    if (preferences != null && id != stored) {
+      unawaited(_persistInstallId(preferences, id));
+    }
+    return id;
   }
 
+  /// Records one impression for [unit]. Every call is a separate event.
+  void impression(AdUnit unit) {
+    if (!unit.isSold) return;
+    _send(unit, 'impression');
+  }
+
+  /// Records one tap for [unit]. Every call is a separate event.
   void tap(AdUnit unit) {
-    if (!unit.isSold || !_tapped.add(unit.id)) return;
-    _send(unit, 'tap', onFailure: () => _tapped.remove(unit.id));
+    if (!unit.isSold) return;
+    _send(unit, 'tap');
   }
 
   /// Retries events left in the on-device outbox by a previous run.
+  ///
+  /// Each queued body already carries its own `eventId`, so a retried event is
+  /// the same event to the server — never a new impression.
   Future<void> flush() async {
     final PreferencesStore? store = this.store;
     if (store == null || _flushing) return;
@@ -97,16 +140,13 @@ class SponsorshipTracker {
         status != 429;
   }
 
-  void _send(AdUnit unit, String type, {VoidCallback? onFailure}) {
-    if (!unit.isSold) return;
-    final String eventId = _eventIds.putIfAbsent(
-      '${unit.id}:$type',
-      _newEventId,
-    );
+  void _send(AdUnit unit, String type) {
+    final String eventId = _newEventId();
     final Map<String, dynamic> body = <String, dynamic>{
       'id': unit.id,
       'type': type,
       'eventId': eventId,
+      'installId': installId,
       if (unit.eventToken != null) 'token': unit.eventToken,
     };
     unawaited(_enqueue(body));
@@ -123,7 +163,6 @@ class SponsorshipTracker {
             );
             return;
           }
-          onFailure?.call();
           AppLog.debug('SponsorshipTracker: $type not counted: $error');
         },
       ),
@@ -133,6 +172,30 @@ class SponsorshipTracker {
   String _url() {
     return '${baseUrl.replaceAll(RegExp(r"/+$"), "")}'
         '/api/mobile/v1/sponsorships/events';
+  }
+
+  Future<void> _persistInstallId(PreferencesStore store, String id) async {
+    try {
+      await store.putString(installIdKey, id);
+    } catch (error) {
+      // Storage is best-effort: the tracker keeps this id for its lifetime and
+      // the next launch may generate a new one rather than failing to measure.
+      AppLog.debug('SponsorshipTracker: could not persist install id: $error');
+    }
+  }
+
+  static final RegExp _installIdPattern = RegExp(r'^[0-9a-f]{32}$');
+
+  static bool _isValidInstallId(String? value) =>
+      value != null && _installIdPattern.hasMatch(value);
+
+  /// 128 random bits rendered as 32 lowercase hex characters.
+  static String _secureInstallId() {
+    final StringBuffer id = StringBuffer();
+    for (int index = 0; index < 16; index++) {
+      id.write(_random.nextInt(256).toRadixString(16).padLeft(2, '0'));
+    }
+    return id.toString();
   }
 
   Future<void> _enqueue(Map<String, dynamic> event) {
@@ -185,6 +248,7 @@ class SponsorshipTracker {
 
   static final Random _random = Random.secure();
 
+  /// A fresh id for one event. Reused only by an outbox retry of that event.
   static String _newEventId() {
     final String random = List<String>.generate(
       12,

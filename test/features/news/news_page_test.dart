@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:slnews_mobile/core/domain/models/ad_placement.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
@@ -17,6 +18,15 @@ import 'package:slnews_mobile/features/news/presentation/news_page.dart';
 import 'package:slnews_mobile/features/news/presentation/widgets/category_pill_header.dart';
 
 import 'support/fakes.dart';
+
+/// The fixture unit the News tab's own `news_stream` placement returns.
+const AdUnit kFakeNewsStreamAd = AdUnit(
+  id: 'ad-news-1',
+  headline: 'NEWS STREAM OFFER',
+  body: 'A sold unit from the news_stream placement.',
+  ctaLabel: 'View more',
+  advertiser: 'News Stream Partner',
+);
 
 /// Headline of the `top` hero in [defaultNewsFixtures].
 const String topHeadline =
@@ -105,7 +115,39 @@ void main() {
       await pumpNewsPage(tester, size: const Size(800, 3200));
 
       expect(find.byType(AdCard), findsOneWidget);
-      expect(find.text(kFakeFeedAd.headline), findsOneWidget);
+      expect(find.text(kFakeNewsStreamAd.headline), findsOneWidget);
+    });
+
+    testWidgets('requests and paints news_stream, never the shared feed slot', (
+      WidgetTester tester,
+    ) async {
+      const AdUnit feedAd = AdUnit(
+        id: 'ad-feed-decoy',
+        headline: 'FEED DECOY',
+        body: 'This unit belongs to the For You pool.',
+        ctaLabel: 'View more',
+        advertiser: 'Feed Partner',
+      );
+      final FakeAdRepository ads = FakeAdRepository(
+        unitsForPlacement: <String, List<AdUnit>>{
+          AdPlacement.newsStream.wire: const <AdUnit>[kFakeNewsStreamAd],
+          AdPlacement.feed.wire: const <AdUnit>[feedAd],
+        },
+      );
+      await pumpNewsPage(
+        tester,
+        size: const Size(800, 3200),
+        adRepository: ads,
+      );
+
+      expect(find.text(kFakeNewsStreamAd.headline), findsOneWidget);
+      expect(find.text(feedAd.headline), findsNothing);
+      expect(ads.requestedPlacements, contains(AdPlacement.newsStream.wire));
+      expect(
+        ads.requestedPlacements,
+        isNot(contains(AdPlacement.feed.wire)),
+        reason: 'News has its own slot and no longer shares the feed pool',
+      );
     });
 
     testWidgets('keeps the two-column grid and truncates 60+ char headlines', (
@@ -148,7 +190,8 @@ Future<void> pumpNewsPage(
   Map<String, List<Article>>? articles,
   Size size = const Size(800, 2400),
   double textScale = 1,
-  List<AdUnit> ads = const <AdUnit>[kFakeFeedAd],
+  List<AdUnit> ads = const <AdUnit>[kFakeNewsStreamAd],
+  FakeAdRepository? adRepository,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -165,7 +208,14 @@ Future<void> pumpNewsPage(
     ProviderScope(
       overrides: [
         articleRepositoryProvider.overrideWithValue(articleRepository),
-        adRepositoryProvider.overrideWithValue(FakeAdRepository.feed(ads)),
+        adRepositoryProvider.overrideWithValue(
+          adRepository ??
+              FakeAdRepository(
+                unitsForPlacement: <String, List<AdUnit>>{
+                  AdPlacement.newsStream.wire: ads,
+                },
+              ),
+        ),
         userStateProvider.overrideWithValue(FakeUserStateRepository()),
         refreshFeedsProvider.overrideWithValue(() async {}),
       ],
