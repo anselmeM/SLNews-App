@@ -36,9 +36,10 @@ identifier.
 | **Email address and display name** | when you create an account or sign in | sent to Clerk (auth provider) and stored in our database |
 | **Account identifier** (Clerk user id) | when you sign in | stored in our database |
 | **Saved stories, likes, follows** | when you use those features while signed in | synced to our database so they appear on your other devices |
-| **Reading preferences** (theme, text size, chosen location, alert toggles) | when you change them | stored on your device; synced to our database when signed in |
+| **Reading preferences** (theme, text size, chosen location, alert toggles) | when you change them | stored on your device; signing in does not sync these settings |
 | **Push-notification token** (FCM registration token) | only if you enable notifications | stored in our database against your account; deleted when notifications are turned off or you delete your account |
 | **Technical request data** (IP address, app version, timestamps, error responses) | whenever the app talks to a server | processed by our hosting providers and visible to us in logs |
+| **Anonymous sponsorship install ID** (random 32-character ID, not an advertising ID) and impression/tap events | when a sponsored card is shown or tapped | sent to our backend; only a keyed hash is stored, used for aggregate reach/frequency reporting; never linked to your account and never shared with advertisers |
 | **Locally cached content** (recent articles, images, preferences) | while you use the app | stored only on your device |
 
 We do **not** collect: precise or approximate location (the weather chip uses the
@@ -80,9 +81,12 @@ and the European Union, under their standard contractual safeguards.
 ## 6. Advertising and sponsored content
 
 Sponsored cards appear in the app next to editorial content and are always labelled
-**Ad**. They are served by our own backend; the app contains no third-party ad SDK
-and does not send your data to advertisers. If you tap a sponsored card, the
-advertiser's site opens in your browser and its own privacy policy applies.
+**Ad**. They are served by our own backend; the app contains no third-party ad SDK.
+To report aggregate delivery to sponsors, the app sends a random anonymous install
+ID with an impression/tap event; our server stores only a keyed hash and never shares
+it with the advertiser. The ID is not an advertising ID, is not linked to your
+account, and is not used to target ads. If you tap a sponsored card, the advertiser's
+site opens in your browser and its own privacy policy applies.
 
 ## 7. How long we keep it
 
@@ -90,6 +94,9 @@ advertiser's site opens in your browser and its own privacy policy applies.
 - **Deletion:** removing your account deletes the account record and the synced
   saved stories, likes and follows. Backups are purged on a rolling basis within
   **90 days**.
+- **Anonymous sponsorship event hashes:** retained in aggregate delivery counters;
+  the raw install ID is never stored server-side. Clearing app data or reinstalling
+  generates a new ID; old hashes remain part of aggregate reporting.
 - **Server logs:** kept by our hosting providers for their standard retention
   periods, then deleted.
 - **On-device cache:** stays until you clear it in Settings, sign out, or uninstall

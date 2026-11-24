@@ -2,10 +2,12 @@
 
 Copy these answers into Play Console. They describe the **Android app as built**
 (`com.slnews.mobile`, version 1.0.0 (current)), not the website: the app has no analytics or
-advertising SDK and no advertising identifier. It does send **crash diagnostics to
-Sentry** (added for the launch build), configured without IP storage, account
-identifiers, content or screenshots. It stores an **FCM registration token** when the
-reader enables notifications (see the push section at the end).
+advertising SDK and no advertising identifier. It sends **crash diagnostics to
+Sentry**, configured without IP storage, account identifiers, content or screenshots.
+It stores an **FCM registration token** when the reader enables notifications (see
+the push section at the end). Sponsored cards also use a random, anonymous install
+ID for aggregate impression/reach measurement; the server stores only a keyed hash,
+never the raw ID, and it is never used for targeting.
 
 > Draft for owner review. Placeholders in `{{ }}` are listed in
 > [legal/README.md](legal/README.md#placeholders-to-fill).
@@ -14,7 +16,8 @@ reader enables notifications (see the push section at the end).
 
 ### Does your app collect or share any required user data types? **Yes**
 
-Only account data, and only when the person chooses to sign in.
+Account data only when the person chooses to sign in, plus anonymous sponsorship
+measurement described below.
 
 | Category | Data type | Collected | Shared | Optional? | Purpose | Deletion |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -24,11 +27,13 @@ Only account data, and only when the person chooses to sign in.
 | App activity | Other in-app actions (saved stories, likes, follows) | Yes | No | Yes | App functionality (sync across devices) | Yes |
 | Diagnostics | Crash logs (stack trace, device model, OS version, app version) | Yes | No | No — automatic when the app crashes | App functionality (diagnostics, fixing crashes) | Yes — 90-day retention at Sentry |
 | Diagnostics | Other app performance data (5 % sampled traces: app start, navigation, network timings) | Yes | No | No | App functionality (diagnostics) | Yes |
+| Device or other IDs | Anonymous sponsorship install ID (random 32-hex; not an advertising ID) | Yes | No | No — only when a sponsored card loads | App functionality (aggregate sponsor reach/frequency) | Yes — raw ID is never stored server-side; hash is not linked to an account |
 
 Everything else: **not collected**. No location, no financial info, no health, no
 messages, no photos or videos, no audio, no files, no contacts, no calendar, no web
-browsing history, no app-interaction analytics, no advertising identifier. The only
-device identifier is the FCM token described in the push section below.
+browsing history, no content/app-interaction analytics, no advertising identifier.
+The only identifiers are the FCM token and the anonymous sponsorship install ID
+described above.
 
 **Security practices**
 
@@ -63,7 +68,9 @@ else needs adding.
 
 - **Does your app contain ads? Yes** — sponsored cards labelled "Ad" are served from
   our backend. No third-party ad SDK.
-- Ads are not targeted using personal data.
+- Ads are not targeted using personal data. The anonymous install ID is used only
+  to count aggregate impressions and unique reach; it is not an advertising ID and
+  is never shared with advertisers.
 
 ## 3. App content → Content rating (IARC questionnaire)
 
