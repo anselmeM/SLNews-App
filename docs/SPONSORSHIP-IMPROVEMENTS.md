@@ -16,13 +16,14 @@
 | 6 | Daily metrics, date-range report and CSV export | Web | [x] |
 | 7 | Campaign edit, duplicate and archive lifecycle | Web | [x] |
 | 8 | Admin UX: effective status, schedules, confirmations, preview/errors | Web | [x] |
-| 9 | Priority, rotation, pacing and frequency caps | App + Web | [x] |
+| 9 | Priority, rotation, pacing and slot capacities | App + Web | [x] |
 | 10 | Image hardening: magic bytes, dimensions, alt text, external URL policy | Web + App | [x] |
 | 11 | Admin auth, audit trail and centralized route guard | Web | [x] |
 | 12 | App tracking outbox and viewability semantics | App | [x] |
 | 13 | Remove or unify the dead web sponsor registry | Web | [x] |
 | 14 | Tests for CTA, measurement, reports and admin UI | Both | [x] |
 | 15 | Reporting, disclosure and accessibility polish | Both | [x] |
+| 16 | Separate News slot, every-impression events, anonymous reach/frequency and ad policy | App + Web | [x] |
 
 ## Acceptance criteria
 
@@ -35,7 +36,9 @@
 
 ### 2. Placements
 - A single placement allow-list is enforced by app, API and admin; the DB column stays text so the no-migrations `db push` workflow cannot require a destructive enum cast.
-- `article_end` renders at the end of the article reader.
+- `feed` is For You only; `news_stream` is a separate sellable News placement.
+- `sports_stream` and `article_end` remain singleton placements.
+- The server returns at most 2 units for feed and 1 for each singleton placement; the app renders the returned order without client-side selection.
 - Admin options exactly match renderable placements.
 - Tests cover each placement and reject unknown ones.
 
@@ -58,9 +61,10 @@
 
 ### 6. Reporting
 - Daily impressions/taps are stored per campaign and UTC day.
-- Report API supports `from`/`to`, returns daily series and totals with CTR.
-- Admin report page supports date range, CSV export and per-campaign rows.
-- Tests cover date filtering and CSV shape.
+- Report API supports `from`/`to`, returns daily series, totals with CTR, unique reach and average frequency.
+- Reach is distinct hashed install ids per campaign in the range; null when no identifiable reach exists.
+- Admin report page supports date range, CSV export, per-campaign rows and category.
+- Tests cover date filtering, reach/frequency and CSV shape.
 
 ### 7. Admin lifecycle
 - Edit an existing campaign without recreating it.
@@ -77,10 +81,10 @@
 - Tests cover the form parser/status derivation.
 
 ### 9. Delivery
-- Campaigns have priority/weight and optional daily/total impression caps.
-- Public API returns a deterministic, weighted, capped selection.
-- App shows at most the agreed number of placements.
-- Tests cover ordering, caps and fallbacks.
+- Campaigns have priority/weight, start/end scheduling and optional daily/total impression caps.
+- Public API returns a deterministic weighted selection: at most 2 feed units, at most 1 for each singleton placement.
+- App shows exactly the server-selected units in server order.
+- Tests cover ordering, caps, slot capacity and fallbacks.
 
 ### 10. Image hardening
 - Upload verifies magic bytes and dimensions, rejects oversized pixel dimensions and non-images.
@@ -95,10 +99,11 @@
 - Tests cover audit writes and unauthenticated redirects.
 
 ### 12. App tracking
-- Impression is counted only after the ad is visible for the defined threshold.
+- One event is posted for every viewable impression and every successful tap (no once-per-campaign-per-session dedupe).
+- Each event has a fresh event id; an outbox retry reuses that event's id so the server dedupes only the retry.
+- The app sends a stable anonymous 32-hex install id; the server stores only a keyed hash for reach reporting.
 - Events are queued persistently and flushed later on failure.
-- Taps dedupe per campaign/session; queue survives app restart.
-- Tests cover visibility, retry, dedupe and queue flush.
+- Tests cover visibility, retry, event-id uniqueness, install-id stability and queue flush.
 
 ### 13. Web registry
 - Either remove `DIRECT_SPONSOR_CAMPAIGNS` or make it DB/admin driven.
