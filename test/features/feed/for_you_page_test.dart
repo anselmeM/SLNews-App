@@ -61,6 +61,7 @@ void main() {
     FakeUserStateRepository? userState,
     FakeWeatherRepository? weather,
     List<AdUnit> ads = const <AdUnit>[],
+    FakeAdRepository? adRepository,
     Size surface = const Size(390, 2200),
     FakeFollowingRepository? following,
   }) async {
@@ -93,6 +94,7 @@ void main() {
           userState: userState,
           weather: weather,
           ads: ads,
+          adRepository: adRepository,
           following: following,
         ),
         child: MaterialApp.router(
@@ -345,6 +347,47 @@ void main() {
     expect(find.byType(AdCard), findsOneWidget);
     expect(find.text('Ultimate Shopping Spree'), findsOneWidget);
     expect(find.text('AD'), findsWidgets, reason: 'sponsored must be labelled');
+  });
+
+  testWidgets('renders up to two server-selected feed units in server order', (
+    WidgetTester tester,
+  ) async {
+    // The backend selects at most two `feed` units and owns their order. The
+    // ids are intentionally unsorted so a client-side reshuffle would fail.
+    final FakeAdRepository ads = FakeAdRepository(
+      rotation: <AdUnit>[
+        const AdUnit(
+          id: 'ad-zulu-first',
+          headline: 'ZULU SERVER UNIT',
+          body: 'First in the server-selected order',
+          ctaLabel: 'View more',
+          advertiser: 'Zulu Partner',
+        ),
+        const AdUnit(
+          id: 'ad-alpha-second',
+          headline: 'ALPHA SERVER UNIT',
+          body: 'Second in the server-selected order',
+          ctaLabel: 'View more',
+          advertiser: 'Alpha Partner',
+        ),
+      ],
+    );
+    await pumpForYou(
+      tester,
+      surface: const Size(390, 6200),
+      articles: railRepository(),
+      adRepository: ads,
+    );
+
+    final List<AdCard> cards = tester
+        .widgetList<AdCard>(find.byType(AdCard))
+        .toList();
+    expect(cards, hasLength(2), reason: 'both returned feed units display');
+    expect(cards[0].unit.id, 'ad-zulu-first');
+    expect(cards[1].unit.id, 'ad-alpha-second');
+    expect(ads.requestedPlacements, contains('feed'));
+    expect(find.text('ZULU SERVER UNIT'), findsOneWidget);
+    expect(find.text('ALPHA SERVER UNIT'), findsOneWidget);
   });
 
   testWidgets('shows the Following topic mosaic', (WidgetTester tester) async {

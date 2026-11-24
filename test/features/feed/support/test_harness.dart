@@ -20,6 +20,7 @@ List<Override> feedTestOverrides({
   FakeWeatherRepository? weather,
   FollowingRepository? following,
   List<AdUnit> ads = const <AdUnit>[],
+  FakeAdRepository? adRepository,
 }) {
   return <Override>[
     articleRepositoryProvider.overrideWithValue(articles),
@@ -34,7 +35,9 @@ List<Override> feedTestOverrides({
     notificationRepositoryProvider.overrideWithValue(
       FakeNotificationRepository(),
     ),
-    adRepositoryProvider.overrideWithValue(FakeAdRepository(rotation: ads)),
+    adRepositoryProvider.overrideWithValue(
+      adRepository ?? FakeAdRepository(rotation: ads),
+    ),
     // Pull-to-refresh is a platform concern; stubbing it keeps the tests off
     // the network entirely.
     refreshFeedsProvider.overrideWithValue(() async {}),

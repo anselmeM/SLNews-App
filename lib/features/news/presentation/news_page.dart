@@ -418,18 +418,19 @@ class NewsRowInset extends StatelessWidget {
   }
 }
 
-/// One native-style ad unit drawn from the `feed` placement.
+/// One native-style ad unit drawn from the `news_stream` placement.
 ///
-/// Placement is intentionally best-effort: while the rotation loads, if it is
-/// empty, or if it fails, this renders nothing at all, so an ad can never
-/// interrupt the stream with a blank card or an error.
+/// News has its own server-selected slot rather than sharing the `feed` pool
+/// with For You. Placement is intentionally best-effort: while the rotation
+/// loads, if it is empty, or if it fails, this renders nothing at all, so an ad
+/// can never interrupt the stream with a blank card or an error.
 class _InStreamAd extends ConsumerWidget {
   const _InStreamAd();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final List<AdUnit> units =
-        ref.watch(adUnitsProvider(AdPlacement.feed.wire)).asData?.value ??
+        ref.watch(adUnitsProvider(AdPlacement.newsStream.wire)).asData?.value ??
         const <AdUnit>[];
     if (units.isEmpty) {
       return const SizedBox.shrink();

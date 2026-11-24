@@ -58,6 +58,7 @@ const Map<String, dynamic> adUnitContractFixture = <String, dynamic>{
 const Set<String> eventRequestContractFields = <String>{
   "eventId",
   "id",
+  "installId",
   "token",
   "type",
 };
@@ -67,4 +68,5 @@ const Map<String, dynamic> eventRequestContractFixture = <String, dynamic>{
   "type": "impression",
   "eventId": "ev_contract_fixture_0001",
   "token": "signed-event-token",
+  "installId": "0123456789abcdef0123456789abcdef",
 };

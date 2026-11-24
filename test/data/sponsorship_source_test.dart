@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/repositories/default_ad_repository.dart';
 import 'package:slnews_mobile/core/data/seed/seed_loader.dart';
 import 'package:slnews_mobile/core/data/sources/sponsorship_source.dart';
+import 'package:slnews_mobile/core/domain/models/ad_placement.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 
 import 'fakes.dart';
@@ -67,13 +68,19 @@ void main() {
       );
     });
 
-    test('asks for the requested placement', () async {
-      String? seen;
-      await SponsorshipSource.forFetcher((String url) async {
-        seen = url;
-        return <String, dynamic>{'items': <dynamic>[]};
-      }).units('sports_stream');
-      expect(seen, contains('placement=sports_stream'));
+    test('asks for the requested placement, including news_stream', () async {
+      final List<String> seen = <String>[];
+      for (final String placement in <String>[
+        'sports_stream',
+        AdPlacement.newsStream.wire,
+      ]) {
+        await SponsorshipSource.forFetcher((String url) async {
+          seen.add(url);
+          return <String, dynamic>{'items': <dynamic>[]};
+        }).units(placement);
+      }
+      expect(seen[0], contains('placement=sports_stream'));
+      expect(seen[1], contains('placement=news_stream'));
     });
   });
 
@@ -89,6 +96,29 @@ void main() {
       );
       final units = await repository.units(placement: 'feed');
       expect(units.single.id, 'sp_1');
+    });
+
+    test('keeps the server-selected order of sold units', () async {
+      final repository = DefaultAdRepository(
+        seedLoader: InMemorySeedLoader(seedData()),
+        sponsorships: SponsorshipSource.forFetcher(
+          (_) async => <String, dynamic>{
+            // Deliberately not sorted by id: the server owns the order, and the
+            // app must not reshuffle sold creatives.
+            'items': <dynamic>[
+              shipped('sp_zulu'),
+              shipped('sp_alpha'),
+              shipped('sp_mike'),
+            ],
+          },
+        ),
+      );
+      final units = await repository.units(placement: 'feed');
+      expect(units.map((AdUnit unit) => unit.id).toList(), <String>[
+        'sp_zulu',
+        'sp_alpha',
+        'sp_mike',
+      ]);
     });
 
     test('falls back to the seed rotation when nothing is sold', () async {

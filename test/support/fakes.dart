@@ -458,9 +458,17 @@ class FakeAdRepository implements AdRepository {
   final List<AdUnit> _rotation;
   final Map<String, List<AdUnit>> _unitsForPlacement;
 
+  /// Placement keys requested through [units], in call order.
+  ///
+  /// Lets a widget test prove which server slot a surface actually asked for
+  /// (for example News must request `news_stream`, not `feed`).
+  final List<String> requestedPlacements = <String>[];
+
   @override
-  Future<List<AdUnit>> units({String placement = 'default'}) async =>
-      _unitsForPlacement[placement] ?? _rotation;
+  Future<List<AdUnit>> units({String placement = 'default'}) async {
+    requestedPlacements.add(placement);
+    return _unitsForPlacement[placement] ?? _rotation;
+  }
 
   @override
   List<AdUnit> get cachedUnits => _rotation;
