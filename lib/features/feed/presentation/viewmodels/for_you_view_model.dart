@@ -10,6 +10,7 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/controllers.dart';
 import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/providers/reading_history_provider.dart';
+import '../../../../core/utils/app_log.dart';
 import '../../../../core/utils/time_ago.dart';
 
 /// Immutable, render-ready snapshot of the For You screen.
@@ -123,8 +124,14 @@ abstract final class ForYouViewModel {
       matches += 2;
     }
     for (final String tag in article.tags) {
-      if (followingIds.contains('topic:$tag')) matches += 1;
-      if (followingIds.contains('city:$tag')) matches += 1;
+      final String lower = tag.toLowerCase();
+      if (followingIds.contains(lower) &&
+          (lower.startsWith('team:') || lower.startsWith('league:'))) {
+        matches += 2;
+        continue;
+      }
+      if (followingIds.contains('topic:$lower')) matches += 1;
+      if (followingIds.contains('city:$lower')) matches += 1;
     }
     return matches;
   }
@@ -144,6 +151,9 @@ abstract final class ForYouViewModel {
     DateTime? now,
     bool personalize = false,
   }) {
+    // The opt-out must suppress follow ranking inside the build path; callers
+    // should not be able to re-enable it accidentally by passing ids.
+    final Set<String> effectiveIds = personalize ? ids : const <String>{};
     articles.sort((Article a, Article b) {
       return FeedMix.compare(
         a,
@@ -163,13 +173,24 @@ abstract final class ForYouViewModel {
           if (boundedFollowWindow) {
             return _effectiveTime(
               right,
-              ids,
-            ).compareTo(_effectiveTime(left, ids));
+              effectiveIds,
+            ).compareTo(_effectiveTime(left, effectiveIds));
           }
-          return personalMatch(right, ids).compareTo(personalMatch(left, ids));
+          return personalMatch(
+            right,
+            effectiveIds,
+          ).compareTo(personalMatch(left, effectiveIds));
         },
       );
     });
+    if (personalize && signals != null && !signals.isEmpty) {
+      final List<Article> explored = PersonalizationEngine.reserveExploration(
+        articles,
+        signals,
+      );
+      // Pools are often fixed-length; replace elements rather than resize.
+      articles.setAll(0, explored);
+    }
   }
 
   /// Builds the render-ready feed exactly as the screen renders it.
@@ -285,10 +306,28 @@ abstract final class ForYouViewModel {
       now: reference,
       personalize: personalizeFeed,
     );
-    final List<Article> sportsStream = FeedMix.limitedSports(
-      merged.where((Article article) => !heroIds.contains(article.id)),
-      limit: sportsOutsideLimit,
-    );
+    final List<Article> sportsPool = merged
+        .where(
+          (Article article) =>
+              !heroIds.contains(article.id) && FeedMix.isSports(article),
+        )
+        .toList(growable: false);
+    if (personalizeFeed) {
+      _sortForAudience(
+        sportsPool,
+        followingIds,
+        signals: signals,
+        now: reference,
+        personalize: true,
+      );
+    } else {
+      sportsPool.sort(
+        (Article a, Article b) => b.publishedAt.compareTo(a.publishedAt),
+      );
+    }
+    final List<Article> sportsStream = sportsPool
+        .take(sportsOutsideLimit)
+        .toList(growable: false);
 
     final List<Article> activeBreaking =
         merged
@@ -369,11 +408,16 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   // still render the feed. Followed topics also contribute their own category
   // feed, so following Politics brings politics stories in even when the home
   // pool has none.
-  AppSettings settings = const AppSettings();
+  AppSettings settings = const AppSettings(personalizeFeed: false);
   try {
     settings = ref.watch(settingsControllerProvider);
-  } on Object {
-    settings = const AppSettings();
+  } on Object catch (error) {
+    // If the saved preference cannot be read, fail closed rather than silently
+    // personalizing an opted-out reader.
+    AppLog.debug(
+      'ForYou: settings unavailable, personalization disabled: $error',
+    );
+    settings = const AppSettings(personalizeFeed: false);
   }
 
   Set<String> followingIds = const <String>{};
@@ -381,20 +425,59 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   try {
     final FollowingSnapshot snapshot = ref.watch(followingControllerProvider);
     followingIds = snapshot.followedIds.toSet();
-    final Set<String> followedTopics = <String>{
-      for (final String id in followingIds)
-        if (id.startsWith('topic:')) id.substring('topic:'.length),
-    }..remove('top');
     final List<Article> stories = <Article>[];
-    for (final String categoryId in followedTopics) {
-      final List<Article>? feed = ref
-          .watch(categoryFeedProvider(categoryId))
-          .value;
-      if (feed == null) continue;
-      stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+    for (final FollowTarget target in snapshot.followed) {
+      switch (target.kind) {
+        case FollowKind.topic:
+          final String categoryId = target.id.startsWith('topic:')
+              ? target.id.substring('topic:'.length)
+              : target.id;
+          if (categoryId == 'top' || categoryId == 'sports') continue;
+          final List<Article>? feed = ref
+              .watch(categoryFeedProvider(categoryId))
+              .value;
+          if (feed != null) {
+            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          }
+        case FollowKind.publisher:
+          final String publisherId = target.id.startsWith('publisher:')
+              ? target.id.substring('publisher:'.length)
+              : target.id;
+          final List<Article>? feed = ref
+              .watch(publisherArticlesProvider(publisherId))
+              .value;
+          if (feed != null) {
+            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          }
+        case FollowKind.location:
+          // There is no city feed in the repository API. Full-text search is
+          // the available city-scoped candidate source; matching still requires
+          // a city tag in _followScore.
+          final List<Article>? feed = ref
+              .watch(searchResultsProvider(target.label))
+              .value;
+          if (feed != null) {
+            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          }
+        case FollowKind.team:
+          final List<Article>? feed = ref
+              .watch(teamNewsProvider(target.id))
+              .value;
+          if (feed != null) {
+            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          }
+        case FollowKind.league:
+          final List<Article>? feed = ref
+              .watch(leagueNewsProvider(target.id))
+              .value;
+          if (feed != null) {
+            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          }
+      }
     }
     followedStories = stories;
-  } on Object {
+  } on Object catch (error) {
+    AppLog.debug('ForYou: follow candidates unavailable: $error');
     followingIds = const <String>{};
     followedStories = const <Article>[];
   }
@@ -421,7 +504,10 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
             topicAffinity: profile.topicAffinity(),
             publisherAffinity: profile.publisherAffinity(),
           );
-    } on Object {
+    } on Object catch (error) {
+      AppLog.debug(
+        'ForYou: signal construction failed, using follows only: $error',
+      );
       signals = ReaderSignals(followedIds: followingIds);
     }
   }

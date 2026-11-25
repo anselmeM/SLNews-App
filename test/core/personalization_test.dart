@@ -27,6 +27,12 @@ const Publisher _ap = Publisher(
   wordmark: 'AP',
   country: 'United States',
 );
+const Publisher _guardian = Publisher(
+  id: 'guardian',
+  name: 'The Guardian',
+  wordmark: 'GUARDIAN',
+  country: 'United Kingdom',
+);
 
 Article _article({
   required String id,
@@ -107,6 +113,117 @@ void main() {
     );
 
     expect(signals.topicAffinity['business'], 4);
+
+    final ReaderSignals readOnly = buildReaderSignals(
+      knownArticles: <Article>[read, target],
+      readIds: const <String>{'read'},
+    );
+    final ReaderSignals savedOnly = buildReaderSignals(
+      knownArticles: <Article>[saved, target],
+      savedIds: const <String>{'saved'},
+    );
+    expect(
+      savedOnly.topicAffinity['business'],
+      greaterThan(readOnly.topicAffinity['business'] ?? 0),
+    );
+  });
+
+  test('a shared tag boosts a story outside its category', () {
+    final Article read = _article(
+      id: 'read',
+      category: 'business',
+      tags: const <String>['budget'],
+    );
+    final Article tagged = _article(
+      id: 'tagged',
+      category: 'world',
+      tags: const <String>['budget'],
+    );
+    final Article untagged = _article(id: 'untagged', category: 'world');
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[read, tagged, untagged],
+      readIds: const <String>{'read'},
+    );
+
+    expect(
+      PersonalizationEngine.score(tagged, signals, now: now),
+      greaterThan(PersonalizationEngine.score(untagged, signals, now: now)),
+    );
+  });
+
+  test('duplicate known stories are counted once', () {
+    final Article saved = _article(id: 'saved', category: 'business');
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[saved, saved, saved],
+      savedIds: const <String>{'saved'},
+    );
+
+    expect(signals.topicAffinity['business'], 3);
+  });
+
+  test('team and league follow tags score sports stories', () {
+    final Article teamStory = _article(
+      id: 'team-story',
+      category: 'sports',
+      tags: const <String>['sports', 'team:lal', 'league:nba'],
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[teamStory],
+      followedIds: const <String>{'team:lal'},
+    );
+
+    expect(
+      PersonalizationEngine.followMatch(teamStory, signals.followedIds),
+      greaterThan(0),
+    );
+  });
+
+  test('followed stories keep local coverage ahead of international', () {
+    final Article local = _article(
+      id: 'local',
+      category: 'politics',
+      publisher: _awoko,
+      publishedAt: now.subtract(const Duration(hours: 6)),
+    );
+    final Article international = _article(
+      id: 'international',
+      category: 'politics',
+      publisher: _bbc,
+      publishedAt: now.subtract(const Duration(minutes: 5)),
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[local, international],
+      followedIds: const <String>{'topic:politics'},
+    );
+
+    final List<Article> followed = PersonalizationEngine.followedStories(
+      <Article>[international, local],
+      signals,
+    );
+    expect(followed.first.id, 'local');
+  });
+
+  test('exploration reserves a slot for a less-personalized story', () {
+    final List<Article> ranked = <Article>[
+      for (int i = 0; i < 8; i++)
+        _article(id: 'politics$i', category: 'politics', publisher: _awoko),
+      for (int i = 0; i < 4; i++)
+        _article(id: 'business$i', category: 'business', publisher: _awoko),
+    ];
+    const ReaderSignals signals = ReaderSignals(
+      topicAffinity: <String, double>{'politics': 10},
+    );
+
+    final List<Article> explored = PersonalizationEngine.reserveExploration(
+      ranked,
+      signals,
+    );
+
+    expect(explored, hasLength(ranked.length));
+    expect(
+      explored[PersonalizationEngine.explorationInterval - 1].categoryId,
+      'business',
+    );
   });
 
   test('already-read stories are down-ranked unless saved or liked', () {
@@ -176,15 +293,17 @@ void main() {
   });
 
   test('diversify caps publishers and categories without dropping stories', () {
+    // All international: this test is about diversity caps, while the
+    // local-first bucket ordering has its own test below.
     final List<Article> input = <Article>[
-      for (int i = 0; i < 5; i++)
-        _article(id: 'a$i', category: 'politics', publisher: _awoko),
       for (int i = 0; i < 5; i++)
         _article(id: 'b$i', category: 'business', publisher: _bbc),
       for (int i = 0; i < 5; i++)
         _article(id: 'c$i', category: 'world', publisher: _reuters),
       for (int i = 0; i < 5; i++)
-        _article(id: 'd$i', category: 'sports', publisher: _ap),
+        _article(id: 'd$i', category: 'science', publisher: _ap),
+      for (int i = 0; i < 5; i++)
+        _article(id: 'e$i', category: 'health', publisher: _guardian),
     ];
 
     final List<Article> output = PersonalizationEngine.diversify(
@@ -193,14 +312,44 @@ void main() {
     );
 
     expect(output, hasLength(input.length));
+    for (final String publisher in <String>[
+      'bbc',
+      'reuters',
+      'ap',
+      'guardian',
+    ]) {
+      expect(
+        output.take(8).where((Article a) => a.publisher.id == publisher).length,
+        lessThanOrEqualTo(PersonalizationEngine.maxPerPublisherInWindow),
+        reason: publisher,
+      );
+    }
     expect(
-      output.take(8).where((Article a) => a.publisher.id == 'awoko').length,
-      lessThanOrEqualTo(PersonalizationEngine.maxPerPublisherInWindow),
-    );
-    expect(
-      output.take(8).where((Article a) => a.categoryId == 'politics').length,
+      output.take(8).where((Article a) => a.categoryId == 'business').length,
       lessThanOrEqualTo(PersonalizationEngine.maxPerCategoryInWindow),
     );
+  });
+
+  test('deferred local stories stay ahead of international stories', () {
+    final List<Article> input = <Article>[
+      for (int i = 0; i < 5; i++)
+        _article(id: 'local$i', category: 'politics', publisher: _awoko),
+      for (int i = 0; i < 5; i++)
+        _article(id: 'world$i', category: 'business', publisher: _bbc),
+    ];
+
+    final List<Article> output = PersonalizationEngine.diversify(
+      input,
+      window: 4,
+    );
+
+    final int lastLocal = output.lastIndexWhere(
+      (Article a) => a.publisher.id == 'awoko',
+    );
+    final int firstInternational = output.indexWhere(
+      (Article a) => a.publisher.id == 'bbc',
+    );
+    expect(lastLocal, lessThan(firstInternational));
   });
 
   test('exploration is deterministic for the same day', () {

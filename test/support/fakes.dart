@@ -11,6 +11,8 @@
 /// never touch Hive, dio or the network.
 library;
 
+import 'dart:async';
+
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
@@ -45,6 +47,7 @@ Article testArticle({
   String categoryId = 'top',
   String? imageUrl,
   String summary = '',
+  List<String> tags = const <String>[],
 }) {
   return Article(
     id: id,
@@ -58,6 +61,7 @@ Article testArticle({
     isBreaking: isBreaking,
     isLive: isLive,
     imageUrl: imageUrl,
+    tags: tags,
   );
 }
 
@@ -288,9 +292,15 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   bool personalizeFeed = true;
 
+  /// Optional gate for testing rapid settings taps.
+  Completer<void>? personalizeGate;
+
   @override
-  Future<void> setPersonalizeFeed(bool enabled) async =>
-      personalizeFeed = enabled;
+  Future<void> setPersonalizeFeed(bool enabled) async {
+    final Completer<void>? gate = personalizeGate;
+    if (gate != null) await gate.future;
+    personalizeFeed = enabled;
+  }
 
   final Map<String, String> digestCache = <String, String>{};
 

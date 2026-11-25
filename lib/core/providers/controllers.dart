@@ -134,9 +134,28 @@ class SettingsController extends Notifier<AppSettings> {
     state = state.copyWith(weatherForecastEnabled: enabled);
   }
 
+  Future<void> _personalizeWrite = Future<void>.value();
+  int _personalizeRequest = 0;
+
   Future<void> setPersonalizeFeed(bool enabled) async {
-    await ref.read(userStateProvider).setPersonalizeFeed(enabled);
+    // Optimistic update so a rapid second tap sees (and can reverse) the first
+    // intent even while persistence is still in flight. Writes are serialized
+    // so the last tap always wins on disk.
+    final int request = ++_personalizeRequest;
+    final bool previous = state.personalizeFeed;
     state = state.copyWith(personalizeFeed: enabled);
+    final Future<void> write = _personalizeWrite.then(
+      (_) => ref.read(userStateProvider).setPersonalizeFeed(enabled),
+    );
+    _personalizeWrite = write.catchError((Object _) {});
+    try {
+      await write;
+    } catch (error) {
+      AppLog.debug('SettingsController: personalize preference failed: $error');
+      if (request == _personalizeRequest) {
+        state = state.copyWith(personalizeFeed: previous);
+      }
+    }
   }
 
   /// Enables or disables the daily follow digest on this device.

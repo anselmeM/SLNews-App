@@ -39,7 +39,11 @@ class ReaderSignals {
   bool get hasExplicitFollows => followedIds.isNotEmpty;
 
   bool get hasBehaviorSignals =>
-      readIds.isNotEmpty || savedIds.isNotEmpty || likedIds.isNotEmpty;
+      readIds.isNotEmpty ||
+      savedIds.isNotEmpty ||
+      likedIds.isNotEmpty ||
+      topicAffinity.isNotEmpty ||
+      publisherAffinity.isNotEmpty;
 
   bool get isEmpty => !hasExplicitFollows && !hasBehaviorSignals;
 
@@ -80,7 +84,14 @@ ReaderSignals buildReaderSignals({
     target[key] = (target[key] ?? 0) + weight;
   }
 
+  // The same story can arrive from the top feed, a category feed and a
+  // followed-publisher feed. Count it once or its affinity is multiplied.
+  final Map<String, Article> unique = <String, Article>{};
   for (final Article article in knownArticles) {
+    unique.putIfAbsent(article.id, () => article);
+  }
+
+  for (final Article article in unique.values) {
     double weight = 0;
     if (readIds.contains(article.id)) weight += 1;
     if (savedIds.contains(article.id)) weight += 3;
@@ -123,7 +134,7 @@ abstract final class PersonalizationEngine {
     bool includeExploration = true,
   }) {
     final int follow = _followScore(article, signals.followedIds);
-    final int topic = _affinityScore(signals.topicAffinity, article.categoryId);
+    final int topic = _bestAffinityScore(article, signals.topicAffinity);
     final int publisher = _affinityScore(
       signals.publisherAffinity,
       article.publisher.id,
@@ -196,6 +207,11 @@ abstract final class PersonalizationEngine {
           article,
     ];
     matched.sort((Article a, Article b) {
+      // Local followed coverage outranks international followed coverage even
+      // when the international story has stronger engagement.
+      final int byAudience = FeedMix.priorityOf(a)
+          .compareTo(FeedMix.priorityOf(b));
+      if (byAudience != 0) return byAudience;
       final int byScore = score(
         b,
         signals,
@@ -217,31 +233,107 @@ abstract final class PersonalizationEngine {
     int? limit,
   }) {
     final List<Article> all = ranked.toList(growable: false);
-    final List<Article> selected = <Article>[];
-    final List<Article> deferred = <Article>[];
+    if (all.isEmpty) return const <Article>[];
+
+    // Keep audience buckets contiguous. Applying caps globally used to append a
+    // capped local story after selected international stories, which broke the
+    // Sierra Leone-first rule. Deferred stories now stay inside their bucket.
+    final Map<FeedAudience, List<Article>> buckets =
+        <FeedAudience, List<Article>>{};
+    for (final Article article in all) {
+      buckets
+          .putIfAbsent(FeedMix.audienceOf(article), () => <Article>[])
+          .add(article);
+    }
+
+    final List<Article> result = <Article>[];
     final Map<String, int> publishers = <String, int>{};
     final Map<String, int> categories = <String, int>{};
 
-    for (final Article article in all) {
-      if (selected.length >= window) {
-        deferred.add(article);
-        continue;
+    for (final FeedAudience audience in FeedAudience.values) {
+      final List<Article>? bucket = buckets[audience];
+      if (bucket == null || bucket.isEmpty) continue;
+      final List<Article> selected = <Article>[];
+      final List<Article> deferred = <Article>[];
+      for (final Article article in bucket) {
+        if (result.length >= window) {
+          deferred.add(article);
+          continue;
+        }
+        final int publisherCount = publishers[article.publisher.id] ?? 0;
+        final int categoryCount = categories[article.categoryId] ?? 0;
+        if (publisherCount >= maxPerPublisher ||
+            categoryCount >= maxPerCategory) {
+          deferred.add(article);
+          continue;
+        }
+        selected.add(article);
+        publishers[article.publisher.id] = publisherCount + 1;
+        categories[article.categoryId] = categoryCount + 1;
       }
-      final int publisherCount = publishers[article.publisher.id] ?? 0;
-      final int categoryCount = categories[article.categoryId] ?? 0;
-      if (publisherCount >= maxPerPublisher ||
-          categoryCount >= maxPerCategory) {
-        deferred.add(article);
-        continue;
-      }
-      selected.add(article);
-      publishers[article.publisher.id] = publisherCount + 1;
-      categories[article.categoryId] = categoryCount + 1;
+      result.addAll(selected);
+      result.addAll(deferred);
     }
 
-    final List<Article> result = <Article>[...selected, ...deferred];
     if (limit == null) return result;
     return result.take(limit).toList(growable: false);
+  }
+
+  /// Reserves a small number of in-bucket positions for a less-personalized
+  /// story. The reserved story is swapped within the same [FeedAudience] bucket
+  /// so exploration never moves international news ahead of Sierra Leone news.
+  static const int explorationInterval = 6;
+  static const int explorationReserve = 2;
+
+  static List<Article> reserveExploration(
+    Iterable<Article> ranked,
+    ReaderSignals signals, {
+    int interval = explorationInterval,
+    int reserve = explorationReserve,
+  }) {
+    final List<Article> result = ranked.toList(growable: true);
+    if (signals.isEmpty || result.length <= interval || reserve <= 0) {
+      return result;
+    }
+
+    int placed = 0;
+    for (
+      int slot = interval - 1;
+      slot < result.length && placed < reserve;
+      slot += interval
+    ) {
+      final Article target = result[slot];
+      if (_isExplorationCandidate(target, signals)) {
+        placed++;
+        continue;
+      }
+      int candidateIndex = -1;
+      for (int index = slot + 1; index < result.length; index++) {
+        final Article candidate = result[index];
+        if (FeedMix.priorityOf(candidate) != FeedMix.priorityOf(target)) {
+          continue;
+        }
+        if (!_isExplorationCandidate(candidate, signals)) continue;
+        candidateIndex = index;
+        break;
+      }
+      if (candidateIndex < 0) continue;
+      final Article candidate = result.removeAt(candidateIndex);
+      result.insert(slot, candidate);
+      placed++;
+    }
+    return result;
+  }
+
+  static bool _isExplorationCandidate(Article article, ReaderSignals signals) {
+    if (_followScore(article, signals.followedIds) > 0) return false;
+    if (signals.readIds.contains(article.id) ||
+        signals.savedIds.contains(article.id) ||
+        signals.likedIds.contains(article.id)) {
+      return false;
+    }
+    return _bestAffinityScore(article, signals.topicAffinity) <= 0 &&
+        _affinityScore(signals.publisherAffinity, article.publisher.id) <= 0;
   }
 
   static int _followScore(Article article, Set<String> followedIds) {
@@ -254,12 +346,30 @@ abstract final class PersonalizationEngine {
     int tagMatches = 0;
     for (final String tag in article.tags) {
       final String lower = tag.toLowerCase();
-      if (followedIds.contains('topic:$lower') ||
+      if (followedIds.contains(lower) &&
+          (lower.startsWith('team:') || lower.startsWith('league:'))) {
+        // Sports feeds emit these tags from their structured metadata.
+        score += 24;
+        continue;
+      }
+      if (followedIds.contains(lower) ||
+          followedIds.contains('topic:$lower') ||
           followedIds.contains('city:$lower')) {
         tagMatches += 8;
       }
     }
     return score + (tagMatches > 16 ? 16 : tagMatches);
+  }
+
+  /// Best category/tag affinity for a candidate. Tags are how non-category
+  /// interests (city names, teams, series) reach a story.
+  static int _bestAffinityScore(Article article, Map<String, double> affinity) {
+    int best = _affinityScore(affinity, article.categoryId);
+    for (final String tag in article.tags.take(5)) {
+      final int tagScore = _affinityScore(affinity, tag.toLowerCase());
+      if (tagScore > best) best = tagScore;
+    }
+    return best;
   }
 
   static int _affinityScore(Map<String, double> affinity, String key) {
