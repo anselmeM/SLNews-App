@@ -7,7 +7,8 @@ Sentry**, configured without IP storage, account identifiers, content or screens
 It stores an **FCM registration token** when the reader enables notifications (see
 the push section at the end). Sponsored cards also use a random, anonymous install
 ID for aggregate impression/reach measurement; the server stores only a keyed hash,
-never the raw ID, and it is never used for targeting.
+never the raw ID, and it is never used for targeting. Weather can use the reader's
+approximate location only after they tap **Use my location**.
 
 > Draft for owner review. Placeholders in `{{ }}` are listed in
 > [legal/README.md](legal/README.md#placeholders-to-fill).
@@ -28,12 +29,13 @@ measurement described below.
 | Diagnostics | Crash logs (stack trace, device model, OS version, app version) | Yes | No | No — automatic when the app crashes | App functionality (diagnostics, fixing crashes) | Yes — 90-day retention at Sentry |
 | Diagnostics | Other app performance data (5 % sampled traces: app start, navigation, network timings) | Yes | No | No | App functionality (diagnostics) | Yes |
 | Device or other IDs | Anonymous sponsorship install ID (random 32-hex; not an advertising ID) | Yes | No | No — only when a sponsored card loads | App functionality (aggregate sponsor reach/frequency) | Yes — raw ID is never stored server-side; hash is not linked to an account |
+| Location | Approximate location (coordinates rounded to ~1 km) | Yes | Yes — sent to Open-Meteo solely for the forecast | Yes — only when the reader taps Use my location | App functionality (local weather) | Yes — can switch back to the saved news location; not stored on our servers |
 
-Everything else: **not collected**. No location, no financial info, no health, no
-messages, no photos or videos, no audio, no files, no contacts, no calendar, no web
-browsing history, no content/app-interaction analytics, no advertising identifier.
-The only identifiers are the FCM token and the anonymous sponsorship install ID
-described above.
+Everything else: **not collected**. No precise location, financial info, health,
+messages, photos or videos, audio, files, contacts, calendar, web browsing history,
+content/app-interaction analytics or advertising identifier. The only identifiers
+are the FCM token, the anonymous sponsorship install ID and the optional approximate
+weather location described above.
 
 **Security practices**
 
@@ -46,7 +48,8 @@ described above.
 **Notes for the reviewer**
 
 - Browsing, search, saving and liking work without an account; data is then local to
-  the device and never transmitted.
+  the device and never transmitted. Weather uses the saved news location unless the
+  reader explicitly opts into approximate device location.
 - Sign-in is handled by Clerk; the app stores only the resulting session on device.
 - Sponsored cards are served by our own backend; no ad SDK and no data sharing with
   advertisers.
@@ -83,7 +86,7 @@ else needs adding.
 | Drugs, alcohol, tobacco references | No |
 | Gambling, simulated gambling | No |
 | User-generated content or user-to-user interaction | No |
-| Shares user's location | No |
+| Shares user's location | Only approximate weather location with Open-Meteo after opt-in; never with advertisers |
 | Allows users to purchase digital goods | No |
 | Contains ads | Yes (labelled sponsored cards) |
 
@@ -128,9 +131,10 @@ provide financial services, advice, trading, payments or lending.
 | `INTERNET` | fetching news, images, market data, sync, push registration |
 | `ACCESS_NETWORK_STATE` | offline banner and cache decisions |
 | `POST_NOTIFICATIONS` | breaking-news alerts; the reader is asked only after their first save or follow |
+| `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` | optional local weather; permission is requested only after the reader taps Use my location. Coordinates are rounded before the forecast request and no background location is used. |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT`, `USE_CREDENTIALS`, `CREDENTIAL_MANAGER_SET_ORIGIN` | added by the sign-in library (Clerk); used only for account sign-in and device credentials |
 
-No location, camera, microphone, contacts, SMS or storage permission is declared.
+No camera, microphone, contacts, SMS or storage permission is declared. Location permissions are optional and used only for the weather card after an explicit opt-in.
 `POST_NOTIFICATIONS` is the only notification-related permission.
 
 ## 9. Encryption / export compliance

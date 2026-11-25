@@ -47,7 +47,12 @@ class DefaultWeatherRepository implements WeatherRepository {
     await _ready;
     final WeatherSnapshot? live = await _fetch(location);
     if (live != null) return live;
-    return _weather[location.id] ?? WeatherSnapshot.placeholder(location.label);
+    final WeatherSnapshot? seeded = _weather[location.id];
+    if (seeded != null) return seeded;
+    if (location.id.startsWith('geo:')) {
+      return WeatherSnapshot.unavailable(location.label);
+    }
+    return WeatherSnapshot.placeholder(location.label);
   }
 
   Future<void> _hydrate() async {

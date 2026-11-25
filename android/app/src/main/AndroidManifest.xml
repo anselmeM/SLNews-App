@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <!-- Weather can follow the reader's approximate location after an explicit
+         "Use my location" action. Coordinates are rounded before the forecast
+         request; no background location is requested. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application

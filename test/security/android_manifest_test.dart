@@ -62,6 +62,7 @@ void main() {
     expect(permissions, <String>{
       'android.permission.INTERNET',
       'android.permission.ACCESS_NETWORK_STATE',
+      'android.permission.ACCESS_COARSE_LOCATION',
       'android.permission.POST_NOTIFICATIONS',
     });
   });

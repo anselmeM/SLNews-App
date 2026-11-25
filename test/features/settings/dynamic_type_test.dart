@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/settings/presentation/settings_page.dart';
@@ -36,6 +37,9 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           userStateProvider.overrideWithValue(FakeUserStateRepository()),
+          preferencesStoreProvider.overrideWithValue(
+            InMemoryPreferencesStore(),
+          ),
         ],
         child: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(2)),

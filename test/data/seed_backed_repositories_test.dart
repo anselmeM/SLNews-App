@@ -238,6 +238,26 @@ void main() {
       expect(freetown.highC, 31);
     });
 
+    test('device locations do not receive a fake Freetown forecast', () async {
+      final DefaultWeatherRepository repository = DefaultWeatherRepository(
+        seedLoader: bundled,
+      );
+
+      final WeatherSnapshot snapshot = await repository.current(
+        const NewsLocation(
+          id: 'geo:51.51,-0.13',
+          label: 'London',
+          region: 'United Kingdom',
+          latitude: 51.51,
+          longitude: -0.13,
+        ),
+      );
+
+      expect(snapshot.locationLabel, 'London');
+      expect(snapshot.isAvailable, isFalse);
+      expect(snapshot.conditionLabel, 'Weather unavailable');
+    });
+
     test('falls back to a placeholder for an unknown city', () async {
       final DefaultWeatherRepository repository = DefaultWeatherRepository(
         seedLoader: bundled,

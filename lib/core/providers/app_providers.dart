@@ -33,6 +33,8 @@ import '../domain/repositories/user_state_repository.dart';
 import '../domain/repositories/weather_repository.dart';
 import '../data/sources/index_quote_source.dart';
 import '../domain/models/index_quote.dart';
+import '../domain/models/weather_location_state.dart';
+import '../location/device_location_service.dart';
 
 import 'package:slnews_mobile/core/utils/app_log.dart';
 
@@ -272,17 +274,135 @@ final notificationsProvider = FutureProvider<List<NotificationItem>>(
   name: 'notifications',
 );
 
-/// Weather for the active location.
+/// Platform location lookup; overridden in widget tests that exercise the
+/// permission flow.
+final Provider<DeviceLocationService> deviceLocationServiceProvider =
+    Provider<DeviceLocationService>(
+      (Ref ref) => GeolocatorDeviceLocationService(),
+      name: 'deviceLocationService',
+    );
+
+/// Reader-selected weather location.
 ///
-/// The location id is read from the persisted user state rather than from
-/// `settingsControllerProvider`, which lives in `controllers.dart` and would
-/// create an import cycle. The feed itself no longer has a city concept: this is
-/// the weather location only, and the app offers no picker for it today.
+/// Deliberately separate from the news feed location: the feed remains
+/// Sierra Leone-first, while the weather card can follow the device after an
+/// explicit "Use my location" action.
+final NotifierProvider<WeatherLocationController, WeatherLocationState>
+weatherLocationControllerProvider =
+    NotifierProvider<WeatherLocationController, WeatherLocationState>(
+      WeatherLocationController.new,
+      name: 'weatherLocation',
+    );
+
+class WeatherLocationController extends Notifier<WeatherLocationState> {
+  static const String useDeviceLocationKey = 'weather.useDeviceLocation';
+  static const String savedDeviceLocationKey = 'weather.deviceLocation';
+
+  @override
+  WeatherLocationState build() {
+    final String selectedId = ref.watch(userStateProvider).activeLocationId;
+    final NewsLocation fallback = _fallbackFor(selectedId);
+    final PreferencesStore? store = _preferencesOrNull();
+    final bool enabled = store?.boolean(useDeviceLocationKey) ?? false;
+    final String? raw = store?.string(savedDeviceLocationKey);
+
+    if (enabled && raw != null && raw.isNotEmpty) {
+      try {
+        final Object? decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          final NewsLocation saved = NewsLocation.fromJson(
+            Map<String, dynamic>.from(decoded),
+          );
+          if (saved.latitude != null && saved.longitude != null) {
+            return WeatherLocationState(location: saved, usingDevice: true);
+          }
+        }
+      } catch (error) {
+        AppLog.debug('WeatherLocation: unreadable saved location: $error');
+      }
+    }
+    return WeatherLocationState(location: fallback);
+  }
+
+  /// Requests the platform location, persists the resolved place, and updates
+  /// the weather card. Returns the platform status so the sheet can offer
+  /// "Open settings" when permission is permanently denied.
+  Future<DeviceLocationStatus> useCurrentLocation() async {
+    if (state.busy) {
+      return state.status ?? DeviceLocationStatus.unavailable;
+    }
+    state = state.copyWith(busy: true, clearStatus: true);
+
+    final DeviceLocationResult result = await ref
+        .read(deviceLocationServiceProvider)
+        .current();
+
+    final NewsLocation? location = result.location;
+    if (location == null) {
+      state = state.copyWith(busy: false, status: result.status);
+      return result.status;
+    }
+
+    final PreferencesStore? store = _preferencesOrNull();
+    if (store != null) {
+      try {
+        await store.putString(
+          savedDeviceLocationKey,
+          jsonEncode(location.toJson()),
+        );
+        await store.putBool(useDeviceLocationKey, true);
+      } catch (error) {
+        // The current session can still use the place even if persistence fails.
+        AppLog.debug('WeatherLocation: could not persist location: $error');
+      }
+    }
+    state = WeatherLocationState(location: location, usingDevice: true);
+    return DeviceLocationStatus.granted;
+  }
+
+  /// Switches back to the saved news location and clears the device location.
+  Future<void> useNewsLocation() async {
+    final String selectedId = ref.read(userStateProvider).activeLocationId;
+    final PreferencesStore? store = _preferencesOrNull();
+    state = WeatherLocationState(location: _fallbackFor(selectedId));
+    if (store != null) {
+      try {
+        await store.putBool(useDeviceLocationKey, false);
+        await store.remove(savedDeviceLocationKey);
+      } catch (error) {
+        AppLog.debug('WeatherLocation: could not clear location: $error');
+      }
+    }
+  }
+
+  Future<bool> openSystemSettings() =>
+      ref.read(deviceLocationServiceProvider).openSettings();
+
+  /// Widget tests sometimes mount the weather card without the full app
+  /// bootstrap. The location feature degrades to session-only when there is no
+  /// preferences store instead of failing the whole card.
+  PreferencesStore? _preferencesOrNull() {
+    try {
+      return ref.read(preferencesStoreProvider);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static NewsLocation _fallbackFor(String locationId) {
+    return SlLocations.all.firstWhere(
+      (NewsLocation candidate) => candidate.id == locationId,
+      orElse: () => SlLocations.fallback,
+    );
+  }
+}
+
+/// Weather for the reader's selected weather location.
 final activeWeatherProvider = FutureProvider<WeatherSnapshot>((Ref ref) {
-  final String locationId = ref.watch(userStateProvider).activeLocationId;
-  final NewsLocation location = SlLocations.all.firstWhere(
-    (NewsLocation candidate) => candidate.id == locationId,
-    orElse: () => SlLocations.fallback,
+  final NewsLocation location = ref.watch(
+    weatherLocationControllerProvider.select(
+      (WeatherLocationState value) => value.location,
+    ),
   );
   return ref.watch(weatherRepositoryProvider).current(location);
 }, name: 'activeWeather');

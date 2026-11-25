@@ -12,6 +12,7 @@ class WeatherSnapshot {
     this.lowC,
     this.humidityPercent,
     required this.updatedAt,
+    this.isAvailable = true,
   });
 
   /// "Freetown" — the active [NewsLocation] label.
@@ -28,6 +29,11 @@ class WeatherSnapshot {
   final int? humidityPercent;
   final DateTime updatedAt;
 
+  /// False when live weather could not be loaded and no bundled snapshot
+  /// applies (for example a device location while offline). The card hides the
+  /// fake temperature instead of showing an invented forecast.
+  final bool isAvailable;
+
   /// "29° · Thundery showers" — the compact label used by the header chip.
   String get compactLabel => '$temperatureC° · $conditionLabel';
 
@@ -40,6 +46,7 @@ class WeatherSnapshot {
     'lowC': lowC,
     'humidityPercent': humidityPercent,
     'updatedAt': updatedAt.toIso8601String(),
+    'isAvailable': isAvailable,
   };
 
   factory WeatherSnapshot.fromJson(Map<String, dynamic> json) =>
@@ -54,7 +61,18 @@ class WeatherSnapshot {
         updatedAt: json['updatedAt'] == null
             ? DateTime.now()
             : DateTime.parse(json['updatedAt'] as String),
+        isAvailable: json['isAvailable'] as bool? ?? true,
       );
+
+  /// Honest fallback for a location with no live forecast and no bundled seed.
+  factory WeatherSnapshot.unavailable(String locationLabel) => WeatherSnapshot(
+    locationLabel: locationLabel,
+    temperatureC: 0,
+    conditionLabel: 'Weather unavailable',
+    glyph: 'cloud',
+    updatedAt: DateTime.now(),
+    isAvailable: false,
+  );
 
   /// Used before the first successful weather fetch, so the header never jitters.
   static WeatherSnapshot placeholder(String locationLabel) => WeatherSnapshot(
