@@ -320,7 +320,7 @@ class FakeWeatherRepository implements WeatherRepository {
     this.pending,
   });
 
-  final bool throwOnCurrent;
+  bool throwOnCurrent;
 
   /// Returned as-is when set, including a deliberately stale location.
   final WeatherSnapshot? snapshot;

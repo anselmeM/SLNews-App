@@ -175,11 +175,13 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
 
   Future<void> _refreshWeatherLocation() async {
     try {
-      await ref
+      final bool refreshed = await ref
           .read(weatherLocationControllerProvider.notifier)
           .refreshDeviceLocation();
       // Same-place resume refreshes do not change the location selection.
-      ref.invalidate(activeWeatherProvider);
+      // Only force a forecast fetch when a new device place was applied; the
+      // controller also throttles repeated foregrounding.
+      if (refreshed) ref.invalidate(activeWeatherProvider);
     } catch (error) {
       AppLog.debug('PushTapHandler: weather location refresh failed: $error');
     }

@@ -7,6 +7,7 @@ import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/domain/models/weather_snapshot.dart';
 import 'package:slnews_mobile/core/location/device_location_service.dart';
+import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/utils/time_ago.dart';
 import 'package:slnews_mobile/features/feed/presentation/widgets/weather_briefing_card.dart';
 
@@ -137,6 +138,25 @@ void main() {
     expect(find.text('18°'), findsNothing);
     expect(find.text('Weather unavailable'), findsWidgets);
     expect(find.text('Freetown'), findsOneWidget);
+  });
+
+  testWidgets('a failed same-place refresh does not keep the old forecast', (
+    WidgetTester tester,
+  ) async {
+    final FakeWeatherRepository weather = FakeWeatherRepository();
+    await tester.pumpWidget(card(weather: weather));
+    await tester.pumpAndSettle();
+    expect(find.text('29°'), findsOneWidget);
+
+    weather.throwOnCurrent = true;
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(WeatherBriefingCard)),
+    );
+    container.invalidate(activeWeatherProvider);
+    await tester.pumpAndSettle();
+
+    expect(find.text('29°'), findsNothing);
+    expect(find.text('Weather unavailable'), findsWidgets);
   });
 
   testWidgets('weather can be hidden while the briefing stays', (

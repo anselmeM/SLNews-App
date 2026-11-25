@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,11 +18,14 @@ class _FakeDeviceLocationService implements DeviceLocationService {
   bool settingsOpened = false;
   int calls = 0;
   bool? lastRequestPermission;
+  Future<DeviceLocationResult>? pending;
 
   @override
   Future<DeviceLocationResult> current({bool requestPermission = true}) async {
     calls++;
     lastRequestPermission = requestPermission;
+    final Future<DeviceLocationResult>? gate = pending;
+    if (gate != null) return gate;
     return result;
   }
 
@@ -226,16 +231,23 @@ void main() {
   test(
     'an opt-out with a failed legacy clear still disables device weather',
     () async {
-      final InMemoryPreferencesStore previous = store;
+      final InMemoryPreferencesStore previous = InMemoryPreferencesStore();
       final _PartialFailureStore failing = _PartialFailureStore(
         base: previous,
         failClear: true,
       );
+      final _FakeDeviceLocationService localService =
+          _FakeDeviceLocationService(
+            const DeviceLocationResult(
+              status: DeviceLocationStatus.granted,
+              location: london,
+            ),
+          );
       final ProviderContainer maybe = ProviderContainer(
         overrides: <Override>[
           preferencesStoreProvider.overrideWithValue(failing),
           userStateProvider.overrideWithValue(FakeUserStateRepository()),
-          deviceLocationServiceProvider.overrideWithValue(service),
+          deviceLocationServiceProvider.overrideWithValue(localService),
         ],
       );
       addTearDown(maybe.dispose);
@@ -249,7 +261,7 @@ void main() {
         overrides: <Override>[
           preferencesStoreProvider.overrideWithValue(failing),
           userStateProvider.overrideWithValue(FakeUserStateRepository()),
-          deviceLocationServiceProvider.overrideWithValue(service),
+          deviceLocationServiceProvider.overrideWithValue(localService),
         ],
       );
       addTearDown(reopened.dispose);
@@ -261,16 +273,24 @@ void main() {
   );
 
   test('an opt-out survives a failed state document and flag write', () async {
+    final InMemoryPreferencesStore fresh = InMemoryPreferencesStore();
     final _PartialFailureStore failing = _PartialFailureStore(
-      base: store,
+      base: fresh,
       failAtomic: true,
       failFlag: true,
+      failClear: true,
+    );
+    final _FakeDeviceLocationService localService = _FakeDeviceLocationService(
+      const DeviceLocationResult(
+        status: DeviceLocationStatus.granted,
+        location: london,
+      ),
     );
     ProviderContainer buildWithStore() => ProviderContainer(
       overrides: <Override>[
         preferencesStoreProvider.overrideWithValue(failing),
         userStateProvider.overrideWithValue(FakeUserStateRepository()),
-        deviceLocationServiceProvider.overrideWithValue(service),
+        deviceLocationServiceProvider.overrideWithValue(localService),
       ],
     );
     final ProviderContainer c = buildWithStore();
@@ -287,6 +307,167 @@ void main() {
       reopened.read(weatherLocationControllerProvider).usingDevice,
       isFalse,
     );
+  });
+
+  test('a numeric opt-out tombstone survives failed string writes', () async {
+    final InMemoryPreferencesStore fresh = InMemoryPreferencesStore();
+    final _PartialFailureStore failing = _PartialFailureStore(
+      base: fresh,
+      failAllStrings: true,
+    );
+    ProviderContainer container() => ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(failing),
+        userStateProvider.overrideWithValue(FakeUserStateRepository()),
+        deviceLocationServiceProvider.overrideWithValue(
+          _FakeDeviceLocationService(
+            const DeviceLocationResult(
+              status: DeviceLocationStatus.granted,
+              location: london,
+            ),
+          ),
+        ),
+      ],
+    );
+    final ProviderContainer first = container();
+    addTearDown(first.dispose);
+    final WeatherLocationController controller = first.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    await controller.useNewsLocation();
+
+    final ProviderContainer reopened = container();
+    addTearDown(reopened.dispose);
+    expect(
+      reopened.read(weatherLocationControllerProvider).usingDevice,
+      isFalse,
+    );
+  });
+
+  test('a written enabled state wins over a stale legacy false', () async {
+    final InMemoryPreferencesStore fresh = InMemoryPreferencesStore(
+      <String, Object?>{WeatherLocationController.useDeviceLocationKey: false},
+    );
+    final _PartialFailureStore failing = _PartialFailureStore(
+      base: fresh,
+      failFlag: true,
+    );
+    final _FakeDeviceLocationService localService = _FakeDeviceLocationService(
+      const DeviceLocationResult(
+        status: DeviceLocationStatus.granted,
+        location: london,
+      ),
+    );
+    ProviderContainer container() => ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(failing),
+        userStateProvider.overrideWithValue(FakeUserStateRepository()),
+        deviceLocationServiceProvider.overrideWithValue(localService),
+      ],
+    );
+
+    final ProviderContainer first = container();
+    addTearDown(first.dispose);
+    final WeatherLocationController controller = first.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    await controller.useNewsLocation();
+    await controller.useCurrentLocation();
+    expect(
+      fresh.boolean(WeatherLocationController.useDeviceLocationKey),
+      isFalse,
+      reason: 'the legacy flag write is forced to fail',
+    );
+
+    final ProviderContainer reopened = container();
+    addTearDown(reopened.dispose);
+    final WeatherLocationState state = reopened.read(
+      weatherLocationControllerProvider,
+    );
+    expect(state.usingDevice, isTrue);
+    expect(state.location.label, 'London');
+  });
+
+  test('an opt-out during an in-flight refresh is not undone', () async {
+    final ProviderContainer c = build();
+    final WeatherLocationController controller = c.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    final Completer<DeviceLocationResult> pending =
+        Completer<DeviceLocationResult>();
+    service.pending = pending.future;
+
+    final Future<bool> refresh = controller.refreshDeviceLocation();
+    await Future<void>.delayed(Duration.zero);
+    await controller.useNewsLocation();
+    pending.complete(
+      const DeviceLocationResult(
+        status: DeviceLocationStatus.granted,
+        location: NewsLocation(
+          id: 'geo:48.86,2.35',
+          label: 'Paris',
+          region: 'France',
+          latitude: 48.86,
+          longitude: 2.35,
+        ),
+      ),
+    );
+
+    expect(await refresh, isFalse);
+    final WeatherLocationState state = c.read(
+      weatherLocationControllerProvider,
+    );
+    expect(state.usingDevice, isFalse);
+    expect(state.location.id, 'city:freetown');
+  });
+
+  test('rapid resume refreshes are throttled', () async {
+    final ProviderContainer c = build();
+    final WeatherLocationController controller = c.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    service.result = const DeviceLocationResult(
+      status: DeviceLocationStatus.granted,
+      location: NewsLocation(
+        id: 'geo:48.86,2.35',
+        label: 'Paris',
+        region: 'France',
+        latitude: 48.86,
+        longitude: 2.35,
+      ),
+    );
+
+    expect(await controller.refreshDeviceLocation(), isTrue);
+    final int callsAfterFirst = service.calls;
+    expect(await controller.refreshDeviceLocation(), isFalse);
+    expect(service.calls, callsAfterFirst);
+  });
+
+  test('a stalled whole lookup clears busy after the timeout', () async {
+    final ProviderContainer c = build();
+    final WeatherLocationController controller = c.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    service.pending = Completer<DeviceLocationResult>().future;
+    WeatherLocationController.lookupTimeout = const Duration(milliseconds: 20);
+    addTearDown(
+      () =>
+          WeatherLocationController.lookupTimeout = const Duration(seconds: 15),
+    );
+
+    final bool refreshed = await controller.refreshDeviceLocation();
+
+    final WeatherLocationState state = c.read(
+      weatherLocationControllerProvider,
+    );
+    expect(refreshed, isFalse);
+    expect(state.busy, isFalse);
+    expect(state.usingDevice, isTrue);
   });
 
   test('openSettings is forwarded to the platform service', () async {
@@ -306,12 +487,14 @@ class _PartialFailureStore extends InMemoryPreferencesStore {
     this.failClear = false,
     this.failAtomic = false,
     this.failFlag = false,
+    this.failAllStrings = false,
   });
 
   final InMemoryPreferencesStore base;
   final bool failClear;
   final bool failAtomic;
   final bool failFlag;
+  final bool failAllStrings;
 
   @override
   String? string(String key) => base.string(key);
@@ -326,8 +509,13 @@ class _PartialFailureStore extends InMemoryPreferencesStore {
   Set<String> stringSet(String key) => base.stringSet(key);
 
   @override
-  Future<void> putString(String key, String value) =>
-      base.putString(key, value);
+  Future<void> putString(String key, String value) {
+    if (failAllStrings) return Future<void>.error(StateError('write failed'));
+    if (failAtomic && key == WeatherLocationController.deviceStateKey) {
+      return Future<void>.error(StateError('state write failed'));
+    }
+    return base.putString(key, value);
+  }
 
   @override
   Future<void> putBool(String key, bool value) {

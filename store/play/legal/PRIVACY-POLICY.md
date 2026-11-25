@@ -40,12 +40,15 @@ identifier.
 | **Push-notification token** (FCM registration token) | only if you enable notifications | stored in our database against your account; deleted when notifications are turned off or you delete your account |
 | **Technical request data** (IP address, app version, timestamps, error responses) | whenever the app talks to a server | processed by our hosting providers and visible to us in logs |
 | **Anonymous sponsorship install ID** (random 32-character ID, not an advertising ID) and impression/tap events | when a sponsored card is shown or tapped | sent to our backend; only a keyed hash is stored, used for aggregate reach/frequency reporting; never linked to your account and never shared with advertisers |
-| **Approximate weather location** (coordinates rounded to about 1 km) | only when you tap Use my location | used to fetch the forecast from Open-Meteo, and processed by the platform geocoder (Google Play services on Android, Apple geocoding on iOS) to turn the coordinates into a place label; not stored on our servers, not linked to your account, not used for advertising. You can switch back to the saved news location at any time. |
+| **Approximate weather location** (coordinates rounded to about 1 km) | only after you opt in with Use my location, and refreshed automatically when the app starts or returns to the foreground while that opt-in is active | used to fetch the forecast from Open-Meteo, and processed by the platform geocoder (Google Play services on Android, Apple geocoding on iOS) to turn the coordinates into a place label; not stored on our servers, not linked to your account, not used for advertising. You can switch back to the saved news location at any time. |
 | **Locally cached content** (recent articles, images, preferences, the last weather place) | while you use the app | stored only on your device |
 
 We do **not** store precise GPS location. If you opt into weather location, we use
 approximate/rounded coordinates to fetch your forecast and to resolve a city/place
-label through your device's platform geocoder (see the table above).
+label through your device's platform geocoder (see the table above). While the
+opt-in remains enabled, the app refreshes that approximate location on startup and
+when it returns to the foreground, so the weather card follows you when you travel.
+Switching back to the saved news location stops these refreshes.
 We do not collect contacts, calendar, SMS or call logs,
 photos, camera or microphone input, health data, or your advertising identifier.
 
