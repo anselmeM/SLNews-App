@@ -31,14 +31,24 @@ Known Phase 1 limit: affinity is derived only from stories still present in the
 current candidate pool. Phase 2 adds a persistent local interest profile so older
 reads/saves continue to matter.
 
-## Phase 2 — behavioural learning (next)
+## Phase 2 — behavioural learning (shipped)
 
-- Local event counters: opened, saved, liked, skipped, dwell time.
-- Persist topic/publisher affinity over 7/30-day windows.
-- “Show less like this” negative feedback.
-- “Continue reading” rail.
-- Personalization reset/diagnostics in Settings.
+- Local event log: opened, read (dwell + progress), saved, liked, skipped and
+  explicit dismissals.
+- Topic/publisher affinity over a 30-day window, with full weight inside 7 days
+  and half weight up to 30 days.
+- Short, shallow reads become negative skip signals.
+- **Show less like this** hides the story immediately and lowers its
+  topic/publisher affinity.
+- **Continue reading** rail resolves unfinished reading positions and shows
+  progress.
+- **Settings → Personalization data** shows local signal counts and can reset
+  the profile.
+- Sync-applied saves/likes never train the profile; only reader actions do.
 - No server profile; still on-device.
+
+Known Phase 2 limit: it remains a transparent weighted model, not a learned
+ranking model. Phase 3 defines experimentation and privacy-safe scaling.
 
 ## Phase 3 — experimentation and scale
 

@@ -31,7 +31,7 @@ import '../../../core/widgets/store_widget.dart';
 import '../../../core/widgets/state_views.dart';
 import 'widgets/article_actions.dart';
 import 'widgets/breaking_alert_banner.dart';
-import 'widgets/recently_read_rail.dart';
+import 'widgets/continue_reading_rail.dart';
 import '../../markets/presentation/stocks_page.dart';
 import '../../markets/presentation/widgets/stocks_card.dart';
 import 'widgets/sport_spotlight_card.dart';

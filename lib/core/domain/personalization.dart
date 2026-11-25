@@ -264,9 +264,11 @@ abstract final class PersonalizationEngine {
 
   static int _affinityScore(Map<String, double> affinity, String key) {
     if (affinity.isEmpty) return 0;
-    final double peak = affinity.values.reduce((double a, double b) {
-      return a > b ? a : b;
-    });
+    double peak = 0;
+    for (final double candidate in affinity.values) {
+      final double magnitude = candidate.abs();
+      if (magnitude > peak) peak = magnitude;
+    }
     if (peak <= 0) return 0;
     final double value = affinity[key] ?? 0;
     return ((value / peak) * 12).round();

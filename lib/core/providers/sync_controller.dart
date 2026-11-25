@@ -334,21 +334,21 @@ class SyncController extends Notifier<SyncStatus> {
 
     for (final String id
         in ref.read(bookmarksControllerProvider).difference(desiredBookmarks)) {
-      await bookmarks.toggle(id);
+      await bookmarks.toggle(id, recordEngagement: false);
     }
     for (final String id in desiredBookmarks.difference(
       ref.read(bookmarksControllerProvider),
     )) {
-      await bookmarks.toggle(id);
+      await bookmarks.toggle(id, recordEngagement: false);
     }
     for (final String id
         in ref.read(likesControllerProvider).difference(desiredLikes)) {
-      await likes.toggle(id);
+      await likes.toggle(id, recordEngagement: false);
     }
     for (final String id in desiredLikes.difference(
       ref.read(likesControllerProvider),
     )) {
-      await likes.toggle(id);
+      await likes.toggle(id, recordEngagement: false);
     }
 
     final Map<String, FollowTarget> catalogue = _followCatalogue(ref);

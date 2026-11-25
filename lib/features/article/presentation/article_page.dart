@@ -10,6 +10,7 @@ import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/providers/personalization_profile.dart';
 import '../../../core/providers/reading_history_provider.dart';
 import '../../../core/tts/tts_controller.dart';
 import '../../../core/routing/app_routes.dart';
@@ -99,11 +100,63 @@ class _ReaderBody extends ConsumerStatefulWidget {
 
 class _ReaderBodyState extends ConsumerState<_ReaderBody>
     with ScrollToTopStateMixin<_ReaderBody> {
+  DateTime? _openedAt;
+  ProviderContainer? _profileContainer;
+  double _lastProgress = 0;
+
   @override
   double get scrollToTopThreshold => ScrollToTopButton.threshold;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_profileContainer != null) return;
+    try {
+      _profileContainer = ProviderScope.containerOf(context);
+    } catch (_) {
+      // No provider scope (for example a very narrow widget test harness).
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _openedAt = DateTime.now();
+    scrollController.addListener(_captureScrollProgress);
+    // Record the open after the frame: provider mutation during initState can
+    // race the first build in Riverpod.
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted) return;
+      try {
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordOpen(widget.article);
+      } catch (_) {
+        // Personalization is best-effort and must never affect reading.
+      }
+    });
+  }
+
+  @override
   void dispose() {
+    scrollController.removeListener(_captureScrollProgress);
+    final DateTime? openedAt = _openedAt;
+    if (openedAt != null) {
+      try {
+        final ProviderContainer? container = _profileContainer;
+        if (container != null) {
+          container
+              .read(personalizationProfileProvider.notifier)
+              .recordRead(
+                widget.article,
+                dwell: DateTime.now().difference(openedAt),
+                progress: _finalProgress(),
+              );
+        }
+      } catch (_) {
+        // The container may already be gone during teardown.
+      }
+    }
     // Leaving the reader must not leave the phone talking.
     try {
       ref.read(articleTtsProvider.notifier).stop();
@@ -111,6 +164,46 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
       // The container may already be gone during teardown.
     }
     super.dispose();
+  }
+
+  /// Scroll progress at close. An article shorter than the viewport counts as
+  /// fully read rather than as 0%.
+  double _finalProgress() {
+    if (!scrollController.hasClients) {
+      return _lastProgress > 0 ? _lastProgress : 1;
+    }
+    final double max = scrollController.position.maxScrollExtent;
+    if (max <= 0) return 1;
+    final double progress = (scrollController.offset / max)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    // An article that fits without scrolling counts as fully read; an article
+    // left at the very top also has no meaningful "continue" position.
+    return progress > 0 ? progress : 1;
+  }
+
+  void _captureScrollProgress() {
+    if (!scrollController.hasClients) return;
+    final double max = scrollController.position.maxScrollExtent;
+    if (max <= 0) {
+      _lastProgress = 1;
+    } else {
+      _lastProgress = (scrollController.offset / max)
+          .clamp(0.0, 1.0)
+          .toDouble();
+    }
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    final ScrollMetrics metrics = notification.metrics;
+    if (metrics.maxScrollExtent <= 0) {
+      _lastProgress = 1;
+    } else {
+      _lastProgress = (metrics.pixels / metrics.maxScrollExtent)
+          .clamp(0.0, 1.0)
+          .toDouble();
+    }
+    return false;
   }
 
   @override
@@ -136,117 +229,122 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     // story is scrolled, exactly like the feeds.
     return Stack(
       children: <Widget>[
-        CustomScrollView(
-          controller: scrollController,
-          slivers: <Widget>[
-            SliverAppBar(
-              pinned: true,
-              toolbarHeight: 72,
-              titleSpacing: AppSpacing.xl,
-              backgroundColor: context.colors.canvas,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: 'Back',
-                onPressed: () => context.pop(),
-              ),
-              // The reference reader puts the outlet's own wordmark in the bar,
-              // not a plain text name: PublisherMark draws the logo when the outlet
-              // has one and its brand wordmark otherwise.
-              title: PublisherMark(
-                publisher: article.publisher,
-                logoHeight: 22,
-                maxWidth: 150,
-                color: context.colors.onSurfaceVariant,
-              ),
-              centerTitle: true,
-              actions: <Widget>[
-                if (ArticleWebMode.originalAction(article.sourceUrl) !=
-                    ArticleOriginalAction.none)
-                  IconButton(
-                    icon: const Icon(Icons.public),
-                    tooltip: 'Read original',
-                    onPressed: () => _openOriginal(context, article),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.bookmark_border),
-                  tooltip: 'Save story',
-                  onPressed: () {
-                    ref
-                        .read(bookmarksControllerProvider.notifier)
-                        .toggle(article.id);
-                    _showSnack(
-                      context,
-                      ref.read(bookmarksControllerProvider).contains(article.id)
-                          ? 'Saved'
-                          : 'Removed from saved',
-                    );
-                  },
+        NotificationListener<ScrollNotification>(
+          onNotification: _onScrollNotification,
+          child: CustomScrollView(
+            controller: scrollController,
+            slivers: <Widget>[
+              SliverAppBar(
+                pinned: true,
+                toolbarHeight: 72,
+                titleSpacing: AppSpacing.xl,
+                backgroundColor: context.colors.canvas,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back',
+                  onPressed: () => context.pop(),
                 ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
-            ),
-            SliverPadding(
-              padding: AppSpacing.page,
-              sliver: SliverList.list(
-                children: <Widget>[
-                  ArticleHeader(article: article),
-                  const SizedBox(height: AppSpacing.lg),
-                  ArticleHeroMedia(article: article),
-                  const SizedBox(height: AppSpacing.xl),
-                  if (article.previewOnly)
-                    _PreviewStoryCard(
-                      article: article,
-                      onReadFullStory: () => _openOriginal(context, article),
-                    )
-                  else ...<Widget>[
-                    // Shown only when the outlet did not simply repeat the
-                    // standfirst as the body's opening paragraph.
-                    if (article.summary.isNotEmpty &&
-                        !HtmlBlocks.opensWith(
-                          article.bodyHtml,
-                          article.summary,
-                        )) ...<Widget>[
-                      Text(article.summary, style: context.typography.lead),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    HtmlContent(html: article.bodyHtml),
-                  ],
-                  if (article.tags.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: <Widget>[
-                        for (final String tag in article.tags)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.xs + 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.colors.surfaceMuted,
-                              borderRadius: AppRadius.pillRadius,
-                            ),
-                            child: Text(
-                              '#$tag',
-                              style: context.typography.caption,
-                            ),
-                          ),
-                      ],
+                // The reference reader puts the outlet's own wordmark in the bar,
+                // not a plain text name: PublisherMark draws the logo when the outlet
+                // has one and its brand wordmark otherwise.
+                title: PublisherMark(
+                  publisher: article.publisher,
+                  logoHeight: 22,
+                  maxWidth: 150,
+                  color: context.colors.onSurfaceVariant,
+                ),
+                centerTitle: true,
+                actions: <Widget>[
+                  if (ArticleWebMode.originalAction(article.sourceUrl) !=
+                      ArticleOriginalAction.none)
+                    IconButton(
+                      icon: const Icon(Icons.public),
+                      tooltip: 'Read original',
+                      onPressed: () => _openOriginal(context, article),
                     ),
-                  ],
-                  const SizedBox(height: AppSpacing.xxl),
-                  const _ArticleEndAd(),
-                  const SizedBox(height: AppSpacing.xxl),
-                  RelatedStories(articles: related),
-                  const SizedBox(height: AppSpacing.xxxl),
+                  IconButton(
+                    icon: const Icon(Icons.bookmark_border),
+                    tooltip: 'Save story',
+                    onPressed: () {
+                      ref
+                          .read(bookmarksControllerProvider.notifier)
+                          .toggle(article.id);
+                      _showSnack(
+                        context,
+                        ref
+                                .read(bookmarksControllerProvider)
+                                .contains(article.id)
+                            ? 'Saved'
+                            : 'Removed from saved',
+                      );
+                    },
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
                 ],
               ),
-            ),
-          ],
+              SliverPadding(
+                padding: AppSpacing.page,
+                sliver: SliverList.list(
+                  children: <Widget>[
+                    ArticleHeader(article: article),
+                    const SizedBox(height: AppSpacing.lg),
+                    ArticleHeroMedia(article: article),
+                    const SizedBox(height: AppSpacing.xl),
+                    if (article.previewOnly)
+                      _PreviewStoryCard(
+                        article: article,
+                        onReadFullStory: () => _openOriginal(context, article),
+                      )
+                    else ...<Widget>[
+                      // Shown only when the outlet did not simply repeat the
+                      // standfirst as the body's opening paragraph.
+                      if (article.summary.isNotEmpty &&
+                          !HtmlBlocks.opensWith(
+                            article.bodyHtml,
+                            article.summary,
+                          )) ...<Widget>[
+                        Text(article.summary, style: context.typography.lead),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                      HtmlContent(html: article.bodyHtml),
+                    ],
+                    if (article.tags.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: <Widget>[
+                          for (final String tag in article.tags)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.xs + 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.colors.surfaceMuted,
+                                borderRadius: AppRadius.pillRadius,
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: context.typography.caption,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.xxl),
+                    const _ArticleEndAd(),
+                    const SizedBox(height: AppSpacing.xxl),
+                    RelatedStories(articles: related),
+                    const SizedBox(height: AppSpacing.xxxl),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         Positioned(
           top: MediaQuery.paddingOf(context).top + kToolbarHeight,

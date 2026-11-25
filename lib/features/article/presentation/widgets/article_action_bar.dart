@@ -9,6 +9,7 @@ import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/tts/tts_controller.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -183,6 +184,7 @@ class ArticleActionBar extends ConsumerWidget {
                     ArticleAction.bookmark,
                     ArticleAction.followPublisher,
                     ArticleAction.openInBrowser,
+                    ArticleAction.lessLikeThis,
                   ],
                   onSelected: (ArticleAction action) =>
                       _handle(context, ref, action),
@@ -220,6 +222,12 @@ class ArticleActionBar extends ConsumerWidget {
         await _share(context);
       case ArticleAction.openInBrowser:
         await _openSource(context);
+      case ArticleAction.lessLikeThis:
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordDismiss(article);
+        if (!context.mounted) return;
+        _snack(context, "We'll show you less like this");
     }
   }
 

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
+import 'package:slnews_mobile/core/domain/models/personalization_profile.dart';
+import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/core/utils/time_ago.dart';
 import 'package:slnews_mobile/core/widgets/publisher_mark.dart';
@@ -31,11 +36,17 @@ void main() {
     WidgetTester tester,
     Article article, {
     Size surface = const Size(390, 2400),
+    bool pushFromHome = false,
   }) async {
     await useTallSurface(tester, size: surface);
     final GoRouter router = GoRouter(
-      initialLocation: '/article/${article.id}',
+      initialLocation: pushFromHome ? '/' : '/article/${article.id}',
       routes: <RouteBase>[
+        GoRoute(
+          path: '/',
+          builder: (BuildContext context, GoRouterState state) =>
+              const Scaffold(body: Text('home')),
+        ),
         GoRoute(
           path: '/article/:id',
           builder: (BuildContext context, GoRouterState state) =>
@@ -46,12 +57,17 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: feedTestOverrides(
-          articles: FakeArticleRepository(
-            topStories: <Article>[article],
-            categoryStories: <Article>[article],
+        overrides: <Override>[
+          ...feedTestOverrides(
+            articles: FakeArticleRepository(
+              topStories: <Article>[article],
+              categoryStories: <Article>[article],
+            ),
           ),
-        ),
+          preferencesStoreProvider.overrideWithValue(
+            InMemoryPreferencesStore(),
+          ),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           routerConfig: router,
@@ -59,6 +75,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (pushFromHome) {
+      router.push('/article/${article.id}');
+      await tester.pumpAndSettle();
+    }
   }
 
   testWidgets('an image without a supplied credit names the publisher', (
@@ -262,6 +282,32 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Read full story'), findsOneWidget);
+  });
+
+  testWidgets('leaving the reader records local engagement', (
+    WidgetTester tester,
+  ) async {
+    final Article article = story();
+    await pumpReader(tester, article, pushFromHome: true);
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(ArticlePage)),
+    );
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    final PersonalizationProfile profile = container.read(
+      personalizationProfileProvider,
+    );
+    expect(profile.events, isNotEmpty);
+    expect(
+      profile.events.any(
+        (EngagementEvent event) =>
+            event.articleId == article.id && event.dwellSeconds != null,
+      ),
+      isTrue,
+    );
+    expect(profile.progress[article.id], isNotNull);
   });
 
   testWidgets('a licensed full story has no preview hand-off', (

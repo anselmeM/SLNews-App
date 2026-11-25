@@ -9,7 +9,8 @@ enum ArticleAction {
   removeBookmark,
   share,
   openInBrowser,
-  followPublisher;
+  followPublisher,
+  lessLikeThis;
 
   String get label => switch (this) {
     ArticleAction.bookmark => 'Save story',
@@ -17,6 +18,7 @@ enum ArticleAction {
     ArticleAction.share => 'Share',
     ArticleAction.openInBrowser => 'Open in browser',
     ArticleAction.followPublisher => 'Follow publisher',
+    ArticleAction.lessLikeThis => 'Show less like this',
   };
 
   IconData get icon => switch (this) {
@@ -25,6 +27,7 @@ enum ArticleAction {
     ArticleAction.share => Icons.ios_share,
     ArticleAction.openInBrowser => Icons.open_in_new,
     ArticleAction.followPublisher => Icons.add_circle_outline,
+    ArticleAction.lessLikeThis => Icons.thumb_down_off_alt,
   };
 }
 
@@ -37,6 +40,7 @@ class OverflowMenuButton extends StatelessWidget {
       ArticleAction.bookmark,
       ArticleAction.share,
       ArticleAction.openInBrowser,
+      ArticleAction.lessLikeThis,
     ],
     this.size = 20,
     this.color,

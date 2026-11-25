@@ -51,9 +51,10 @@ photos, camera or microphone input, health data, or your advertising identifier.
 Search terms are matched against content already on your device; the app does not
 send your queries to us as a search log.
 
-**Personalized For You** uses follows, saved stories, likes and reading history
-on your device to re-rank stories. These ranking signals are not sent to us, and
-you can switch personalization off in Settings.
+**Personalized For You** uses follows, saved stories, likes, reading history,
+dwell time and reading progress on your device to re-rank stories and offer
+Continue reading. These ranking signals are not sent to us, and you can switch
+personalization off or reset its local data in Settings.
 
 ## 4. Why we use it
 

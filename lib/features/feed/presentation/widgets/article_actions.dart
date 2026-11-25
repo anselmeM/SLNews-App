@@ -9,6 +9,7 @@ import '../../../../core/domain/follow_targets.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
 
 /// Runs one [ArticleAction] for [article] and always leaves the reader with
@@ -38,6 +39,8 @@ Future<void> handleArticleAction(
       await _openInBrowser(article, messenger);
     case ArticleAction.followPublisher:
       await _runFollowPublisher(ref, article, messenger);
+    case ArticleAction.lessLikeThis:
+      _showLessLikeThis(ref, article, messenger);
   }
 }
 
@@ -108,6 +111,19 @@ Future<void> _openInBrowser(
     if (!launched) _showMessage(messenger, "Couldn't open this story");
   } on Object {
     _showMessage(messenger, "Couldn't open this story");
+  }
+}
+
+void _showLessLikeThis(
+  WidgetRef ref,
+  Article article,
+  ScaffoldMessengerState messenger,
+) {
+  try {
+    ref.read(personalizationProfileProvider.notifier).recordDismiss(article);
+    _showMessage(messenger, "We'll show you less like this");
+  } catch (_) {
+    _showMessage(messenger, "Couldn't update your feed preferences");
   }
 }
 

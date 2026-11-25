@@ -74,9 +74,10 @@ else needs adding.
 - Ads are not targeted using personal data. The anonymous install ID is used only
   to count aggregate impressions and unique reach; it is not an advertising ID and
   is never shared with advertisers.
-- For You personalization uses follows, saves, likes and reading history locally
-  on the device to rank stories. Those signals are not transmitted to SLNews for
-  ranking, and the reader can turn the feature off in Settings.
+- For You personalization uses follows, saves, likes, reading history, dwell
+  time and reading positions locally on the device to rank stories and offer
+  Continue reading. Those signals are not transmitted to SLNews for ranking, and
+  the reader can turn the feature off or reset the data in Settings.
 
 ## 3. App content → Content rating (IARC questionnaire)
 

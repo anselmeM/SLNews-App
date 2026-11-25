@@ -14,10 +14,12 @@ import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
+import '../../../core/domain/models/personalization_profile.dart';
 import '../../../core/domain/models/weather_location_state.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
+import '../../../core/providers/personalization_profile.dart';
 import '../../../core/providers/sync_repository_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -53,6 +55,9 @@ class SettingsPage extends ConsumerWidget {
     final AuthState auth = ref.watch(authControllerProvider);
     final WeatherLocationState weatherLocation = ref.watch(
       weatherLocationControllerProvider,
+    );
+    final PersonalizationProfile personalizationProfile = ref.watch(
+      personalizationProfileProvider,
     );
     final SettingsController controller = ref.read(
       settingsControllerProvider.notifier,
@@ -205,6 +210,20 @@ class SettingsPage extends ConsumerWidget {
                           'home feed. Your choices stay on this device.',
                       value: settings.personalizeFeed,
                       onChanged: controller.setPersonalizeFeed,
+                    ),
+                    SettingsValueRow(
+                      title: 'Personalization data',
+                      subtitle: personalizationProfile.isEmpty
+                          ? 'No on-device activity yet'
+                          : 'Signals and reading positions stay on this phone',
+                      value: personalizationProfile.isEmpty
+                          ? 'None'
+                          : '${personalizationProfile.eventCount} signals',
+                      onTap: () => _showPersonalizationData(
+                        context,
+                        personalizationProfile,
+                        ref,
+                      ),
                     ),
                     SettingsValueRow(
                       title: 'Weather location',
@@ -476,4 +495,43 @@ Future<void> _showChoiceSheet<T>(
       );
     },
   );
+}
+
+Future<void> _showPersonalizationData(
+  BuildContext context,
+  PersonalizationProfile profile,
+  WidgetRef ref,
+) async {
+  final bool? reset = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) => AlertDialog(
+      title: const Text('Personalization data'),
+      content: Text(
+        profile.isEmpty
+            ? 'No personalization signals are stored on this device.'
+            : '${profile.eventCount} local signals and '
+                  '${profile.unfinishedCount} unfinished reading positions '
+                  'are stored only on this device. They are never sent to '
+                  'SLNews servers.',
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Close'),
+        ),
+        if (!profile.isEmpty)
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Reset'),
+          ),
+      ],
+    ),
+  );
+  if (reset != true || !context.mounted) return;
+  ref.read(personalizationProfileProvider.notifier).clear();
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      const SnackBar(content: Text('Personalization data was reset')),
+    );
 }
