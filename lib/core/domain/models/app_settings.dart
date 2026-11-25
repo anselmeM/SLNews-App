@@ -39,6 +39,7 @@ class AppSettings {
     this.sportsAlertsEnabled = true,
     this.followedTopicAlertsEnabled = true,
     this.weatherForecastEnabled = true,
+    this.personalizeFeed = true,
     this.digestEnabled = true,
     this.quietHoursStart,
     this.quietHoursEnd,
@@ -68,6 +69,10 @@ class AppSettings {
   /// When false the weather row is hidden from the feeds.
   final bool weatherForecastEnabled;
 
+  /// When false For You keeps the editorial Sierra Leone-first order and does
+  /// not use follows, saves or reading history to re-rank stories.
+  final bool personalizeFeed;
+
   /// Daily follow-digest delivery and its local quiet window (minutes).
   final bool digestEnabled;
   final int? quietHoursStart;
@@ -95,6 +100,7 @@ class AppSettings {
     bool? sportsAlertsEnabled,
     bool? followedTopicAlertsEnabled,
     bool? weatherForecastEnabled,
+    bool? personalizeFeed,
     bool? digestEnabled,
     int? quietHoursStart,
     int? quietHoursEnd,
@@ -114,6 +120,7 @@ class AppSettings {
           followedTopicAlertsEnabled ?? this.followedTopicAlertsEnabled,
       weatherForecastEnabled:
           weatherForecastEnabled ?? this.weatherForecastEnabled,
+      personalizeFeed: personalizeFeed ?? this.personalizeFeed,
       digestEnabled: digestEnabled ?? this.digestEnabled,
       quietHoursStart: clearQuietHours
           ? null
@@ -139,6 +146,7 @@ class AppSettings {
       other.sportsAlertsEnabled == sportsAlertsEnabled &&
       other.followedTopicAlertsEnabled == followedTopicAlertsEnabled &&
       other.weatherForecastEnabled == weatherForecastEnabled &&
+      other.personalizeFeed == personalizeFeed &&
       other.digestEnabled == digestEnabled &&
       other.quietHoursStart == quietHoursStart &&
       other.quietHoursEnd == quietHoursEnd &&
@@ -154,6 +162,7 @@ class AppSettings {
     sportsAlertsEnabled,
     followedTopicAlertsEnabled,
     weatherForecastEnabled,
+    personalizeFeed,
     digestEnabled,
     quietHoursStart,
     quietHoursEnd,

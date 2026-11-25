@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
+import 'package:slnews_mobile/core/domain/personalization.dart';
 import 'package:slnews_mobile/features/feed/presentation/viewmodels/for_you_view_model.dart';
 
 import 'support/fakes.dart';
@@ -15,10 +16,14 @@ void main() {
     List<Article> extraStories = const <Article>[],
     int heroLimit = ForYouViewModel.heroLimit,
     Set<String> followingIds = const <String>{},
+    ReaderSignals signals = const ReaderSignals(),
+    bool personalizeFeed = false,
   }) {
     return ForYouViewModel.build(
       now: DateTime(2026, 10, 15, 20),
       followingIds: followingIds,
+      signals: signals,
+      personalizeFeed: personalizeFeed,
       topStories: topStories,
       locationStories: localStories,
       extraStories: extraStories,
@@ -81,6 +86,82 @@ void main() {
       'newer',
       'stale',
     ]);
+  });
+
+  test('personalization puts explicit follows in a separate rail', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+      publishedAt: DateTime(2026, 10, 15, 8),
+    );
+    final Article unrelated = testArticle(
+      id: 'unrelated',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 9),
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[followed, unrelated],
+      followedIds: const <String>{'topic:politics'},
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[unrelated, followed],
+      heroLimit: 0,
+      followingIds: const <String>{'topic:politics'},
+      signals: signals,
+      personalizeFeed: true,
+    );
+
+    expect(feed.followingStories.map((Article a) => a.id).toList(), <String>[
+      'followed',
+    ]);
+    expect(feed.stream.map((Article a) => a.id), isNot(contains('followed')));
+    expect(feed.stream.map((Article a) => a.id), contains('unrelated'));
+  });
+
+  test('turning personalization off removes the follows rail', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[followed],
+      followedIds: const <String>{'topic:politics'},
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[followed],
+      heroLimit: 0,
+      followingIds: const <String>{'topic:politics'},
+      signals: signals,
+      personalizeFeed: false,
+    );
+
+    expect(feed.followingStories, isEmpty);
+    expect(feed.stream.map((Article a) => a.id), contains('followed'));
+  });
+
+  test('the follows rail does not duplicate hero stories', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[followed],
+      followedIds: const <String>{'topic:politics'},
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[followed],
+      heroLimit: 1,
+      followingIds: const <String>{'topic:politics'},
+      signals: signals,
+      personalizeFeed: true,
+    );
+
+    expect(feed.hero.map((Article a) => a.id), <String>['followed']);
+    expect(feed.followingStories, isEmpty);
+    expect(feed.stream.map((Article a) => a.id), isNot(contains('followed')));
   });
 
   test('personalMatch counts category, publisher and tag follow ids', () {

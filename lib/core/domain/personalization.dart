@@ -1,0 +1,294 @@
+import 'package:flutter/foundation.dart';
+
+import 'feed_mix.dart';
+import 'models/article.dart';
+
+/// Local, privacy-preserving signals used to rank For You.
+///
+/// Nothing here leaves the device. Explicit follows are the strong signal;
+/// reading history, saved stories and likes provide a softer affinity signal.
+@immutable
+class ReaderSignals {
+  const ReaderSignals({
+    this.followedIds = const <String>{},
+    this.readIds = const <String>{},
+    this.savedIds = const <String>{},
+    this.likedIds = const <String>{},
+    this.topicAffinity = const <String, double>{},
+    this.publisherAffinity = const <String, double>{},
+  });
+
+  /// Explicit `topic:`, `publisher:`, `city:` and sports follow ids.
+  final Set<String> followedIds;
+
+  /// Recently opened story ids on this device.
+  final Set<String> readIds;
+
+  /// Saved story ids on this device/account.
+  final Set<String> savedIds;
+
+  /// Liked story ids on this device/account.
+  final Set<String> likedIds;
+
+  /// Raw category affinity counts derived from the local signals above.
+  final Map<String, double> topicAffinity;
+
+  /// Raw publisher affinity counts derived from the local signals above.
+  final Map<String, double> publisherAffinity;
+
+  bool get hasExplicitFollows => followedIds.isNotEmpty;
+
+  bool get hasBehaviorSignals =>
+      readIds.isNotEmpty || savedIds.isNotEmpty || likedIds.isNotEmpty;
+
+  bool get isEmpty => !hasExplicitFollows && !hasBehaviorSignals;
+
+  ReaderSignals copyWith({
+    Set<String>? followedIds,
+    Set<String>? readIds,
+    Set<String>? savedIds,
+    Set<String>? likedIds,
+    Map<String, double>? topicAffinity,
+    Map<String, double>? publisherAffinity,
+  }) {
+    return ReaderSignals(
+      followedIds: followedIds ?? this.followedIds,
+      readIds: readIds ?? this.readIds,
+      savedIds: savedIds ?? this.savedIds,
+      likedIds: likedIds ?? this.likedIds,
+      topicAffinity: topicAffinity ?? this.topicAffinity,
+      publisherAffinity: publisherAffinity ?? this.publisherAffinity,
+    );
+  }
+}
+
+/// Builds raw affinity from the stories the reader has interacted with that are
+/// still known locally. Unknown/old ids are simply ignored; Phase 2 replaces
+/// this with a persistent interest profile.
+ReaderSignals buildReaderSignals({
+  required Iterable<Article> knownArticles,
+  Set<String> followedIds = const <String>{},
+  Set<String> readIds = const <String>{},
+  Set<String> savedIds = const <String>{},
+  Set<String> likedIds = const <String>{},
+}) {
+  final Map<String, double> topics = <String, double>{};
+  final Map<String, double> publishers = <String, double>{};
+
+  void add(Map<String, double> target, String key, double weight) {
+    if (key.trim().isEmpty) return;
+    target[key] = (target[key] ?? 0) + weight;
+  }
+
+  for (final Article article in knownArticles) {
+    double weight = 0;
+    if (readIds.contains(article.id)) weight += 1;
+    if (savedIds.contains(article.id)) weight += 3;
+    if (likedIds.contains(article.id)) weight += 2;
+    if (weight <= 0) continue;
+    add(topics, article.categoryId, weight);
+    add(publishers, article.publisher.id, weight);
+    for (final String tag in article.tags.take(3)) {
+      add(topics, tag.toLowerCase(), weight * 0.5);
+    }
+  }
+
+  return ReaderSignals(
+    followedIds: followedIds,
+    readIds: readIds,
+    savedIds: savedIds,
+    likedIds: likedIds,
+    topicAffinity: topics,
+    publisherAffinity: publishers,
+  );
+}
+
+/// Deterministic, explainable ranking for the For You feed.
+///
+/// This is deliberately not a social-media-scale ML model. It combines explicit
+/// follows with lightweight local behaviour, then applies diversity caps. Pure
+/// functions keep the rules testable and the result stable across rebuilds.
+abstract final class PersonalizationEngine {
+  static const int maxPerPublisherInWindow = 2;
+  static const int maxPerCategoryInWindow = 3;
+  static const int diversityWindow = 12;
+  static const int followedRailLimit = 5;
+
+  /// Higher is more relevant. The score is intentionally bounded and made of
+  /// named, inspectable parts rather than a learned black box.
+  static int score(
+    Article article,
+    ReaderSignals signals, {
+    DateTime? now,
+    bool includeExploration = true,
+  }) {
+    final int follow = _followScore(article, signals.followedIds);
+    final int topic = _affinityScore(signals.topicAffinity, article.categoryId);
+    final int publisher = _affinityScore(
+      signals.publisherAffinity,
+      article.publisher.id,
+    );
+    final int direct =
+        (signals.savedIds.contains(article.id) ? 10 : 0) +
+        (signals.likedIds.contains(article.id) ? 8 : 0);
+    final int readPenalty =
+        signals.readIds.contains(article.id) &&
+            !signals.savedIds.contains(article.id) &&
+            !signals.likedIds.contains(article.id)
+        ? -12
+        : 0;
+    final int freshness = _freshnessScore(article, now ?? DateTime.now());
+    final int breaking = article.isBreaking ? 14 : 0;
+    final int local = FeedMix.isSierraLeone(article) ? 6 : 0;
+    final int exploration = includeExploration
+        ? _explorationScore(article, now ?? DateTime.now())
+        : 0;
+
+    return follow +
+        topic +
+        publisher +
+        direct +
+        readPenalty +
+        freshness +
+        breaking +
+        local +
+        exploration;
+  }
+
+  /// Comparator used inside one [FeedMix] audience bucket.
+  static int compare(
+    Article a,
+    Article b,
+    ReaderSignals signals, {
+    DateTime? now,
+  }) {
+    if (a.isBreaking != b.isBreaking) return a.isBreaking ? -1 : 1;
+    final int byScore = score(
+      b,
+      signals,
+      now: now,
+    ).compareTo(score(a, signals, now: now));
+    if (byScore != 0) return byScore;
+    return b.publishedAt.compareTo(a.publishedAt);
+  }
+
+  /// Explicit-follow matches only. Used by the "From your follows" rail so the
+  /// rail is always explainable ("you follow this").
+  static int followMatch(Article article, Set<String> followedIds) =>
+      _followScore(article, followedIds);
+
+  /// Selects the followed stories rail, newest/relevant first and without
+  /// duplicate publishers or categories in the small top set.
+  static List<Article> followedStories(
+    Iterable<Article> articles,
+    ReaderSignals signals, {
+    int limit = followedRailLimit,
+    Set<String> excludeIds = const <String>{},
+  }) {
+    if (!signals.hasExplicitFollows || limit <= 0) {
+      return const <Article>[];
+    }
+    final List<Article> matched = <Article>[
+      for (final Article article in articles)
+        if (!excludeIds.contains(article.id) &&
+            !FeedMix.isSports(article) &&
+            _followScore(article, signals.followedIds) > 0)
+          article,
+    ];
+    matched.sort((Article a, Article b) {
+      final int byScore = score(
+        b,
+        signals,
+        includeExploration: false,
+      ).compareTo(score(a, signals, includeExploration: false));
+      if (byScore != 0) return byScore;
+      return b.publishedAt.compareTo(a.publishedAt);
+    });
+    return diversify(matched, limit: limit);
+  }
+
+  /// Applies publisher/category diversity caps to the first
+  /// [diversityWindow] slots while preserving all remaining stories.
+  static List<Article> diversify(
+    Iterable<Article> ranked, {
+    int maxPerPublisher = maxPerPublisherInWindow,
+    int maxPerCategory = maxPerCategoryInWindow,
+    int window = diversityWindow,
+    int? limit,
+  }) {
+    final List<Article> all = ranked.toList(growable: false);
+    final List<Article> selected = <Article>[];
+    final List<Article> deferred = <Article>[];
+    final Map<String, int> publishers = <String, int>{};
+    final Map<String, int> categories = <String, int>{};
+
+    for (final Article article in all) {
+      if (selected.length >= window) {
+        deferred.add(article);
+        continue;
+      }
+      final int publisherCount = publishers[article.publisher.id] ?? 0;
+      final int categoryCount = categories[article.categoryId] ?? 0;
+      if (publisherCount >= maxPerPublisher ||
+          categoryCount >= maxPerCategory) {
+        deferred.add(article);
+        continue;
+      }
+      selected.add(article);
+      publishers[article.publisher.id] = publisherCount + 1;
+      categories[article.categoryId] = categoryCount + 1;
+    }
+
+    final List<Article> result = <Article>[...selected, ...deferred];
+    if (limit == null) return result;
+    return result.take(limit).toList(growable: false);
+  }
+
+  static int _followScore(Article article, Set<String> followedIds) {
+    if (followedIds.isEmpty) return 0;
+    int score = 0;
+    if (followedIds.contains('topic:${article.categoryId}')) score += 24;
+    if (followedIds.contains('publisher:${article.publisher.id}')) {
+      score += 24;
+    }
+    int tagMatches = 0;
+    for (final String tag in article.tags) {
+      final String lower = tag.toLowerCase();
+      if (followedIds.contains('topic:$lower') ||
+          followedIds.contains('city:$lower')) {
+        tagMatches += 8;
+      }
+    }
+    return score + (tagMatches > 16 ? 16 : tagMatches);
+  }
+
+  static int _affinityScore(Map<String, double> affinity, String key) {
+    if (affinity.isEmpty) return 0;
+    final double peak = affinity.values.reduce((double a, double b) {
+      return a > b ? a : b;
+    });
+    if (peak <= 0) return 0;
+    final double value = affinity[key] ?? 0;
+    return ((value / peak) * 12).round();
+  }
+
+  static int _freshnessScore(Article article, DateTime now) {
+    final int hours = now.difference(article.publishedAt).inHours;
+    if (hours <= 6) return 18;
+    if (hours <= 24) return 13;
+    if (hours <= 72) return 7;
+    if (hours <= 168) return 2;
+    return 0;
+  }
+
+  /// A tiny deterministic exploration signal: no reader data, no random state,
+  /// and repeated rebuilds on the same day keep the same order.
+  static int _explorationScore(Article article, DateTime now) {
+    final int day = now.toUtc().difference(DateTime.utc(2026)).inDays;
+    int hash = day;
+    for (final int unit in article.id.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    return hash % 4;
+  }
+}

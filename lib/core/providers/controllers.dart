@@ -41,6 +41,7 @@ class SettingsController extends Notifier<AppSettings> {
       sportsAlertsEnabled: repository.sportsAlertsEnabled,
       followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
+      personalizeFeed: repository.personalizeFeed,
       digestEnabled: digest.digestEnabled,
       quietHoursStart: digest.quietHoursStart,
       quietHoursEnd: digest.quietHoursEnd,
@@ -129,6 +130,11 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setWeatherForecastEnabled(bool enabled) async {
     await ref.read(userStateProvider).setWeatherForecastEnabled(enabled);
     state = state.copyWith(weatherForecastEnabled: enabled);
+  }
+
+  Future<void> setPersonalizeFeed(bool enabled) async {
+    await ref.read(userStateProvider).setPersonalizeFeed(enabled);
+    state = state.copyWith(personalizeFeed: enabled);
   }
 
   /// Enables or disables the daily follow digest on this device.

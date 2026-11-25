@@ -103,6 +103,16 @@ class _FeedSliver extends ConsumerWidget {
                 context.push(AppRoutes.articleFor(article.id)),
           ),
         ),
+        if (feed.followingStories.isNotEmpty) ...<Widget>[
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'From your follows',
+              subtitle: 'Topics, sources and places you follow',
+              onTap: () => context.go(AppRoutes.following),
+            ),
+          ),
+          _ArticleTileSliver(articles: feed.followingStories),
+        ],
         if (latestStream.isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             child: SectionHeader(

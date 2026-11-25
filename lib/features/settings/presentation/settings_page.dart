@@ -198,6 +198,14 @@ class SettingsPage extends ConsumerWidget {
                       value: settings.weatherForecastEnabled,
                       onChanged: controller.setWeatherForecastEnabled,
                     ),
+                    SettingsSwitchRow(
+                      title: 'Personalize For You',
+                      subtitle:
+                          'Use follows, saves and reading history to shape the '
+                          'home feed. Your choices stay on this device.',
+                      value: settings.personalizeFeed,
+                      onChanged: controller.setPersonalizeFeed,
+                    ),
                     SettingsValueRow(
                       title: 'Weather location',
                       subtitle: weatherLocation.usingDevice
