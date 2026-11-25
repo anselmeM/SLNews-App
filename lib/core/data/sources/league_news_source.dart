@@ -184,7 +184,7 @@ class LeagueNewsSource {
       );
       // The endpoint is league-scoped; take its stories as they come.
       final List<Article> result = List<Article>.unmodifiable(
-        parsed.take(limit),
+        _withLeagueTag(parsed.take(limit), slug),
       );
       _cache[slug] = result;
       return result;
@@ -243,12 +243,23 @@ class LeagueNewsSource {
         config: config,
         limit: 16,
       );
-      return parsed.take(16).toList(growable: false);
+      return _withLeagueTag(parsed.take(16), slug).toList(growable: false);
     } catch (error) {
       AppLog.debug('LeagueNewsSource($slug, combined): $error');
       return const <Article>[];
     }
   }
+}
+
+Iterable<Article> _withLeagueTag(Iterable<Article> articles, String slug) {
+  final String tag = 'league:$slug';
+  return articles.map(
+    (Article article) => article.tags.contains(tag)
+        ? article
+        : article.copyWith(
+            tags: List<String>.unmodifiable(<String>[...article.tags, tag]),
+          ),
+  );
 }
 
 class _LeagueFeed {

@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
+import 'package:slnews_mobile/core/domain/auth/account_scope.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
 import 'package:slnews_mobile/core/domain/models/personalization_profile.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/auth_providers.dart';
 import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 
 import '../support/fakes.dart';
@@ -32,6 +34,7 @@ void main() {
         .read(personalizationProfileProvider.notifier)
         .recordRead(story, dwell: const Duration(seconds: 45), progress: 0.45);
 
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     final PersonalizationProfile profile = container.read(
       personalizationProfileProvider,
     );
@@ -39,7 +42,7 @@ void main() {
     expect(profile.continueReading().single.articleId, 'story-1');
     expect(profile.topicAffinity()['politics'], greaterThan(0));
     expect(
-      store.string(personalizationProfileKey),
+      store.string(personalizationProfileKeyFor(anonymousAccountId)),
       isNotNull,
       reason: 'the profile persists locally',
     );
@@ -106,13 +109,19 @@ void main() {
     );
     controller.recordSave(story);
     await Future<void>.delayed(Duration.zero);
-    expect(store.string(personalizationProfileKey), isNotNull);
+    expect(
+      store.string(personalizationProfileKeyFor(anonymousAccountId)),
+      isNotNull,
+    );
 
     controller.clear();
     await Future<void>.delayed(Duration.zero);
 
     expect(container.read(personalizationProfileProvider).isEmpty, isTrue);
-    expect(store.string(personalizationProfileKey), isNull);
+    expect(
+      store.string(personalizationProfileKeyFor(anonymousAccountId)),
+      isNull,
+    );
   });
 
   test('affinity decays after seven days and expires after thirty', () {
@@ -184,6 +193,32 @@ void main() {
       }).isEmpty,
       isTrue,
     );
+  });
+
+  test('profile and reading positions are isolated per account', () async {
+    final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+    final ProviderContainer a = ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(store),
+        activeAccountKeyProvider.overrideWithValue('account-a'),
+      ],
+    );
+    addTearDown(a.dispose);
+    a.read(personalizationProfileProvider.notifier).recordSave(story);
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    final ProviderContainer b = ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(store),
+        activeAccountKeyProvider.overrideWithValue('account-b'),
+      ],
+    );
+    addTearDown(b.dispose);
+
+    expect(a.read(personalizationProfileProvider).eventCount, 1);
+    expect(b.read(personalizationProfileProvider).isEmpty, isTrue);
+    expect(store.string(personalizationProfileKeyFor('account-a')), isNotNull);
+    expect(store.string(personalizationProfileKeyFor('account-b')), isNull);
   });
 
   test(

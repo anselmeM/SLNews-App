@@ -2,12 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/local/preferences_store.dart';
+import '../domain/auth/account_scope.dart';
 import '../domain/models/article.dart';
 import '../utils/app_log.dart';
 import 'app_providers.dart';
+import 'auth_providers.dart';
 
-/// Preferences key holding the reader's recently opened story ids, newest first.
+/// Preferences key prefix holding recently opened story ids.
 const String readingHistoryKey = 'reading_history.v1';
+
+/// Account-scoped preference key. Reading history must never leak from one
+/// signed-in reader to another on a shared device.
+String readingHistoryKeyFor(String accountKey) =>
+    '$readingHistoryKey.$accountKey';
 
 /// Local, device-only reading history.
 ///
@@ -26,10 +34,20 @@ class ReadingHistoryController extends Notifier<List<String>> {
 
   @override
   List<String> build() {
+    final String accountKey = ref.watch(activeAccountKeyProvider);
+    return _read(accountKey);
+  }
+
+  List<String> _read(String accountKey) {
     try {
-      final String? raw = ref
+      String? raw = ref
           .read(preferencesStoreProvider)
-          .string(readingHistoryKey);
+          .string(readingHistoryKeyFor(accountKey));
+      // Migrate only the old anonymous document. A signed-in account must not
+      // inherit another account's (or the pre-sign-in) browsing history.
+      if (raw == null && accountKey == anonymousAccountId) {
+        raw = ref.read(preferencesStoreProvider).string(readingHistoryKey);
+      }
       if (raw == null || raw.isEmpty) return const <String>[];
       final Object? decoded = jsonDecode(raw);
       if (decoded is! List) return const <String>[];
@@ -53,10 +71,11 @@ class ReadingHistoryController extends Notifier<List<String>> {
         if (existing != id) existing,
     ].take(limit).toList(growable: false);
     state = next;
+    final String accountKey = ref.read(activeAccountKeyProvider);
     try {
       await ref
           .read(preferencesStoreProvider)
-          .putString(readingHistoryKey, jsonEncode(next));
+          .putString(readingHistoryKeyFor(accountKey), jsonEncode(next));
     } catch (error) {
       // History is best-effort; reading must never fail because of it.
       AppLog.debug('Reading history: record failed: $error');
@@ -65,8 +84,13 @@ class ReadingHistoryController extends Notifier<List<String>> {
 
   Future<void> clear() async {
     state = const <String>[];
+    final String accountKey = ref.read(activeAccountKeyProvider);
     try {
-      await ref.read(preferencesStoreProvider).remove(readingHistoryKey);
+      final PreferencesStore store = ref.read(preferencesStoreProvider);
+      await store.remove(readingHistoryKeyFor(accountKey));
+      if (accountKey == anonymousAccountId) {
+        await store.remove(readingHistoryKey);
+      }
     } catch (error) {
       // Clearing is best-effort too.
       AppLog.debug('Reading history: clear failed: $error');

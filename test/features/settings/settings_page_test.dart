@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,6 +167,27 @@ void main() {
 
     expect(userState.personalizeFeed, isFalse);
     expect(switchValue(tester, 'Personalize For You'), isFalse);
+  });
+
+  testWidgets('rapid personalization taps persist the final intent', (
+    WidgetTester tester,
+  ) async {
+    final Completer<void> gate = Completer<void>();
+    userState.personalizeGate = gate;
+    await pumpPage(tester);
+
+    await tester.tap(find.text('Personalize For You'));
+    await tester.pump();
+    expect(switchValue(tester, 'Personalize For You'), isFalse);
+    await tester.tap(find.text('Personalize For You'));
+    await tester.pump();
+    expect(switchValue(tester, 'Personalize For You'), isTrue);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+
+    expect(userState.personalizeFeed, isTrue);
+    expect(switchValue(tester, 'Personalize For You'), isTrue);
   });
 
   testWidgets('personalization data can be reviewed and reset', (

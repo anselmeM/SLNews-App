@@ -110,8 +110,18 @@ class EspnSource {
         AppLog.debug('EspnSource: skipping malformed article: $error');
       }
     }
+    final String leagueTag = 'league:${ref.league}';
+    // `teamId` is the follow-catalogue id (`team:lal`), not ESPN's numeric id.
+    final String followTeamTag = teamId;
     final List<Article> chosen = (tagged.isNotEmpty ? tagged : all)
         .take(limit)
+        .map((Article article) {
+          final Set<String> tags = <String>{...article.tags};
+          tags
+            ..add(leagueTag)
+            ..add(followTeamTag);
+          return article.copyWith(tags: List<String>.unmodifiable(tags));
+        })
         .toList(growable: false);
     return List<Article>.unmodifiable(chosen);
   }
@@ -267,6 +277,21 @@ class EspnSource {
     final DateTime published =
         DateTime.tryParse((json['published'] ?? '').toString()) ??
         DateTime.now().toUtc();
+    final Set<String> tags = <String>{'sports'};
+    final Object? categories = json['categories'];
+    if (categories is List) {
+      for (final Object? category in categories) {
+        if (category is! Map) continue;
+        final String type = (category['type'] ?? '').toString().toLowerCase();
+        if (type == 'team' && category['teamId'] != null) {
+          tags.add('team:${category['teamId']}');
+        }
+        if (type == 'league') {
+          final Object? leagueId = category['leagueId'] ?? category['id'];
+          if (leagueId != null) tags.add('league:$leagueId');
+        }
+      }
+    }
     return Article(
       id: 'espn:${json['id']}',
       title: headline,
@@ -281,7 +306,7 @@ class EspnSource {
       publishedAt: published,
       sourceUrl: sourceUrl,
       categoryId: 'sports',
-      tags: const <String>['sports'],
+      tags: List<String>.unmodifiable(tags),
       previewOnly: true,
     );
   }

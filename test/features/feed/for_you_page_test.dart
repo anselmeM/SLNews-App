@@ -219,6 +219,65 @@ void main() {
     expect(find.text('Port expansion wins backing'), findsOneWidget);
   });
 
+  testWidgets('a followed publisher brings its stories into the feed', (
+    WidgetTester tester,
+  ) async {
+    final Article publisherStory = testArticle(
+      id: 'publisher-1',
+      title: 'Awoko investigation wins an award',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 6),
+    );
+    final FakeArticleRepository articles = FakeArticleRepository(
+      topStories: <Article>[newest],
+    );
+    articles.seed('business', <Article>[publisherStory]);
+    const FollowTarget publisher = FollowTarget(
+      id: 'publisher:awoko',
+      kind: FollowKind.publisher,
+      label: 'Awoko Newspaper',
+    );
+    final FakeFollowingRepository following = FakeFollowingRepository(
+      catalogue: const <FollowTarget>[publisher],
+    );
+    await following.follow(publisher);
+
+    await pumpForYou(tester, articles: articles, following: following);
+
+    expect(find.text('From your follows'), findsOneWidget);
+    expect(find.text('Awoko investigation wins an award'), findsOneWidget);
+  });
+
+  testWidgets('a followed city brings matching stories into the feed', (
+    WidgetTester tester,
+  ) async {
+    final Article cityStory = testArticle(
+      id: 'city-1',
+      title: 'Freetown port expansion continues',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 6),
+      tags: const <String>['freetown'],
+    );
+    final FakeArticleRepository articles = FakeArticleRepository(
+      topStories: <Article>[newest],
+    );
+    articles.seed('business', <Article>[cityStory]);
+    const FollowTarget city = FollowTarget(
+      id: 'city:freetown',
+      kind: FollowKind.location,
+      label: 'Freetown',
+    );
+    final FakeFollowingRepository following = FakeFollowingRepository(
+      catalogue: const <FollowTarget>[city],
+    );
+    await following.follow(city);
+
+    await pumpForYou(tester, articles: articles, following: following);
+
+    expect(find.text('From your follows'), findsOneWidget);
+    expect(find.text('Freetown port expansion continues'), findsOneWidget);
+  });
+
   testWidgets('an unfollowed topic stays out of the feed', (
     WidgetTester tester,
   ) async {

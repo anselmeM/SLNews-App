@@ -50,6 +50,7 @@ void main() {
     final ForYouFeed feed = build(
       topStories: <Article>[newer, followed],
       followingIds: const <String>{'topic:politics'},
+      personalizeFeed: true,
     );
 
     expect(feed.hero.map((Article a) => a.id).toList(), <String>[
@@ -79,6 +80,7 @@ void main() {
       topStories: <Article>[newer, followed, staleFollowed],
       heroLimit: 0,
       followingIds: const <String>{'topic:politics'},
+      personalizeFeed: true,
     );
 
     // +36h boosts the one-day-old followed story above "now", but not a
@@ -88,6 +90,60 @@ void main() {
       'newer',
       'stale',
     ]);
+  });
+
+  test('the opt-out suppresses follow ranking even with ids', () {
+    final Article followed = testArticle(
+      id: 'followed',
+      categoryId: 'politics',
+      publishedAt: DateTime(2026, 10, 14, 9),
+    );
+    final Article newer = testArticle(
+      id: 'newer',
+      categoryId: 'business',
+      publishedAt: DateTime(2026, 10, 15, 9),
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[followed, newer],
+      heroLimit: 0,
+      followingIds: const <String>{'topic:politics'},
+      personalizeFeed: false,
+    );
+
+    expect(feed.stream.map((Article a) => a.id).toList(), <String>[
+      'newer',
+      'followed',
+    ]);
+  });
+
+  test('followed sports stories lead the sports tail', () {
+    final Article followedSports = testArticle(
+      id: 'team-lal',
+      categoryId: 'sports',
+      tags: const <String>['sports', 'team:lal'],
+      publishedAt: DateTime(2026, 10, 14, 9),
+    );
+    final Article fresherSports = testArticle(
+      id: 'other-game',
+      categoryId: 'sports',
+      tags: const <String>['sports'],
+      publishedAt: DateTime(2026, 10, 15, 9),
+    );
+    final ReaderSignals signals = buildReaderSignals(
+      knownArticles: <Article>[followedSports, fresherSports],
+      followedIds: const <String>{'team:lal'},
+    );
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[fresherSports, followedSports],
+      heroLimit: 0,
+      followingIds: const <String>{'team:lal'},
+      signals: signals,
+      personalizeFeed: true,
+    );
+
+    expect(feed.stream.first.id, 'team-lal');
   });
 
   test('personalization puts explicit follows in a separate rail', () {

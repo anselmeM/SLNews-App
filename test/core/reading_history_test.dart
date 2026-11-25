@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
+import 'package:slnews_mobile/core/domain/auth/account_scope.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/auth_providers.dart';
 import 'package:slnews_mobile/core/providers/reading_history_provider.dart';
 
 import '../features/feed/support/fakes.dart';
@@ -41,7 +43,7 @@ void main() {
 
     expect(container.read(readingHistoryProvider), <String>['a', 'b']);
     expect(
-      store.string(readingHistoryKey),
+      store.string(readingHistoryKeyFor(anonymousAccountId)),
       isNotNull,
       reason: 'history is written to preferences',
     );
@@ -73,7 +75,31 @@ void main() {
     await history.clear();
 
     expect(container.read(readingHistoryProvider), isEmpty);
-    expect(store.string(readingHistoryKey), isNull);
+    expect(store.string(readingHistoryKeyFor(anonymousAccountId)), isNull);
+  });
+
+  test('reading history is isolated per account', () async {
+    final ProviderContainer a = ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(store),
+        activeAccountKeyProvider.overrideWithValue('account-a'),
+      ],
+    );
+    addTearDown(a.dispose);
+    await a.read(readingHistoryProvider.notifier).record('a-story');
+
+    final ProviderContainer b = ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(store),
+        activeAccountKeyProvider.overrideWithValue('account-b'),
+      ],
+    );
+    addTearDown(b.dispose);
+
+    expect(a.read(readingHistoryProvider), <String>['a-story']);
+    expect(b.read(readingHistoryProvider), isEmpty);
+    expect(store.string(readingHistoryKeyFor('account-a')), isNotNull);
+    expect(store.string(readingHistoryKeyFor('account-b')), isNull);
   });
 
   test('recently read resolves ids against the article repository', () async {

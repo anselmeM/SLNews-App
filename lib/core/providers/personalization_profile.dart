@@ -4,13 +4,20 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/preferences_store.dart';
+import '../domain/auth/account_scope.dart';
 import '../domain/models/article.dart';
 import '../domain/models/personalization_profile.dart';
 import '../utils/app_log.dart';
 import 'app_providers.dart';
+import 'auth_providers.dart';
 
 /// Versioned preference key for the on-device personalization profile.
 const String personalizationProfileKey = 'personalization.profile.v1';
+
+/// Account-scoped key. Engagement signals and reading positions must never
+/// carry across identities on a shared device.
+String personalizationProfileKeyFor(String accountKey) =>
+    '$personalizationProfileKey.$accountKey';
 
 /// Local, private engagement profile used by For You.
 ///
@@ -25,12 +32,24 @@ personalizationProfileProvider =
 
 class PersonalizationProfileController
     extends Notifier<PersonalizationProfile> {
-  @override
-  PersonalizationProfile build() => _read();
+  Future<void> _writeBarrier = Future<void>.value();
 
-  PersonalizationProfile _read() {
+  @override
+  PersonalizationProfile build() {
+    final String accountKey = ref.watch(activeAccountKeyProvider);
+    return _read(accountKey);
+  }
+
+  PersonalizationProfile _read(String accountKey) {
     try {
-      final String? raw = _preferences()?.string(personalizationProfileKey);
+      String? raw = _preferences()?.string(
+        personalizationProfileKeyFor(accountKey),
+      );
+      // Only the old anonymous document may migrate; never adopt another
+      // account's profile into a newly signed-in account.
+      if (raw == null && accountKey == anonymousAccountId) {
+        raw = _preferences()?.string(personalizationProfileKey);
+      }
       if (raw == null || raw.isEmpty) return const PersonalizationProfile();
       final Object? decoded = jsonDecode(raw);
       if (decoded is! Map) return const PersonalizationProfile();
@@ -152,15 +171,23 @@ class PersonalizationProfileController
     );
   }
 
-  void clear() {
+  Future<void> clear() async {
     state = const PersonalizationProfile();
     final PreferencesStore? preferences = _preferences();
     if (preferences == null) return;
-    unawaited(
-      preferences.remove(personalizationProfileKey).catchError((Object error) {
+    final String accountKey = _accountKey();
+    final Future<void> removal = _writeBarrier.then((_) async {
+      try {
+        await preferences.remove(personalizationProfileKeyFor(accountKey));
+        if (accountKey == anonymousAccountId) {
+          await preferences.remove(personalizationProfileKey);
+        }
+      } catch (error) {
         AppLog.debug('PersonalizationProfile: clear failed: $error');
-      }),
-    );
+      }
+    });
+    _writeBarrier = removal.catchError((Object _) {});
+    await removal;
   }
 
   void _append(
@@ -198,13 +225,17 @@ class PersonalizationProfileController
   void _persist() {
     final PreferencesStore? preferences = _preferences();
     if (preferences == null) return;
-    unawaited(
-      preferences
-          .putString(personalizationProfileKey, jsonEncode(state.toJson()))
-          .catchError((Object error) {
-            AppLog.debug('PersonalizationProfile: persistence failed: $error');
-          }),
+    final String accountKey = _accountKey();
+    final String payload = jsonEncode(state.toJson());
+    final Future<void> write = _writeBarrier.then(
+      (_) => preferences.putString(
+        personalizationProfileKeyFor(accountKey),
+        payload,
+      ),
     );
+    _writeBarrier = write.catchError((Object error) {
+      AppLog.debug('PersonalizationProfile: persistence failed: $error');
+    });
   }
 
   PreferencesStore? _preferences() {
@@ -212,6 +243,14 @@ class PersonalizationProfileController
       return ref.read(preferencesStoreProvider);
     } catch (_) {
       return null;
+    }
+  }
+
+  String _accountKey() {
+    try {
+      return ref.read(activeAccountKeyProvider);
+    } catch (_) {
+      return anonymousAccountId;
     }
   }
 }

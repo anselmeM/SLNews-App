@@ -25,7 +25,9 @@ enough traffic and interaction data.
   why they are there; those stories are removed from the rest of the stream.
 - A **Settings → Personalize For You** toggle disables ranking and the follows
   rail. The device-local preference defaults to on.
-- No personalization signal leaves the device.
+- Reading history, dwell/progress and derived affinity are scoped per local
+  account and never leave the device. Saved stories, likes and follows are
+  account state and may sync; synced copies are not used as ranking signals.
 
 Known Phase 1 limit: affinity is derived only from stories still present in the
 current candidate pool. Phase 2 adds a persistent local interest profile so older
@@ -45,7 +47,18 @@ reads/saves continue to matter.
 - **Settings → Personalization data** shows local signal counts and can reset
   the profile.
 - Sync-applied saves/likes never train the profile; only reader actions do.
-- No server profile; still on-device.
+- Reading history and the engagement profile are isolated per account, so a
+  shared device cannot carry one reader's interests into another's For You.
+- Explicit team and league follows tag sports stories and rank them ahead of
+  recency-only sports stories.
+- Followed publisher and city candidates are included even when they are absent
+  from the general top/story feed.
+- Shared tags contribute topic affinity, duplicate story occurrences are counted
+  once, and the follows rail keeps local coverage ahead of international
+  coverage.
+- Exploration reserves in-bucket feed slots for a less-personalized story; it is
+  not just a small score bonus.
+- No server profile; all ranking is still on-device.
 
 Known Phase 2 limit: it remains a transparent weighted model, not a learned
 ranking model. Phase 3 defines experimentation and privacy-safe scaling.
