@@ -19,6 +19,7 @@ void main() {
     }, freetown);
     expect(snapshot, isNotNull);
     expect(snapshot!.locationLabel, 'Freetown');
+    expect(snapshot.locationId, 'city:freetown');
     expect(snapshot.temperatureC, 29);
     expect(snapshot.conditionLabel, 'Sunny');
     expect(snapshot.glyph, 'sun');

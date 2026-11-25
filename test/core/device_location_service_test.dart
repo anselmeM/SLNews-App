@@ -13,6 +13,7 @@ class _Probe implements DeviceLocationProbe {
     this.position,
     this.positionError,
     this.placemarks = const <Placemark>[],
+    this.placemarkFuture,
     this.geocodeError,
     this.settingsResult = true,
   });
@@ -23,8 +24,10 @@ class _Probe implements DeviceLocationProbe {
   final Position? position;
   final Object? positionError;
   final List<Placemark> placemarks;
+  final Future<List<Placemark>>? placemarkFuture;
   final Object? geocodeError;
   final bool settingsResult;
+  int requestCount = 0;
 
   @override
   Future<bool> serviceEnabled() async => servicesOn;
@@ -33,7 +36,10 @@ class _Probe implements DeviceLocationProbe {
   Future<LocationPermission> checkPermission() async => permission;
 
   @override
-  Future<LocationPermission> requestPermission() async => requestedPermission;
+  Future<LocationPermission> requestPermission() async {
+    requestCount++;
+    return requestedPermission;
+  }
 
   @override
   Future<Position> currentPosition() async {
@@ -47,6 +53,8 @@ class _Probe implements DeviceLocationProbe {
     double latitude,
     double longitude,
   ) async {
+    final Future<List<Placemark>>? future = placemarkFuture;
+    if (future != null) return future;
     final Object? error = geocodeError;
     if (error != null) throw error;
     return placemarks;
@@ -153,6 +161,32 @@ void main() {
 
     expect(result.status, DeviceLocationStatus.granted);
     expect(result.location!.label, 'My location');
+  });
+
+  test('bounds a stalled reverse geocoder with a neutral label', () async {
+    final Completer<List<Placemark>> stalled = Completer<List<Placemark>>();
+    final service = GeolocatorDeviceLocationService(
+      probe: _Probe(position: _londonPosition, placemarkFuture: stalled.future),
+      geocodeTimeout: const Duration(milliseconds: 20),
+    );
+
+    final result = await service.current();
+
+    expect(result.status, DeviceLocationStatus.granted);
+    expect(result.location!.label, 'My location');
+  });
+
+  test('an automatic refresh does not request permission', () async {
+    final _Probe probe = _Probe(
+      permission: LocationPermission.denied,
+      requestedPermission: LocationPermission.whileInUse,
+    );
+    final service = GeolocatorDeviceLocationService(probe: probe);
+
+    final result = await service.current(requestPermission: false);
+
+    expect(result.status, DeviceLocationStatus.denied);
+    expect(probe.requestCount, 0);
   });
 
   test('reports a timeout as unavailable', () async {

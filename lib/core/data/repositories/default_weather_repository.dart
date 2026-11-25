@@ -14,8 +14,8 @@ import 'package:slnews_mobile/core/utils/app_log.dart';
 /// Current conditions for the active location.
 ///
 /// Resolution order is remote (when an endpoint is configured) → seeded
-/// snapshot → [WeatherSnapshot.placeholder], so the header chip never shows a
-/// spinner or an error.
+/// snapshot → an explicit unavailable state. The repository never invents a
+/// forecast for an unknown place.
 class DefaultWeatherRepository implements WeatherRepository {
   /// Creates a repository over [seedLoader].
   ///
@@ -48,11 +48,10 @@ class DefaultWeatherRepository implements WeatherRepository {
     final WeatherSnapshot? live = await _fetch(location);
     if (live != null) return live;
     final WeatherSnapshot? seeded = _weather[location.id];
-    if (seeded != null) return seeded;
-    if (location.id.startsWith('geo:')) {
-      return WeatherSnapshot.unavailable(location.label);
+    if (seeded != null) {
+      return seeded.copyWith(locationId: location.id);
     }
-    return WeatherSnapshot.placeholder(location.label);
+    return WeatherSnapshot.unavailable(location.label, locationId: location.id);
   }
 
   Future<void> _hydrate() async {
@@ -80,6 +79,7 @@ class DefaultWeatherRepository implements WeatherRepository {
     final int? humidity = (current['relative_humidity_2m'] as num?)?.toInt();
     return WeatherSnapshot(
       locationLabel: location.label,
+      locationId: location.id,
       temperatureC: temp.round(),
       conditionLabel: label,
       glyph: glyph,
@@ -144,7 +144,10 @@ class DefaultWeatherRepository implements WeatherRepository {
           json['summary'] ??
           'Unknown';
       json['updatedAt'] = json['updatedAt'] ?? DateTime.now().toIso8601String();
-      return WeatherSnapshot.fromJson(json);
+      final WeatherSnapshot parsed = WeatherSnapshot.fromJson(json);
+      return parsed.locationId == null
+          ? parsed.copyWith(locationId: location.id)
+          : parsed;
     } catch (error) {
       AppLog.debug(
         'DefaultWeatherRepository: live weather unavailable: $error',

@@ -131,6 +131,7 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
       if (ref.read(authControllerProvider).isSignedIn) {
         unawaited(ref.read(syncControllerProvider.notifier).mergeOnSignIn());
       }
+      unawaited(_refreshWeatherLocation());
     });
     try {
       final PushService push = ref.read(pushServiceProvider);
@@ -161,10 +162,26 @@ class _PushTapHandlerState extends ConsumerState<_PushTapHandler>
   }
 
   Future<void> _refreshOnResume() async {
+    // Weather and editorial feeds are independent: do not make a fresh local
+    // forecast wait for a slow news refresh.
+    final Future<void> weatherRefresh = _refreshWeatherLocation();
     try {
       await ref.read(refreshFeedsProvider)();
     } catch (error) {
       AppLog.debug('PushTapHandler: resume refresh failed: $error');
+    }
+    await weatherRefresh;
+  }
+
+  Future<void> _refreshWeatherLocation() async {
+    try {
+      await ref
+          .read(weatherLocationControllerProvider.notifier)
+          .refreshDeviceLocation();
+      // Same-place resume refreshes do not change the location selection.
+      ref.invalidate(activeWeatherProvider);
+    } catch (error) {
+      AppLog.debug('PushTapHandler: weather location refresh failed: $error');
     }
   }
 

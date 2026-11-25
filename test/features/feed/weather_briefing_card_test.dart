@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
+import 'package:slnews_mobile/core/domain/models/weather_snapshot.dart';
 import 'package:slnews_mobile/core/location/device_location_service.dart';
 import 'package:slnews_mobile/core/utils/time_ago.dart';
 import 'package:slnews_mobile/features/feed/presentation/widgets/weather_briefing_card.dart';
@@ -19,11 +22,12 @@ void main() {
     List<Article> articles = const <Article>[],
     ValueChanged<Article>? onOpen,
     DeviceLocationService? deviceLocation,
+    FakeWeatherRepository? weather,
   }) {
     return ProviderScope(
       overrides: feedTestOverrides(
         articles: FakeArticleRepository(),
-        weather: FakeWeatherRepository(),
+        weather: weather ?? FakeWeatherRepository(),
         deviceLocation: deviceLocation,
       ),
       child: themedChild(
@@ -67,6 +71,72 @@ void main() {
     await tester.tap(find.text('Second briefing headline'));
     await tester.pumpAndSettle();
     expect(opened, <String>['b']);
+  });
+
+  testWidgets('a loading forecast is not replaced by an invented forecast', (
+    WidgetTester tester,
+  ) async {
+    final Completer<WeatherSnapshot> pending = Completer<WeatherSnapshot>();
+    await tester.pumpWidget(
+      card(weather: FakeWeatherRepository(pending: pending)),
+    );
+    await tester.pump();
+
+    expect(find.text('Checking weather'), findsOneWidget);
+    expect(find.text('Loading weather…'), findsOneWidget);
+    expect(find.text('29°'), findsNothing);
+    expect(find.text('Thundery showers'), findsNothing);
+
+    pending.complete(
+      WeatherSnapshot(
+        locationLabel: 'Freetown',
+        locationId: 'city:freetown',
+        temperatureC: 27,
+        conditionLabel: 'Sunny',
+        glyph: 'sun',
+        updatedAt: DateTime(2026, 11, 23, 9),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('27°'), findsOneWidget);
+  });
+
+  testWidgets('an unavailable forecast is not called cloudy', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      card(weather: FakeWeatherRepository(throwOnCurrent: true)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Weather unavailable'), findsWidgets);
+    expect(find.textContaining('Cloudy '), findsNothing);
+    expect(find.text('29°'), findsNothing);
+  });
+
+  testWidgets('a retained forecast for another place is discarded', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      card(
+        weather: FakeWeatherRepository(
+          snapshot: WeatherSnapshot(
+            locationLabel: 'Paris',
+            locationId: 'geo:48.86,2.35',
+            temperatureC: 18,
+            conditionLabel: 'Rain',
+            glyph: 'rain',
+            updatedAt: DateTime(2026, 11, 23, 9),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Paris'), findsNothing);
+    expect(find.text('18°'), findsNothing);
+    expect(find.text('Weather unavailable'), findsWidgets);
+    expect(find.text('Freetown'), findsOneWidget);
   });
 
   testWidgets('weather can be hidden while the briefing stays', (
@@ -156,23 +226,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
+      final Object? error = tester.takeException();
+      if (error != null) debugDumpRenderTree();
+      expect(error, isNull);
     });
   }
 }
 
 class _FakeDeviceLocationService implements DeviceLocationService {
   @override
-  Future<DeviceLocationResult> current() async => const DeviceLocationResult(
-    status: DeviceLocationStatus.granted,
-    location: NewsLocation(
-      id: 'geo:51.51,-0.13',
-      label: 'London',
-      region: 'United Kingdom',
-      latitude: 51.51,
-      longitude: -0.13,
-    ),
-  );
+  Future<DeviceLocationResult> current({bool requestPermission = true}) async =>
+      const DeviceLocationResult(
+        status: DeviceLocationStatus.granted,
+        location: NewsLocation(
+          id: 'geo:51.51,-0.13',
+          label: 'London',
+          region: 'United Kingdom',
+          latitude: 51.51,
+          longitude: -0.13,
+        ),
+      );
 
   @override
   Future<bool> openSettings() async => false;

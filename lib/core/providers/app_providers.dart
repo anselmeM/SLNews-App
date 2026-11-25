@@ -298,30 +298,83 @@ class WeatherLocationController extends Notifier<WeatherLocationState> {
   static const String useDeviceLocationKey = 'weather.useDeviceLocation';
   static const String savedDeviceLocationKey = 'weather.deviceLocation';
 
+  /// Single-document copy of the opt-in + place. The legacy keys above remain
+  /// for migration and as independently written fallbacks.
+  static const String deviceStateKey = 'weather.deviceState.v1';
+
   @override
   WeatherLocationState build() {
     final String selectedId = ref.watch(userStateProvider).activeLocationId;
     final NewsLocation fallback = _fallbackFor(selectedId);
     final PreferencesStore? store = _preferencesOrNull();
-    final bool enabled = store?.boolean(useDeviceLocationKey) ?? false;
-    final String? raw = store?.string(savedDeviceLocationKey);
+    final _PersistedWeather persisted = _readPersisted(store);
+    if (!persisted.enabled) {
+      return WeatherLocationState(location: fallback);
+    }
+    final NewsLocation? saved = persisted.location;
+    if (saved != null) {
+      return WeatherLocationState(location: saved, usingDevice: true);
+    }
+    return WeatherLocationState(location: fallback);
+  }
 
-    if (enabled && raw != null && raw.isNotEmpty) {
+  _PersistedWeather _readPersisted(PreferencesStore? store) {
+    if (store == null) return const _PersistedWeather.disabled();
+
+    bool? atomicEnabled;
+    NewsLocation? atomicLocation;
+    final String? rawState = store.string(deviceStateKey);
+    if (rawState != null && rawState.isNotEmpty) {
       try {
-        final Object? decoded = jsonDecode(raw);
+        final Object? decoded = jsonDecode(rawState);
         if (decoded is Map) {
-          final NewsLocation saved = NewsLocation.fromJson(
+          final Map<String, dynamic> json = Map<String, dynamic>.from(decoded);
+          final Object? enabled = json['enabled'];
+          if (enabled is bool) atomicEnabled = enabled;
+          final Object? rawLocation = json['location'];
+          if (rawLocation is Map) {
+            final NewsLocation parsed = NewsLocation.fromJson(
+              Map<String, dynamic>.from(rawLocation),
+            );
+            if (parsed.latitude != null && parsed.longitude != null) {
+              atomicLocation = parsed;
+            }
+          }
+        }
+      } catch (error) {
+        AppLog.debug('WeatherLocation: unreadable device state: $error');
+      }
+    }
+
+    final bool? legacyEnabled = store.boolean(useDeviceLocationKey);
+    NewsLocation? legacyLocation;
+    final String? rawLocation = store.string(savedDeviceLocationKey);
+    if (rawLocation != null && rawLocation.isNotEmpty) {
+      try {
+        final Object? decoded = jsonDecode(rawLocation);
+        if (decoded is Map) {
+          final NewsLocation parsed = NewsLocation.fromJson(
             Map<String, dynamic>.from(decoded),
           );
-          if (saved.latitude != null && saved.longitude != null) {
-            return WeatherLocationState(location: saved, usingDevice: true);
+          if (parsed.latitude != null && parsed.longitude != null) {
+            legacyLocation = parsed;
           }
         }
       } catch (error) {
         AppLog.debug('WeatherLocation: unreadable saved location: $error');
       }
     }
-    return WeatherLocationState(location: fallback);
+
+    // An explicit false from either copy wins: a failed partial opt-out must
+    // not leave the reader on device weather.
+    final bool disabled = atomicEnabled == false || legacyEnabled == false;
+    if (disabled) return const _PersistedWeather.disabled();
+    final bool enabled = atomicEnabled == true || legacyEnabled == true;
+    if (!enabled) return const _PersistedWeather.disabled();
+    return _PersistedWeather(
+      enabled: true,
+      location: atomicLocation ?? legacyLocation,
+    );
   }
 
   /// Requests the platform location, persists the resolved place, and updates
@@ -343,35 +396,98 @@ class WeatherLocationController extends Notifier<WeatherLocationState> {
       return result.status;
     }
 
-    final PreferencesStore? store = _preferencesOrNull();
-    if (store != null) {
-      try {
-        await store.putString(
-          savedDeviceLocationKey,
-          jsonEncode(location.toJson()),
-        );
-        await store.putBool(useDeviceLocationKey, true);
-      } catch (error) {
-        // The current session can still use the place even if persistence fails.
-        AppLog.debug('WeatherLocation: could not persist location: $error');
-      }
-    }
+    await _persistDeviceState(enabled: true, location: location);
     state = WeatherLocationState(location: location, usingDevice: true);
     return DeviceLocationStatus.granted;
   }
 
   /// Switches back to the saved news location and clears the device location.
+  ///
+  /// The single-document state and both legacy keys are written independently:
+  /// one failed write must not leave coordinates or an opt-in behind.
   Future<void> useNewsLocation() async {
     final String selectedId = ref.read(userStateProvider).activeLocationId;
-    final PreferencesStore? store = _preferencesOrNull();
     state = WeatherLocationState(location: _fallbackFor(selectedId));
-    if (store != null) {
-      try {
-        await store.putBool(useDeviceLocationKey, false);
-        await store.remove(savedDeviceLocationKey);
-      } catch (error) {
-        AppLog.debug('WeatherLocation: could not clear location: $error');
+    await _persistDeviceState(enabled: false);
+  }
+
+  /// Refreshes the opted-in device place when the app returns to the
+  /// foreground. The previously saved place stays visible on failure.
+  Future<void> refreshDeviceLocation() async {
+    if (!state.usingDevice || state.busy) return;
+    state = state.copyWith(busy: true, clearStatus: true);
+    try {
+      final DeviceLocationResult result = await ref
+          .read(deviceLocationServiceProvider)
+          .current(requestPermission: false);
+      final NewsLocation? location = result.location;
+      if (location == null) {
+        state = state.copyWith(busy: false);
+        return;
       }
+      await _persistDeviceState(enabled: true, location: location);
+      state = WeatherLocationState(location: location, usingDevice: true);
+    } catch (error) {
+      AppLog.debug('WeatherLocation: resume refresh failed: $error');
+      state = state.copyWith(busy: false);
+    }
+  }
+
+  Future<void> _persistDeviceState({
+    required bool enabled,
+    NewsLocation? location,
+  }) async {
+    final PreferencesStore? store = _preferencesOrNull();
+    if (store == null) return;
+
+    final String stateDocument = jsonEncode(<String, dynamic>{
+      'enabled': enabled,
+      'location': enabled && location != null ? location.toJson() : null,
+    });
+    bool atomicWritten = false;
+    try {
+      await store.putString(deviceStateKey, stateDocument);
+      atomicWritten = true;
+    } catch (error) {
+      AppLog.debug('WeatherLocation: could not write device state: $error');
+    }
+    if (!atomicWritten) {
+      // A stale enabled document would otherwise beat the fallback keys.
+      try {
+        await store.remove(deviceStateKey);
+      } catch (error) {
+        AppLog.debug('WeatherLocation: could not clear device state: $error');
+      }
+    }
+
+    if (enabled && location != null) {
+      try {
+        await store.putString(
+          savedDeviceLocationKey,
+          jsonEncode(location.toJson()),
+        );
+      } catch (error) {
+        AppLog.debug('WeatherLocation: could not save place: $error');
+      }
+      try {
+        await store.putBool(useDeviceLocationKey, true);
+      } catch (error) {
+        AppLog.debug('WeatherLocation: could not save opt-in: $error');
+      }
+      return;
+    }
+
+    // Opt-out: perform the three clears independently so one failure cannot
+    // resurrect the device location on the next launch.
+    try {
+      await store.putBool(useDeviceLocationKey, false);
+    } catch (error) {
+      AppLog.debug('WeatherLocation: could not clear opt-in: $error');
+    }
+    try {
+      await store.remove(savedDeviceLocationKey);
+    } catch (error) {
+      AppLog.debug('WeatherLocation: could not clear saved place: $error');
     }
   }
 
@@ -395,6 +511,15 @@ class WeatherLocationController extends Notifier<WeatherLocationState> {
       orElse: () => SlLocations.fallback,
     );
   }
+}
+
+class _PersistedWeather {
+  const _PersistedWeather({required this.enabled, required this.location});
+
+  const _PersistedWeather.disabled() : enabled = false, location = null;
+
+  final bool enabled;
+  final NewsLocation? location;
 }
 
 /// Weather for the reader's selected weather location.
