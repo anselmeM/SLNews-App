@@ -61,7 +61,14 @@ class WeatherBriefingCard extends ConsumerWidget {
     // AsyncValue can retain the previous place's snapshot while the new
     // location loads. Only trust a value whose id/label matches the selection.
     final WeatherSnapshot snapshot;
-    if (value != null && value.matches(selected)) {
+    if (weather.hasError) {
+      // A failed same-place refresh must not present the previous forecast as
+      // if it were current.
+      snapshot = WeatherSnapshot.unavailable(
+        selected.label,
+        locationId: selected.id,
+      );
+    } else if (value != null && value.matches(selected)) {
       snapshot = value;
     } else if (weather.isLoading) {
       snapshot = WeatherSnapshot.loading(

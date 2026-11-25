@@ -281,6 +281,32 @@ void main() {
       },
     );
 
+    test('does not fetch a coordinate endpoint without coordinates', () async {
+      final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith(
+        (RequestOptions options) async => jsonBody(
+          '{"current":{"temperatureC":33,"conditionLabel":"Sunny","glyph":"sun"}}',
+        ),
+      );
+      final DefaultWeatherRepository repository = DefaultWeatherRepository(
+        seedLoader: bundled,
+        client: ApiClient(dio: fake.dio, timeout: const Duration(seconds: 2)),
+        endpointTemplate:
+            'https://api.example.test/weather?id={id}&lat={lat}&lon={lon}',
+      );
+
+      final WeatherSnapshot snapshot = await repository.current(
+        const NewsLocation(
+          id: 'city:nowhere',
+          label: 'Nowhere',
+          region: 'Nowhere',
+        ),
+      );
+
+      expect(fake.adapter.requests, isEmpty);
+      expect(snapshot.isAvailable, isFalse);
+      expect(snapshot.conditionLabel, 'Weather unavailable');
+    });
+
     test('prefers a configured live endpoint', () async {
       final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith(
         (RequestOptions options) async => jsonBody(

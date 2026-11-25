@@ -129,7 +129,8 @@ class _WeatherLocationSheet extends ConsumerWidget {
             Text(
               'Approximate location is rounded before it is sent to the '
               'weather service and your device\'s platform geocoder, which '
-              'resolves the place name. It is never used for advertising.',
+              'resolves the place name. While enabled it refreshes when the '
+              'app starts or resumes. It is never used for advertising.',
               style: context.typography.caption.copyWith(
                 color: context.colors.onSurfaceFaint,
               ),

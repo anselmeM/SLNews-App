@@ -45,7 +45,13 @@ class DefaultWeatherRepository implements WeatherRepository {
   @override
   Future<WeatherSnapshot> current(NewsLocation location) async {
     await _ready;
-    final WeatherSnapshot? live = await _fetch(location);
+    // A coordinate endpoint cannot forecast an unknown point. Fetching with
+    // substituted 0,0 would present the Gulf of Guinea as the place's weather.
+    final bool hasCoordinates =
+        location.latitude != null && location.longitude != null;
+    final WeatherSnapshot? live = hasCoordinates
+        ? await _fetch(location)
+        : null;
     if (live != null) return live;
     final WeatherSnapshot? seeded = _weather[location.id];
     if (seeded != null) {
@@ -110,6 +116,7 @@ class DefaultWeatherRepository implements WeatherRepository {
     final ApiClient? client = _api;
     final String? template = _template;
     if (client == null || template == null || template.isEmpty) return null;
+    if (location.latitude == null || location.longitude == null) return null;
 
     final String url = template
         .replaceAll('{id}', Uri.encodeQueryComponent(location.id))
