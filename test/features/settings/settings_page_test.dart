@@ -153,6 +153,19 @@ void main() {
     expect(switchValue(tester, "Editor's picks"), isTrue);
   });
 
+  testWidgets('the personalization switch persists locally', (
+    WidgetTester tester,
+  ) async {
+    await pumpPage(tester);
+
+    expect(switchValue(tester, 'Personalize For You'), isTrue);
+    await tester.tap(find.text('Personalize For You'));
+    await tester.pumpAndSettle();
+
+    expect(userState.personalizeFeed, isFalse);
+    expect(switchValue(tester, 'Personalize For You'), isFalse);
+  });
+
   testWidgets('the weather switch persists', (WidgetTester tester) async {
     await pumpPage(tester);
 

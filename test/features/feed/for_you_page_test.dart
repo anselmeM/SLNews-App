@@ -175,7 +175,47 @@ void main() {
 
     await pumpForYou(tester, articles: articles, following: following);
 
-    // The story is not in the home pool; it arrives because Business is followed.
+    // The story is not in the home pool; it arrives because Business is followed
+    // and is explained by the dedicated follows rail.
+    expect(find.text('From your follows'), findsOneWidget);
+    expect(find.text('Port expansion wins backing'), findsOneWidget);
+  });
+
+  testWidgets('turning personalization off hides the follows rail', (
+    WidgetTester tester,
+  ) async {
+    final FakeArticleRepository articles = FakeArticleRepository(
+      topStories: <Article>[newest],
+    );
+    articles.seed('business', <Article>[
+      testArticle(
+        id: 'biz-1',
+        title: 'Port expansion wins backing',
+        categoryId: 'business',
+        publishedAt: DateTime(2026, 10, 15, 8),
+      ),
+    ]);
+    const FollowTarget business = FollowTarget(
+      id: 'topic:business',
+      kind: FollowKind.topic,
+      label: 'Business',
+    );
+    final FakeFollowingRepository following = FakeFollowingRepository(
+      catalogue: const <FollowTarget>[business],
+    );
+    await following.follow(business);
+    final FakeUserStateRepository userState = FakeUserStateRepository()
+      ..personalizeFeed = false;
+
+    await pumpForYou(
+      tester,
+      articles: articles,
+      following: following,
+      userState: userState,
+    );
+
+    expect(find.text('From your follows'), findsNothing);
+    // The followed category feed still exists; it is just not personalised.
     expect(find.text('Port expansion wins backing'), findsOneWidget);
   });
 

@@ -64,6 +64,11 @@ abstract interface class UserStateRepository {
 
   Future<void> setWeatherForecastEnabled(bool enabled);
 
+  /// Whether For You may re-rank stories using local reader signals.
+  bool get personalizeFeed;
+
+  Future<void> setPersonalizeFeed(bool enabled);
+
   /// Device-local digest preferences, encoded as JSON under [device key].
   String? digestPreferencesFor(String deviceKey);
 

@@ -285,6 +285,13 @@ class FakeUserStateRepository implements UserStateRepository {
   Future<void> setWeatherForecastEnabled(bool enabled) async =>
       weatherForecastEnabled = enabled;
 
+  @override
+  bool personalizeFeed = true;
+
+  @override
+  Future<void> setPersonalizeFeed(bool enabled) async =>
+      personalizeFeed = enabled;
+
   final Map<String, String> digestCache = <String, String>{};
 
   @override

@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/feed_mix.dart';
 import '../../../../core/domain/models/article.dart';
+import '../../../../core/domain/models/app_settings.dart';
 import '../../../../core/domain/models/follow_models.dart';
+import '../../../../core/domain/personalization.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/providers/reading_history_provider.dart';
 import '../../../../core/utils/time_ago.dart';
 
 /// Immutable, render-ready snapshot of the For You screen.
@@ -16,6 +19,7 @@ class ForYouFeed {
     required this.hero,
     required this.stream,
     this.briefing = const <Article>[],
+    this.followingStories = const <Article>[],
     required this.breakingCount,
     this.breakingAlert,
     required this.activeLocation,
@@ -35,6 +39,10 @@ class ForYouFeed {
   /// breaking alert story is excluded because it already has its own row.
   final List<Article> briefing;
 
+  /// Explicitly followed stories promoted to the "From your follows" rail.
+  /// Kept out of [stream] so the same story never appears twice on the page.
+  final List<Article> followingStories;
+
   /// The one fresh breaking story that may be promoted to the alert row.
   ///
   /// This is deliberately a single story, not a feed-wide boolean: a stale
@@ -51,7 +59,8 @@ class ForYouFeed {
   final DateTime? lastSyncedAt;
 
   /// True when no story is available from any source.
-  bool get isEmpty => hero.isEmpty && stream.isEmpty;
+  bool get isEmpty =>
+      hero.isEmpty && stream.isEmpty && followingStories.isEmpty;
 
   /// True when a fresh breaking story should show the alert row.
   bool get hasBreaking => breakingAlert != null;
@@ -129,6 +138,9 @@ abstract final class ForYouViewModel {
     List<Article> articles,
     Set<String> ids, {
     bool boundedFollowWindow = false,
+    ReaderSignals? signals,
+    DateTime? now,
+    bool personalize = false,
   }) {
     articles.sort((Article a, Article b) {
       return FeedMix.compare(
@@ -137,6 +149,14 @@ abstract final class ForYouViewModel {
         within: (Article left, Article right) {
           if (left.isBreaking != right.isBreaking) {
             return left.isBreaking ? -1 : 1;
+          }
+          if (personalize && signals != null && !signals.isEmpty) {
+            return PersonalizationEngine.compare(
+              left,
+              right,
+              signals,
+              now: now,
+            );
           }
           if (boundedFollowWindow) {
             return _effectiveTime(
@@ -165,6 +185,8 @@ abstract final class ForYouViewModel {
     int heroLimit = ForYouViewModel.heroLimit,
     int sportsOutsideLimit = 2,
     Set<String> followingIds = const <String>{},
+    ReaderSignals signals = const ReaderSignals(),
+    bool personalizeFeed = false,
   }) {
     final List<Article> merged = merge(
       topStories,
@@ -180,27 +202,59 @@ abstract final class ForYouViewModel {
     final List<Article> heroCandidates = topStories
         .where((Article article) => !FeedMix.isSports(article))
         .toList(growable: false);
-    _sortForAudience(heroCandidates, followingIds);
+    _sortForAudience(
+      heroCandidates,
+      followingIds,
+      signals: signals,
+      now: reference,
+      personalize: personalizeFeed,
+    );
     final List<Article> heroPool = heroCandidates.isNotEmpty
         ? heroCandidates
         : topStories;
-    final List<Article> hero = heroPool.take(heroLimit).toList(growable: false);
+    final List<Article> hero = personalizeFeed
+        ? PersonalizationEngine.diversify(heroPool, limit: heroLimit)
+        : heroPool.take(heroLimit).toList(growable: false);
 
     final Set<String> heroIds = <String>{
       for (final Article article in hero) article.id,
     };
 
-    // Local stream: the location feed, minus whatever the carousel consumed.
+    // Explicit follows get their own, explainable rail. Keep these stories out
+    // of the stream so they cannot appear twice in one scroll.
+    final List<Article> followingStories = personalizeFeed
+        ? PersonalizationEngine.followedStories(
+            merged,
+            signals,
+            excludeIds: heroIds,
+          )
+        : const <Article>[];
+    final Set<String> followingIdsInRail = <String>{
+      for (final Article article in followingStories) article.id,
+    };
+
+    // Local stream: the location feed, minus whatever the carousel or followed
+    // rail consumed.
     final List<Article> localStream = locationStories
         .where(
           (Article article) =>
-              !heroIds.contains(article.id) && !FeedMix.isSports(article),
+              !heroIds.contains(article.id) &&
+              !followingIdsInRail.contains(article.id) &&
+              !FeedMix.isSports(article),
         )
         .toList(growable: false);
-    _sortForAudience(localStream, followingIds, boundedFollowWindow: true);
+    _sortForAudience(
+      localStream,
+      followingIds,
+      boundedFollowWindow: true,
+      signals: signals,
+      now: reference,
+      personalize: personalizeFeed,
+    );
     final Set<String> shown = <String>{
       for (final Article article in localStream) article.id,
       ...heroIds,
+      ...followingIdsInRail,
     };
 
     // Latest stream: every non-sports merged story the reader cannot already
@@ -208,10 +262,19 @@ abstract final class ForYouViewModel {
     final List<Article> latestStream = merged
         .where(
           (Article article) =>
-              !shown.contains(article.id) && !FeedMix.isSports(article),
+              !shown.contains(article.id) &&
+              !followingIdsInRail.contains(article.id) &&
+              !FeedMix.isSports(article),
         )
         .toList(growable: false);
-    _sortForAudience(latestStream, followingIds, boundedFollowWindow: true);
+    _sortForAudience(
+      latestStream,
+      followingIds,
+      boundedFollowWindow: true,
+      signals: signals,
+      now: reference,
+      personalize: personalizeFeed,
+    );
     final List<Article> sportsStream = FeedMix.limitedSports(
       merged.where((Article article) => !heroIds.contains(article.id)),
       limit: sportsOutsideLimit,
@@ -248,6 +311,7 @@ abstract final class ForYouViewModel {
       hero: hero,
       stream: stream,
       briefing: List<Article>.unmodifiable(briefing),
+      followingStories: List<Article>.unmodifiable(followingStories),
       breakingCount: activeBreaking.length,
       breakingAlert: breakingAlert,
       activeLocation: activeLocation,
@@ -294,8 +358,14 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
   // Personalisation is a boost, never a gate: an un-overridden test scope must
   // still render the feed. Followed topics also contribute their own category
   // feed, so following Politics brings politics stories in even when the home
-  // pool has none — before this, a follow could only reorder what was already
-  // there.
+  // pool has none.
+  AppSettings settings = const AppSettings();
+  try {
+    settings = ref.watch(settingsControllerProvider);
+  } on Object {
+    settings = const AppSettings();
+  }
+
   Set<String> followingIds = const <String>{};
   List<Article> followedStories = const <Article>[];
   try {
@@ -319,8 +389,32 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
     followedStories = const <Article>[];
   }
 
+  ReaderSignals signals = const ReaderSignals();
+  if (settings.personalizeFeed) {
+    try {
+      final List<Article> known = <Article>[
+        ...(top.value ?? const <Article>[]),
+        ...(extra.value ?? const <Article>[]),
+        ...followedStories,
+      ];
+      signals = buildReaderSignals(
+        knownArticles: known,
+        followedIds: followingIds,
+        readIds: ref.watch(readingHistoryProvider).toSet(),
+        savedIds: ref.watch(bookmarksControllerProvider),
+        likedIds: ref.watch(likesControllerProvider),
+      );
+    } on Object {
+      signals = ReaderSignals(followedIds: followingIds);
+    }
+  }
+
   return ForYouViewModel.build(
-    followingIds: followingIds,
+    // The toggle is about ranking: followed category feeds may still contribute
+    // stories, but a disabled personalisation must not boost their order.
+    followingIds: settings.personalizeFeed ? followingIds : const <String>{},
+    signals: signals,
+    personalizeFeed: settings.personalizeFeed,
     topStories: top.value ?? const <Article>[],
     // The feed covers Sierra Leone as a whole: there is no city-scoped rail
     // until the reader asks for one, so the "From <city>" section stays absent.

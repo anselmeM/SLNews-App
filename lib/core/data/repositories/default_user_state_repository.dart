@@ -32,6 +32,7 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const String sportsAlertsKey = 'settings.sportsAlerts';
   static const String followedTopicAlertsKey = 'settings.followedTopicAlerts';
   static const String weatherForecastKey = 'settings.weatherForecast';
+  static const String personalizeFeedKey = 'settings.personalizeFeed';
   static const String onboardingKey = 'settings.onboardingCompleted';
 
   /// Digest preferences are one device-local document; they are not synced.
@@ -47,6 +48,7 @@ class DefaultUserStateRepository implements UserStateRepository {
   static const bool defaultSportsAlerts = true;
   static const bool defaultFollowedTopicAlerts = true;
   static const bool defaultWeatherForecast = true;
+  static const bool defaultPersonalizeFeed = true;
   static const bool defaultOnboardingCompleted = false;
 
   final PreferencesStore _store;
@@ -161,6 +163,14 @@ class DefaultUserStateRepository implements UserStateRepository {
   @override
   Future<void> setWeatherForecastEnabled(bool enabled) =>
       _store.putBool(weatherForecastKey, enabled);
+
+  @override
+  bool get personalizeFeed =>
+      _store.boolean(personalizeFeedKey) ?? defaultPersonalizeFeed;
+
+  @override
+  Future<void> setPersonalizeFeed(bool enabled) =>
+      _store.putBool(personalizeFeedKey, enabled);
 
   /// Account-scoped key for reader-owned collections.
   String _readerKey(String base) => '$base.${localAccountIdFor(_accountId())}';
