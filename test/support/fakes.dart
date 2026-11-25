@@ -314,20 +314,34 @@ class FakeUserStateRepository implements UserStateRepository {
 
 /// Deterministic weather; `throwOnCurrent` exercises the header fallback.
 class FakeWeatherRepository implements WeatherRepository {
-  FakeWeatherRepository({this.throwOnCurrent = false});
+  FakeWeatherRepository({
+    this.throwOnCurrent = false,
+    this.snapshot,
+    this.pending,
+  });
 
   final bool throwOnCurrent;
+
+  /// Returned as-is when set, including a deliberately stale location.
+  final WeatherSnapshot? snapshot;
+
+  /// When set, the forecast stays loading until the test completes it.
+  final Completer<WeatherSnapshot>? pending;
 
   @override
   Future<WeatherSnapshot> current(NewsLocation location) async {
     if (throwOnCurrent) throw StateError('no weather');
-    return WeatherSnapshot(
-      locationLabel: location.label,
-      temperatureC: 29,
-      conditionLabel: 'Thundery showers',
-      glyph: 'storm',
-      updatedAt: DateTime(2026, 10, 15, 9),
-    );
+    final Completer<WeatherSnapshot>? gate = pending;
+    if (gate != null) return gate.future;
+    return snapshot ??
+        WeatherSnapshot(
+          locationLabel: location.label,
+          locationId: location.id,
+          temperatureC: 29,
+          conditionLabel: 'Thundery showers',
+          glyph: 'storm',
+          updatedAt: DateTime(2026, 10, 15, 9),
+        );
   }
 }
 

@@ -14,9 +14,15 @@ class _FakeDeviceLocationService implements DeviceLocationService {
 
   DeviceLocationResult result;
   bool settingsOpened = false;
+  int calls = 0;
+  bool? lastRequestPermission;
 
   @override
-  Future<DeviceLocationResult> current() async => result;
+  Future<DeviceLocationResult> current({bool requestPermission = true}) async {
+    calls++;
+    lastRequestPermission = requestPermission;
+    return result;
+  }
 
   @override
   Future<bool> openSettings() async {
@@ -167,6 +173,122 @@ void main() {
     },
   );
 
+  test(
+    'an opted-in resume refresh updates the place without asking again',
+    () async {
+      final ProviderContainer c = build();
+      final WeatherLocationController controller = c.read(
+        weatherLocationControllerProvider.notifier,
+      );
+      await controller.useCurrentLocation();
+      service.result = const DeviceLocationResult(
+        status: DeviceLocationStatus.granted,
+        location: NewsLocation(
+          id: 'geo:48.86,2.35',
+          label: 'Paris',
+          region: 'France',
+          latitude: 48.86,
+          longitude: 2.35,
+        ),
+      );
+
+      await controller.refreshDeviceLocation();
+
+      final WeatherLocationState state = c.read(
+        weatherLocationControllerProvider,
+      );
+      expect(state.location.label, 'Paris');
+      expect(service.calls, 2);
+      expect(service.lastRequestPermission, isFalse);
+    },
+  );
+
+  test('a failed resume refresh keeps the saved place', () async {
+    final ProviderContainer c = build();
+    final WeatherLocationController controller = c.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    service.result = const DeviceLocationResult(
+      status: DeviceLocationStatus.unavailable,
+    );
+
+    await controller.refreshDeviceLocation();
+
+    final WeatherLocationState state = c.read(
+      weatherLocationControllerProvider,
+    );
+    expect(state.location.label, 'London');
+    expect(state.usingDevice, isTrue);
+    expect(state.busy, isFalse);
+  });
+
+  test(
+    'an opt-out with a failed legacy clear still disables device weather',
+    () async {
+      final InMemoryPreferencesStore previous = store;
+      final _PartialFailureStore failing = _PartialFailureStore(
+        base: previous,
+        failClear: true,
+      );
+      final ProviderContainer maybe = ProviderContainer(
+        overrides: <Override>[
+          preferencesStoreProvider.overrideWithValue(failing),
+          userStateProvider.overrideWithValue(FakeUserStateRepository()),
+          deviceLocationServiceProvider.overrideWithValue(service),
+        ],
+      );
+      addTearDown(maybe.dispose);
+      final WeatherLocationController controller = maybe.read(
+        weatherLocationControllerProvider.notifier,
+      );
+      await controller.useCurrentLocation();
+      await controller.useNewsLocation();
+
+      final ProviderContainer reopened = ProviderContainer(
+        overrides: <Override>[
+          preferencesStoreProvider.overrideWithValue(failing),
+          userStateProvider.overrideWithValue(FakeUserStateRepository()),
+          deviceLocationServiceProvider.overrideWithValue(service),
+        ],
+      );
+      addTearDown(reopened.dispose);
+      expect(
+        reopened.read(weatherLocationControllerProvider).usingDevice,
+        isFalse,
+      );
+    },
+  );
+
+  test('an opt-out survives a failed state document and flag write', () async {
+    final _PartialFailureStore failing = _PartialFailureStore(
+      base: store,
+      failAtomic: true,
+      failFlag: true,
+    );
+    ProviderContainer buildWithStore() => ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(failing),
+        userStateProvider.overrideWithValue(FakeUserStateRepository()),
+        deviceLocationServiceProvider.overrideWithValue(service),
+      ],
+    );
+    final ProviderContainer c = buildWithStore();
+    addTearDown(c.dispose);
+    final WeatherLocationController controller = c.read(
+      weatherLocationControllerProvider.notifier,
+    );
+    await controller.useCurrentLocation();
+    await controller.useNewsLocation();
+
+    final ProviderContainer reopened = buildWithStore();
+    addTearDown(reopened.dispose);
+    expect(
+      reopened.read(weatherLocationControllerProvider).usingDevice,
+      isFalse,
+    );
+  });
+
   test('openSettings is forwarded to the platform service', () async {
     final ProviderContainer c = build();
     final bool opened = await c
@@ -176,4 +298,60 @@ void main() {
     expect(opened, isTrue);
     expect(service.settingsOpened, isTrue);
   });
+}
+
+class _PartialFailureStore extends InMemoryPreferencesStore {
+  _PartialFailureStore({
+    required this.base,
+    this.failClear = false,
+    this.failAtomic = false,
+    this.failFlag = false,
+  });
+
+  final InMemoryPreferencesStore base;
+  final bool failClear;
+  final bool failAtomic;
+  final bool failFlag;
+
+  @override
+  String? string(String key) => base.string(key);
+
+  @override
+  bool? boolean(String key) => base.boolean(key);
+
+  @override
+  double? number(String key) => base.number(key);
+
+  @override
+  Set<String> stringSet(String key) => base.stringSet(key);
+
+  @override
+  Future<void> putString(String key, String value) =>
+      base.putString(key, value);
+
+  @override
+  Future<void> putBool(String key, bool value) {
+    if ((failClear || failFlag) &&
+        key == WeatherLocationController.useDeviceLocationKey) {
+      return Future<void>.error(StateError('bool write failed'));
+    }
+    return base.putBool(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) {
+    if (failClear) return Future<void>.error(StateError('remove failed'));
+    return base.remove(key);
+  }
+
+  @override
+  Future<void> putStringSet(String key, Set<String> values) =>
+      base.putStringSet(key, values);
+
+  @override
+  Future<void> putNumber(String key, double value) =>
+      base.putNumber(key, value);
+
+  @override
+  Future<void> init() => base.init();
 }

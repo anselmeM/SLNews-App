@@ -226,6 +226,7 @@ void main() {
       for (final NewsLocation location in SlLocations.all) {
         final WeatherSnapshot snapshot = await repository.current(location);
         expect(snapshot.locationLabel, location.label);
+        expect(snapshot.locationId, location.id);
         expect(snapshot.temperatureC, greaterThan(0));
         expect(snapshot.conditionLabel, isNotEmpty);
       }
@@ -258,22 +259,27 @@ void main() {
       expect(snapshot.conditionLabel, 'Weather unavailable');
     });
 
-    test('falls back to a placeholder for an unknown city', () async {
-      final DefaultWeatherRepository repository = DefaultWeatherRepository(
-        seedLoader: bundled,
-      );
+    test(
+      'an unknown city is honestly unavailable, not a fake forecast',
+      () async {
+        final DefaultWeatherRepository repository = DefaultWeatherRepository(
+          seedLoader: bundled,
+        );
 
-      final WeatherSnapshot snapshot = await repository.current(
-        const NewsLocation(
-          id: 'city:nowhere',
-          label: 'Nowhere',
-          region: 'Nowhere',
-        ),
-      );
+        final WeatherSnapshot snapshot = await repository.current(
+          const NewsLocation(
+            id: 'city:nowhere',
+            label: 'Nowhere',
+            region: 'Nowhere',
+          ),
+        );
 
-      expect(snapshot.locationLabel, 'Nowhere');
-      expect(snapshot.conditionLabel, 'Thundery showers');
-    });
+        expect(snapshot.locationLabel, 'Nowhere');
+        expect(snapshot.locationId, 'city:nowhere');
+        expect(snapshot.isAvailable, isFalse);
+        expect(snapshot.conditionLabel, 'Weather unavailable');
+      },
+    );
 
     test('prefers a configured live endpoint', () async {
       final ({Dio dio, FakeHttpAdapter adapter}) fake = dioWith(

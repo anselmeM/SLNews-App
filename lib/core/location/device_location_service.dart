@@ -30,9 +30,12 @@ class DeviceLocationResult {
 
 /// Platform location lookup seam.
 abstract interface class DeviceLocationService {
-  /// Returns the current place, requesting permission only when
-  /// [requestPermission] is true.
-  Future<DeviceLocationResult> current();
+  /// Returns the current place.
+  ///
+  /// Permission is requested only when [requestPermission] is true and the
+  /// platform has not already granted it. Automatic resume refreshes pass
+  /// `false`; the explicit "Use my location" button passes the default `true`.
+  Future<DeviceLocationResult> current({bool requestPermission = true});
 
   /// Opens the platform app settings so a permanently denied permission can be
   /// changed.
@@ -57,16 +60,21 @@ abstract interface class DeviceLocationProbe {
 
 /// `geolocator` + platform geocoder implementation.
 class GeolocatorDeviceLocationService implements DeviceLocationService {
-  GeolocatorDeviceLocationService({DeviceLocationProbe? probe})
-    : _probe = probe ?? _PlatformLocationProbe();
+  GeolocatorDeviceLocationService({
+    DeviceLocationProbe? probe,
+    this.geocodeTimeout = const Duration(seconds: 3),
+  }) : _probe = probe ?? _PlatformLocationProbe();
 
   /// Low accuracy is deliberate: the weather card only needs the nearest town.
   static const Duration timeout = Duration(seconds: 10);
 
+  /// Reverse geocoding is optional and must not keep the sheet busy forever.
+  final Duration geocodeTimeout;
+
   final DeviceLocationProbe _probe;
 
   @override
-  Future<DeviceLocationResult> current() async {
+  Future<DeviceLocationResult> current({bool requestPermission = true}) async {
     try {
       if (!await _probe.serviceEnabled()) {
         return const DeviceLocationResult(
@@ -76,6 +84,11 @@ class GeolocatorDeviceLocationService implements DeviceLocationService {
 
       LocationPermission permission = await _probe.checkPermission();
       if (permission == LocationPermission.denied) {
+        if (!requestPermission) {
+          return const DeviceLocationResult(
+            status: DeviceLocationStatus.denied,
+          );
+        }
         permission = await _probe.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
@@ -140,7 +153,11 @@ class GeolocatorDeviceLocationService implements DeviceLocationService {
   Future<_PlaceLabel> _placeLabel(double lat, double lon) async {
     try {
       final List<geocoding.Placemark> marks = await _probe
-          .placemarkFromCoordinates(lat, lon);
+          .placemarkFromCoordinates(lat, lon)
+          .timeout(
+            geocodeTimeout,
+            onTimeout: () => const <geocoding.Placemark>[],
+          );
       if (marks.isEmpty) {
         return const _PlaceLabel(label: 'My location', region: '');
       }

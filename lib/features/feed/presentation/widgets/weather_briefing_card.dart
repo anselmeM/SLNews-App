@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/models/article.dart';
+import '../../../../core/domain/models/follow_models.dart';
 import '../../../../core/domain/models/weather_location_state.dart';
 import '../../../../core/domain/models/weather_snapshot.dart';
 import '../../../../core/providers/app_providers.dart';
@@ -55,9 +56,24 @@ class WeatherBriefingCard extends ConsumerWidget {
     final AsyncValue<WeatherSnapshot> weather = ref.watch(
       activeWeatherProvider,
     );
-    final WeatherSnapshot snapshot =
-        weather.value ??
-        WeatherSnapshot.placeholder(locationState.location.label);
+    final NewsLocation selected = locationState.location;
+    final WeatherSnapshot? value = weather.value;
+    // AsyncValue can retain the previous place's snapshot while the new
+    // location loads. Only trust a value whose id/label matches the selection.
+    final WeatherSnapshot snapshot;
+    if (value != null && value.matches(selected)) {
+      snapshot = value;
+    } else if (weather.isLoading) {
+      snapshot = WeatherSnapshot.loading(
+        selected.label,
+        locationId: selected.id,
+      );
+    } else {
+      snapshot = WeatherSnapshot.unavailable(
+        selected.label,
+        locationId: selected.id,
+      );
+    }
     final DateTime now = appNow();
 
     return Padding(
@@ -101,6 +117,9 @@ class _WeatherCard extends StatelessWidget {
     final String daypart = _daypart(now);
     final String adjective = _weatherAdjective(snapshot.glyph);
     final String greeting = _weatherGreeting(adjective, daypart, snapshot);
+    final String headline = !snapshot.isAvailable
+        ? (snapshot.isLoading ? 'Checking weather' : 'Weather unavailable')
+        : '$adjective $daypart';
 
     return ClipRRect(
       borderRadius: AppRadius.cardRadius,
@@ -156,7 +175,7 @@ class _WeatherCard extends StatelessWidget {
                   Semantics(
                     header: true,
                     child: Text(
-                      '$adjective $daypart',
+                      headline,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.typography.screenTitle.copyWith(
@@ -345,13 +364,23 @@ class _WeatherMetrics extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(Icons.cloud_off_outlined, size: 22, color: mutedInk),
+              Icon(
+                snapshot.isLoading
+                    ? Icons.schedule_outlined
+                    : Icons.cloud_off_outlined,
+                size: 22,
+                color: mutedInk,
+              ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Weather unavailable',
-                style: context.typography.cardTitle.copyWith(
-                  color: ink,
-                  fontSize: 18,
+              Expanded(
+                child: Text(
+                  snapshot.conditionLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.cardTitle.copyWith(
+                    color: ink,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ],
@@ -639,6 +668,9 @@ String _weatherGreeting(
   String daypart,
   WeatherSnapshot snapshot,
 ) {
+  if (snapshot.isLoading) {
+    return 'Loading the forecast for ${snapshot.locationLabel}.';
+  }
   if (!snapshot.isAvailable) {
     return 'Weather for ${snapshot.locationLabel} isn’t available right now.';
   }

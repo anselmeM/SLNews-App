@@ -128,7 +128,8 @@ class _WeatherLocationSheet extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Approximate location is rounded before it is sent to the '
-              'weather service. It is never used for advertising.',
+              'weather service and your device\'s platform geocoder, which '
+              'resolves the place name. It is never used for advertising.',
               style: context.typography.caption.copyWith(
                 color: context.colors.onSurfaceFaint,
               ),
