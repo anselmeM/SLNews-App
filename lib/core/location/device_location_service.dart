@@ -39,23 +39,44 @@ abstract interface class DeviceLocationService {
   Future<bool> openSettings();
 }
 
+/// Platform operations behind [GeolocatorDeviceLocationService].
+///
+/// Split from the service so the permission/label logic can be tested without a
+/// device or a plugin channel.
+abstract interface class DeviceLocationProbe {
+  Future<bool> serviceEnabled();
+  Future<LocationPermission> checkPermission();
+  Future<LocationPermission> requestPermission();
+  Future<Position> currentPosition();
+  Future<List<geocoding.Placemark>> placemarkFromCoordinates(
+    double latitude,
+    double longitude,
+  );
+  Future<bool> openSettings();
+}
+
 /// `geolocator` + platform geocoder implementation.
 class GeolocatorDeviceLocationService implements DeviceLocationService {
+  GeolocatorDeviceLocationService({DeviceLocationProbe? probe})
+    : _probe = probe ?? _PlatformLocationProbe();
+
   /// Low accuracy is deliberate: the weather card only needs the nearest town.
   static const Duration timeout = Duration(seconds: 10);
+
+  final DeviceLocationProbe _probe;
 
   @override
   Future<DeviceLocationResult> current() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
+      if (!await _probe.serviceEnabled()) {
         return const DeviceLocationResult(
           status: DeviceLocationStatus.servicesDisabled,
         );
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
+      LocationPermission permission = await _probe.checkPermission();
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+        permission = await _probe.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
         return const DeviceLocationResult(
@@ -66,12 +87,7 @@ class GeolocatorDeviceLocationService implements DeviceLocationService {
         return const DeviceLocationResult(status: DeviceLocationStatus.denied);
       }
 
-      final Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low,
-          timeLimit: timeout,
-        ),
-      );
+      final Position position = await _probe.currentPosition();
 
       // Round before persistence/network: at two decimal places the forecast
       // request still resolves the right town but no longer carries a precise
@@ -110,30 +126,33 @@ class GeolocatorDeviceLocationService implements DeviceLocationService {
   @override
   Future<bool> openSettings() async {
     try {
-      return await Geolocator.openAppSettings();
+      return await _probe.openSettings();
     } catch (_) {
       return false;
     }
   }
 
-  static double _round(double value) => (value * 100).round() / 100;
+  /// Exposed for tests of the coordinate privacy rounding.
+  static double roundCoordinate(double value) => (value * 100).round() / 100;
 
-  static Future<_PlaceLabel> _placeLabel(double lat, double lon) async {
+  static double _round(double value) => roundCoordinate(value);
+
+  Future<_PlaceLabel> _placeLabel(double lat, double lon) async {
     try {
-      final List<geocoding.Placemark> marks = await geocoding.Geocoding()
+      final List<geocoding.Placemark> marks = await _probe
           .placemarkFromCoordinates(lat, lon);
       if (marks.isEmpty) {
         return const _PlaceLabel(label: 'My location', region: '');
       }
       final geocoding.Placemark mark = marks.first;
-      final String label = _firstNonEmpty(<String?>[
+      final String label = firstNonEmpty(<String?>[
         mark.locality,
         mark.subAdministrativeArea,
         mark.administrativeArea,
         mark.country,
         'My location',
       ]);
-      final String region = _firstNonEmpty(<String?>[
+      final String region = firstNonEmpty(<String?>[
         mark.country,
         mark.administrativeArea,
         mark.subAdministrativeArea,
@@ -147,13 +166,45 @@ class GeolocatorDeviceLocationService implements DeviceLocationService {
     }
   }
 
-  static String _firstNonEmpty(List<String?> values) {
+  /// Exposed for tests; first non-empty value wins.
+  static String firstNonEmpty(List<String?> values) {
     for (final String? value in values) {
       final String trimmed = value?.trim() ?? '';
       if (trimmed.isNotEmpty) return trimmed;
     }
     return '';
   }
+}
+
+class _PlatformLocationProbe implements DeviceLocationProbe {
+  final geocoding.Geocoding _geocoding = geocoding.Geocoding();
+
+  @override
+  Future<bool> serviceEnabled() => Geolocator.isLocationServiceEnabled();
+
+  @override
+  Future<LocationPermission> checkPermission() => Geolocator.checkPermission();
+
+  @override
+  Future<LocationPermission> requestPermission() =>
+      Geolocator.requestPermission();
+
+  @override
+  Future<Position> currentPosition() => Geolocator.getCurrentPosition(
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.low,
+      timeLimit: GeolocatorDeviceLocationService.timeout,
+    ),
+  );
+
+  @override
+  Future<List<geocoding.Placemark>> placemarkFromCoordinates(
+    double latitude,
+    double longitude,
+  ) => _geocoding.placemarkFromCoordinates(latitude, longitude);
+
+  @override
+  Future<bool> openSettings() => Geolocator.openAppSettings();
 }
 
 class _PlaceLabel {
