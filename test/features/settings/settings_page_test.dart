@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/settings/presentation/settings_page.dart';
 
@@ -164,6 +165,25 @@ void main() {
 
     expect(userState.personalizeFeed, isFalse);
     expect(switchValue(tester, 'Personalize For You'), isFalse);
+  });
+
+  testWidgets('personalization data can be reviewed and reset', (
+    WidgetTester tester,
+  ) async {
+    container
+        .read(personalizationProfileProvider.notifier)
+        .recordSave(testArticle(id: 'story-1', title: 'Budget passes'));
+    await pumpPage(tester);
+
+    expect(find.text('Personalization data'), findsOneWidget);
+    await tester.tap(find.text('Personalization data'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reset'), findsOneWidget);
+    await tester.tap(find.text('Reset'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(personalizationProfileProvider).isEmpty, isTrue);
+    expect(find.text('Personalization data was reset'), findsOneWidget);
   });
 
   testWidgets('the weather switch persists', (WidgetTester tester) async {

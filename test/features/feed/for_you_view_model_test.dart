@@ -18,12 +18,14 @@ void main() {
     Set<String> followingIds = const <String>{},
     ReaderSignals signals = const ReaderSignals(),
     bool personalizeFeed = false,
+    Set<String> dismissedIds = const <String>{},
   }) {
     return ForYouViewModel.build(
       now: DateTime(2026, 10, 15, 20),
       followingIds: followingIds,
       signals: signals,
       personalizeFeed: personalizeFeed,
+      dismissedIds: dismissedIds,
       topStories: topStories,
       locationStories: localStories,
       extraStories: extraStories,
@@ -162,6 +164,24 @@ void main() {
     expect(feed.hero.map((Article a) => a.id), <String>['followed']);
     expect(feed.followingStories, isEmpty);
     expect(feed.stream.map((Article a) => a.id), isNot(contains('followed')));
+  });
+
+  test('explicitly dismissed stories are removed from every stream', () {
+    final Article dismissed = testArticle(id: 'dismissed');
+    final Article visible = testArticle(id: 'visible');
+
+    final ForYouFeed feed = build(
+      topStories: <Article>[dismissed, visible],
+      dismissedIds: const <String>{'dismissed'},
+    );
+
+    final List<String> rendered = <String>[
+      ...feed.hero.map((Article a) => a.id),
+      ...feed.stream.map((Article a) => a.id),
+      ...feed.followingStories.map((Article a) => a.id),
+    ];
+    expect(rendered, isNot(contains('dismissed')));
+    expect(rendered, contains('visible'));
   });
 
   test('personalMatch counts category, publisher and tag follow ids', () {

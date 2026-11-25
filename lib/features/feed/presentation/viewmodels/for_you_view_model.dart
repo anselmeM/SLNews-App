@@ -4,9 +4,11 @@ import '../../../../core/domain/feed_mix.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
 import '../../../../core/domain/models/follow_models.dart';
+import '../../../../core/domain/models/personalization_profile.dart';
 import '../../../../core/domain/personalization.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/controllers.dart';
+import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/providers/reading_history_provider.dart';
 import '../../../../core/utils/time_ago.dart';
 
@@ -187,11 +189,19 @@ abstract final class ForYouViewModel {
     Set<String> followingIds = const <String>{},
     ReaderSignals signals = const ReaderSignals(),
     bool personalizeFeed = false,
+    Set<String> dismissedIds = const <String>{},
   }) {
+    List<Article> visible(List<Article> stories) => stories
+        .where((Article article) => !dismissedIds.contains(article.id))
+        .toList(growable: false);
+
+    final List<Article> visibleTop = visible(topStories);
+    final List<Article> visibleLocation = visible(locationStories);
+    final List<Article> visibleExtra = visible(extraStories);
     final List<Article> merged = merge(
-      topStories,
-      locationStories: locationStories,
-      extraStories: extraStories,
+      visibleTop,
+      locationStories: visibleLocation,
+      extraStories: visibleExtra,
     );
     final DateTime reference = now ?? appNow();
     final DateTime breakingCutoff = reference.subtract(breakingWindow);
@@ -199,7 +209,7 @@ abstract final class ForYouViewModel {
     // The home surfaces are Sierra Leone-first, then international, then a
     // small sports tail. Sports-only feeds are numerous and would otherwise
     // crowd out local reporting.
-    final List<Article> heroCandidates = topStories
+    final List<Article> heroCandidates = visibleTop
         .where((Article article) => !FeedMix.isSports(article))
         .toList(growable: false);
     _sortForAudience(
@@ -235,7 +245,7 @@ abstract final class ForYouViewModel {
 
     // Local stream: the location feed, minus whatever the carousel or followed
     // rail consumed.
-    final List<Article> localStream = locationStories
+    final List<Article> localStream = visibleLocation
         .where(
           (Article article) =>
               !heroIds.contains(article.id) &&
@@ -389,6 +399,9 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
     followedStories = const <Article>[];
   }
 
+  final PersonalizationProfile profile = ref.watch(
+    personalizationProfileProvider,
+  );
   ReaderSignals signals = const ReaderSignals();
   if (settings.personalizeFeed) {
     try {
@@ -397,13 +410,17 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
         ...(extra.value ?? const <Article>[]),
         ...followedStories,
       ];
-      signals = buildReaderSignals(
-        knownArticles: known,
-        followedIds: followingIds,
-        readIds: ref.watch(readingHistoryProvider).toSet(),
-        savedIds: ref.watch(bookmarksControllerProvider),
-        likedIds: ref.watch(likesControllerProvider),
-      );
+      signals =
+          buildReaderSignals(
+            knownArticles: known,
+            followedIds: followingIds,
+            readIds: ref.watch(readingHistoryProvider).toSet(),
+            savedIds: ref.watch(bookmarksControllerProvider),
+            likedIds: ref.watch(likesControllerProvider),
+          ).copyWith(
+            topicAffinity: profile.topicAffinity(),
+            publisherAffinity: profile.publisherAffinity(),
+          );
     } on Object {
       signals = ReaderSignals(followedIds: followingIds);
     }
@@ -415,6 +432,7 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
     followingIds: settings.personalizeFeed ? followingIds : const <String>{},
     signals: signals,
     personalizeFeed: settings.personalizeFeed,
+    dismissedIds: profile.dismissedArticleIds(),
     topStories: top.value ?? const <Article>[],
     // The feed covers Sierra Leone as a whole: there is no city-scoped rail
     // until the reader asks for one, so the "From <city>" section stays absent.

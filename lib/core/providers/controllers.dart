@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/app_settings.dart';
+import '../domain/models/article.dart';
 import '../push/push_service.dart';
 import '../domain/models/follow_models.dart';
 import '../domain/models/notification_item.dart';
@@ -13,6 +14,7 @@ import '../domain/sync/sync_repository.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'digest_preferences_store.dart';
+import 'personalization_profile.dart';
 import 'sync_controller.dart';
 
 import 'package:slnews_mobile/core/utils/app_log.dart';
@@ -205,17 +207,38 @@ class BookmarksController extends Notifier<Set<String>> {
 
   bool isBookmarked(String articleId) => state.contains(articleId);
 
-  Future<void> toggle(String articleId) async {
+  Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
+    final bool wasSaved = state.contains(articleId);
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleBookmark(articleId);
     state = <String>{...repository.bookmarkedIds};
-    if (state.contains(articleId)) _askForPushAfterFirstAction(ref);
+    final bool nowSaved = state.contains(articleId);
+    if (nowSaved) _askForPushAfterFirstAction(ref);
+    if (recordEngagement && !wasSaved && nowSaved) {
+      unawaited(_recordProfile(articleId, saved: true));
+    }
     await recordSyncChange(
       ref,
       SyncCollections.bookmarks,
       articleId,
-      deleted: !state.contains(articleId),
+      deleted: !nowSaved,
     );
+  }
+
+  Future<void> _recordProfile(String articleId, {required bool saved}) async {
+    try {
+      final Article? article = await ref
+          .read(articleRepositoryProvider)
+          .byId(articleId);
+      if (article == null) return;
+      if (saved) {
+        ref.read(personalizationProfileProvider.notifier).recordSave(article);
+      } else {
+        ref.read(personalizationProfileProvider.notifier).recordLike(article);
+      }
+    } catch (_) {
+      // Personalization must never break saving or liking.
+    }
   }
 }
 
@@ -235,17 +258,38 @@ class LikesController extends Notifier<Set<String>> {
 
   bool isLiked(String articleId) => state.contains(articleId);
 
-  Future<void> toggle(String articleId) async {
+  Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
+    final bool wasLiked = state.contains(articleId);
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleLike(articleId);
     state = <String>{...repository.likedIds};
-    if (state.contains(articleId)) _askForPushAfterFirstAction(ref);
+    final bool nowLiked = state.contains(articleId);
+    if (nowLiked) _askForPushAfterFirstAction(ref);
+    if (recordEngagement && !wasLiked && nowLiked) {
+      unawaited(_recordProfile(articleId, saved: false));
+    }
     await recordSyncChange(
       ref,
       SyncCollections.reactions,
       articleId,
-      deleted: !state.contains(articleId),
+      deleted: !nowLiked,
     );
+  }
+
+  Future<void> _recordProfile(String articleId, {required bool saved}) async {
+    try {
+      final Article? article = await ref
+          .read(articleRepositoryProvider)
+          .byId(articleId);
+      if (article == null) return;
+      if (saved) {
+        ref.read(personalizationProfileProvider.notifier).recordSave(article);
+      } else {
+        ref.read(personalizationProfileProvider.notifier).recordLike(article);
+      }
+    } catch (_) {
+      // Personalization must never break saving or liking.
+    }
   }
 }
 

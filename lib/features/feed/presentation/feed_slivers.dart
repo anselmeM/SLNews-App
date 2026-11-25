@@ -123,7 +123,7 @@ class _FeedSliver extends ConsumerWidget {
           ),
           _ArticleTileSliver(articles: latestStream),
         ],
-        const SliverToBoxAdapter(child: RecentlyReadRail()),
+        const SliverToBoxAdapter(child: ContinueReadingRail()),
         if (_mosaicItems(feed).isNotEmpty) ...<Widget>[
           SliverToBoxAdapter(
             // "Following â€º" in the reference: the chevron comes from onTap, and

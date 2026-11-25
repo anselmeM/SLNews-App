@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
+import 'package:slnews_mobile/core/domain/models/personalization_profile.dart';
+import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/widgets/overflow_menu_button.dart';
 import 'package:slnews_mobile/features/feed/presentation/widgets/article_actions.dart';
@@ -70,6 +72,14 @@ void main() {
     expect(capturedRef.read(bookmarksControllerProvider), contains(article.id));
     expect(userState.bookmarkedIds, contains(article.id));
     expect(find.text('Saved for offline reading'), findsOneWidget);
+    expect(
+      capturedRef
+          .read(personalizationProfileProvider)
+          .events
+          .any((EngagementEvent event) => event.kind == EngagementKind.save),
+      isTrue,
+      reason: 'saving teaches the local personalization profile',
+    );
 
     await tester.tap(find.text('unsave'));
     await tester.pumpAndSettle();
@@ -79,6 +89,47 @@ void main() {
       isNot(contains(article.id)),
     );
     expect(find.text('Removed from saved'), findsOneWidget);
+  });
+
+  testWidgets('show less like this hides the story and records dismissal', (
+    WidgetTester tester,
+  ) async {
+    late WidgetRef capturedRef;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(topStories: <Article>[article]),
+        ),
+        child: themedChild(
+          Consumer(
+            builder: (BuildContext context, WidgetRef ref, Widget? child) {
+              capturedRef = ref;
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => handleArticleAction(
+                    context,
+                    ref,
+                    article,
+                    ArticleAction.lessLikeThis,
+                  ),
+                  child: const Text('less'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('less'));
+    await tester.pumpAndSettle();
+
+    expect(
+      capturedRef.read(personalizationProfileProvider).dismissedArticleIds(),
+      contains(article.id),
+    );
+    expect(find.text("We'll show you less like this"), findsOneWidget);
   });
 
   testWidgets('openInBrowser without a link reports instead of throwing', (
