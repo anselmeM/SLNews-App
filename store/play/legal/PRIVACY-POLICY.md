@@ -40,10 +40,12 @@ identifier.
 | **Push-notification token** (FCM registration token) | only if you enable notifications | stored in our database against your account; deleted when notifications are turned off or you delete your account |
 | **Technical request data** (IP address, app version, timestamps, error responses) | whenever the app talks to a server | processed by our hosting providers and visible to us in logs |
 | **Anonymous sponsorship install ID** (random 32-character ID, not an advertising ID) and impression/tap events | when a sponsored card is shown or tapped | sent to our backend; only a keyed hash is stored, used for aggregate reach/frequency reporting; never linked to your account and never shared with advertisers |
-| **Locally cached content** (recent articles, images, preferences) | while you use the app | stored only on your device |
+| **Approximate weather location** (coordinates rounded to about 1 km) | only when you tap Use my location | used to fetch the forecast from Open-Meteo; not stored on our servers, not linked to your account, not used for advertising. You can switch back to the saved news location at any time. |
+| **Locally cached content** (recent articles, images, preferences, the last weather place) | while you use the app | stored only on your device |
 
-We do **not** collect: precise or approximate location (the weather chip uses the
-location you pick from a list, never GPS), contacts, calendar, SMS or call logs,
+We do **not** store precise GPS location. If you opt into weather location, we use
+approximate/rounded coordinates only to fetch your forecast (see the table above).
+We do not collect contacts, calendar, SMS or call logs,
 photos, camera or microphone input, health data, or your advertising identifier.
 
 Search terms are matched against content already on your device; the app does not
@@ -52,6 +54,8 @@ send your queries to us as a search log.
 ## 4. Why we use it
 
 - **To run your account and sync your reading state** across devices (contract).
+- **To show local weather when you opt in** (consent; you can switch it off at any
+  time in Settings → Weather location).
 - **To show the right local content and your preferences** (contract).
 - **To send notifications you asked for** (consent; off by default and changeable at
   any time in Settings or in Android settings).

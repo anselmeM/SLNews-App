@@ -10,6 +10,7 @@ import 'package:slnews_mobile/core/config/legal_links.dart';
 import 'package:slnews_mobile/core/data/sources/api_client.dart';
 import 'package:slnews_mobile/core/data/sync/sync_api_config.dart';
 import 'package:slnews_mobile/core/domain/auth/auth_repository.dart';
+import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/auth_providers.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
@@ -109,6 +110,9 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           userStateProvider.overrideWithValue(userState),
+          preferencesStoreProvider.overrideWithValue(
+            InMemoryPreferencesStore(),
+          ),
           authRepositoryProvider.overrideWithValue(auth),
           accountDeletionServiceProvider.overrideWithValue(deletion),
           externalUrlOpenerProvider.overrideWithValue((String url) async {

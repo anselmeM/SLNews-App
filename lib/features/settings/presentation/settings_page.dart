@@ -14,12 +14,15 @@ import '../../../core/domain/auth/auth_repository.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
+import '../../../core/domain/models/weather_location_state.dart';
+import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/providers/sync_repository_provider.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../feed/presentation/widgets/weather_location_sheet.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/quiet_hours_picker.dart';
 import 'widgets/settings_card.dart';
@@ -48,6 +51,9 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppSettings settings = ref.watch(settingsControllerProvider);
     final AuthState auth = ref.watch(authControllerProvider);
+    final WeatherLocationState weatherLocation = ref.watch(
+      weatherLocationControllerProvider,
+    );
     final SettingsController controller = ref.read(
       settingsControllerProvider.notifier,
     );
@@ -191,6 +197,14 @@ class SettingsPage extends ConsumerWidget {
                       title: 'Show weather forecast',
                       value: settings.weatherForecastEnabled,
                       onChanged: controller.setWeatherForecastEnabled,
+                    ),
+                    SettingsValueRow(
+                      title: 'Weather location',
+                      subtitle: weatherLocation.usingDevice
+                          ? 'Using approximate current location'
+                          : 'Using the saved news location',
+                      value: weatherLocation.location.label,
+                      onTap: () => showWeatherLocationSheet(context),
                     ),
                   ],
                 ),

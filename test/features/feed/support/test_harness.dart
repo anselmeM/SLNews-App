@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/ad_unit.dart';
+import 'package:slnews_mobile/core/location/device_location_service.dart';
 import 'package:slnews_mobile/core/domain/repositories/following_repository.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
@@ -21,8 +22,11 @@ List<Override> feedTestOverrides({
   FollowingRepository? following,
   List<AdUnit> ads = const <AdUnit>[],
   FakeAdRepository? adRepository,
+  DeviceLocationService? deviceLocation,
 }) {
   return <Override>[
+    if (deviceLocation != null)
+      deviceLocationServiceProvider.overrideWithValue(deviceLocation),
     articleRepositoryProvider.overrideWithValue(articles),
     userStateProvider.overrideWithValue(userState ?? FakeUserStateRepository()),
     weatherRepositoryProvider.overrideWithValue(

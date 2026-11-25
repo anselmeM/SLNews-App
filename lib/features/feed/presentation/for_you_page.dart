@@ -129,7 +129,6 @@ class ForYouPage extends ConsumerWidget {
             ),
           SliverToBoxAdapter(
             child: WeatherBriefingCard(
-              location: feed.activeLocation,
               showWeather: settings.weatherForecastEnabled,
               briefing: feed.briefing,
               onOpenArticle: (Article article) =>

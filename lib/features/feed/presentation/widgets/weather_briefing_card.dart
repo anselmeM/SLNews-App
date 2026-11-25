@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/models/article.dart';
-import '../../../../core/domain/models/follow_models.dart';
+import '../../../../core/domain/models/weather_location_state.dart';
 import '../../../../core/domain/models/weather_snapshot.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/app_glyphs.dart';
 import '../../../../core/widgets/pressable_ink_well.dart';
+import 'weather_location_sheet.dart';
 
 /// Merged weather + daily-briefing card at the top of For You.
 ///
@@ -20,13 +21,11 @@ import '../../../../core/widgets/pressable_ink_well.dart';
 class WeatherBriefingCard extends ConsumerWidget {
   const WeatherBriefingCard({
     super.key,
-    required this.location,
     required this.showWeather,
     required this.briefing,
     required this.onOpenArticle,
   });
 
-  final NewsLocation location;
   final bool showWeather;
   final List<Article> briefing;
   final ValueChanged<Article> onOpenArticle;
@@ -50,11 +49,15 @@ class WeatherBriefingCard extends ConsumerWidget {
       );
     }
 
+    final WeatherLocationState locationState = ref.watch(
+      weatherLocationControllerProvider,
+    );
     final AsyncValue<WeatherSnapshot> weather = ref.watch(
       activeWeatherProvider,
     );
     final WeatherSnapshot snapshot =
-        weather.value ?? WeatherSnapshot.placeholder(location.label);
+        weather.value ??
+        WeatherSnapshot.placeholder(locationState.location.label);
     final DateTime now = appNow();
 
     return Padding(
@@ -69,6 +72,7 @@ class WeatherBriefingCard extends ConsumerWidget {
         now: now,
         briefing: briefing,
         onOpenArticle: onOpenArticle,
+        onLocationTap: () => showWeatherLocationSheet(context),
       ),
     );
   }
@@ -80,12 +84,14 @@ class _WeatherCard extends StatelessWidget {
     required this.now,
     required this.briefing,
     required this.onOpenArticle,
+    required this.onLocationTap,
   });
 
   final WeatherSnapshot snapshot;
   final DateTime now;
   final List<Article> briefing;
   final ValueChanged<Article> onOpenArticle;
+  final VoidCallback onLocationTap;
 
   static const Color _ink = Color(0xFF0B1730);
   static const Color _mutedInk = Color(0xA60F1B35);
@@ -177,6 +183,7 @@ class _WeatherCard extends StatelessWidget {
                     snapshot: snapshot,
                     ink: _ink,
                     mutedInk: _mutedInk,
+                    onLocationTap: onLocationTap,
                   ),
                   if (briefing.isNotEmpty) ...<Widget>[
                     const SizedBox(height: AppSpacing.lg),
@@ -322,14 +329,38 @@ class _WeatherMetrics extends StatelessWidget {
     required this.snapshot,
     required this.ink,
     required this.mutedInk,
+    required this.onLocationTap,
   });
 
   final WeatherSnapshot snapshot;
   final Color ink;
   final Color mutedInk;
+  final VoidCallback onLocationTap;
 
   @override
   Widget build(BuildContext context) {
+    if (!snapshot.isAvailable) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(Icons.cloud_off_outlined, size: 22, color: mutedInk),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Weather unavailable',
+                style: context.typography.cardTitle.copyWith(
+                  color: ink,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _tappableLocation(context),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -376,24 +407,7 @@ class _WeatherMetrics extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.place_outlined, size: 12, color: mutedInk),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          child: Text(
-                            snapshot.locationLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.typography.caption.copyWith(
-                              color: mutedInk,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    _tappableLocation(context),
                   ],
                 ),
               ),
@@ -418,6 +432,40 @@ class _WeatherMetrics extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _tappableLocation(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Change weather location',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onLocationTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.place_outlined, size: 12, color: mutedInk),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                snapshot.locationLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.typography.caption.copyWith(
+                  color: mutedInk,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11.5,
+                  decoration: TextDecoration.underline,
+                  decorationColor: mutedInk,
+                ),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.expand_more, size: 13, color: mutedInk),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -591,6 +639,9 @@ String _weatherGreeting(
   String daypart,
   WeatherSnapshot snapshot,
 ) {
+  if (!snapshot.isAvailable) {
+    return 'Weather for ${snapshot.locationLabel} isn’t available right now.';
+  }
   return 'A ${adjective.toLowerCase()} $daypart in ${snapshot.locationLabel} — '
       'here’s what matters today.';
 }
