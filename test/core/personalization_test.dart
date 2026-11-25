@@ -3,7 +3,6 @@ import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
 import 'package:slnews_mobile/core/domain/personalization.dart';
 
-
 const Publisher _awoko = Publisher(
   id: 'awoko',
   name: 'Awoko',
