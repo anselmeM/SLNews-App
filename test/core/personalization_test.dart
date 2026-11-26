@@ -151,6 +151,17 @@ void main() {
     );
   });
 
+  test('persistent category affinity preserves current tag affinity', () {
+    final Map<String, double> merged = mergeAffinityMaps(
+      <String, double>{'politics': 2, 'freetown': 1.5},
+      <String, double>{'politics': 3, 'budget': 2},
+    );
+
+    expect(merged['politics'], 5);
+    expect(merged['freetown'], 1.5);
+    expect(merged['budget'], 2);
+  });
+
   test('duplicate known stories are counted once', () {
     final Article saved = _article(id: 'saved', category: 'business');
     final ReaderSignals signals = buildReaderSignals(
@@ -328,6 +339,37 @@ void main() {
       output.take(8).where((Article a) => a.categoryId == 'business').length,
       lessThanOrEqualTo(PersonalizationEngine.maxPerCategoryInWindow),
     );
+  });
+
+  test('diversity stops capping once the window is filled', () {
+    final List<Article> input = <Article>[
+      _article(id: 'p0', category: 'business', publisher: _bbc),
+      _article(id: 'p1', category: 'business', publisher: _bbc),
+      _article(id: 'p2', category: 'world', publisher: _reuters),
+      _article(id: 'p3', category: 'health', publisher: _guardian),
+      _article(id: 'p4', category: 'science', publisher: _ap),
+      _article(id: 'p5', category: 'business', publisher: _bbc),
+      _article(id: 'p6', category: 'culture', publisher: _guardian),
+      _article(id: 'p7', category: 'education', publisher: _ap),
+    ];
+
+    final List<Article> output = PersonalizationEngine.diversify(
+      input,
+      window: 5,
+    );
+
+    // Past the fifth slot the ranked order must survive; old logic kept
+    // applying caps to the whole bucket and could move p6 before p5.
+    expect(output.map((Article a) => a.id).toList(), <String>[
+      'p0',
+      'p1',
+      'p2',
+      'p3',
+      'p4',
+      'p5',
+      'p6',
+      'p7',
+    ]);
   });
 
   test('deferred local stories stay ahead of international stories', () {

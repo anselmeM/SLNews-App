@@ -25,9 +25,11 @@ enough traffic and interaction data.
   why they are there; those stories are removed from the rest of the stream.
 - A **Settings → Personalize For You** toggle disables ranking and the follows
   rail. The device-local preference defaults to on.
-- Reading history, dwell/progress and derived affinity are scoped per local
-  account and never leave the device. Saved stories, likes and follows are
-  account state and may sync; synced copies are not used as ranking signals.
+- Reading history, dwell/progress and the derived affinity profile are scoped
+  per local account and never leave the device. Saved stories, likes and follows
+  are account state and may sync; ranking uses the saved/liked sets present on
+  the device, so synced items can influence ranking. Reading history and the
+  affinity profile itself are not synchronized.
 
 Known Phase 1 limit: affinity is derived only from stories still present in the
 current candidate pool. Phase 2 adds a persistent local interest profile so older
@@ -78,5 +80,6 @@ Only after enough monthly active readers and interaction data:
 - Exploration slots prevent a filter bubble.
 - Optimise for informed reading and retention, not clicks alone.
 - Personalization must always be explainable and resettable.
-- Saved stories, likes and follows may sync; reading history and ranking signals
-  stay device-local.
+- Saved stories, likes and follows may sync and can influence ranking on the
+  device; reading history, dwell/progress and the affinity profile stay
+  device-local.

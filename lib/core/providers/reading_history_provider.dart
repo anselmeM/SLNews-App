@@ -39,14 +39,18 @@ class ReadingHistoryController extends Notifier<List<String>> {
   }
 
   List<String> _read(String accountKey) {
+    final PreferencesStore? preferences = _preferences();
+    if (preferences == null) return const <String>[];
+    return _readFor(accountKey, preferences);
+  }
+
+  List<String> _readFor(String accountKey, PreferencesStore preferences) {
     try {
-      String? raw = ref
-          .read(preferencesStoreProvider)
-          .string(readingHistoryKeyFor(accountKey));
+      String? raw = preferences.string(readingHistoryKeyFor(accountKey));
       // Migrate only the old anonymous document. A signed-in account must not
       // inherit another account's (or the pre-sign-in) browsing history.
       if (raw == null && accountKey == anonymousAccountId) {
-        raw = ref.read(preferencesStoreProvider).string(readingHistoryKey);
+        raw = preferences.string(readingHistoryKey);
       }
       if (raw == null || raw.isEmpty) return const <String>[];
       final Object? decoded = jsonDecode(raw);
@@ -61,30 +65,70 @@ class ReadingHistoryController extends Notifier<List<String>> {
     }
   }
 
-  Future<void> record(String articleId) async {
+  PreferencesStore? _preferences() {
+    try {
+      return ref.read(preferencesStoreProvider);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> record(String articleId, {String? accountKey}) async {
     final String id = articleId.trim();
     if (id.isEmpty) return;
-    if (state.isNotEmpty && state.first == id) return;
+    // Capture the owner before any early return or await so a fast account
+    // switch cannot move this interaction into the next account's history.
+    final String ownerAccount = accountKey ?? _currentAccountKey();
+    final bool sameAccount = ownerAccount == _currentAccountKey();
+    if (sameAccount && state.isNotEmpty && state.first == id) return;
+    if (!sameAccount) {
+      // The account switched while this interaction was in flight. Update only
+      // the owner's document; never mutate the new account's in-memory list.
+      final PreferencesStore? preferences = _preferences();
+      if (preferences == null) return;
+      final List<String> existing = _readFor(ownerAccount, preferences);
+      final List<String> next = <String>[
+        id,
+        for (final String value in existing)
+          if (value != id) value,
+      ].take(limit).toList(growable: false);
+      try {
+        await preferences.putString(
+          readingHistoryKeyFor(ownerAccount),
+          jsonEncode(next),
+        );
+      } catch (error) {
+        AppLog.debug('Reading history: late record failed: $error');
+      }
+      return;
+    }
     final List<String> next = <String>[
       id,
       for (final String existing in state)
         if (existing != id) existing,
     ].take(limit).toList(growable: false);
     state = next;
-    final String accountKey = ref.read(activeAccountKeyProvider);
     try {
       await ref
           .read(preferencesStoreProvider)
-          .putString(readingHistoryKeyFor(accountKey), jsonEncode(next));
+          .putString(readingHistoryKeyFor(ownerAccount), jsonEncode(next));
     } catch (error) {
       // History is best-effort; reading must never fail because of it.
       AppLog.debug('Reading history: record failed: $error');
     }
   }
 
+  String _currentAccountKey() {
+    try {
+      return ref.read(activeAccountKeyProvider);
+    } catch (_) {
+      return anonymousAccountId;
+    }
+  }
+
   Future<void> clear() async {
     state = const <String>[];
-    final String accountKey = ref.read(activeAccountKeyProvider);
+    final String accountKey = _currentAccountKey();
     try {
       final PreferencesStore store = ref.read(preferencesStoreProvider);
       await store.remove(readingHistoryKeyFor(accountKey));

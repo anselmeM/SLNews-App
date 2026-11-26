@@ -295,8 +295,17 @@ class FakeUserStateRepository implements UserStateRepository {
   /// Optional gate for testing rapid settings taps.
   Completer<void>? personalizeGate;
 
+  /// Optional injected failure/success behavior for preference writes.
+  Future<void> Function(bool enabled)? personalizeWriter;
+
   @override
   Future<void> setPersonalizeFeed(bool enabled) async {
+    final Future<void> Function(bool enabled)? writer = personalizeWriter;
+    if (writer != null) {
+      await writer(enabled);
+      personalizeFeed = enabled;
+      return;
+    }
     final Completer<void>? gate = personalizeGate;
     if (gate != null) await gate.future;
     personalizeFeed = enabled;

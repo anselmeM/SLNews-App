@@ -30,11 +30,16 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container
-        .read(personalizationProfileProvider.notifier)
-        .recordRead(story, dwell: const Duration(seconds: 45), progress: 0.45);
+    final PersonalizationProfileController controller = container.read(
+      personalizationProfileProvider.notifier,
+    );
+    controller.recordRead(
+      story,
+      dwell: const Duration(seconds: 45),
+      progress: 0.45,
+    );
 
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await controller.flushPersistence();
     final PersonalizationProfile profile = container.read(
       personalizationProfileProvider,
     );
@@ -108,14 +113,13 @@ void main() {
       personalizationProfileProvider.notifier,
     );
     controller.recordSave(story);
-    await Future<void>.delayed(Duration.zero);
+    await controller.flushPersistence();
     expect(
       store.string(personalizationProfileKeyFor(anonymousAccountId)),
       isNotNull,
     );
 
-    controller.clear();
-    await Future<void>.delayed(Duration.zero);
+    await controller.clear();
 
     expect(container.read(personalizationProfileProvider).isEmpty, isTrue);
     expect(
@@ -204,8 +208,11 @@ void main() {
       ],
     );
     addTearDown(a.dispose);
-    a.read(personalizationProfileProvider.notifier).recordSave(story);
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+    final PersonalizationProfileController controllerA = a.read(
+      personalizationProfileProvider.notifier,
+    );
+    controllerA.recordSave(story);
+    await controllerA.flushPersistence();
 
     final ProviderContainer b = ProviderContainer(
       overrides: <Override>[
@@ -219,6 +226,91 @@ void main() {
     expect(b.read(personalizationProfileProvider).isEmpty, isTrue);
     expect(store.string(personalizationProfileKeyFor('account-a')), isNotNull);
     expect(store.string(personalizationProfileKeyFor('account-b')), isNull);
+  });
+
+  test('event tags persist as tag affinity', () async {
+    final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[preferencesStoreProvider.overrideWithValue(store)],
+    );
+    addTearDown(container.dispose);
+    final PersonalizationProfileController controller = container.read(
+      personalizationProfileProvider.notifier,
+    );
+    final Article tagged = story.copyWith(tags: const <String>['freetown']);
+
+    controller.recordSave(tagged);
+    await controller.flushPersistence();
+
+    expect(
+      container
+          .read(personalizationProfileProvider)
+          .topicAffinity()['freetown'],
+      greaterThan(0),
+    );
+  });
+
+  test(
+    'deferred activity uses the captured account, not the active one',
+    () async {
+      final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+      final ProviderContainer current = ProviderContainer(
+        overrides: <Override>[
+          preferencesStoreProvider.overrideWithValue(store),
+          activeAccountKeyProvider.overrideWithValue('account-b'),
+        ],
+      );
+      addTearDown(current.dispose);
+      final PersonalizationProfileController controller = current.read(
+        personalizationProfileProvider.notifier,
+      );
+      controller.recordSave(story, accountKey: 'account-a');
+      await controller.flushPersistence();
+
+      final ProviderContainer owner = ProviderContainer(
+        overrides: <Override>[
+          preferencesStoreProvider.overrideWithValue(store),
+          activeAccountKeyProvider.overrideWithValue('account-a'),
+        ],
+      );
+      addTearDown(owner.dispose);
+      expect(owner.read(personalizationProfileProvider).eventCount, 1);
+      final ProviderContainer other = ProviderContainer(
+        overrides: <Override>[
+          preferencesStoreProvider.overrideWithValue(store),
+          activeAccountKeyProvider.overrideWithValue('account-b'),
+        ],
+      );
+      addTearDown(other.dispose);
+      expect(other.read(personalizationProfileProvider).isEmpty, isTrue);
+      expect(current.read(personalizationProfileProvider).isEmpty, isTrue);
+    },
+  );
+
+  test('reset marker blocks a partially failed legacy restore', () async {
+    final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[preferencesStoreProvider.overrideWithValue(store)],
+    );
+    addTearDown(container.dispose);
+    final PersonalizationProfileController controller = container.read(
+      personalizationProfileProvider.notifier,
+    );
+    controller.recordSave(story);
+    await controller.flushPersistence();
+    final String oldLegacy = jsonEncode(
+      container.read(personalizationProfileProvider).toJson(),
+    );
+    await controller.clear();
+
+    // Simulate the legacy remove failing during reset after the scoped key was
+    // already cleared.
+    await store.putString(personalizationProfileKey, oldLegacy);
+    final ProviderContainer reopened = ProviderContainer(
+      overrides: <Override>[preferencesStoreProvider.overrideWithValue(store)],
+    );
+    addTearDown(reopened.dispose);
+    expect(reopened.read(personalizationProfileProvider).isEmpty, isTrue);
   });
 
   test(

@@ -34,6 +34,7 @@ class EngagementEvent {
     required this.weight,
     this.progress,
     this.dwellSeconds,
+    this.tags = const <String>[],
   });
 
   final String articleId;
@@ -45,6 +46,10 @@ class EngagementEvent {
   final double? progress;
   final int? dwellSeconds;
 
+  /// Normalized article tags (city, team, series) that carried this event.
+  /// Kept so affinity survives after the article leaves the candidate pool.
+  final List<String> tags;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'articleId': articleId,
     'topicId': topicId,
@@ -54,19 +59,25 @@ class EngagementEvent {
     'weight': weight,
     'progress': progress,
     'dwellSeconds': dwellSeconds,
+    'tags': tags,
   };
 
-  factory EngagementEvent.fromJson(Map<String, dynamic> json) =>
-      EngagementEvent(
-        articleId: json['articleId'] as String? ?? '',
-        topicId: json['topicId'] as String? ?? '',
-        publisherId: json['publisherId'] as String? ?? '',
-        kind: EngagementKind.fromWire(json['kind'] as String?),
-        at: DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.now(),
-        weight: (json['weight'] as num?)?.toDouble() ?? 0,
-        progress: (json['progress'] as num?)?.toDouble(),
-        dwellSeconds: (json['dwellSeconds'] as num?)?.toInt(),
-      );
+  factory EngagementEvent.fromJson(
+    Map<String, dynamic> json,
+  ) => EngagementEvent(
+    articleId: json['articleId'] as String? ?? '',
+    topicId: json['topicId'] as String? ?? '',
+    publisherId: json['publisherId'] as String? ?? '',
+    kind: EngagementKind.fromWire(json['kind'] as String?),
+    at: DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.now(),
+    weight: (json['weight'] as num?)?.toDouble() ?? 0,
+    progress: (json['progress'] as num?)?.toDouble(),
+    dwellSeconds: (json['dwellSeconds'] as num?)?.toInt(),
+    tags: <String>[
+      for (final Object? tag in (json['tags'] as List?) ?? const <Object?>[])
+        if (tag is String && tag.trim().isNotEmpty) tag.trim().toLowerCase(),
+    ],
+  );
 }
 
 /// Reading position of one article on this device.
@@ -157,9 +168,26 @@ class PersonalizationProfile {
   }
 
   /// Decayed topic affinity. Events inside 7 days count fully; 7–30 days are
-  /// half-weight; older events are ignored.
-  Map<String, double> topicAffinity({DateTime? now}) =>
-      _affinity((EngagementEvent event) => event.topicId, now: now);
+  /// half-weight; older events are ignored. Tags contribute at half weight so a
+  /// followed city/team/series can move a story outside its category.
+  Map<String, double> topicAffinity({DateTime? now}) {
+    final Map<String, double> result = _affinity(
+      (EngagementEvent event) => event.topicId,
+      now: now,
+    );
+    final DateTime reference = now ?? DateTime.now();
+    for (final EngagementEvent event in events) {
+      final Duration age = reference.difference(event.at);
+      if (age > eventWindow) continue;
+      final double decay = age <= const Duration(days: 7) ? 1 : 0.5;
+      for (final String tag in event.tags.take(5)) {
+        final String key = tag.trim().toLowerCase();
+        if (key.isEmpty) continue;
+        result[key] = (result[key] ?? 0) + event.weight * decay * 0.5;
+      }
+    }
+    return result;
+  }
 
   /// Decayed publisher affinity.
   Map<String, double> publisherAffinity({DateTime? now}) =>

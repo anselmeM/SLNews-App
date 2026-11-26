@@ -9,6 +9,7 @@ import '../../../core/domain/models/ad_placement.dart';
 import '../../../core/domain/models/ad_unit.dart';
 import '../../../core/domain/models/article.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/providers/personalization_profile.dart';
 import '../../../core/providers/reading_history_provider.dart';
@@ -28,6 +29,14 @@ import 'widgets/reading_progress_bar.dart';
 import 'widgets/article_header.dart';
 import 'widgets/article_hero_media.dart';
 import 'widgets/related_stories.dart';
+
+String _accountKey(WidgetRef ref) {
+  try {
+    return ref.read(activeAccountKeyProvider);
+  } catch (_) {
+    return 'anonymous';
+  }
+}
 
 /// The dedicated article reader (`/article/:id`).
 ///
@@ -66,12 +75,15 @@ class ArticlePage extends ConsumerWidget {
               ),
             );
           }
+          final String ownerAccount = _accountKey(ref);
           final List<String> history = ref.read(readingHistoryProvider);
           if (history.isEmpty || history.first != story.id) {
             // Record after the frame: the notifier writes preferences, which
-            // must not happen during build.
+            // must not happen during build. Keep the account captured at open.
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(readingHistoryProvider.notifier).record(story.id);
+              ref
+                  .read(readingHistoryProvider.notifier)
+                  .record(story.id, accountKey: ownerAccount);
             });
           }
           return _ReaderBody(article: story);
@@ -102,6 +114,7 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     with ScrollToTopStateMixin<_ReaderBody> {
   DateTime? _openedAt;
   ProviderContainer? _profileContainer;
+  String? _profileAccountKey;
   double _lastProgress = 0;
 
   @override
@@ -113,6 +126,7 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     if (_profileContainer != null) return;
     try {
       _profileContainer = ProviderScope.containerOf(context);
+      _profileAccountKey = _accountKey(ref);
     } catch (_) {
       // No provider scope (for example a very narrow widget test harness).
     }
@@ -130,7 +144,7 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
       try {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordOpen(widget.article);
+            .recordOpen(widget.article, accountKey: _profileAccountKey);
       } catch (_) {
         // Personalization is best-effort and must never affect reading.
       }
@@ -151,6 +165,7 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
                 widget.article,
                 dwell: DateTime.now().difference(openedAt),
                 progress: _finalProgress(),
+                accountKey: _profileAccountKey,
               );
         }
       } catch (_) {

@@ -19,6 +19,13 @@ const String personalizationProfileKey = 'personalization.profile.v1';
 String personalizationProfileKeyFor(String accountKey) =>
     '$personalizationProfileKey.$accountKey';
 
+/// Set after an explicit reset so a failed legacy cleanup cannot resurrect the
+/// pre-reset anonymous document.
+const String personalizationProfileResetKey = 'personalization.profileReset.v1';
+
+String personalizationProfileResetKeyFor(String accountKey) =>
+    '$personalizationProfileResetKey.$accountKey';
+
 /// Local, private engagement profile used by For You.
 ///
 /// It records a small event log and reading positions. There is intentionally no
@@ -42,13 +49,20 @@ class PersonalizationProfileController
 
   PersonalizationProfile _read(String accountKey) {
     try {
-      String? raw = _preferences()?.string(
+      final PreferencesStore? preferences = _preferences();
+      String? raw = preferences?.string(
         personalizationProfileKeyFor(accountKey),
       );
       // Only the old anonymous document may migrate; never adopt another
-      // account's profile into a newly signed-in account.
+      // account's profile into a newly signed-in account. A reset marker keeps
+      // a partially failed legacy cleanup from restoring the profile.
       if (raw == null && accountKey == anonymousAccountId) {
-        raw = _preferences()?.string(personalizationProfileKey);
+        final bool wasReset =
+            preferences?.boolean(
+              personalizationProfileResetKeyFor(accountKey),
+            ) ==
+            true;
+        if (!wasReset) raw = preferences?.string(personalizationProfileKey);
       }
       if (raw == null || raw.isEmpty) return const PersonalizationProfile();
       final Object? decoded = jsonDecode(raw);
@@ -63,7 +77,7 @@ class PersonalizationProfileController
   }
 
   /// A lightweight open signal; reading completion is recorded separately.
-  void recordOpen(Article article) {
+  void recordOpen(Article article, {String? accountKey}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -72,7 +86,9 @@ class PersonalizationProfileController
         kind: EngagementKind.open,
         at: DateTime.now(),
         weight: 0.25,
+        tags: _normalizedTags(article),
       ),
+      accountKey: accountKey,
     );
   }
 
@@ -81,7 +97,11 @@ class PersonalizationProfileController
     Article article, {
     required Duration dwell,
     required double progress,
+    String? accountKey,
   }) {
+    final String owner = accountKey ?? _accountKey();
+    final bool sameAccount = owner == _accountKey();
+    final PersonalizationProfile base = sameAccount ? state : _read(owner);
     final DateTime now = DateTime.now();
     final double boundedProgress = progress.clamp(0.0, 1.0).toDouble();
     final bool shortAndShallow = dwell.inSeconds < 8 && boundedProgress < 0.15;
@@ -96,7 +116,7 @@ class PersonalizationProfileController
         : 1;
 
     final Map<String, ReadingProgressEntry> nextProgress =
-        <String, ReadingProgressEntry>{...state.progress};
+        <String, ReadingProgressEntry>{...base.progress};
     if (boundedProgress >= 0.05) {
       final ReadingProgressEntry? previous = nextProgress[article.id];
       final double maxProgress = previous == null
@@ -122,12 +142,14 @@ class PersonalizationProfileController
         weight: weight,
         progress: boundedProgress,
         dwellSeconds: dwell.inSeconds,
+        tags: _normalizedTags(article),
       ),
       progress: nextProgress,
+      accountKey: owner,
     );
   }
 
-  void recordSave(Article article) {
+  void recordSave(Article article, {String? accountKey}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -136,11 +158,13 @@ class PersonalizationProfileController
         kind: EngagementKind.save,
         at: DateTime.now(),
         weight: 4,
+        tags: _normalizedTags(article),
       ),
+      accountKey: accountKey,
     );
   }
 
-  void recordLike(Article article) {
+  void recordLike(Article article, {String? accountKey}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -149,15 +173,21 @@ class PersonalizationProfileController
         kind: EngagementKind.like,
         at: DateTime.now(),
         weight: 3,
+        tags: _normalizedTags(article),
       ),
+      accountKey: accountKey,
     );
   }
 
   /// Explicit "Show less like this": hide the story from For You and lower the
   /// topic/publisher affinity.
-  void recordDismiss(Article article) {
+  void recordDismiss(Article article, {String? accountKey}) {
+    final String owner = accountKey ?? _accountKey();
+    final PersonalizationProfile base = owner == _accountKey()
+        ? state
+        : _read(owner);
     final Map<String, ReadingProgressEntry> nextProgress =
-        <String, ReadingProgressEntry>{...state.progress}..remove(article.id);
+        <String, ReadingProgressEntry>{...base.progress}..remove(article.id);
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -166,8 +196,10 @@ class PersonalizationProfileController
         kind: EngagementKind.dismiss,
         at: DateTime.now(),
         weight: -5,
+        tags: _normalizedTags(article),
       ),
       progress: nextProgress,
+      accountKey: owner,
     );
   }
 
@@ -178,22 +210,58 @@ class PersonalizationProfileController
     final String accountKey = _accountKey();
     final Future<void> removal = _writeBarrier.then((_) async {
       try {
-        await preferences.remove(personalizationProfileKeyFor(accountKey));
-        if (accountKey == anonymousAccountId) {
-          await preferences.remove(personalizationProfileKey);
-        }
+        await preferences.putBool(
+          personalizationProfileResetKeyFor(accountKey),
+          true,
+        );
+      } catch (error) {
+        AppLog.debug('PersonalizationProfile: reset marker failed: $error');
+      }
+      final String scopedKey = personalizationProfileKeyFor(accountKey);
+      bool scopedRemoved = false;
+      try {
+        await preferences.remove(scopedKey);
+        scopedRemoved = true;
       } catch (error) {
         AppLog.debug('PersonalizationProfile: clear failed: $error');
+      }
+      if (!scopedRemoved) {
+        try {
+          await preferences.putString(
+            scopedKey,
+            jsonEncode(const PersonalizationProfile().toJson()),
+          );
+        } catch (error) {
+          AppLog.debug('PersonalizationProfile: empty reset failed: $error');
+        }
+      }
+      if (accountKey == anonymousAccountId) {
+        try {
+          await preferences.remove(personalizationProfileKey);
+        } catch (error) {
+          AppLog.debug('PersonalizationProfile: legacy clear failed: $error');
+        }
       }
     });
     _writeBarrier = removal.catchError((Object _) {});
     await removal;
   }
 
+  /// Awaits all queued local persistence; used by tests and diagnostics.
+  Future<void> flushPersistence() => _writeBarrier;
+
   void _append(
     EngagementEvent event, {
     Map<String, ReadingProgressEntry>? progress,
+    String? accountKey,
   }) {
+    final String owner = accountKey ?? _accountKey();
+    if (owner != _accountKey()) {
+      // The account switched while the interaction was in flight. Persist to
+      // the owner without contaminating the new account's in-memory profile.
+      _appendForAccount(owner, event, progress);
+      return;
+    }
     final List<EngagementEvent> events = <EngagementEvent>[
       event,
       ...state.events,
@@ -205,7 +273,37 @@ class PersonalizationProfileController
       events: events,
       progress: progress ?? state.progress,
     );
-    _persist();
+    _persist(owner);
+  }
+
+  void _appendForAccount(
+    String accountKey,
+    EngagementEvent event,
+    Map<String, ReadingProgressEntry>? progress,
+  ) {
+    final Future<void> write = _writeBarrier.then((_) async {
+      final PreferencesStore? preferences = _preferences();
+      if (preferences == null) return;
+      final PersonalizationProfile existing = _read(accountKey);
+      final List<EngagementEvent> events = <EngagementEvent>[
+        event,
+        ...existing.events,
+      ];
+      if (events.length > PersonalizationProfile.maxEvents) {
+        events.removeRange(PersonalizationProfile.maxEvents, events.length);
+      }
+      final PersonalizationProfile next = PersonalizationProfile(
+        events: events,
+        progress: progress ?? existing.progress,
+      );
+      await preferences.putString(
+        personalizationProfileKeyFor(accountKey),
+        jsonEncode(next.toJson()),
+      );
+    });
+    _writeBarrier = write.catchError((Object error) {
+      AppLog.debug('PersonalizationProfile: late event failed: $error');
+    });
   }
 
   static void _trimProgress(Map<String, ReadingProgressEntry> progress) {
@@ -222,10 +320,9 @@ class PersonalizationProfileController
     }
   }
 
-  void _persist() {
+  void _persist(String accountKey) {
     final PreferencesStore? preferences = _preferences();
     if (preferences == null) return;
-    final String accountKey = _accountKey();
     final String payload = jsonEncode(state.toJson());
     final Future<void> write = _writeBarrier.then(
       (_) => preferences.putString(
@@ -237,6 +334,11 @@ class PersonalizationProfileController
       AppLog.debug('PersonalizationProfile: persistence failed: $error');
     });
   }
+
+  static List<String> _normalizedTags(Article article) => <String>[
+    for (final String tag in article.tags.take(5))
+      if (tag.trim().isNotEmpty) tag.trim().toLowerCase(),
+  ];
 
   PreferencesStore? _preferences() {
     try {

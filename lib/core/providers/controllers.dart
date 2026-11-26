@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/auth/account_scope.dart';
 import '../domain/models/app_settings.dart';
 import '../domain/models/article.dart';
 import '../push/push_service.dart';
@@ -27,6 +28,8 @@ settingsControllerProvider = NotifierProvider<SettingsController, AppSettings>(
 );
 
 class SettingsController extends Notifier<AppSettings> {
+  bool _persistedPersonalize = true;
+
   @override
   AppSettings build() {
     final UserStateRepository repository = ref.watch(userStateProvider);
@@ -34,7 +37,7 @@ class SettingsController extends Notifier<AppSettings> {
     final DigestPreferences digest = ref
         .watch(digestPreferencesStoreProvider)
         .read();
-    return AppSettings(
+    final AppSettings settings = AppSettings(
       themeMode: AppThemeMode.fromWire(repository.themeMode),
       textScale: repository.textScale,
       breakingNewsAlertsEnabled: repository.breakingNewsAlertsEnabled,
@@ -49,6 +52,8 @@ class SettingsController extends Notifier<AppSettings> {
       quietHoursEnd: digest.quietHoursEnd,
       onboardingCompleted: repository.onboardingCompleted,
     );
+    _persistedPersonalize = settings.personalizeFeed;
+    return settings;
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
@@ -142,7 +147,6 @@ class SettingsController extends Notifier<AppSettings> {
     // intent even while persistence is still in flight. Writes are serialized
     // so the last tap always wins on disk.
     final int request = ++_personalizeRequest;
-    final bool previous = state.personalizeFeed;
     state = state.copyWith(personalizeFeed: enabled);
     final Future<void> write = _personalizeWrite.then(
       (_) => ref.read(userStateProvider).setPersonalizeFeed(enabled),
@@ -150,10 +154,13 @@ class SettingsController extends Notifier<AppSettings> {
     _personalizeWrite = write.catchError((Object _) {});
     try {
       await write;
+      _persistedPersonalize = enabled;
     } catch (error) {
       AppLog.debug('SettingsController: personalize preference failed: $error');
       if (request == _personalizeRequest) {
-        state = state.copyWith(personalizeFeed: previous);
+        // Restore the last durable value, not an optimistic value from an
+        // earlier failed tap.
+        state = state.copyWith(personalizeFeed: _persistedPersonalize);
       }
     }
   }
@@ -228,13 +235,16 @@ class BookmarksController extends Notifier<Set<String>> {
 
   Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
     final bool wasSaved = state.contains(articleId);
+    final String ownerAccount = _activeAccountKey(ref);
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleBookmark(articleId);
     state = <String>{...repository.bookmarkedIds};
     final bool nowSaved = state.contains(articleId);
     if (nowSaved) _askForPushAfterFirstAction(ref);
     if (recordEngagement && !wasSaved && nowSaved) {
-      unawaited(_recordProfile(articleId, saved: true));
+      unawaited(
+        _recordProfile(articleId, saved: true, accountKey: ownerAccount),
+      );
     }
     await recordSyncChange(
       ref,
@@ -244,16 +254,24 @@ class BookmarksController extends Notifier<Set<String>> {
     );
   }
 
-  Future<void> _recordProfile(String articleId, {required bool saved}) async {
+  Future<void> _recordProfile(
+    String articleId, {
+    required bool saved,
+    required String accountKey,
+  }) async {
     try {
       final Article? article = await ref
           .read(articleRepositoryProvider)
           .byId(articleId);
       if (article == null) return;
       if (saved) {
-        ref.read(personalizationProfileProvider.notifier).recordSave(article);
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordSave(article, accountKey: accountKey);
       } else {
-        ref.read(personalizationProfileProvider.notifier).recordLike(article);
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordLike(article, accountKey: accountKey);
       }
     } catch (_) {
       // Personalization must never break saving or liking.
@@ -279,13 +297,16 @@ class LikesController extends Notifier<Set<String>> {
 
   Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
     final bool wasLiked = state.contains(articleId);
+    final String ownerAccount = _activeAccountKey(ref);
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleLike(articleId);
     state = <String>{...repository.likedIds};
     final bool nowLiked = state.contains(articleId);
     if (nowLiked) _askForPushAfterFirstAction(ref);
     if (recordEngagement && !wasLiked && nowLiked) {
-      unawaited(_recordProfile(articleId, saved: false));
+      unawaited(
+        _recordProfile(articleId, saved: false, accountKey: ownerAccount),
+      );
     }
     await recordSyncChange(
       ref,
@@ -295,16 +316,24 @@ class LikesController extends Notifier<Set<String>> {
     );
   }
 
-  Future<void> _recordProfile(String articleId, {required bool saved}) async {
+  Future<void> _recordProfile(
+    String articleId, {
+    required bool saved,
+    required String accountKey,
+  }) async {
     try {
       final Article? article = await ref
           .read(articleRepositoryProvider)
           .byId(articleId);
       if (article == null) return;
       if (saved) {
-        ref.read(personalizationProfileProvider.notifier).recordSave(article);
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordSave(article, accountKey: accountKey);
       } else {
-        ref.read(personalizationProfileProvider.notifier).recordLike(article);
+        ref
+            .read(personalizationProfileProvider.notifier)
+            .recordLike(article, accountKey: accountKey);
       }
     } catch (_) {
       // Personalization must never break saving or liking.
@@ -386,6 +415,14 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 /// A bookmark toggle must still work in that world, so a missing sync stack is
 /// treated as "this build does not sync" rather than an error.
 /// Nudges the OS permission prompt once, after a first save/like/follow.
+String _activeAccountKey(Ref ref) {
+  try {
+    return ref.read(activeAccountKeyProvider);
+  } catch (_) {
+    return localAccountIdFor(null);
+  }
+}
+
 void _askForPushAfterFirstAction(Ref ref) {
   try {
     unawaited(ref.read(pushServiceProvider).requestIfNeeded());

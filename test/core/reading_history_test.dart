@@ -102,6 +102,23 @@ void main() {
     expect(store.string(readingHistoryKeyFor('account-b')), isNull);
   });
 
+  test('a deferred record writes to its captured account', () async {
+    final ReadingHistoryController history = container.read(
+      readingHistoryProvider.notifier,
+    );
+    await history.record('captured', accountKey: 'account-a');
+
+    final ProviderContainer a = ProviderContainer(
+      overrides: <Override>[
+        preferencesStoreProvider.overrideWithValue(store),
+        activeAccountKeyProvider.overrideWithValue('account-a'),
+      ],
+    );
+    addTearDown(a.dispose);
+    expect(a.read(readingHistoryProvider), <String>['captured']);
+    expect(container.read(readingHistoryProvider), isEmpty);
+  });
+
   test('recently read resolves ids against the article repository', () async {
     final Article first = testArticle(id: 'a', title: 'First');
     final Article second = testArticle(id: 'b', title: 'Second');

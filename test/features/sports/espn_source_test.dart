@@ -7,6 +7,10 @@ void main() {
     expect(EspnSource.leagueIdForTeam('team:lal'), 'nba');
     expect(EspnSource.refForTeam('team:lal')!.teamId, '13');
     expect(EspnSource.supportsTeamId('team:leone-stars'), isFalse);
+    // Standings emit the ESPN alias; it must resolve to the same catalogue team.
+    expect(EspnSource.supportsTeamId('team:espn-13'), isTrue);
+    expect(EspnSource.refForTeam('team:espn-13')!.teamId, '13');
+    expect(EspnSource.leagueIdForTeam('team:espn-13'), 'nba');
   });
 
   test('maps followed leagues to ESPN standings paths', () {

@@ -117,6 +117,37 @@ void main() {
     ]);
   });
 
+  test('city search matches require a tag or title match', () {
+    final Article tagged = testArticle(
+      id: 'tagged',
+      title: 'Port expansion continues',
+      tags: const <String>['freetown'],
+    );
+    final Article titleMatch = testArticle(
+      id: 'title',
+      title: 'Freetown port expansion continues',
+    );
+    final Article summaryOnly = testArticle(
+      id: 'summary',
+      title: 'Port expansion continues',
+      summary: 'The project is based in Freetown.',
+    );
+    const FollowTarget city = FollowTarget(
+      id: 'city:freetown',
+      kind: FollowKind.location,
+      label: 'Freetown',
+    );
+
+    final List<Article> matches = ForYouViewModel.cityCandidates(<Article>[
+      tagged,
+      titleMatch,
+      summaryOnly,
+    ], city);
+
+    expect(matches.map((Article a) => a.id), <String>['tagged', 'title']);
+    expect(matches.last.tags, contains('city:freetown'));
+  });
+
   test('followed sports stories lead the sports tail', () {
     final Article followedSports = testArticle(
       id: 'team-lal',

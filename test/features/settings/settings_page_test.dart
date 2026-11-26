@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:slnews_mobile/core/data/local/preferences_store.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
 import 'package:slnews_mobile/features/settings/presentation/settings_page.dart';
@@ -168,6 +169,28 @@ void main() {
     expect(userState.personalizeFeed, isFalse);
     expect(switchValue(tester, 'Personalize For You'), isFalse);
   });
+
+  test(
+    'failed rapid personalization writes restore the last durable value',
+    () async {
+      userState.personalizeWriter = (bool enabled) async {
+        throw StateError('write failed');
+      };
+      final SettingsController controller = container.read(
+        settingsControllerProvider.notifier,
+      );
+
+      final Future<void> first = controller.setPersonalizeFeed(false);
+      final Future<void> second = controller.setPersonalizeFeed(true);
+      await Future.wait(<Future<void>>[first, second]);
+
+      expect(
+        container.read(settingsControllerProvider).personalizeFeed,
+        isTrue,
+      );
+      expect(userState.personalizeFeed, isTrue);
+    },
+  );
 
   testWidgets('rapid personalization taps persist the final intent', (
     WidgetTester tester,
