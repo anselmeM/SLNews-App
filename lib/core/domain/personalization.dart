@@ -66,6 +66,23 @@ class ReaderSignals {
   }
 }
 
+/// Adds persistent profile affinity to the current-pool signal affinity.
+///
+/// The profile is keyed by categories/publishers plus last-seen tags; the
+/// current-pool signals carry tags from freshly read/saved stories. Merging
+/// preserves both instead of replacing tags with category-only profile keys.
+Map<String, double> mergeAffinityMaps(
+  Map<String, double> current,
+  Map<String, double> persistent,
+) {
+  if (persistent.isEmpty) return current;
+  final Map<String, double> merged = <String, double>{...current};
+  persistent.forEach((String key, double value) {
+    merged[key] = (merged[key] ?? 0) + value;
+  });
+  return merged;
+}
+
 /// Builds raw affinity from the stories the reader has interacted with that are
 /// still known locally. Unknown/old ids are simply ignored; Phase 2 replaces
 /// this with a persistent interest profile.
@@ -256,7 +273,7 @@ abstract final class PersonalizationEngine {
       final List<Article> selected = <Article>[];
       final List<Article> deferred = <Article>[];
       for (final Article article in bucket) {
-        if (result.length >= window) {
+        if (result.length + selected.length >= window) {
           deferred.add(article);
           continue;
         }

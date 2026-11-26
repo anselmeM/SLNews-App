@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/data/sources/espn_source.dart';
 import '../../../../core/domain/feed_mix.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/app_settings.dart';
@@ -132,6 +133,42 @@ abstract final class ForYouViewModel {
       }
       if (followingIds.contains('topic:$lower')) matches += 1;
       if (followingIds.contains('city:$lower')) matches += 1;
+    }
+    return matches;
+  }
+
+  /// Normalizes city-scoped search candidates before follow matching.
+  ///
+  /// A tagged story passes directly. A title match is treated as a city match
+  /// and receives the normalized city tag; a mere body/summary mention does not
+  /// qualify, so unrelated search hits cannot enter For You this way.
+  static List<Article> cityCandidates(
+    Iterable<Article> articles,
+    FollowTarget target, {
+    int limit = followedFeedLimit,
+  }) {
+    final String cityId = target.id.toLowerCase();
+    final String label = target.label.trim().toLowerCase();
+    if (label.isEmpty) return const <Article>[];
+    final List<Article> matches = <Article>[];
+    for (final Article article in articles) {
+      final bool tagged = article.tags.any((String tag) {
+        final String lower = tag.trim().toLowerCase();
+        return lower == cityId || 'city:$lower' == cityId;
+      });
+      final bool titleMatch = article.title.toLowerCase().contains(label);
+      if (!tagged && !titleMatch) continue;
+      matches.add(
+        tagged
+            ? article
+            : article.copyWith(
+                tags: List<String>.unmodifiable(<String>[
+                  ...article.tags,
+                  cityId,
+                ]),
+              ),
+      );
+      if (matches.length >= limit) break;
     }
     return matches;
   }
@@ -433,45 +470,99 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
               ? target.id.substring('topic:'.length)
               : target.id;
           if (categoryId == 'top' || categoryId == 'sports') continue;
-          final List<Article>? feed = ref
-              .watch(categoryFeedProvider(categoryId))
-              .value;
-          if (feed != null) {
-            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          final AsyncValue<List<Article>> feed = ref.watch(
+            categoryFeedProvider(categoryId),
+          );
+          if (feed.hasError) {
+            AppLog.debug(
+              'ForYou: followed topic ${target.id} unavailable: ${feed.error}',
+            );
+            continue;
+          }
+          final List<Article>? articles = feed.value;
+          if (articles != null) {
+            stories.addAll(articles.take(ForYouViewModel.followedFeedLimit));
           }
         case FollowKind.publisher:
           final String publisherId = target.id.startsWith('publisher:')
               ? target.id.substring('publisher:'.length)
               : target.id;
-          final List<Article>? feed = ref
-              .watch(publisherArticlesProvider(publisherId))
-              .value;
-          if (feed != null) {
-            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          final AsyncValue<List<Article>> feed = ref.watch(
+            publisherArticlesProvider(publisherId),
+          );
+          if (feed.hasError) {
+            AppLog.debug(
+              'ForYou: followed publisher ${target.id} unavailable: '
+              '${feed.error}',
+            );
+            continue;
+          }
+          final List<Article>? articles = feed.value;
+          if (articles != null) {
+            stories.addAll(articles.take(ForYouViewModel.followedFeedLimit));
           }
         case FollowKind.location:
-          // There is no city feed in the repository API. Full-text search is
-          // the available city-scoped candidate source; matching still requires
-          // a city tag in _followScore.
-          final List<Article>? feed = ref
-              .watch(searchResultsProvider(target.label))
-              .value;
-          if (feed != null) {
-            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          // There is no city feed in the repository API. Search candidates are
+          // normalized by title/tag before they can affect ranking.
+          final AsyncValue<List<Article>> feed = ref.watch(
+            searchResultsProvider(target.label),
+          );
+          if (feed.hasError) {
+            AppLog.debug(
+              'ForYou: followed city ${target.id} unavailable: ${feed.error}',
+            );
+            continue;
+          }
+          final List<Article>? articles = feed.value;
+          if (articles != null) {
+            stories.addAll(ForYouViewModel.cityCandidates(articles, target));
           }
         case FollowKind.team:
-          final List<Article>? feed = ref
-              .watch(teamNewsProvider(target.id))
-              .value;
-          if (feed != null) {
-            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          if (!EspnSource.supportsTeamId(target.id)) {
+            // Unsupported clubs still get a general sports fallback rather
+            // than silently producing no candidate stories.
+            final AsyncValue<List<Article>> fallback = ref.watch(
+              categoryFeedProvider('sports'),
+            );
+            if (fallback.hasError) {
+              AppLog.debug(
+                'ForYou: team fallback for ${target.id} unavailable: '
+                '${fallback.error}',
+              );
+              continue;
+            }
+            final List<Article>? articles = fallback.value;
+            if (articles != null) {
+              stories.addAll(articles.take(ForYouViewModel.followedFeedLimit));
+            }
+            continue;
+          }
+          final AsyncValue<List<Article>> feed = ref.watch(
+            teamNewsProvider(target.id),
+          );
+          if (feed.hasError) {
+            AppLog.debug(
+              'ForYou: followed team ${target.id} unavailable: ${feed.error}',
+            );
+            continue;
+          }
+          final List<Article>? articles = feed.value;
+          if (articles != null) {
+            stories.addAll(articles.take(ForYouViewModel.followedFeedLimit));
           }
         case FollowKind.league:
-          final List<Article>? feed = ref
-              .watch(leagueNewsProvider(target.id))
-              .value;
-          if (feed != null) {
-            stories.addAll(feed.take(ForYouViewModel.followedFeedLimit));
+          final AsyncValue<List<Article>> feed = ref.watch(
+            leagueNewsProvider(target.id),
+          );
+          if (feed.hasError) {
+            AppLog.debug(
+              'ForYou: followed league ${target.id} unavailable: ${feed.error}',
+            );
+            continue;
+          }
+          final List<Article>? articles = feed.value;
+          if (articles != null) {
+            stories.addAll(articles.take(ForYouViewModel.followedFeedLimit));
           }
       }
     }
@@ -493,17 +584,23 @@ final Provider<ForYouFeed?> forYouFeedProvider = Provider<ForYouFeed?>((
         ...(extra.value ?? const <Article>[]),
         ...followedStories,
       ];
-      signals =
-          buildReaderSignals(
-            knownArticles: known,
-            followedIds: followingIds,
-            readIds: ref.watch(readingHistoryProvider).toSet(),
-            savedIds: ref.watch(bookmarksControllerProvider),
-            likedIds: ref.watch(likesControllerProvider),
-          ).copyWith(
-            topicAffinity: profile.topicAffinity(),
-            publisherAffinity: profile.publisherAffinity(),
-          );
+      final ReaderSignals currentSignals = buildReaderSignals(
+        knownArticles: known,
+        followedIds: followingIds,
+        readIds: ref.watch(readingHistoryProvider).toSet(),
+        savedIds: ref.watch(bookmarksControllerProvider),
+        likedIds: ref.watch(likesControllerProvider),
+      );
+      signals = currentSignals.copyWith(
+        topicAffinity: mergeAffinityMaps(
+          currentSignals.topicAffinity,
+          profile.topicAffinity(),
+        ),
+        publisherAffinity: mergeAffinityMaps(
+          currentSignals.publisherAffinity,
+          profile.publisherAffinity(),
+        ),
+      );
     } on Object catch (error) {
       AppLog.debug(
         'ForYou: signal construction failed, using follows only: $error',

@@ -72,12 +72,41 @@ class EspnSource {
     'mlb': EspnLeagueRef(sport: 'baseball', league: 'mlb', label: 'MLB'),
   };
 
-  static bool supportsTeamId(String teamId) => teams.containsKey(teamId);
+  /// Team refs discovered from standings. Keyed by `team:espn-<numeric id>` so
+  /// a followed standings team can resolve its sport/league on later launches.
+  static final Map<String, EspnTeamRef> _discoveredTeams =
+      <String, EspnTeamRef>{};
 
-  static EspnTeamRef? refForTeam(String teamId) => teams[teamId];
+  static bool supportsTeamId(String teamId) => _refFor(teamId) != null;
+
+  static EspnTeamRef? refForTeam(String teamId) => _refFor(teamId);
 
   /// League slug (e.g. `nba`) for a followed ESPN team, for standings.
-  static String? leagueIdForTeam(String teamId) => teams[teamId]?.league;
+  static String? leagueIdForTeam(String teamId) => _refFor(teamId)?.league;
+
+  static EspnTeamRef? _refFor(String teamId) {
+    final EspnTeamRef? direct = teams[teamId];
+    if (direct != null) return direct;
+    final EspnTeamRef? discovered = _discoveredTeams[teamId];
+    if (discovered != null) return discovered;
+    // `team:espn-13` is the standings form of the catalogue's `team:lal`.
+    final RegExpMatch? numeric = RegExp(r'^team:espn-(\d+)$')
+        .firstMatch(teamId);
+    if (numeric == null) return null;
+    final String espnId = numeric.group(1)!;
+    for (final EspnTeamRef ref in teams.values) {
+      if (ref.teamId == espnId) return ref;
+    }
+    return null;
+  }
+
+  /// Adds the standings alias to the known catalogue id when possible.
+  static String? _catalogueIdForNumeric(String espnId) {
+    for (final MapEntry<String, EspnTeamRef> entry in teams.entries) {
+      if (entry.value.teamId == espnId) return entry.key;
+    }
+    return null;
+  }
 
   static String leagueLabel(String slug) =>
       leagues[slug.toLowerCase()]?.label ?? slug.toUpperCase();
@@ -89,7 +118,7 @@ class EspnSource {
       leagueId.split(':').last.toLowerCase();
 
   Future<List<Article>> teamNews(String teamId, {int limit = 8}) async {
-    final EspnTeamRef? ref = teams[teamId];
+    final EspnTeamRef? ref = _refFor(teamId);
     if (ref == null) return const <Article>[];
     final Object? payload = await client.getJson(
       '$_base/site/v2/sports/${ref.sport}/${ref.league}/news',
@@ -284,7 +313,10 @@ class EspnSource {
         if (category is! Map) continue;
         final String type = (category['type'] ?? '').toString().toLowerCase();
         if (type == 'team' && category['teamId'] != null) {
-          tags.add('team:${category['teamId']}');
+          final String espnId = category['teamId'].toString();
+          tags.add('team:espn-$espnId');
+          final String? catalogueId = _catalogueIdForNumeric(espnId);
+          if (catalogueId != null) tags.add(catalogueId);
         }
         if (type == 'league') {
           final Object? leagueId = category['leagueId'] ?? category['id'];
