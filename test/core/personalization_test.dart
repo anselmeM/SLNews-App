@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
 import 'package:slnews_mobile/core/domain/personalization.dart';
+import 'package:slnews_mobile/core/domain/personalization_tuning.dart';
 
 const Publisher _awoko = Publisher(
   id: 'awoko',
@@ -65,6 +66,34 @@ void main() {
     );
   });
 
+  test('read classification uses tuned dwell and progress thresholds', () {
+    expect(
+      PersonalizationTuning.classifyRead(
+        dwell: const Duration(seconds: 5),
+        progress: 0.1,
+      ),
+      ReadEngagement.skip,
+    );
+    expect(
+      PersonalizationTuning.classifyRead(
+        dwell: const Duration(seconds: 7),
+        progress: 0.1,
+      ),
+      ReadEngagement.read,
+    );
+    expect(
+      PersonalizationTuning.classifyRead(
+        dwell: const Duration(seconds: 20),
+        progress: 0.7,
+      ),
+      ReadEngagement.deep,
+    );
+    expect(
+      PersonalizationTuning.readWeightFor(ReadEngagement.deep),
+      greaterThan(PersonalizationTuning.readWeightFor(ReadEngagement.read)),
+    );
+  });
+
   test('explicit follows outweigh fresh unrelated stories', () {
     final Article followed = _article(
       id: 'followed',
@@ -112,7 +141,10 @@ void main() {
       savedIds: const <String>{'saved'},
     );
 
-    expect(signals.topicAffinity['business'], 4);
+    expect(
+      signals.topicAffinity['business'],
+      1 + PersonalizationTuning.saveWeight,
+    );
 
     final ReaderSignals readOnly = buildReaderSignals(
       knownArticles: <Article>[read, target],
@@ -121,6 +153,10 @@ void main() {
     final ReaderSignals savedOnly = buildReaderSignals(
       knownArticles: <Article>[saved, target],
       savedIds: const <String>{'saved'},
+    );
+    expect(
+      savedOnly.topicAffinity['business'],
+      PersonalizationTuning.saveWeight,
     );
     expect(
       savedOnly.topicAffinity['business'],
@@ -169,7 +205,7 @@ void main() {
       savedIds: const <String>{'saved'},
     );
 
-    expect(signals.topicAffinity['business'], 3);
+    expect(signals.topicAffinity['business'], PersonalizationTuning.saveWeight);
   });
 
   test('team and league follow tags score sports stories', () {
