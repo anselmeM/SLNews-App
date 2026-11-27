@@ -132,6 +132,46 @@ void main() {
     expect(find.text("We'll show you less like this"), findsOneWidget);
   });
 
+  testWidgets('opted-out readers do not train the local profile on save', (
+    WidgetTester tester,
+  ) async {
+    final FakeUserStateRepository userState = FakeUserStateRepository()
+      ..personalizeFeed = false;
+    late WidgetRef capturedRef;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(topStories: <Article>[article]),
+          userState: userState,
+        ),
+        child: themedChild(
+          Consumer(
+            builder: (BuildContext context, WidgetRef ref, Widget? child) {
+              capturedRef = ref;
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => handleArticleAction(
+                    context,
+                    ref,
+                    article,
+                    ArticleAction.bookmark,
+                  ),
+                  child: const Text('save'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('save'));
+    await tester.pumpAndSettle();
+
+    expect(capturedRef.read(personalizationProfileProvider).events, isEmpty);
+  });
+
   testWidgets('openInBrowser without a link reports instead of throwing', (
     WidgetTester tester,
   ) async {

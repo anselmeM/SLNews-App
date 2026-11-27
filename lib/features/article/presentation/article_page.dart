@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:slnews_mobile/core/widgets/scroll_to_top_state_mixin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,6 +31,30 @@ import 'widgets/article_header.dart';
 import 'widgets/article_hero_media.dart';
 import 'widgets/related_stories.dart';
 
+int _profileGenerationOf(WidgetRef ref) {
+  try {
+    return ref.read(personalizationProfileProvider.notifier).generation;
+  } catch (_) {
+    return 0;
+  }
+}
+
+bool _personalizationEnabled(WidgetRef ref) {
+  try {
+    return ref.read(settingsControllerProvider).personalizeFeed;
+  } catch (_) {
+    return true;
+  }
+}
+
+bool _personalizationEnabledContainer(ProviderContainer container) {
+  try {
+    return container.read(settingsControllerProvider).personalizeFeed;
+  } catch (_) {
+    return true;
+  }
+}
+
 String _accountKey(WidgetRef ref) {
   try {
     return ref.read(activeAccountKeyProvider);
@@ -45,9 +70,12 @@ String _accountKey(WidgetRef ref) {
 /// body, finished by the persistent floating action bar (follow publisher, `aA`,
 /// like, translate, share, menu).
 class ArticlePage extends ConsumerWidget {
-  const ArticlePage({super.key, required this.articleId});
+  const ArticlePage({super.key, required this.articleId, this.initialProgress});
 
   final String articleId;
+
+  /// Last local reading position, used by the Continue reading rail.
+  final double? initialProgress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,7 +114,7 @@ class ArticlePage extends ConsumerWidget {
                   .record(story.id, accountKey: ownerAccount);
             });
           }
-          return _ReaderBody(article: story);
+          return _ReaderBody(article: story, initialProgress: initialProgress);
         },
       ),
       bottomNavigationBar: article.value == null
@@ -102,20 +130,26 @@ class ArticlePage extends ConsumerWidget {
 }
 
 class _ReaderBody extends ConsumerStatefulWidget {
-  const _ReaderBody({required this.article});
+  const _ReaderBody({required this.article, this.initialProgress});
 
   final Article article;
+  final double? initialProgress;
 
   @override
   ConsumerState<_ReaderBody> createState() => _ReaderBodyState();
 }
 
 class _ReaderBodyState extends ConsumerState<_ReaderBody>
-    with ScrollToTopStateMixin<_ReaderBody> {
+    with ScrollToTopStateMixin<_ReaderBody>, WidgetsBindingObserver {
   DateTime? _openedAt;
   ProviderContainer? _profileContainer;
   String? _profileAccountKey;
+  int? _profileGeneration;
+  bool _profileEnabled = true;
+  int _restoreAttempts = 0;
   double _lastProgress = 0;
+  Duration _backgroundDuration = Duration.zero;
+  DateTime? _backgroundStarted;
 
   @override
   double get scrollToTopThreshold => ScrollToTopButton.threshold;
@@ -127,6 +161,8 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     try {
       _profileContainer = ProviderScope.containerOf(context);
       _profileAccountKey = _accountKey(ref);
+      _profileGeneration = _profileGenerationOf(ref);
+      _profileEnabled = _personalizationEnabled(ref);
     } catch (_) {
       // No provider scope (for example a very narrow widget test harness).
     }
@@ -135,16 +171,23 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _openedAt = DateTime.now();
     scrollController.addListener(_captureScrollProgress);
+    _restoreInitialProgress();
+    _scheduleFitMeasurement();
     // Record the open after the frame: provider mutation during initState can
     // race the first build in Riverpod.
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (!mounted) return;
+      if (!mounted || !_profileEnabled) return;
       try {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordOpen(widget.article, accountKey: _profileAccountKey);
+            .recordOpen(
+              widget.article,
+              accountKey: _profileAccountKey,
+              generation: _profileGeneration,
+            );
       } catch (_) {
         // Personalization is best-effort and must never affect reading.
       }
@@ -153,19 +196,24 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     scrollController.removeListener(_captureScrollProgress);
     final DateTime? openedAt = _openedAt;
     if (openedAt != null) {
       try {
         final ProviderContainer? container = _profileContainer;
-        if (container != null) {
+        final bool enabled = container == null
+            ? _profileEnabled
+            : _personalizationEnabledContainer(container);
+        if (container != null && enabled) {
           container
               .read(personalizationProfileProvider.notifier)
               .recordRead(
                 widget.article,
-                dwell: DateTime.now().difference(openedAt),
+                dwell: _foregroundDwell(openedAt),
                 progress: _finalProgress(),
                 accountKey: _profileAccountKey,
+                generation: _profileGeneration,
               );
         }
       } catch (_) {
@@ -181,43 +229,96 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final DateTime now = DateTime.now();
+    if (state == AppLifecycleState.resumed) {
+      final DateTime? started = _backgroundStarted;
+      if (started != null) {
+        _backgroundDuration += now.difference(started);
+        _backgroundStarted = null;
+      }
+      return;
+    }
+    _backgroundStarted ??= now;
+  }
+
+  Duration _foregroundDwell(DateTime openedAt) {
+    final DateTime now = DateTime.now();
+    Duration background = _backgroundDuration;
+    final DateTime? started = _backgroundStarted;
+    if (started != null) background += now.difference(started);
+    final Duration elapsed = now.difference(openedAt) - background;
+    return elapsed.isNegative ? Duration.zero : elapsed;
+  }
+
+  void _restoreInitialProgress() {
+    final double? saved = widget.initialProgress;
+    if (saved == null || saved <= 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted) return;
+      if (!scrollController.hasClients) {
+        _restoreInitialProgress();
+        return;
+      }
+      final double max = scrollController.position.maxScrollExtent;
+      if (max <= 0) {
+        if (++_restoreAttempts < 8) {
+          _restoreInitialProgress();
+          SchedulerBinding.instance.scheduleFrame();
+        }
+        return;
+      }
+      scrollController.jumpTo((max * saved).clamp(0.0, max));
+    });
+  }
+
   /// Scroll progress at close. An article shorter than the viewport counts as
   /// fully read rather than as 0%.
   double _finalProgress() {
     if (!scrollController.hasClients) {
-      return _lastProgress > 0 ? _lastProgress : 1;
+      // The controller can already be detached during teardown. Use the last
+      // observed position rather than assuming the article was completed.
+      return _lastProgress;
     }
     final double max = scrollController.position.maxScrollExtent;
-    if (max <= 0) return 1;
-    final double progress = (scrollController.offset / max)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    // An article that fits without scrolling counts as fully read; an article
-    // left at the very top also has no meaningful "continue" position.
-    return progress > 0 ? progress : 1;
+    if (max <= 0) return 1; // Article fits without scrolling: fully read.
+    return (scrollController.offset / max).clamp(0.0, 1.0).toDouble();
   }
 
   void _captureScrollProgress() {
     if (!scrollController.hasClients) return;
     final double max = scrollController.position.maxScrollExtent;
-    if (max <= 0) {
+    if (max <= 0) return; // Fits check is handled after layout settles.
+    _lastProgress = (scrollController.offset / max).clamp(0.0, 1.0).toDouble();
+  }
+
+  void _scheduleFitMeasurement([int attempt = 0]) {
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted) return;
+      if (!scrollController.hasClients) {
+        if (attempt < 8) {
+          _scheduleFitMeasurement(attempt + 1);
+          SchedulerBinding.instance.scheduleFrame();
+        }
+        return;
+      }
+      if (scrollController.position.maxScrollExtent > 0) return;
+      if (attempt < 3) {
+        _scheduleFitMeasurement(attempt + 1);
+        SchedulerBinding.instance.scheduleFrame();
+        return;
+      }
       _lastProgress = 1;
-    } else {
-      _lastProgress = (scrollController.offset / max)
-          .clamp(0.0, 1.0)
-          .toDouble();
-    }
+    });
   }
 
   bool _onScrollNotification(ScrollNotification notification) {
     final ScrollMetrics metrics = notification.metrics;
-    if (metrics.maxScrollExtent <= 0) {
-      _lastProgress = 1;
-    } else {
-      _lastProgress = (metrics.pixels / metrics.maxScrollExtent)
-          .clamp(0.0, 1.0)
-          .toDouble();
-    }
+    if (metrics.maxScrollExtent <= 0) return false;
+    _lastProgress = (metrics.pixels / metrics.maxScrollExtent)
+        .clamp(0.0, 1.0)
+        .toDouble();
     return false;
   }
 

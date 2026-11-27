@@ -56,6 +56,7 @@ class ContinueReadingRail extends ConsumerWidget {
                         maxTitleLines: 2,
                         onTap: () => context.push(
                           AppRoutes.articleFor(entry.article.id),
+                          extra: entry.progress,
                         ),
                       ),
                     ),

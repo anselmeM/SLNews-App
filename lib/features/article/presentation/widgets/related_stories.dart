@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/article_tile.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../feed/presentation/widgets/article_actions.dart';
 
 /// "More stories" block closing the reader.
 class RelatedStories extends ConsumerWidget {
@@ -36,9 +37,8 @@ class RelatedStories extends ConsumerWidget {
             onTap: () => context.openArticle(article.id),
             onLike: () =>
                 ref.read(likesControllerProvider.notifier).toggle(article.id),
-            onMore: (ArticleAction action) => ref
-                .read(bookmarksControllerProvider.notifier)
-                .toggle(article.id),
+            onMore: (ArticleAction action) =>
+                handleArticleAction(context, ref, article, action),
           ),
           if (article != articles.last) const SizedBox(height: AppSpacing.md),
         ],

@@ -30,6 +30,7 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sl_page_scaffold.dart';
 import '../../../core/widgets/state_views.dart';
 import 'viewmodels/sports_view_model.dart';
+import '../../feed/presentation/widgets/article_actions.dart';
 import '../domain/sports_links.dart';
 import '../domain/sports_league_catalog.dart';
 import '../../../core/data/sources/league_news_source.dart';
@@ -155,7 +156,7 @@ class SportsPage extends ConsumerWidget {
                   onTap: () => context.go(AppRoutes.news),
                 ),
               ),
-              ..._topStoriesSlivers(context, allSports, liked),
+              ..._topStoriesSlivers(context, ref, allSports, liked),
               ..._leagueSections(context, ref, viewModel, teamNews, following),
               SliverToBoxAdapter(
                 child: SectionHeader(title: viewModel.newsSectionTitle),
@@ -181,6 +182,7 @@ class SportsPage extends ConsumerWidget {
   /// Top stories: one full-bleed hero followed by compact story cards.
   List<Widget> _topStoriesSlivers(
     BuildContext context,
+    WidgetRef ref,
     AsyncValue<List<Article>> news,
     Set<String> liked,
   ) {
@@ -210,7 +212,8 @@ class SportsPage extends ConsumerWidget {
                   isLiked: liked.contains(article.id),
                   onTap: () => _openArticle(context, article),
                   onLike: () {},
-                  onMore: (_) {},
+                  onMore: (ArticleAction action) =>
+                      handleArticleAction(context, ref, article, action),
                 ),
               ),
             ),

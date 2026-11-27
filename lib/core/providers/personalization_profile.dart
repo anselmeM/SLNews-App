@@ -40,6 +40,10 @@ personalizationProfileProvider =
 class PersonalizationProfileController
     extends Notifier<PersonalizationProfile> {
   Future<void> _writeBarrier = Future<void>.value();
+  int _generation = 0;
+
+  /// Monotonic token used to ignore events that started before a reset.
+  int get generation => _generation;
 
   @override
   PersonalizationProfile build() {
@@ -77,7 +81,7 @@ class PersonalizationProfileController
   }
 
   /// A lightweight open signal; reading completion is recorded separately.
-  void recordOpen(Article article, {String? accountKey}) {
+  void recordOpen(Article article, {String? accountKey, int? generation}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -89,6 +93,7 @@ class PersonalizationProfileController
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
+      generation: generation,
     );
   }
 
@@ -98,6 +103,7 @@ class PersonalizationProfileController
     required Duration dwell,
     required double progress,
     String? accountKey,
+    int? generation,
   }) {
     final String owner = accountKey ?? _accountKey();
     final bool sameAccount = owner == _accountKey();
@@ -146,10 +152,11 @@ class PersonalizationProfileController
       ),
       progress: nextProgress,
       accountKey: owner,
+      generation: generation,
     );
   }
 
-  void recordSave(Article article, {String? accountKey}) {
+  void recordSave(Article article, {String? accountKey, int? generation}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -161,10 +168,11 @@ class PersonalizationProfileController
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
+      generation: generation,
     );
   }
 
-  void recordLike(Article article, {String? accountKey}) {
+  void recordLike(Article article, {String? accountKey, int? generation}) {
     _append(
       EngagementEvent(
         articleId: article.id,
@@ -176,12 +184,13 @@ class PersonalizationProfileController
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
+      generation: generation,
     );
   }
 
-  /// Explicit "Show less like this": hide the story from For You and lower the
+  /// Explicit "Show less like this"": hide the story from For You and lower the
   /// topic/publisher affinity.
-  void recordDismiss(Article article, {String? accountKey}) {
+  void recordDismiss(Article article, {String? accountKey, int? generation}) {
     final String owner = accountKey ?? _accountKey();
     final PersonalizationProfile base = owner == _accountKey()
         ? state
@@ -200,51 +209,61 @@ class PersonalizationProfileController
       ),
       progress: nextProgress,
       accountKey: owner,
+      generation: generation,
     );
   }
 
-  Future<void> clear() async {
+  Future<bool> clear() async {
+    _generation++;
     state = const PersonalizationProfile();
     final PreferencesStore? preferences = _preferences();
-    if (preferences == null) return;
+    if (preferences == null || !preferences.isAvailable) return false;
     final String accountKey = _accountKey();
-    final Future<void> removal = _writeBarrier.then((_) async {
+    final Future<bool> removal = _writeBarrier.then((_) async {
+      bool ok = true;
+      bool markerOk = false;
       try {
-        await preferences.putBool(
+        await _putBoolWithRetry(
+          preferences,
           personalizationProfileResetKeyFor(accountKey),
           true,
         );
+        markerOk = true;
       } catch (error) {
         AppLog.debug('PersonalizationProfile: reset marker failed: $error');
       }
       final String scopedKey = personalizationProfileKeyFor(accountKey);
       bool scopedRemoved = false;
       try {
-        await preferences.remove(scopedKey);
+        await _removeWithRetry(preferences, scopedKey);
         scopedRemoved = true;
       } catch (error) {
         AppLog.debug('PersonalizationProfile: clear failed: $error');
       }
       if (!scopedRemoved) {
         try {
-          await preferences.putString(
+          await _putStringWithRetry(
+            preferences,
             scopedKey,
             jsonEncode(const PersonalizationProfile().toJson()),
           );
         } catch (error) {
           AppLog.debug('PersonalizationProfile: empty reset failed: $error');
+          ok = false;
         }
       }
       if (accountKey == anonymousAccountId) {
         try {
-          await preferences.remove(personalizationProfileKey);
+          await _removeWithRetry(preferences, personalizationProfileKey);
         } catch (error) {
           AppLog.debug('PersonalizationProfile: legacy clear failed: $error');
+          if (!markerOk) ok = false;
         }
       }
+      return ok;
     });
-    _writeBarrier = removal.catchError((Object _) {});
-    await removal;
+    _writeBarrier = removal.then<void>((_) {}).catchError((Object _) {});
+    return removal;
   }
 
   /// Awaits all queued local persistence; used by tests and diagnostics.
@@ -254,7 +273,9 @@ class PersonalizationProfileController
     EngagementEvent event, {
     Map<String, ReadingProgressEntry>? progress,
     String? accountKey,
+    int? generation,
   }) {
+    if (generation != null && generation != _generation) return;
     final String owner = accountKey ?? _accountKey();
     if (owner != _accountKey()) {
       // The account switched while the interaction was in flight. Persist to
@@ -262,13 +283,9 @@ class PersonalizationProfileController
       _appendForAccount(owner, event, progress);
       return;
     }
-    final List<EngagementEvent> events = <EngagementEvent>[
-      event,
-      ...state.events,
-    ];
-    if (events.length > PersonalizationProfile.maxEvents) {
-      events.removeRange(PersonalizationProfile.maxEvents, events.length);
-    }
+    final List<EngagementEvent> events = PersonalizationProfile.capEvents(
+      <EngagementEvent>[event, ...state.events],
+    );
     state = PersonalizationProfile(
       events: events,
       progress: progress ?? state.progress,
@@ -283,20 +300,17 @@ class PersonalizationProfileController
   ) {
     final Future<void> write = _writeBarrier.then((_) async {
       final PreferencesStore? preferences = _preferences();
-      if (preferences == null) return;
+      if (preferences == null || !preferences.isAvailable) return;
       final PersonalizationProfile existing = _read(accountKey);
-      final List<EngagementEvent> events = <EngagementEvent>[
-        event,
-        ...existing.events,
-      ];
-      if (events.length > PersonalizationProfile.maxEvents) {
-        events.removeRange(PersonalizationProfile.maxEvents, events.length);
-      }
+      final List<EngagementEvent> events = PersonalizationProfile.capEvents(
+        <EngagementEvent>[event, ...existing.events],
+      );
       final PersonalizationProfile next = PersonalizationProfile(
         events: events,
         progress: progress ?? existing.progress,
       );
-      await preferences.putString(
+      await _putStringWithRetry(
+        preferences,
         personalizationProfileKeyFor(accountKey),
         jsonEncode(next.toJson()),
       );
@@ -322,10 +336,16 @@ class PersonalizationProfileController
 
   void _persist(String accountKey) {
     final PreferencesStore? preferences = _preferences();
-    if (preferences == null) return;
+    if (preferences == null || !preferences.isAvailable) {
+      AppLog.debug(
+        'PersonalizationProfile: storage unavailable; change not saved',
+      );
+      return;
+    }
     final String payload = jsonEncode(state.toJson());
     final Future<void> write = _writeBarrier.then(
-      (_) => preferences.putString(
+      (_) => _putStringWithRetry(
+        preferences,
         personalizationProfileKeyFor(accountKey),
         payload,
       ),
@@ -333,6 +353,41 @@ class PersonalizationProfileController
     _writeBarrier = write.catchError((Object error) {
       AppLog.debug('PersonalizationProfile: persistence failed: $error');
     });
+  }
+
+  static Future<void> _putStringWithRetry(
+    PreferencesStore preferences,
+    String key,
+    String value,
+  ) async {
+    try {
+      await preferences.putString(key, value);
+    } catch (_) {
+      await preferences.putString(key, value);
+    }
+  }
+
+  static Future<void> _putBoolWithRetry(
+    PreferencesStore preferences,
+    String key,
+    bool value,
+  ) async {
+    try {
+      await preferences.putBool(key, value);
+    } catch (_) {
+      await preferences.putBool(key, value);
+    }
+  }
+
+  static Future<void> _removeWithRetry(
+    PreferencesStore preferences,
+    String key,
+  ) async {
+    try {
+      await preferences.remove(key);
+    } catch (_) {
+      await preferences.remove(key);
+    }
   }
 
   static List<String> _normalizedTags(Article article) => <String>[

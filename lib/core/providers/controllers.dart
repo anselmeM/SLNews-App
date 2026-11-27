@@ -236,14 +236,23 @@ class BookmarksController extends Notifier<Set<String>> {
   Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
     final bool wasSaved = state.contains(articleId);
     final String ownerAccount = _activeAccountKey(ref);
+    final bool recordProfile = _personalizationEnabled(ref);
+    final int profileGeneration = ref
+        .read(personalizationProfileProvider.notifier)
+        .generation;
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleBookmark(articleId);
     state = <String>{...repository.bookmarkedIds};
     final bool nowSaved = state.contains(articleId);
     if (nowSaved) _askForPushAfterFirstAction(ref);
-    if (recordEngagement && !wasSaved && nowSaved) {
+    if (recordEngagement && recordProfile && !wasSaved && nowSaved) {
       unawaited(
-        _recordProfile(articleId, saved: true, accountKey: ownerAccount),
+        _recordProfile(
+          articleId,
+          saved: true,
+          accountKey: ownerAccount,
+          generation: profileGeneration,
+        ),
       );
     }
     await recordSyncChange(
@@ -258,20 +267,31 @@ class BookmarksController extends Notifier<Set<String>> {
     String articleId, {
     required bool saved,
     required String accountKey,
+    required int generation,
   }) async {
     try {
+      if (!_personalizationEnabled(ref)) return;
       final Article? article = await ref
           .read(articleRepositoryProvider)
           .byId(articleId);
       if (article == null) return;
+      if (!_personalizationEnabled(ref)) return;
       if (saved) {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordSave(article, accountKey: accountKey);
+            .recordSave(
+              article,
+              accountKey: accountKey,
+              generation: generation,
+            );
       } else {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordLike(article, accountKey: accountKey);
+            .recordLike(
+              article,
+              accountKey: accountKey,
+              generation: generation,
+            );
       }
     } catch (_) {
       // Personalization must never break saving or liking.
@@ -298,14 +318,23 @@ class LikesController extends Notifier<Set<String>> {
   Future<void> toggle(String articleId, {bool recordEngagement = true}) async {
     final bool wasLiked = state.contains(articleId);
     final String ownerAccount = _activeAccountKey(ref);
+    final bool recordProfile = _personalizationEnabled(ref);
+    final int profileGeneration = ref
+        .read(personalizationProfileProvider.notifier)
+        .generation;
     final UserStateRepository repository = ref.read(userStateProvider);
     await repository.toggleLike(articleId);
     state = <String>{...repository.likedIds};
     final bool nowLiked = state.contains(articleId);
     if (nowLiked) _askForPushAfterFirstAction(ref);
-    if (recordEngagement && !wasLiked && nowLiked) {
+    if (recordEngagement && recordProfile && !wasLiked && nowLiked) {
       unawaited(
-        _recordProfile(articleId, saved: false, accountKey: ownerAccount),
+        _recordProfile(
+          articleId,
+          saved: false,
+          accountKey: ownerAccount,
+          generation: profileGeneration,
+        ),
       );
     }
     await recordSyncChange(
@@ -320,20 +349,31 @@ class LikesController extends Notifier<Set<String>> {
     String articleId, {
     required bool saved,
     required String accountKey,
+    required int generation,
   }) async {
     try {
+      if (!_personalizationEnabled(ref)) return;
       final Article? article = await ref
           .read(articleRepositoryProvider)
           .byId(articleId);
       if (article == null) return;
+      if (!_personalizationEnabled(ref)) return;
       if (saved) {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordSave(article, accountKey: accountKey);
+            .recordSave(
+              article,
+              accountKey: accountKey,
+              generation: generation,
+            );
       } else {
         ref
             .read(personalizationProfileProvider.notifier)
-            .recordLike(article, accountKey: accountKey);
+            .recordLike(
+              article,
+              accountKey: accountKey,
+              generation: generation,
+            );
       }
     } catch (_) {
       // Personalization must never break saving or liking.
@@ -415,6 +455,14 @@ class FollowingController extends Notifier<FollowingSnapshot> {
 /// A bookmark toggle must still work in that world, so a missing sync stack is
 /// treated as "this build does not sync" rather than an error.
 /// Nudges the OS permission prompt once, after a first save/like/follow.
+bool _personalizationEnabled(Ref ref) {
+  try {
+    return ref.read(settingsControllerProvider).personalizeFeed;
+  } catch (_) {
+    return true;
+  }
+}
+
 String _activeAccountKey(Ref ref) {
   try {
     return ref.read(activeAccountKeyProvider);

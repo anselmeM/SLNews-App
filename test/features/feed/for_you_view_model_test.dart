@@ -253,6 +253,21 @@ void main() {
     expect(feed.stream.map((Article a) => a.id), isNot(contains('followed')));
   });
 
+  test('dismissed stories never return through the hero fallback', () {
+    final Article dismissed = testArticle(
+      id: 'dismissed',
+      categoryId: 'sports',
+    );
+    final ForYouFeed feed = build(
+      topStories: <Article>[dismissed],
+      heroLimit: 3,
+      dismissedIds: const <String>{'dismissed'},
+    );
+
+    expect(feed.hero, isEmpty);
+    expect(feed.stream, isEmpty);
+  });
+
   test('explicitly dismissed stories are removed from every stream', () {
     final Article dismissed = testArticle(id: 'dismissed');
     final Article visible = testArticle(id: 'visible');

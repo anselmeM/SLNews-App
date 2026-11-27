@@ -65,11 +65,17 @@ void main() {
         .read(personalizationProfileProvider.notifier)
         .recordRead(story, dwell: const Duration(seconds: 3), progress: 0.02);
 
+    final PersonalizationProfile profile = container.read(
+      personalizationProfileProvider,
+    );
+    expect(profile.topicAffinity()['politics'], lessThan(0));
     expect(
-      container
-          .read(personalizationProfileProvider)
-          .topicAffinity()['politics'],
-      lessThan(0),
+      profile.events.any(
+        (EngagementEvent event) =>
+            event.articleId == story.id && event.kind == EngagementKind.skip,
+      ),
+      isTrue,
+      reason: 'a short shallow read must be classified as a skip',
     );
   });
 
@@ -93,6 +99,13 @@ void main() {
     );
 
     controller.recordLike(story);
+    expect(
+      container
+          .read(personalizationProfileProvider)
+          .topicAffinity()['politics'],
+      7,
+      reason: 'recordLike must add its own signal',
+    );
     controller.recordDismiss(story);
 
     final PersonalizationProfile profile = container.read(
@@ -101,6 +114,15 @@ void main() {
     expect(profile.dismissedArticleIds(), contains('story-1'));
     expect(profile.progress, isEmpty);
     expect(profile.topicAffinity()['politics'], lessThan(4));
+  });
+
+  test('clear reports failure when local storage is unavailable', () async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+    final bool cleared = await container
+        .read(personalizationProfileProvider.notifier)
+        .clear();
+    expect(cleared, isFalse);
   });
 
   test('clear removes the profile and its stored document', () async {
@@ -161,6 +183,54 @@ void main() {
 
     expect(profile.topicAffinity(now: now)['politics'], 6);
     expect(profile.publisherAffinity(now: now)['awoko'], 6);
+  });
+
+  test('active dismissals survive the event cap', () {
+    final DateTime now = DateTime.utc(2026, 11, 24);
+    final List<EngagementEvent> events = <EngagementEvent>[
+      EngagementEvent(
+        articleId: 'dismissed',
+        topicId: 'politics',
+        publisherId: 'awoko',
+        kind: EngagementKind.dismiss,
+        at: now.subtract(const Duration(days: 1)),
+        weight: -5,
+      ),
+      for (int i = 0; i < PersonalizationProfile.maxEvents + 20; i++)
+        EngagementEvent(
+          articleId: 'open-$i',
+          topicId: 'politics',
+          publisherId: 'awoko',
+          kind: EngagementKind.open,
+          at: now,
+          weight: 0.25,
+        ),
+      EngagementEvent(
+        articleId: 'expired-dismiss',
+        topicId: 'politics',
+        publisherId: 'awoko',
+        kind: EngagementKind.dismiss,
+        at: now.subtract(const Duration(days: 40)),
+        weight: -5,
+      ),
+    ];
+
+    final List<EngagementEvent> capped = PersonalizationProfile.capEvents(
+      events,
+      now: now,
+    );
+
+    expect(capped, hasLength(PersonalizationProfile.maxEvents));
+    expect(
+      capped.any((EngagementEvent event) => event.articleId == 'dismissed'),
+      isTrue,
+    );
+    expect(
+      capped.any(
+        (EngagementEvent event) => event.articleId == 'expired-dismiss',
+      ),
+      isFalse,
+    );
   });
 
   test('profile JSON round-trips and tolerates a bad document', () {
@@ -226,6 +296,24 @@ void main() {
     expect(b.read(personalizationProfileProvider).isEmpty, isTrue);
     expect(store.string(personalizationProfileKeyFor('account-a')), isNotNull);
     expect(store.string(personalizationProfileKeyFor('account-b')), isNull);
+  });
+
+  test('a reset invalidates in-flight recordings', () async {
+    final InMemoryPreferencesStore store = InMemoryPreferencesStore();
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[preferencesStoreProvider.overrideWithValue(store)],
+    );
+    addTearDown(container.dispose);
+    final PersonalizationProfileController controller = container.read(
+      personalizationProfileProvider.notifier,
+    );
+    final int generation = controller.generation;
+
+    await controller.clear();
+    controller.recordSave(story, generation: generation);
+    await controller.flushPersistence();
+
+    expect(container.read(personalizationProfileProvider).isEmpty, isTrue);
   });
 
   test('event tags persist as tag affinity', () async {
