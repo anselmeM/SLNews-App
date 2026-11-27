@@ -11,6 +11,9 @@ abstract interface class PreferencesStore {
   /// Opens or migrates the backing store. Safe to call more than once.
   Future<void> init();
 
+  /// False when the backing box could not be opened; writes are no-ops.
+  bool get isAvailable;
+
   /// Members of the set stored at [key]; empty when absent or of another type.
   ///
   /// Always a fresh, mutable set, so callers can stage an update and write it
@@ -47,6 +50,9 @@ class InMemoryPreferencesStore implements PreferencesStore {
     : _values = <String, Object?>{...?seed};
 
   final Map<String, Object?> _values;
+
+  @override
+  bool get isAvailable => true;
 
   @override
   Future<void> init() async {}
@@ -143,6 +149,9 @@ class HivePreferencesStore implements PreferencesStore {
   }
 
   Box<dynamic>? get _openBox => (_box?.isOpen ?? false) ? _box : null;
+
+  @override
+  bool get isAvailable => _openBox != null;
 
   @override
   Set<String> stringSet(String key) {

@@ -279,7 +279,7 @@ abstract final class ForYouViewModel {
     );
     final List<Article> heroPool = heroCandidates.isNotEmpty
         ? heroCandidates
-        : topStories;
+        : visibleTop;
     final List<Article> hero = personalizeFeed
         ? PersonalizationEngine.diversify(heroPool, limit: heroLimit)
         : heroPool.take(heroLimit).toList(growable: false);

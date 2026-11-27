@@ -132,6 +132,35 @@ class PersonalizationProfile {
 
   bool get isEmpty => events.isEmpty && progress.isEmpty;
 
+  /// Applies the 30-day window and event cap while retaining active
+  /// dismissals. A burst of newer activity must not resurrect dismissed stories
+  /// before the dismissal itself has expired.
+  static List<EngagementEvent> capEvents(
+    Iterable<EngagementEvent> events, {
+    DateTime? now,
+  }) {
+    final DateTime reference = now ?? DateTime.now();
+    final List<EngagementEvent> active = <EngagementEvent>[
+      for (final EngagementEvent event in events)
+        if (reference.difference(event.at) <= eventWindow) event,
+    ];
+    if (active.length <= maxEvents) return active;
+    final List<EngagementEvent> dismissals = <EngagementEvent>[
+      for (final EngagementEvent event in active)
+        if (event.kind == EngagementKind.dismiss) event,
+    ];
+    final int dismissalBudget = dismissals.length > maxEvents
+        ? maxEvents
+        : dismissals.length;
+    final List<EngagementEvent> kept = <EngagementEvent>[
+      ...dismissals.take(dismissalBudget),
+      for (final EngagementEvent event in active)
+        if (event.kind != EngagementKind.dismiss) event,
+    ].take(maxEvents).toList(growable: false);
+    return kept
+      ..sort((EngagementEvent a, EngagementEvent b) => b.at.compareTo(a.at));
+  }
+
   int get eventCount => events.length;
 
   int get unfinishedCount => progress.values

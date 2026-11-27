@@ -528,10 +528,19 @@ Future<void> _showPersonalizationData(
     ),
   );
   if (reset != true || !context.mounted) return;
-  ref.read(personalizationProfileProvider.notifier).clear();
+  final bool cleared = await ref
+      .read(personalizationProfileProvider.notifier)
+      .clear();
+  if (!context.mounted) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
-      const SnackBar(content: Text('Personalization data was reset')),
+      SnackBar(
+        content: Text(
+          cleared
+              ? 'Personalization data was reset'
+              : "Couldn't reset personalization data. Please try again.",
+        ),
+      ),
     );
 }

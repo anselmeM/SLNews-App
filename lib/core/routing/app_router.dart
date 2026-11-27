@@ -148,7 +148,14 @@ GoRouter createAppRouter() {
         name: RouteNames.article,
         parentNavigatorKey: _rootNavigatorKey,
         builder: (BuildContext context, GoRouterState state) {
-          return ArticlePage(articleId: state.pathParameters['id'] ?? '');
+          final Object? extra = state.extra;
+          final double? progress = extra is num
+              ? extra.toDouble().clamp(0.0, 1.0)
+              : null;
+          return ArticlePage(
+            articleId: state.pathParameters['id'] ?? '',
+            initialProgress: progress,
+          );
         },
       ),
       GoRoute(

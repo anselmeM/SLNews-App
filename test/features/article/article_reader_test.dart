@@ -37,6 +37,8 @@ void main() {
     Article article, {
     Size surface = const Size(390, 2400),
     bool pushFromHome = false,
+    double? initialProgress,
+    FakeUserStateRepository? userState,
   }) async {
     await useTallSurface(tester, size: surface);
     final GoRouter router = GoRouter(
@@ -49,8 +51,13 @@ void main() {
         ),
         GoRoute(
           path: '/article/:id',
-          builder: (BuildContext context, GoRouterState state) =>
-              ArticlePage(articleId: state.pathParameters['id'] ?? ''),
+          builder: (BuildContext context, GoRouterState state) {
+            final Object? extra = state.extra;
+            return ArticlePage(
+              articleId: state.pathParameters['id'] ?? '',
+              initialProgress: extra is num ? extra.toDouble() : null,
+            );
+          },
         ),
       ],
     );
@@ -63,6 +70,7 @@ void main() {
               topStories: <Article>[article],
               categoryStories: <Article>[article],
             ),
+            userState: userState,
           ),
           preferencesStoreProvider.overrideWithValue(
             InMemoryPreferencesStore(),
@@ -76,7 +84,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     if (pushFromHome) {
-      router.push('/article/${article.id}');
+      router.push('/article/${article.id}', extra: initialProgress);
       await tester.pumpAndSettle();
     }
   }
@@ -308,6 +316,93 @@ void main() {
       isTrue,
     );
     expect(profile.progress[article.id], isNotNull);
+  });
+
+  testWidgets('an unscrolled scrollable article keeps zero progress', (
+    WidgetTester tester,
+  ) async {
+    final Article article = Article(
+      id: 'unscrolled',
+      title: 'A long report',
+      publisher: testPublisher,
+      publishedAt: DateTime.utc(2026, 10, 16, 19, 30),
+      categoryId: 'politics',
+      bodyHtml: List<String>.generate(
+        40,
+        (int index) => '<p>Paragraph $index.</p>',
+      ).join(),
+    );
+    await pumpReader(
+      tester,
+      article,
+      surface: const Size(390, 600),
+      pushFromHome: true,
+    );
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(ArticlePage)),
+    );
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    final PersonalizationProfile profile = container.read(
+      personalizationProfileProvider,
+    );
+    expect(profile.progress[article.id], isNull);
+    expect(
+      profile.events
+          .where((EngagementEvent event) => event.articleId == article.id)
+          .every((EngagementEvent event) => (event.progress ?? 0) == 0),
+      isTrue,
+    );
+  });
+
+  testWidgets('continue reading restores the saved scroll offset', (
+    WidgetTester tester,
+  ) async {
+    final Article article = Article(
+      id: 'resume-long',
+      title: 'A long report to resume',
+      publisher: testPublisher,
+      publishedAt: DateTime.utc(2026, 10, 16, 19, 30),
+      categoryId: 'politics',
+      bodyHtml: List<String>.generate(
+        40,
+        (int index) => '<p>Paragraph $index.</p>',
+      ).join(),
+    );
+    await pumpReader(
+      tester,
+      article,
+      surface: const Size(390, 600),
+      pushFromHome: true,
+      initialProgress: 0.5,
+    );
+    final ArticlePage page = tester.widget<ArticlePage>(
+      find.byType(ArticlePage),
+    );
+    expect(page.initialProgress, 0.5);
+
+    final ScrollableState scrollable = tester.state<ScrollableState>(
+      find.byType(Scrollable).first,
+    );
+    expect(scrollable.position.pixels, greaterThan(0));
+  });
+
+  testWidgets('opting out stops profile collection', (
+    WidgetTester tester,
+  ) async {
+    final FakeUserStateRepository userState = FakeUserStateRepository()
+      ..personalizeFeed = false;
+    await pumpReader(tester, story(), userState: userState, pushFromHome: true);
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(ArticlePage)),
+    );
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(container.read(personalizationProfileProvider).events, isEmpty);
   });
 
   testWidgets('a licensed full story has no preview hand-off', (

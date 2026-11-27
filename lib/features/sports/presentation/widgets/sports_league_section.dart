@@ -9,7 +9,9 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/widgets/article_tile.dart';
 import '../../../../core/widgets/publisher_mark.dart';
 import '../../../../core/widgets/skeleton.dart';
+import '../../../../core/widgets/overflow_menu_button.dart';
 import '../../../../core/widgets/sl_network_image.dart';
+import '../../../feed/presentation/widgets/article_actions.dart';
 import 'league_look.dart';
 import 'score_card.dart';
 
@@ -179,7 +181,8 @@ class SportsLeagueSection extends ConsumerWidget {
                   showThumbnail: true,
                   onTap: () => onArticleTap(article),
                   onLike: () {},
-                  onMore: (_) {},
+                  onMore: (ArticleAction action) =>
+                      handleArticleAction(context, ref, article, action),
                 ),
               ),
             Align(
