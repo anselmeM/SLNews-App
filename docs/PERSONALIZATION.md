@@ -88,6 +88,10 @@ should be revisited with aggregate usage data before Phase 3 experiments.
 
 ## Phase 3 — experimentation and scale
 
+Phase 3A is tracked in [EXPERIMENTS.md](EXPERIMENTS.md): anonymous sticky
+assignment, local aggregate metric/guardrail shapes, the privacy boundary and
+the gates before any upload or server-side ranking are enabled.
+
 Only after enough monthly active readers and interaction data:
 
 - privacy-safe, aggregated ranking experiments
