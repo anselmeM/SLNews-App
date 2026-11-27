@@ -8,6 +8,7 @@ import 'package:slnews_mobile/core/domain/auth/account_scope.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/publisher.dart';
 import 'package:slnews_mobile/core/domain/models/personalization_profile.dart';
+import 'package:slnews_mobile/core/domain/personalization_tuning.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
 import 'package:slnews_mobile/core/providers/auth_providers.dart';
 import 'package:slnews_mobile/core/providers/personalization_profile.dart';
@@ -95,7 +96,7 @@ void main() {
       container
           .read(personalizationProfileProvider)
           .topicAffinity()['politics'],
-      4,
+      PersonalizationTuning.saveWeight,
     );
 
     controller.recordLike(story);
@@ -103,7 +104,7 @@ void main() {
       container
           .read(personalizationProfileProvider)
           .topicAffinity()['politics'],
-      7,
+      PersonalizationTuning.saveWeight + PersonalizationTuning.likeWeight,
       reason: 'recordLike must add its own signal',
     );
     controller.recordDismiss(story);
@@ -113,7 +114,10 @@ void main() {
     );
     expect(profile.dismissedArticleIds(), contains('story-1'));
     expect(profile.progress, isEmpty);
-    expect(profile.topicAffinity()['politics'], lessThan(4));
+    expect(
+      profile.topicAffinity()['politics'],
+      lessThan(PersonalizationTuning.saveWeight),
+    );
   });
 
   test('clear reports failure when local storage is unavailable', () async {

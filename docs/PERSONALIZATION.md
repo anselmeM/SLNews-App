@@ -65,6 +65,27 @@ reads/saves continue to matter.
 Known Phase 2 limit: it remains a transparent weighted model, not a learned
 ranking model. Phase 3 defines experimentation and privacy-safe scaling.
 
+## Tuning (Phase 2 follow-up)
+
+All ranking weights live in `lib/core/domain/personalization_tuning.dart` so
+they can be adjusted without touching the algorithm:
+
+- **Reads:** skip when dwell is under 6 s and progress under 12%; deep read when
+  dwell is at least 15 s and progress at least 60%.
+- **Weights:** save 5, like 4, deep read 3, normal read 1, skip -2.5, explicit
+  dismissal -6, open 0.2. Deliberate saves/likes and completed reads therefore
+  outweigh a casual open.
+- **Follows:** topic +24, publisher +20, tag/city/team +8 capped at +16.
+- **Affinity:** normalised to a 12-point ceiling; read stories that are not
+  saved/liked carry a 12-point penalty.
+- **Diversity:** at most 2 stories per publisher and 3 per category inside a
+  12-story window.
+- **Exploration:** one reserved slot per six ranked stories, swapped within the
+  same audience bucket so Sierra Leone-first ordering is preserved.
+
+These are conservative defaults rather than claims of an optimised model; they
+should be revisited with aggregate usage data before Phase 3 experiments.
+
 ## Phase 3 — experimentation and scale
 
 Only after enough monthly active readers and interaction data:

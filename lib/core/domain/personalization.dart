@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'feed_mix.dart';
+import 'personalization_tuning.dart';
 import 'models/article.dart';
 
 /// Local, privacy-preserving signals used to rank For You.
@@ -111,13 +112,21 @@ ReaderSignals buildReaderSignals({
   for (final Article article in unique.values) {
     double weight = 0;
     if (readIds.contains(article.id)) weight += 1;
-    if (savedIds.contains(article.id)) weight += 3;
-    if (likedIds.contains(article.id)) weight += 2;
+    if (savedIds.contains(article.id)) {
+      weight += PersonalizationTuning.saveWeight;
+    }
+    if (likedIds.contains(article.id)) {
+      weight += PersonalizationTuning.likeWeight;
+    }
     if (weight <= 0) continue;
     add(topics, article.categoryId, weight);
     add(publishers, article.publisher.id, weight);
     for (final String tag in article.tags.take(3)) {
-      add(topics, tag.toLowerCase(), weight * 0.5);
+      add(
+        topics,
+        tag.toLowerCase(),
+        weight * PersonalizationTuning.tagAffinityFactor,
+      );
     }
   }
 
@@ -137,9 +146,11 @@ ReaderSignals buildReaderSignals({
 /// follows with lightweight local behaviour, then applies diversity caps. Pure
 /// functions keep the rules testable and the result stable across rebuilds.
 abstract final class PersonalizationEngine {
-  static const int maxPerPublisherInWindow = 2;
-  static const int maxPerCategoryInWindow = 3;
-  static const int diversityWindow = 12;
+  static const int maxPerPublisherInWindow =
+      PersonalizationTuning.maxPerPublisherInWindow;
+  static const int maxPerCategoryInWindow =
+      PersonalizationTuning.maxPerCategoryInWindow;
+  static const int diversityWindow = PersonalizationTuning.diversityWindow;
   static const int followedRailLimit = 5;
 
   /// Higher is more relevant. The score is intentionally bounded and made of
@@ -157,17 +168,25 @@ abstract final class PersonalizationEngine {
       article.publisher.id,
     );
     final int direct =
-        (signals.savedIds.contains(article.id) ? 10 : 0) +
-        (signals.likedIds.contains(article.id) ? 8 : 0);
+        (signals.savedIds.contains(article.id)
+            ? PersonalizationTuning.savedStoryBoost
+            : 0) +
+        (signals.likedIds.contains(article.id)
+            ? PersonalizationTuning.likedStoryBoost
+            : 0);
     final int readPenalty =
         signals.readIds.contains(article.id) &&
             !signals.savedIds.contains(article.id) &&
             !signals.likedIds.contains(article.id)
-        ? -12
+        ? PersonalizationTuning.alreadyReadPenalty
         : 0;
     final int freshness = _freshnessScore(article, now ?? DateTime.now());
-    final int breaking = article.isBreaking ? 14 : 0;
-    final int local = FeedMix.isSierraLeone(article) ? 6 : 0;
+    final int breaking = article.isBreaking
+        ? PersonalizationTuning.breakingBoost
+        : 0;
+    final int local = FeedMix.isSierraLeone(article)
+        ? PersonalizationTuning.localBoost
+        : 0;
     final int exploration = includeExploration
         ? _explorationScore(article, now ?? DateTime.now())
         : 0;
@@ -299,8 +318,10 @@ abstract final class PersonalizationEngine {
   /// Reserves a small number of in-bucket positions for a less-personalized
   /// story. The reserved story is swapped within the same [FeedAudience] bucket
   /// so exploration never moves international news ahead of Sierra Leone news.
-  static const int explorationInterval = 6;
-  static const int explorationReserve = 2;
+  static const int explorationInterval =
+      PersonalizationTuning.explorationInterval;
+  static const int explorationReserve =
+      PersonalizationTuning.explorationReserve;
 
   static List<Article> reserveExploration(
     Iterable<Article> ranked,
@@ -356,9 +377,11 @@ abstract final class PersonalizationEngine {
   static int _followScore(Article article, Set<String> followedIds) {
     if (followedIds.isEmpty) return 0;
     int score = 0;
-    if (followedIds.contains('topic:${article.categoryId}')) score += 24;
+    if (followedIds.contains('topic:${article.categoryId}')) {
+      score += PersonalizationTuning.followTopicScore;
+    }
     if (followedIds.contains('publisher:${article.publisher.id}')) {
-      score += 24;
+      score += PersonalizationTuning.followPublisherScore;
     }
     int tagMatches = 0;
     for (final String tag in article.tags) {
@@ -366,16 +389,19 @@ abstract final class PersonalizationEngine {
       if (followedIds.contains(lower) &&
           (lower.startsWith('team:') || lower.startsWith('league:'))) {
         // Sports feeds emit these tags from their structured metadata.
-        score += 24;
+        score += PersonalizationTuning.followTopicScore;
         continue;
       }
       if (followedIds.contains(lower) ||
           followedIds.contains('topic:$lower') ||
           followedIds.contains('city:$lower')) {
-        tagMatches += 8;
+        tagMatches += PersonalizationTuning.followTagScore;
       }
     }
-    return score + (tagMatches > 16 ? 16 : tagMatches);
+    return score +
+        (tagMatches > PersonalizationTuning.followTagCap
+            ? PersonalizationTuning.followTagCap
+            : tagMatches);
   }
 
   /// Best category/tag affinity for a candidate. Tags are how non-category
@@ -398,15 +424,15 @@ abstract final class PersonalizationEngine {
     }
     if (peak <= 0) return 0;
     final double value = affinity[key] ?? 0;
-    return ((value / peak) * 12).round();
+    return ((value / peak) * PersonalizationTuning.affinityCeiling).round();
   }
 
   static int _freshnessScore(Article article, DateTime now) {
     final int hours = now.difference(article.publishedAt).inHours;
-    if (hours <= 6) return 18;
-    if (hours <= 24) return 13;
-    if (hours <= 72) return 7;
-    if (hours <= 168) return 2;
+    if (hours <= 6) return PersonalizationTuning.freshSixHours;
+    if (hours <= 24) return PersonalizationTuning.freshDay;
+    if (hours <= 72) return PersonalizationTuning.freshThreeDays;
+    if (hours <= 168) return PersonalizationTuning.freshWeek;
     return 0;
   }
 
@@ -418,6 +444,6 @@ abstract final class PersonalizationEngine {
     for (final int unit in article.id.codeUnits) {
       hash = (hash * 31 + unit) & 0x7fffffff;
     }
-    return hash % 4;
+    return hash % (PersonalizationTuning.explorationMaxBonus + 1);
   }
 }

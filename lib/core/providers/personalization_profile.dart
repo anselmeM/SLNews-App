@@ -7,6 +7,7 @@ import '../data/local/preferences_store.dart';
 import '../domain/auth/account_scope.dart';
 import '../domain/models/article.dart';
 import '../domain/models/personalization_profile.dart';
+import '../domain/personalization_tuning.dart';
 import '../utils/app_log.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
@@ -89,7 +90,7 @@ class PersonalizationProfileController
         publisherId: article.publisher.id,
         kind: EngagementKind.open,
         at: DateTime.now(),
-        weight: 0.25,
+        weight: PersonalizationTuning.openWeight,
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
@@ -110,16 +111,14 @@ class PersonalizationProfileController
     final PersonalizationProfile base = sameAccount ? state : _read(owner);
     final DateTime now = DateTime.now();
     final double boundedProgress = progress.clamp(0.0, 1.0).toDouble();
-    final bool shortAndShallow = dwell.inSeconds < 8 && boundedProgress < 0.15;
-    final bool deepRead = dwell.inSeconds >= 20 && boundedProgress >= 0.5;
-    final EngagementKind kind = shortAndShallow
+    final ReadEngagement engagement = PersonalizationTuning.classifyRead(
+      dwell: dwell,
+      progress: boundedProgress,
+    );
+    final EngagementKind kind = engagement == ReadEngagement.skip
         ? EngagementKind.skip
         : EngagementKind.read;
-    final double weight = shortAndShallow
-        ? -2
-        : deepRead
-        ? 2.5
-        : 1;
+    final double weight = PersonalizationTuning.readWeightFor(engagement);
 
     final Map<String, ReadingProgressEntry> nextProgress =
         <String, ReadingProgressEntry>{...base.progress};
@@ -164,7 +163,7 @@ class PersonalizationProfileController
         publisherId: article.publisher.id,
         kind: EngagementKind.save,
         at: DateTime.now(),
-        weight: 4,
+        weight: PersonalizationTuning.saveWeight,
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
@@ -180,7 +179,7 @@ class PersonalizationProfileController
         publisherId: article.publisher.id,
         kind: EngagementKind.like,
         at: DateTime.now(),
-        weight: 3,
+        weight: PersonalizationTuning.likeWeight,
         tags: _normalizedTags(article),
       ),
       accountKey: accountKey,
@@ -204,7 +203,7 @@ class PersonalizationProfileController
         publisherId: article.publisher.id,
         kind: EngagementKind.dismiss,
         at: DateTime.now(),
-        weight: -5,
+        weight: PersonalizationTuning.dismissWeight,
         tags: _normalizedTags(article),
       ),
       progress: nextProgress,
