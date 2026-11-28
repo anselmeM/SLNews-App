@@ -50,6 +50,17 @@ void main() {
     expect(restored.duration, const Duration(seconds: 65));
   });
 
+  test('accepts the scraper numeric id by falling back to video_id', () {
+    final VideoMoment moment = VideoMoment.fromJson(<String, dynamic>{
+      'id': 617,
+      'video_id': 'Igado43VyiE',
+      'title': 'Live clip',
+    });
+
+    expect(moment.id, 'Igado43VyiE');
+    expect(moment.youtubeId, 'Igado43VyiE');
+  });
+
   test('other fields still degrade as before', () {
     final VideoMoment moment = parse(<String, dynamic>{'source': ''});
     expect(moment.source, 'SLNews');

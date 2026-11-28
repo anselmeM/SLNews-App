@@ -39,6 +39,26 @@ void main() {
       expect(video.publishedAt, DateTime.utc(2026, 10, 15, 7, 30));
     });
 
+    test('keeps live rows whose database id is numeric', () {
+      final List<VideoMoment> videos = SlNewsVideoSource.parse(
+        <String, Object?>{
+          'data': <Object?>[
+            <String, Object?>{
+              'id': 617,
+              'video_id': 'Igado43VyiE',
+              'title': 'A live clip',
+              'published_at': '2026-11-27T23:59:01.000Z',
+            },
+          ],
+        },
+      );
+
+      expect(videos, hasLength(1));
+      expect(videos.single.id, 'Igado43VyiE');
+      expect(videos.single.youtubeId, 'Igado43VyiE');
+      expect(videos.single.publishedAt, DateTime.utc(2026, 11, 27, 23, 59, 1));
+    });
+
     test('skips rows without an identity or a title', () {
       final List<VideoMoment> videos = SlNewsVideoSource.parse(
         <String, Object?>{

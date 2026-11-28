@@ -53,7 +53,15 @@ class VideoMoment {
   /// Unknown or missing fields degrade instead of throwing: one malformed row
   /// must not take down the rail.
   factory VideoMoment.fromJson(Map<String, dynamic> json) {
-    final String id = _string(json['id'] ?? json['video_id']) ?? '';
+    // The scraper sends a numeric database `id` plus a string YouTube
+    // `video_id`. Prefer a string id when present, then fall back to video_id;
+    // converting the numeric id directly used to produce an empty identity and
+    // silently skip every live row.
+    final String id =
+        _string(json['id']) ??
+        _string(json['video_id']) ??
+        _string(json['youtube_id']) ??
+        '';
     return VideoMoment(
       id: id,
       title: _string(json['title']) ?? '',
