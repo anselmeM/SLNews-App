@@ -97,86 +97,111 @@ class SportsPage extends ConsumerWidget {
 
     final Future<void> Function() onRefresh = ref.watch(refreshFeedsProvider);
 
-    final Widget content = (!hasContent && scoreboard.hasError)
-        ? SlPageScaffold(
-            title: 'Sports',
-            actions: const <Widget>[HeaderActions()],
-            onRefresh: onRefresh,
-            slivers: <Widget>[
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: ErrorStateView(
-                  message: 'We could not load the sports feed right now.',
-                  onRetry: () {
-                    ref.invalidate(scoreboardProvider);
-                    ref.invalidate(categoryFeedProvider);
-                  },
-                ),
-              ),
-            ],
-          )
-        : SlPageScaffold(
-            title: 'Sports',
-            actions: const <Widget>[HeaderActions()],
-            onRefresh: onRefresh,
-            slivers: <Widget>[
-              const SliverToBoxAdapter(child: ScoreboardStrip()),
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Following',
-                  onTap: () => context.go(AppRoutes.following),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: FollowedTeamsRow(
-                  targets: viewModel.followedSports,
-                  onTap: (FollowTarget target) {
-                    switch (target.kind) {
-                      case FollowKind.team:
-                        context.push(
-                          AppRoutes.teamFor(target.id),
-                          extra: target.label,
-                        );
-                      case FollowKind.league:
-                        context.push(
-                          AppRoutes.leagueFor(target.id),
-                          extra: target.label,
-                        );
-                      default:
-                        context.go(AppRoutes.following);
-                    }
-                  },
-                  onEmptyTap: () => context.go(AppRoutes.following),
-                ),
-              ),
-              if (ad != null) _adSliver(context, ref, ad),
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Top stories',
-                  onTap: () => context.go(AppRoutes.news),
-                ),
-              ),
-              ..._topStoriesSlivers(context, ref, allSports, liked),
-              ..._leagueSections(context, ref, viewModel, teamNews, following),
-              SliverToBoxAdapter(
-                child: SectionHeader(title: viewModel.newsSectionTitle),
-              ),
-              ..._newsSlivers(context, ref, allSports, liked),
-              SliverToBoxAdapter(
-                child: SectionHeader(title: viewModel.fixturesSectionTitle),
-              ),
-              ..._fixtureSlivers(
-                context,
-                ref,
-                fixtures,
-                fixtureTeamId,
-                viewModel.heroTeam?.label,
-              ),
-            ],
-          );
+    if (!hasContent && scoreboard.hasError) {
+      return _errorScaffold(ref, onRefresh);
+    }
+    return SlPageScaffold(
+      title: 'Sports',
+      actions: const <Widget>[HeaderActions()],
+      onRefresh: onRefresh,
+      slivers: _sportsSlivers(
+        context,
+        ref,
+        viewModel: viewModel,
+        allSports: allSports,
+        teamNews: teamNews,
+        following: following,
+        liked: liked,
+        ad: ad,
+        fixtures: fixtures,
+        fixtureTeamId: fixtureTeamId,
+      ),
+    );
+  }
 
-    // Follow the reader's theme; the league blocks keep their own dark artwork.
-    return content;
+  Widget _errorScaffold(WidgetRef ref, Future<void> Function() onRefresh) {
+    return SlPageScaffold(
+      title: 'Sports',
+      actions: const <Widget>[HeaderActions()],
+      onRefresh: onRefresh,
+      slivers: <Widget>[
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: ErrorStateView(
+            message: 'We could not load the sports feed right now.',
+            onRetry: () {
+              ref.invalidate(scoreboardProvider);
+              ref.invalidate(categoryFeedProvider);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _sportsSlivers(
+    BuildContext context,
+    WidgetRef ref, {
+    required SportsViewModel viewModel,
+    required AsyncValue<List<Article>> allSports,
+    required AsyncValue<List<Article>> teamNews,
+    required FollowingSnapshot following,
+    required Set<String> liked,
+    required AdUnit? ad,
+    required AsyncValue<List<GameScore>>? fixtures,
+    required String? fixtureTeamId,
+  }) {
+    return <Widget>[
+      const SliverToBoxAdapter(child: ScoreboardStrip()),
+      SliverToBoxAdapter(
+        child: SectionHeader(
+          title: 'Following',
+          onTap: () => context.go(AppRoutes.following),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: FollowedTeamsRow(
+          targets: viewModel.followedSports,
+          onTap: (FollowTarget target) {
+            switch (target.kind) {
+              case FollowKind.team:
+                context.push(AppRoutes.teamFor(target.id), extra: target.label);
+              case FollowKind.league:
+                context.push(
+                  AppRoutes.leagueFor(target.id),
+                  extra: target.label,
+                );
+              default:
+                context.go(AppRoutes.following);
+            }
+          },
+          onEmptyTap: () => context.go(AppRoutes.following),
+        ),
+      ),
+      if (ad != null) _adSliver(context, ref, ad),
+      SliverToBoxAdapter(
+        child: SectionHeader(
+          title: 'Top stories',
+          onTap: () => context.go(AppRoutes.news),
+        ),
+      ),
+      ..._topStoriesSlivers(context, ref, allSports, liked),
+      ..._leagueSections(context, ref, viewModel, teamNews, following),
+      SliverToBoxAdapter(
+        child: SectionHeader(title: viewModel.newsSectionTitle),
+      ),
+      ..._newsSlivers(context, ref, allSports, liked),
+      SliverToBoxAdapter(
+        child: SectionHeader(title: viewModel.fixturesSectionTitle),
+      ),
+      ..._fixtureSlivers(
+        context,
+        ref,
+        fixtures,
+        fixtureTeamId,
+        viewModel.heroTeam?.label,
+      ),
+    ];
   }
 
   /// Top stories: one full-bleed hero followed by compact story cards.

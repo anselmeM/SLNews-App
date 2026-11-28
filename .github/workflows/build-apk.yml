@@ -123,6 +123,10 @@ jobs:
 
       # test/golden is excluded on purpose: its pixels depend on the host
       # renderer, so it is a local visual-review harness rather than a gate.
+      - name: Enforce function structure
+        if: steps.changes.outputs.docs_only != 'true'
+        run: python3 scripts/check_function_structure.py
+
       - name: Test with coverage (4 workers, 5.8 min vs 11 serial)
         if: steps.changes.outputs.docs_only != 'true'
         run: flutter test test/core test/contracts test/data test/features test/sync test/push test/security --coverage --concurrency=4

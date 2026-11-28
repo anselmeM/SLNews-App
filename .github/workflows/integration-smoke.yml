@@ -1,0 +1,68 @@
+name: Integration smoke
+
+# The app-smoke integration test needs a real Android device to execute. CI
+# cannot provide one on every pull request, but it can ensure the harness and
+# app entry point still compile after routing/provider changes. Device execution
+# remains the documented release smoke step:
+#
+#   flutter test integration_test -d <android-device-id>
+on:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'integration_test/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/integration-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile-smoke-harness:
+    name: Compile device smoke harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Restore Firebase client config
+        run: cp android/app/google-services.json.example android/app/google-services.json
+
+      - name: Compile integration harness
+        run: flutter build apk --debug --target integration_test/app_smoke_test.dart
+
+      - name: Upload smoke harness APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: slnews-integration-smoke-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

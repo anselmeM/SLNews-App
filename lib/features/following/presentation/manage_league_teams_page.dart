@@ -11,6 +11,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../sports/domain/sports_league_catalog.dart';
 import '../../sports/domain/sports_links.dart';
 import 'widgets/catalogue_list.dart';
+import 'widgets/catalogue_page_scaffold.dart';
 
 /// One competition's teams, reached from the "Manage leagues and teams" list.
 ///
@@ -36,56 +37,27 @@ class ManageLeagueTeamsPage extends ConsumerWidget {
     final List<SportsLeague> members = mergedLeagueMembers(leagueId);
     final List<FollowTarget> teams = _teamsFor(snapshot);
 
-    return Scaffold(
-      backgroundColor: context.colors.canvas,
-      appBar: AppBar(
-        backgroundColor: context.colors.canvas,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back',
-          onPressed: () => context.pop(),
-        ),
-        title: Text(title, style: context.typography.groupTitle),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.xs,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Text(
-              members.isEmpty
-                  ? 'Select the teams you want to follow.'
-                  : 'Pick a league to choose its teams.',
-              style: context.typography.caption,
-            ),
-          ),
-          Expanded(
-            child: members.isNotEmpty
-                ? _memberList(context, members)
-                : (teams.isEmpty
-                      ? EmptyStateView(
-                          title: 'No teams listed yet',
-                          message:
-                              'This competition has no seeded teams. Open the '
-                              'league page to follow its scores instead.',
-                          actionLabel: 'Open league page',
-                          onAction: () => context.push(
-                            AppRoutes.leagueFor(leagueId),
-                            extra: title,
-                          ),
-                          icon: Icons.groups_outlined,
-                        )
-                      : _teamList(ref, snapshot, teams)),
-          ),
-        ],
-      ),
+    return CataloguePageScaffold(
+      title: title,
+      subtitle: members.isEmpty
+          ? 'Select the teams you want to follow.'
+          : 'Pick a league to choose its teams.',
+      child: members.isNotEmpty
+          ? _memberList(context, members)
+          : (teams.isEmpty
+                ? EmptyStateView(
+                    title: 'No teams listed yet',
+                    message:
+                        'This competition has no seeded teams. Open the '
+                        'league page to follow its scores instead.',
+                    actionLabel: 'Open league page',
+                    onAction: () => context.push(
+                      AppRoutes.leagueFor(leagueId),
+                      extra: title,
+                    ),
+                    icon: Icons.groups_outlined,
+                  )
+                : _teamList(ref, snapshot, teams)),
     );
   }
 

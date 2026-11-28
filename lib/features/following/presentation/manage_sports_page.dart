@@ -11,6 +11,7 @@ import '../../../core/widgets/app_glyphs.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../sports/domain/sports_league_catalog.dart';
 import 'widgets/catalogue_list.dart';
+import 'widgets/catalogue_page_scaffold.dart';
 import 'widgets/follow_section.dart';
 
 /// "Manage leagues and teams": the sports following surface.
@@ -59,85 +60,40 @@ class _ManageSportsPageState extends ConsumerState<ManageSportsPage> {
     final List<FollowTarget> visibleLeagues = leagues.where(matches).toList();
     final List<FollowTarget> visibleTeams = teams.where(matches).toList();
 
-    return Scaffold(
-      backgroundColor: context.colors.canvas,
-      appBar: AppBar(
-        backgroundColor: context.colors.canvas,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back',
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Manage leagues and teams',
-          style: context.typography.groupTitle,
-        ),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.xs,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Text(
-              'Select the leagues and teams you want to follow.',
-              style: context.typography.caption,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: TextField(
-              onChanged: (String value) => setState(() => _query = value),
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Search leagues and teams',
-              ),
-            ),
-          ),
-          Expanded(
-            child: visibleLeagues.isEmpty && visibleTeams.isEmpty
-                ? const EmptyStateView(
-                    title: 'No leagues or teams found',
-                    message: 'Try another name.',
-                    icon: Icons.search_off,
-                  )
-                : ListView(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+    return CataloguePageScaffold(
+      title: 'Manage leagues and teams',
+      subtitle: 'Select the leagues and teams you want to follow.',
+      searchHint: 'Search leagues and teams',
+      onQueryChanged: (String value) => setState(() => _query = value),
+      child: visibleLeagues.isEmpty && visibleTeams.isEmpty
+          ? const EmptyStateView(
+              title: 'No leagues or teams found',
+              message: 'Try another name.',
+              icon: Icons.search_off,
+            )
+          : ListView(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+              children: <Widget>[
+                if (visibleLeagues.isNotEmpty) ...<Widget>[
+                  const FollowGroupLabel(label: 'Leagues'),
+                  CatalogueCard(
                     children: <Widget>[
-                      if (visibleLeagues.isNotEmpty) ...<Widget>[
-                        const FollowGroupLabel(label: 'Leagues'),
-                        CatalogueCard(
-                          children: <Widget>[
-                            for (final FollowTarget target in visibleLeagues)
-                              _row(snapshot, target),
-                          ],
-                        ),
-                      ],
-                      if (visibleTeams.isNotEmpty) ...<Widget>[
-                        const FollowGroupLabel(label: 'Teams'),
-                        CatalogueCard(
-                          children: <Widget>[
-                            for (final FollowTarget target in visibleTeams)
-                              _row(snapshot, target),
-                          ],
-                        ),
-                      ],
+                      for (final FollowTarget target in visibleLeagues)
+                        _row(snapshot, target),
                     ],
                   ),
-          ),
-        ],
-      ),
+                ],
+                if (visibleTeams.isNotEmpty) ...<Widget>[
+                  const FollowGroupLabel(label: 'Teams'),
+                  CatalogueCard(
+                    children: <Widget>[
+                      for (final FollowTarget target in visibleTeams)
+                        _row(snapshot, target),
+                    ],
+                  ),
+                ],
+              ],
+            ),
     );
   }
 

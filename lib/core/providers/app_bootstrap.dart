@@ -102,111 +102,168 @@ class AppBootstrap {
     SeedLoader? seedLoaderOverride,
   }) async {
     final Stopwatch clock = Stopwatch()..start();
-    PreferencesStore preferences;
-    ArticleCache cache;
-    bool persistent = false;
-
-    if (allowPersistence) {
-      try {
-        // Hive needs a writable app directory before either box can open, but
-        // the two boxes are independent: open them together.
-        await Hive.initFlutter();
-        final List<Object> boxes = await Future.wait(<Future<Object>>[
-          HivePreferencesStore.open(),
-          HiveArticleCache.open(),
-        ]);
-        preferences = boxes[0] as PreferencesStore;
-        cache = boxes[1] as ArticleCache;
-        persistent = true;
-      } catch (error, stackTrace) {
-        AppLog.debug(
-          'SLNews: local storage unavailable, falling back to memory ($error)',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-        preferences = InMemoryPreferencesStore();
-        cache = InMemoryArticleCache();
-      }
-    } else {
-      preferences = InMemoryPreferencesStore();
-      cache = InMemoryArticleCache();
-    }
-
+    final _Storage storage = await _openStorage(allowPersistence);
     final int storageMs = clock.elapsedMilliseconds;
-
-    // Identity is optional too; a rejected key or an unreachable Frontend API
-    // must never stop the reader from opening the app. It is created before the
-    // scraper configuration because a build that ships no static key relies on
-    // the session token this provides.
-    // Identity must never hold the first frame hostage: a cold Frontend API can
-    // take seconds. Four seconds is generous for a local session restore; after
-    // that the app opens anonymously for this launch.
-    final ClerkAuthRepository? auth = await _createAuth().timeout(
-      const Duration(seconds: 4),
-      onTimeout: () {
-        AppLog.debug('SLNews: Clerk init timed out; continuing anonymously');
-        return null;
-      },
-    );
-
-    // The aggregated Sierra Leone feed from the SLNews scraper API is an optional
-    // extra source. It is enabled by a static key embedded at build time, or - in
-    // a build that ships no secret - by the Clerk session token a signed-in
-    // reader can mint. With neither, it stays absent and such a build behaves
-    // exactly like the RSS + seed app.
+    final ClerkAuthRepository? auth = await _createAuthWithTimeout();
     final SlNewsApiConfig apiConfig = SlNewsApiConfig.fromEnvironment(
       sessionTokenAvailable: auth != null,
     );
-
     AppLog.debug(
       'SLNews bootstrap: storage=${storageMs}ms '
       'auth=${clock.elapsedMilliseconds - storageMs}ms '
       'total=${clock.elapsedMilliseconds}ms',
     );
 
-    // Reader-state sync (bookmarks, likes, follows) lives on the PWA origin, so
-    // its host must be allow-listed for the session token too â€” otherwise every
-    // sync call would be anonymous and answer 401.
     final SyncApiConfig syncConfig = SyncApiConfig.fromEnvironment();
+    final ApiClient client = _createClient(
+      auth: auth,
+      apiConfig: apiConfig,
+      syncConfig: syncConfig,
+    );
+    final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();
+    final _Sources sources = _createSources(client, apiConfig);
+    AppLog.debug(_sourceLog(apiConfig, sources, auth));
 
-    final ApiClient client = ApiClient(
+    final _RepositoryGraph repositories = await _buildRepositories(
+      storage: storage,
+      auth: auth,
+      client: client,
+      seedLoader: seedLoader,
+      sources: sources.sources,
+      apiSource: sources.apiSource,
+    );
+    return AppBootstrap._(
+      container: _createContainer(
+        auth: auth,
+        apiConfig: apiConfig,
+        syncConfig: syncConfig,
+        seedLoader: seedLoader,
+        storage: storage,
+        client: client,
+        sources: sources.sources,
+        repositories: repositories,
+      ),
+      articleRepository: repositories.articleRepository,
+      isPersistent: storage.persistent,
+      preferences: storage.preferences,
+      cache: storage.cache,
+      seedLoader: seedLoader,
+      apiClient: client,
+      feedSources: sources.sources,
+      sportsRepository: repositories.sportsRepository,
+      followingRepository: repositories.followingRepository,
+      notificationRepository: repositories.notificationRepository,
+      weatherRepository: repositories.weatherRepository,
+      userStateRepository: repositories.userStateRepository,
+      adRepository: repositories.adRepository,
+    );
+  }
+
+  static Future<_Storage> _openStorage(bool allowPersistence) async {
+    if (!allowPersistence) {
+      return _Storage(
+        preferences: InMemoryPreferencesStore(),
+        cache: InMemoryArticleCache(),
+        persistent: false,
+      );
+    }
+    try {
+      // Hive needs a writable app directory before either box can open, but
+      // the two boxes are independent: open them together.
+      await Hive.initFlutter();
+      final List<Object> boxes = await Future.wait(<Future<Object>>[
+        HivePreferencesStore.open(),
+        HiveArticleCache.open(),
+      ]);
+      return _Storage(
+        preferences: boxes[0] as PreferencesStore,
+        cache: boxes[1] as ArticleCache,
+        persistent: true,
+      );
+    } catch (error, stackTrace) {
+      AppLog.debug(
+        'SLNews: local storage unavailable, falling back to memory ($error)',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return _Storage(
+        preferences: InMemoryPreferencesStore(),
+        cache: InMemoryArticleCache(),
+        persistent: false,
+      );
+    }
+  }
+
+  static Future<ClerkAuthRepository?> _createAuthWithTimeout() =>
+      _createAuth().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {
+          AppLog.debug('SLNews: Clerk init timed out; continuing anonymously');
+          return null;
+        },
+      );
+
+  static ApiClient _createClient({
+    required ClerkAuthRepository? auth,
+    required SlNewsApiConfig apiConfig,
+    required SyncApiConfig syncConfig,
+  }) {
+    // Session tokens are only attached to SLNews-owned hosts: the same client
+    // also fetches third-party publisher feeds, which must never see them.
+    return ApiClient(
       authTokenProvider: auth?.sessionToken,
-      // Session tokens are only attached to SLNews-owned hosts: the same client
-      // also fetches third-party publisher feeds, which must never see them.
       authTokenHosts: <String>{
         if (apiConfig.host.isNotEmpty) apiConfig.host,
         if (syncConfig.isConfigured) syncConfig.host,
         // The live site origin, plus the custom domain it is expected to move to.
-        // Session tokens are never attached to `slnews.app`: that domain is not ours
-        // and is not part of the deep-link plan.
         'sl-news.vercel.app',
         'slnews.sl',
         'www.slnews.sl',
       },
     );
-    final SeedLoader seedLoader = seedLoaderOverride ?? const AssetSeedLoader();
+  }
+
+  static _Sources _createSources(ApiClient client, SlNewsApiConfig apiConfig) {
     final SlNewsApiSource? apiSource = apiConfig.isConfigured
         ? SlNewsApiSource(config: apiConfig, client: client)
         : null;
-    final List<FeedSource> sources = <FeedSource>[
-      ...OutletRegistry.buildSources(client),
-      ?apiSource,
-    ];
-    AppLog.debug(
-      'SLNews: ingest sources=${sources.length} '
-      '(scraper API ${apiConfig.isConfigured ? 'enabled on ${apiConfig.host} via '
-                '${apiConfig.apiKey.trim().isEmpty ? 'Clerk session' : 'embedded key'}' : 'disabled - no key and no identity'}), '
-      'identity ${auth == null ? 'disabled' : 'Clerk'}',
+    return _Sources(
+      sources: <FeedSource>[...OutletRegistry.buildSources(client), ?apiSource],
+      apiSource: apiSource,
     );
+  }
 
-    // Concrete types: the seed-backed implementations expose an extra `ready()`
-    // used below, which is not part of the repository contracts.
+  static String _sourceLog(
+    SlNewsApiConfig apiConfig,
+    _Sources sources,
+    ClerkAuthRepository? auth,
+  ) {
+    final String credential = apiConfig.apiKey.trim().isNotEmpty
+        ? 'embedded key'
+        : auth != null
+        ? 'Clerk session'
+        : 'anonymous public routes';
+    final String scraper = apiConfig.isConfigured
+        ? 'enabled on ${apiConfig.host} via $credential'
+        : 'disabled - no host';
+    return 'SLNews: ingest sources=${sources.sources.length} '
+        '(scraper API $scraper), '
+        'identity ${auth == null ? 'disabled' : 'Clerk'}';
+  }
+
+  static Future<_RepositoryGraph> _buildRepositories({
+    required _Storage storage,
+    required ClerkAuthRepository? auth,
+    required ApiClient client,
+    required SeedLoader seedLoader,
+    required List<FeedSource> sources,
+    required SlNewsApiSource? apiSource,
+  }) async {
     final OfflineFirstArticleRepository articleRepository =
         OfflineFirstArticleRepository(
           sources: sources,
-          cache: cache,
+          cache: storage.cache,
           seedLoader: seedLoader,
           client: client,
-          // Deep links outside the current feed resolve, then cache.
           fetchById: apiSource?.articleById,
         );
     final EspnSource espnSource = EspnSource(client: client);
@@ -215,13 +272,7 @@ class AppBootstrap {
       seedLoader: seedLoader,
       client: client,
       espn: espnSource,
-      // Optional backend sports proxy (`/api/mobile/v1/sports`). The app maps
-      // the same {games} shape it already consumed from the old scoreboard URL.
       scoreboardUrl: const String.fromEnvironment('SLNEWS_SCOREBOARD_URL'),
-      // Live scores are a production-build feature: tests and key-less builds
-      // stay fully offline and instant.
-      // Prefer the backend proxy when configured: it caches, hides the key and
-      // survives rate limits. Direct TheSportsDB stays for proxy-less builds.
       liveSource:
           const bool.fromEnvironment('THESPORTSDB_ENABLED') &&
               const String.fromEnvironment('SLNEWS_SCOREBOARD_URL').isEmpty
@@ -230,13 +281,13 @@ class AppBootstrap {
     );
     final DefaultFollowingRepository followingRepository =
         DefaultFollowingRepository(
-          preferences: preferences,
+          preferences: storage.preferences,
           seedLoader: seedLoader,
           accountId: () => localAccountIdFor(auth?.currentUser?.id),
         );
     final DefaultNotificationRepository notificationRepository =
         DefaultNotificationRepository(
-          preferences: preferences,
+          preferences: storage.preferences,
           seedLoader: seedLoader,
         );
     final DefaultWeatherRepository weatherRepository = DefaultWeatherRepository(
@@ -249,12 +300,9 @@ class AppBootstrap {
     );
     final DefaultUserStateRepository userStateRepository =
         DefaultUserStateRepository(
-          preferences: preferences,
+          preferences: storage.preferences,
           accountId: () => localAccountIdFor(auth?.currentUser?.id),
         );
-    // Sold sponsorships and their counters live on the marketing/API host, not
-    // the scraper host. Pointing them at SyncApiConfig sent these calls to
-    // Render, where the route does not exist, so every feed fell back to seed ads.
     const String webApiBase = String.fromEnvironment(
       'SLNEWS_WEB_URL',
       defaultValue: 'https://sl-news.vercel.app',
@@ -263,11 +311,6 @@ class AppBootstrap {
       seedLoader: seedLoader,
       sponsorships: SponsorshipSource(client: client, baseUrl: webApiBase),
     );
-
-    // The seed-backed repositories expose synchronous reads (required by the
-    // frozen interfaces) over an async seed load. Awaiting them here means the
-    // very first frame already has the followed-teams catalogue, alert history,
-    // ad rotation, scoreboard and weather instead of an empty flash.
     await Future.wait(<Future<void>>[
       sportsRepository.ready(),
       followingRepository.ready(),
@@ -275,79 +318,93 @@ class AppBootstrap {
       weatherRepository.ready(),
       adRepository.ready(),
     ]);
-
-    return AppBootstrap._(
-      container: ProviderContainer(
-        overrides: [
-          preferencesStoreProvider.overrideWithValue(preferences),
-          articleCacheProvider.overrideWithValue(cache),
-          seedLoaderProvider.overrideWithValue(seedLoader),
-          apiClientProvider.overrideWithValue(client),
-          feedSourcesProvider.overrideWithValue(sources),
-          articleRepositoryProvider.overrideWithValue(articleRepository),
-          sportsRepositoryProvider.overrideWithValue(sportsRepository),
-          espnSourceProvider.overrideWithValue(espnSource),
-          leagueNewsSourceProvider.overrideWithValue(leagueNewsSource),
-          followingRepositoryProvider.overrideWithValue(followingRepository),
-          notificationRepositoryProvider.overrideWithValue(
-            notificationRepository,
-          ),
-          weatherRepositoryProvider.overrideWithValue(weatherRepository),
-          userStateProvider.overrideWithValue(userStateRepository),
-          ttsServiceProvider.overrideWithValue(FlutterTtsService()),
-          adRepositoryProvider.overrideWithValue(adRepository),
-          sponsorshipTrackerProvider.overrideWithValue(
-            (() {
-              final tracker = SponsorshipTracker(
-                client: client,
-                baseUrl: webApiBase,
-                store: preferences,
-              );
-              unawaited(tracker.flush());
-              return tracker;
-            })(),
-          ),
-          pushServiceProvider.overrideWithValue(
-            PushService(
-              client: client,
-              baseUrl: webApiBase,
-              initialTopics: preferences.stringSet(PushService.topicsPrefKey),
-              persistTopics: (Set<String> topics) =>
-                  preferences.putStringSet(PushService.topicsPrefKey, topics),
-            ),
-          ),
-          // The video rail shares the scraper configuration; when the build has
-          // no key it stays null and the bundled rotation is used instead.
-          slNewsVideoSourceProvider.overrideWithValue(
-            apiConfig.isConfigured
-                ? SlNewsVideoSource(apiConfig, client)
-                : null,
-          ),
-          // Keep the provider and the composition root on the same configuration
-          // (and URL host allow-list), so a test or a staging build overrides one
-          // place and everything follows.
-          syncApiConfigProvider.overrideWithValue(syncConfig),
-          // Identity is only overridden when a provider is actually configured;
-          // otherwise the default (unconfigured, signed-out) stand-ins apply.
-          if (auth != null) authRepositoryProvider.overrideWithValue(auth),
-          if (auth != null) signInSurfaceProvider.overrideWithValue(auth),
-          if (auth != null)
-            authAppWrapperProvider.overrideWithValue(auth.wrapApp),
-        ],
-      ),
+    return _RepositoryGraph(
       articleRepository: articleRepository,
-      isPersistent: persistent,
-      preferences: preferences,
-      cache: cache,
-      seedLoader: seedLoader,
-      apiClient: client,
-      feedSources: sources,
+      espnSource: espnSource,
+      leagueNewsSource: leagueNewsSource,
       sportsRepository: sportsRepository,
       followingRepository: followingRepository,
       notificationRepository: notificationRepository,
       weatherRepository: weatherRepository,
       userStateRepository: userStateRepository,
       adRepository: adRepository,
+    );
+  }
+
+  static ProviderContainer _createContainer({
+    required ClerkAuthRepository? auth,
+    required SlNewsApiConfig apiConfig,
+    required SyncApiConfig syncConfig,
+    required SeedLoader seedLoader,
+    required _Storage storage,
+    required ApiClient client,
+    required List<FeedSource> sources,
+    required _RepositoryGraph repositories,
+  }) {
+    const String webApiBase = String.fromEnvironment(
+      'SLNEWS_WEB_URL',
+      defaultValue: 'https://sl-news.vercel.app',
+    );
+    return ProviderContainer(
+      overrides: [
+        preferencesStoreProvider.overrideWithValue(storage.preferences),
+        articleCacheProvider.overrideWithValue(storage.cache),
+        seedLoaderProvider.overrideWithValue(seedLoader),
+        apiClientProvider.overrideWithValue(client),
+        feedSourcesProvider.overrideWithValue(sources),
+        articleRepositoryProvider.overrideWithValue(
+          repositories.articleRepository,
+        ),
+        sportsRepositoryProvider.overrideWithValue(
+          repositories.sportsRepository,
+        ),
+        espnSourceProvider.overrideWithValue(repositories.espnSource),
+        leagueNewsSourceProvider.overrideWithValue(
+          repositories.leagueNewsSource,
+        ),
+        followingRepositoryProvider.overrideWithValue(
+          repositories.followingRepository,
+        ),
+        notificationRepositoryProvider.overrideWithValue(
+          repositories.notificationRepository,
+        ),
+        weatherRepositoryProvider.overrideWithValue(
+          repositories.weatherRepository,
+        ),
+        userStateProvider.overrideWithValue(repositories.userStateRepository),
+        ttsServiceProvider.overrideWithValue(FlutterTtsService()),
+        adRepositoryProvider.overrideWithValue(repositories.adRepository),
+        sponsorshipTrackerProvider.overrideWithValue(
+          (() {
+            final tracker = SponsorshipTracker(
+              client: client,
+              baseUrl: webApiBase,
+              store: storage.preferences,
+            );
+            unawaited(tracker.flush());
+            return tracker;
+          })(),
+        ),
+        pushServiceProvider.overrideWithValue(
+          PushService(
+            client: client,
+            baseUrl: webApiBase,
+            initialTopics: storage.preferences.stringSet(
+              PushService.topicsPrefKey,
+            ),
+            persistTopics: (Set<String> topics) => storage.preferences
+                .putStringSet(PushService.topicsPrefKey, topics),
+          ),
+        ),
+        slNewsVideoSourceProvider.overrideWithValue(
+          apiConfig.isConfigured ? SlNewsVideoSource(apiConfig, client) : null,
+        ),
+        syncApiConfigProvider.overrideWithValue(syncConfig),
+        if (auth != null) authRepositoryProvider.overrideWithValue(auth),
+        if (auth != null) signInSurfaceProvider.overrideWithValue(auth),
+        if (auth != null)
+          authAppWrapperProvider.overrideWithValue(auth.wrapApp),
+      ],
     );
   }
 
@@ -375,4 +432,47 @@ class AppBootstrap {
       return null;
     }
   }
+}
+
+class _Storage {
+  const _Storage({
+    required this.preferences,
+    required this.cache,
+    required this.persistent,
+  });
+
+  final PreferencesStore preferences;
+  final ArticleCache cache;
+  final bool persistent;
+}
+
+class _Sources {
+  const _Sources({required this.sources, required this.apiSource});
+
+  final List<FeedSource> sources;
+  final SlNewsApiSource? apiSource;
+}
+
+class _RepositoryGraph {
+  const _RepositoryGraph({
+    required this.articleRepository,
+    required this.espnSource,
+    required this.leagueNewsSource,
+    required this.sportsRepository,
+    required this.followingRepository,
+    required this.notificationRepository,
+    required this.weatherRepository,
+    required this.userStateRepository,
+    required this.adRepository,
+  });
+
+  final OfflineFirstArticleRepository articleRepository;
+  final EspnSource espnSource;
+  final LeagueNewsSource leagueNewsSource;
+  final DefaultSportsRepository sportsRepository;
+  final DefaultFollowingRepository followingRepository;
+  final DefaultNotificationRepository notificationRepository;
+  final DefaultWeatherRepository weatherRepository;
+  final DefaultUserStateRepository userStateRepository;
+  final DefaultAdRepository adRepository;
 }

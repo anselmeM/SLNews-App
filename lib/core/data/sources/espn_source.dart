@@ -120,10 +120,16 @@ class EspnSource {
   Future<List<Article>> teamNews(String teamId, {int limit = 8}) async {
     final EspnTeamRef? ref = _refFor(teamId);
     if (ref == null) return const <Article>[];
-    final Object? payload = await client.getJson(
-      '$_base/site/v2/sports/${ref.sport}/${ref.league}/news',
-      query: <String, dynamic>{'team': ref.teamId, 'limit': limit},
-    );
+    Object? payload;
+    try {
+      payload = await client.getJson(
+        '$_base/site/v2/sports/${ref.sport}/${ref.league}/news',
+        query: <String, dynamic>{'team': ref.teamId, 'limit': limit},
+      );
+    } catch (error) {
+      AppLog.debug('EspnSource: team news unavailable: $error');
+      return const <Article>[];
+    }
     final Object? raw = payload is Map ? payload['articles'] : null;
     if (raw is! List) return const <Article>[];
     final List<Article> tagged = <Article>[];
@@ -165,9 +171,15 @@ class EspnSource {
     final List<TeamStanding>? cached = _standingsCache[slug];
     if (cached != null) return cached;
 
-    final Object? payload = await client.getJson(
-      '$_base/v2/sports/${ref.sport}/${ref.league}/standings',
-    );
+    Object? payload;
+    try {
+      payload = await client.getJson(
+        '$_base/v2/sports/${ref.sport}/${ref.league}/standings',
+      );
+    } catch (error) {
+      AppLog.debug('EspnSource: standings unavailable: $error');
+      return const <TeamStanding>[];
+    }
     if (payload is! Map) return const <TeamStanding>[];
 
     final List<Map<String, dynamic>> entries = <Map<String, dynamic>>[];

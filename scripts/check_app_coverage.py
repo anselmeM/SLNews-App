@@ -45,6 +45,16 @@ CRITICAL_FLOORS: dict[str, float] = {
     "lib/core/data/sync/remote_sync_source.dart": 89.0,
     "lib/core/domain/sync/sync_state.dart": 83.0,
     "lib/core/push/push_service.dart": 48.0,
+    # Startup/auth/storage orchestration now has an in-memory bootstrap test;
+    # keep it from silently regressing back to zero coverage.
+    "lib/core/providers/app_bootstrap.dart": 65.0,
+    # Ingestion and sports-source floors: these paths fail soft to seed content,
+    # so a coverage drop is otherwise invisible until a feed goes missing.
+    "lib/core/data/sources/feed_source.dart": 95.0,
+    "lib/core/data/sources/espn_source.dart": 85.0,
+    "lib/core/data/sources/league_news_source.dart": 90.0,
+    "lib/core/data/sources/rss_feed_source.dart": 80.0,
+    "lib/core/data/sources/rss_wire.dart": 70.0,
 }
 
 # Structural budget. `docs/TECH-DEBT-AUDIT-2026-11-13.md` proposes warn >500 /
