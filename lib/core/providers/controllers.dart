@@ -302,5 +302,9 @@ refreshFeedsProvider = Provider<Future<void> Function()>((Ref ref) {
       // Source is not configured in this build/test harness.
     }
     ref.invalidate(leagueNewsProvider);
+    // Video moments are an independent feed; a pull-to-refresh must retry them
+    // too, otherwise a failed cold-start request can pin the rail to an old
+    // cache indefinitely.
+    ref.invalidate(videoMomentsProvider);
   };
 }, name: 'refreshFeeds');
