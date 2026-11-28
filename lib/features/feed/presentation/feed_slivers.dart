@@ -94,201 +94,248 @@ class _FeedSliver extends ConsumerWidget {
     final AdUnit? leadAd = ads.isNotEmpty ? ads.first : null;
     final AdUnit? secondAd = ads.length > 1 ? ads[1] : null;
 
+    final List<TopicMosaicItem> mosaicItems = _mosaicItems(feed);
     return SliverMainAxisGroup(
       slivers: <Widget>[
+        ..._heroAndFollows(context),
+        ..._latestAndMosaic(context, ref, latestStream, mosaicItems, leadAd),
+        ..._videoSlivers(context),
+        ..._discoverySlivers(context, trending, board),
+        ..._readingSlivers(context, ref, picks, secondAd, nextRead),
+      ],
+    );
+  }
+
+  List<Widget> _heroAndFollows(BuildContext context) {
+    return <Widget>[
+      SliverToBoxAdapter(
+        child: TopStoriesCarousel(
+          articles: feed.hero,
+          onOpenArticle: (Article article) =>
+              context.push(AppRoutes.articleFor(article.id)),
+        ),
+      ),
+      if (feed.followingStories.isNotEmpty) ...<Widget>[
         SliverToBoxAdapter(
-          child: TopStoriesCarousel(
-            articles: feed.hero,
-            onOpenArticle: (Article article) =>
+          child: SectionHeader(
+            title: 'From your follows',
+            subtitle: 'Topics, sources and places you follow',
+            onTap: () => context.go(AppRoutes.following),
+          ),
+        ),
+        _ArticleTileSliver(articles: feed.followingStories),
+      ],
+    ];
+  }
+
+  List<Widget> _latestAndMosaic(
+    BuildContext context,
+    WidgetRef ref,
+    List<Article> latestStream,
+    List<TopicMosaicItem> mosaicItems,
+    AdUnit? leadAd,
+  ) {
+    return <Widget>[
+      if (latestStream.isNotEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Latest',
+            onTap: () => context.go(AppRoutes.news),
+            trailing: const _MoreLabel(),
+          ),
+        ),
+        _ArticleTileSliver(articles: latestStream),
+      ],
+      const SliverToBoxAdapter(child: ContinueReadingRail()),
+      if (mosaicItems.isNotEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          // "Following â€º" in the reference: the chevron comes from onTap, and
+          // no "More" label, so the rail reads as a doorway rather than a list.
+          child: SectionHeader(
+            title: 'Following',
+            onTap: () => context.go(AppRoutes.following),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: TopicMosaic(
+              items: mosaicItems,
+              onOpen: (TopicMosaicItem item) => context.push(
+                AppRoutes.sectionFor(item.id),
+                extra: item.label,
+              ),
+            ),
+          ),
+        ),
+      ],
+      if (leadAd != null)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              0,
+            ),
+            child: TrackedAdCard(
+              unit: leadAd,
+              onCtaPressed: () => openSponsorship(context, ref, leadAd),
+              onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
+            ),
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _videoSlivers(BuildContext context) {
+    return <Widget>[
+      if (videos.isNotEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Video moments',
+            subtitle: "See what's new",
+            onTap: () => _openVideo(context, videos.first),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  Icons.play_circle_outline,
+                  size: 17,
+                  color: context.colors.primary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Watch all',
+                  style: context.typography.caption.copyWith(
+                    color: context.colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: VideoMomentsRail(
+            videos: videos,
+            onOpen: (VideoMoment video) => _openVideo(context, video),
+          ),
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _discoverySlivers(
+    BuildContext context,
+    List<Article> trending,
+    IndexBoard? board,
+  ) {
+    return <Widget>[
+      // Reference order: Trending now, then the Sports scoreboard card, then
+      // the Stocks board. Each header chevron opens the full surface.
+      if (trending.isNotEmpty) ...<Widget>[
+        const SliverToBoxAdapter(child: SectionHeader(title: 'Trending now')),
+        SliverToBoxAdapter(
+          child: TrendingNow(
+            articles: trending,
+            onOpen: (Article article) =>
                 context.push(AppRoutes.articleFor(article.id)),
           ),
         ),
-        if (feed.followingStories.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'From your follows',
-              subtitle: 'Topics, sources and places you follow',
-              onTap: () => context.go(AppRoutes.following),
-            ),
-          ),
-          _ArticleTileSliver(articles: feed.followingStories),
-        ],
-        if (latestStream.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Latest',
-              onTap: () => context.go(AppRoutes.news),
-              trailing: const _MoreLabel(),
-            ),
-          ),
-          _ArticleTileSliver(articles: latestStream),
-        ],
-        const SliverToBoxAdapter(child: ContinueReadingRail()),
-        if (_mosaicItems(feed).isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            // "Following â€º" in the reference: the chevron comes from onTap, and
-            // no "More" label, so the rail reads as a doorway rather than a list.
-            child: SectionHeader(
-              title: 'Following',
-              onTap: () => context.go(AppRoutes.following),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: TopicMosaic(
-                items: _mosaicItems(feed),
-                onOpen: (TopicMosaicItem item) => context.push(
-                  AppRoutes.sectionFor(item.id),
-                  extra: item.label,
-                ),
-              ),
-            ),
-          ),
-        ],
-        if (leadAd != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: TrackedAdCard(
-                unit: leadAd,
-                onCtaPressed: () => openSponsorship(context, ref, leadAd),
-                onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
-              ),
-            ),
-          ),
-        if (videos.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Video moments',
-              subtitle: "See what's new",
-              onTap: () => _openVideo(context, videos.first),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(
-                    Icons.play_circle_outline,
-                    size: 17,
-                    color: context.colors.primary,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Watch all',
-                    style: context.typography.caption.copyWith(
-                      color: context.colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: VideoMomentsRail(
-              videos: videos,
-              onOpen: (VideoMoment video) => _openVideo(context, video),
-            ),
-          ),
-        ],
-        // Reference order: Trending now, then the Sports scoreboard card, then
-        // the Stocks board. Each header chevron opens the full surface.
-        if (trending.isNotEmpty) ...<Widget>[
-          const SliverToBoxAdapter(child: SectionHeader(title: 'Trending now')),
-          SliverToBoxAdapter(
-            child: TrendingNow(
-              articles: trending,
-              onOpen: (Article article) =>
-                  context.push(AppRoutes.articleFor(article.id)),
-            ),
-          ),
-        ],
-        if (games.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Sports',
-              subtitle: 'Scores and fixtures',
-              onTap: () => context.go(AppRoutes.sports),
-              trailing: const _MoreLabel(),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: SportSpotlightCard(
-                game: games.first,
-                onTap: () => context.go(AppRoutes.sports),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: MoreStoriesLink(
-              label: 'More sports stories',
-              onPressed: () => context.go(AppRoutes.sports),
-            ),
-          ),
-        ],
-        if (showMarkets && board != null && !board.isEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Stocks',
-              subtitle: board.isOpen ? 'Markets today' : 'Market closed',
-              onTap: () => _openStocksPanel(context),
-              trailing: const _MoreLabel(),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: StocksCard(
-                board: board,
-                onOpen: () => _openStocksPanel(context),
-              ),
-            ),
-          ),
-        ],
-        if (picks.isNotEmpty) ...<Widget>[
-          SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Picks for you',
-              subtitle: 'Articles you might enjoy',
-              onTap: () => context.go(AppRoutes.news),
-              trailing: const _MoreLabel(),
-            ),
-          ),
-          _ArticleTileSliver(articles: picks),
-        ],
-        if (secondAd != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: TrackedAdCard(
-                unit: secondAd,
-                onCtaPressed: () => openSponsorship(context, ref, secondAd),
-                onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
-              ),
-            ),
-          ),
-        if (nextRead.isNotEmpty) ...<Widget>[
-          const SliverToBoxAdapter(
-            child: SectionHeader(
-              title: 'Your next read',
-              subtitle: 'Based on your interests',
-            ),
-          ),
-          _ArticleTileSliver(articles: nextRead),
-        ],
       ],
-    );
+      if (games.isNotEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Sports',
+            subtitle: 'Scores and fixtures',
+            onTap: () => context.go(AppRoutes.sports),
+            trailing: const _MoreLabel(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: SportSpotlightCard(
+              game: games.first,
+              onTap: () => context.go(AppRoutes.sports),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: MoreStoriesLink(
+            label: 'More sports stories',
+            onPressed: () => context.go(AppRoutes.sports),
+          ),
+        ),
+      ],
+      if (showMarkets && board != null && !board.isEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Stocks',
+            subtitle: board.isOpen ? 'Markets today' : 'Market closed',
+            onTap: () => _openStocksPanel(context),
+            trailing: const _MoreLabel(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: StocksCard(
+              board: board,
+              onOpen: () => _openStocksPanel(context),
+            ),
+          ),
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _readingSlivers(
+    BuildContext context,
+    WidgetRef ref,
+    List<Article> picks,
+    AdUnit? secondAd,
+    List<Article> nextRead,
+  ) {
+    return <Widget>[
+      if (picks.isNotEmpty) ...<Widget>[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Picks for you',
+            subtitle: 'Articles you might enjoy',
+            onTap: () => context.go(AppRoutes.news),
+            trailing: const _MoreLabel(),
+          ),
+        ),
+        _ArticleTileSliver(articles: picks),
+      ],
+      if (secondAd != null)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              0,
+            ),
+            child: TrackedAdCard(
+              unit: secondAd,
+              onCtaPressed: () => openSponsorship(context, ref, secondAd),
+              onOpened: (AdUnit unit) => openSponsorship(context, ref, unit),
+            ),
+          ),
+        ),
+      if (nextRead.isNotEmpty) ...<Widget>[
+        const SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'Your next read',
+            subtitle: 'Based on your interests',
+          ),
+        ),
+        _ArticleTileSliver(articles: nextRead),
+      ],
+    ];
   }
 
   void _openVideo(BuildContext context, VideoMoment video) {

@@ -49,9 +49,9 @@ lib/
     └── settings/                 # Preferences, legal, deletion
 ```
 
-Deeper detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ·
-design tokens: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) ·
-frozen interfaces: [`docs/CONTRACT.md`](docs/CONTRACT.md).
+Deeper detail: [documentation index](docs/README.md), [architecture](docs/ARCHITECTURE.md),
+design tokens: [design system](docs/DESIGN_SYSTEM.md), frozen interfaces:
+[contract](docs/CONTRACT.md).
 
 ## Getting started
 
@@ -152,14 +152,17 @@ instant so renders are byte-comparable — and writes one PNG per screen
 layout, and the clearest proof that the app renders with no connectivity at all.
 
 CI runs the functional, contract and security suites, then
+`scripts/check_function_structure.py` (function length/complexity ratchet) and
 `scripts/check_app_coverage.py`, which enforces three gates in one place:
 total line coverage ≥ 75.5 %, per-file floors on the critical modules (API
 client, sync, offline repository, push) and an 800-line budget per file
 (warned at 500). A separate new-file gate requires 60 % coverage for added
 `lib/` files. Flutter's coverage output has no branch records, so those per-file
 floors are what makes an untested critical module fail the build rather than hide
-inside the total. Goldens are excluded from CI because pixel output depends on
-the host renderer; run them before release.
+inside the total. A separate Windows `Visual regression` workflow runs the
+goldens when UI/assets change; a `Integration smoke` workflow compiles the
+device-smoke harness on every relevant PR. The device run itself remains a
+release step (`flutter test integration_test -d <device>`).
 
 Current technical-debt snapshot:
 [`docs/TECH-DEBT-AUDIT-2026-11-27.md`](docs/TECH-DEBT-AUDIT-2026-11-27.md).

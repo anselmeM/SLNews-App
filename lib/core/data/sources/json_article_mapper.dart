@@ -63,117 +63,151 @@ abstract final class JsonArticleMapper {
 
   /// Maps one wire object, or returns `null` when it cannot describe a story.
   static Article? map(Object? entry, FeedSourceConfig config, {DateTime? now}) {
-    if (entry is! Map) return null;
-
-    final Map<String, dynamic> json = <String, dynamic>{};
-    entry.forEach((Object? key, Object? value) {
-      if (key is String) json[key] = value;
-    });
-
-    final String title = _string(
-      json['title'] ?? json['headline'] ?? json['name'],
-    );
+    final Map<String, dynamic>? json = _asMap(entry);
+    if (json == null) return null;
+    final String title = _title(json);
     if (title.isEmpty) return null;
 
-    final String base = config.websiteUrl ?? config.url;
-    final String? rawLink = _nullableString(
-      json['sourceUrl'] ?? json['url'] ?? json['link'] ?? json['permalink'],
-    );
-    final String? link = rawLink == null
-        ? null
-        : (UrlNormalizer.absolute(rawLink, base: base) ?? rawLink);
-
-    final DateTime publishedAt =
-        _date(
-          json['publishedAt'] ??
-              json['published_at'] ??
-              json['pubDate'] ??
-              json['date'] ??
-              json['createdAt'],
-        ) ??
-        now ??
-        DateTime.now();
-
-    final String wireId = _string(json['id']);
-    final String id = wireId.isNotEmpty
-        ? wireId
-        : link != null
-        ? StableId.fromUrl(link)
-        : StableId.fromParts(<String>[
-            config.id,
-            title,
-            publishedAt.toIso8601String(),
-          ]);
-
-    final String bodyHtml = _string(
-      json['bodyHtml'] ??
-          json['content'] ??
-          json['body'] ??
-          json['description'],
-    );
-    final String summary = _string(
-      json['summary'] ??
-          json['standfirst'] ??
-          json['description'] ??
-          json['excerpt'],
-    );
-
-    final String categoryId =
-        _nullableString(
-          json['categoryId'] ?? json['category'] ?? json['section'],
-        ) ??
-        config.categoryId;
+    final String? link = _sourceLink(json, config);
+    final DateTime publishedAt = _publishedAt(json, now);
+    final String bodyHtml = _bodyHtml(json);
+    final String summary = _summary(json);
+    final String categoryId = _categoryId(json, config);
     final List<String> tags = _tags(json['tags'] ?? json['keywords']);
     final Publisher publisher = _publisher(
       json['publisher'] ?? json['source'],
       config,
     );
-    final bool editorFlagged = json['isBreaking'] == true;
-    final BreakingAssessment breaking = BreakingNewsPolicy.assess(
-      title: title,
-      summary: summary.isEmpty ? _truncate(bodyHtml) : summary,
-      categoryId: categoryId,
-      tags: tags,
-      publishedAt: publishedAt,
-      isWire: publisher.isWire,
-      editorFlagged: editorFlagged,
-      now: now,
-    );
-
-    final bool previewOnly = config.isPreviewOnly;
     return Article(
-      id: id,
+      id: _articleId(json, config, link: link, title: title, at: publishedAt),
       title: title,
       summary: summary.isEmpty ? _truncate(bodyHtml) : summary,
-      bodyHtml: previewOnly ? '' : bodyHtml,
+      bodyHtml: config.isPreviewOnly ? '' : bodyHtml,
       author: _nullableString(
         json['author'] ?? json['byline'] ?? json['creator'],
       ),
-      imageUrl: config.allowsRemoteImages
-          ? _nullableString(
-              json['imageUrl'] ??
-                  json['image'] ??
-                  json['thumbnail'] ??
-                  json['image_url'],
-            )
-          : null,
-      imageCaption: config.allowsRemoteImages
-          ? _nullableString(json['imageCaption'])
-          : null,
-      imageCredit: config.allowsRemoteImages
-          ? _nullableString(json['imageCredit'])
-          : null,
+      imageUrl: _remoteImage(
+        json['imageUrl'] ??
+            json['image'] ??
+            json['thumbnail'] ??
+            json['image_url'],
+        config,
+      ),
+      imageCaption: _remoteImage(json['imageCaption'], config),
+      imageCredit: _remoteImage(json['imageCredit'], config),
       sourceUrl: link,
       publisher: publisher,
       publishedAt: publishedAt,
       categoryId: categoryId,
       tags: tags,
-      isBreaking: breaking.isBreaking,
+      isBreaking: _breaking(
+        json: json,
+        title: title,
+        summary: summary,
+        bodyHtml: bodyHtml,
+        categoryId: categoryId,
+        tags: tags,
+        publishedAt: publishedAt,
+        publisher: publisher,
+        now: now,
+      ),
       isLive: json['isLive'] == true,
       readingMinutes: _int(json['readingMinutes']) ?? 0,
-      previewOnly: previewOnly,
+      previewOnly: config.isPreviewOnly,
     );
   }
+
+  static Map<String, dynamic>? _asMap(Object? entry) {
+    if (entry is! Map) return null;
+    final Map<String, dynamic> json = <String, dynamic>{};
+    entry.forEach((Object? key, Object? value) {
+      if (key is String) json[key] = value;
+    });
+    return json;
+  }
+
+  static String _title(Map<String, dynamic> json) =>
+      _string(json['title'] ?? json['headline'] ?? json['name']);
+
+  static String _bodyHtml(Map<String, dynamic> json) => _string(
+    json['bodyHtml'] ?? json['content'] ?? json['body'] ?? json['description'],
+  );
+
+  static String _summary(Map<String, dynamic> json) => _string(
+    json['summary'] ??
+        json['standfirst'] ??
+        json['description'] ??
+        json['excerpt'],
+  );
+
+  static String _categoryId(
+    Map<String, dynamic> json,
+    FeedSourceConfig config,
+  ) =>
+      _nullableString(
+        json['categoryId'] ?? json['category'] ?? json['section'],
+      ) ??
+      config.categoryId;
+
+  static String? _remoteImage(Object? raw, FeedSourceConfig config) =>
+      config.allowsRemoteImages ? _nullableString(raw) : null;
+
+  static String? _sourceLink(
+    Map<String, dynamic> json,
+    FeedSourceConfig config,
+  ) {
+    final String? raw = _nullableString(
+      json['sourceUrl'] ?? json['url'] ?? json['link'] ?? json['permalink'],
+    );
+    if (raw == null) return null;
+    final String base = config.websiteUrl ?? config.url;
+    return UrlNormalizer.absolute(raw, base: base) ?? raw;
+  }
+
+  static DateTime _publishedAt(Map<String, dynamic> json, DateTime? now) =>
+      _date(
+        json['publishedAt'] ??
+            json['published_at'] ??
+            json['pubDate'] ??
+            json['date'] ??
+            json['createdAt'],
+      ) ??
+      now ??
+      DateTime.now();
+
+  static String _articleId(
+    Map<String, dynamic> json,
+    FeedSourceConfig config, {
+    required String? link,
+    required String title,
+    required DateTime at,
+  }) {
+    final String wireId = _string(json['id']);
+    if (wireId.isNotEmpty) return wireId;
+    if (link != null) return StableId.fromUrl(link);
+    return StableId.fromParts(<String>[config.id, title, at.toIso8601String()]);
+  }
+
+  static bool _breaking({
+    required Map<String, dynamic> json,
+    required String title,
+    required String summary,
+    required String bodyHtml,
+    required String categoryId,
+    required List<String> tags,
+    required DateTime publishedAt,
+    required Publisher publisher,
+    required DateTime? now,
+  }) => BreakingNewsPolicy.assess(
+    title: title,
+    summary: summary.isEmpty ? _truncate(bodyHtml) : summary,
+    categoryId: categoryId,
+    tags: tags,
+    publishedAt: publishedAt,
+    isWire: publisher.isWire,
+    editorFlagged: json['isBreaking'] == true,
+    now: now,
+  ).isBreaking;
 
   static Publisher _publisher(Object? raw, FeedSourceConfig config) {
     if (raw is Map) {

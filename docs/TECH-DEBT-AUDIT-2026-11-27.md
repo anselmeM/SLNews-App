@@ -23,29 +23,29 @@ in a small number of high-churn orchestration files, not in the module layout.**
 |---|---:|---|---|
 | Architecture | B | Flat/improving | Feature-first, zero import cycles; a few bootstrap/router/page hotspots |
 | Code quality | C+ | Mixed | 9 functions >150 lines, max complexity 79, ~10% duplication |
-| Testing | B | Improving | 907 tests, 79.43% coverage, strong gates; no CI goldens/device tests |
+| Testing | B+ | Improving | 922 tests, 82.06% coverage, strong gates; golden/integration workflows added |
 | Dependencies | B+ | Stable | 5 locked and 7 constrained versions, mostly deliberate |
 | Documentation | C+ | Improving | 30 docs, but README and older audits were stale (fixed this pass) |
 | Infrastructure | B+ | Improving | Strong CI/signing gates; R8 off, Android-only CI |
 | Process/repo hygiene | C | Mixed | 94 branches, 259 commits/90 days, no explicit debt budget |
 
-**Largest drags**
+**Largest remaining drags (after the 2026-11-28 remediation pass)**
 
-1. `JsonArticleMapper.map` — 112 lines, estimated cyclomatic score 79; the
-   single highest-risk function in the app and on every ingestion path.
-2. `AppBootstrap.create` — 253 lines, 0% measured coverage; startup, auth,
-   storage and source wiring are one untested function.
-3. `SettingsPage.build` — 290 lines; every new setting increases review and
-   widget-test setup cost.
-4. Presentation duplication — about **10.1%** of non-empty Dart lines are in
-   duplicated 6-line windows; five catalogue/manage pages repeat the same
-   scaffold/search/list structure.
-5. Testing blind spots — `app_bootstrap`, `app.dart`, `clerk_auth_repository`,
-   RSS/ESPN/league sources and `preferences_store` are far below the quality of
-   the rest of the suite. Goldens and the single integration smoke test do not
-   run in CI.
-6. Process debt — 32 local + 62 remote-tracking branches; all feature branches
-   remain after squash-merges.
+1. `createAppRouter` — 241 lines; declarative but expensive to review as one unit.
+2. `ForYouViewModel.build` / `SportsLeagueSection.build` / `AdCard.build` /
+   `ArticleActionBar.build` / `AppTheme._build` — 162–171 lines each.
+3. Presentation duplication is down to **9.0%** but 16 files remain over 400
+   lines; the next targets are the router, settings sections and the remaining
+   card builders.
+4. Testing blind spots — `app.dart`, `clerk_auth_repository`,
+   `preferences_store`, `app_router`, WebView and native player paths are still
+   below the quality of the rest of the suite. Goldens and integration smoke now
+   have their own workflows, but device execution remains manual.
+5. Process debt — 32 local + 62 remote-tracking branches; all feature branches
+   remain after squash-merges. Policy is documented but cleanup still needs
+   human confirmation.
+6. Release hardening — R8/shrinking off, iOS has no build/signing CI, no startup
+   performance baseline.
 
 **Quick wins completed in this pass**
 
@@ -60,6 +60,28 @@ in a small number of high-churn orchestration files, not in the module layout.**
 - Marked the two older point-in-time audits as superseded and added this
   snapshot.
 
+### Remediation pass — 2026-11-28
+
+| Action | Before | After | Verification |
+|---|---:|---:|---|
+| `JsonArticleMapper.map` | 112 lines / complexity 79 | **54 lines / 25** | 18 mapper tests |
+| `AppBootstrap.create` | 253 lines / 0% coverage | **61 lines / 79.33%** | new bootstrap tests + coverage floor |
+| `SettingsPage.build` | 290 lines | **76 lines** + sections extension | settings page suite |
+| `FeedSlivers.build` | 229 lines | **44 lines** | feed suite |
+| `SportsPage.build` | 121 lines / complexity 34 | **61 lines** | sports suite |
+| Catalogue scaffolds | repeated on 5 pages | **shared `CataloguePageScaffold`** | 4 manage-page suites |
+| Source coverage floors | 6 modules | **12 modules** (bootstrap, feed, ESPN, league, RSS) | coverage gate |
+| CI visual/device guards | absent | Windows golden workflow + integration-harness compile workflow | local compile + YAML |
+| Structure gate | absent | `check_function_structure.py` in CI | allowlist ratchet |
+| Docs/branches | no index | `docs/README.md` + branch-hygiene policy | review |
+| Full suite / coverage | 907 / 79.43% | **922 / 82.06%** | local + CI |
+
+Remaining long-function allowlist: `createAppRouter` (241),
+`ForYouViewModel.build` (171), `SportsLeagueSection.build` (166),
+`AdCard.build` (166), `ArticleActionBar.build` (166), `AppTheme._build` (162).
+Max complexity is now `Article.copyWith` at 48. These are the next extraction
+candidates; do not grow the allowlist.
+
 ---
 
 ## 2. Inventory and metrics
@@ -69,13 +91,13 @@ in a small number of high-churn orchestration files, not in the module layout.**
 | `lib/` Dart files | **241** | 264 |
 | `lib/` lines | **36,153** | ~45.4k (incl. generated/other) |
 | Test Dart files / lines | **129 / 21,275** | — |
-| Functional tests | **907 pass** | 750 (Nov 20) |
+| Functional tests | **922 pass** | 750 (Nov 20) |
 | Golden tests | **9** | 9 |
-| Total line coverage | **79.43%** (floor 75.5%) | 80.06% (Nov 20) |
-| Files >400 / >500 / >800 lines | **15 / 0 / 0** | 3 >500 (Nov 20) |
-| Functions >60 / >100 / >150 lines | **65 / 25 / 9** | 209 >60 across 3 repos |
-| Functions complexity-estimate >15 / >25 | **41 / 14** | — |
-| Duplication estimate (6-line windows) | **10.1%** | ~16% across 3 repos |
+| Total line coverage | **82.06%** (floor 75.5%) | 80.06% (Nov 20) |
+| Files >400 / >500 / >800 lines | **16 / 0 / 0** | 3 >500 (Nov 20) |
+| Functions >60 / >100 / >150 lines | **63 / 19 / 6** | 209 >60 across 3 repos |
+| Functions complexity-estimate >15 / >25 | **38 / 11** | — |
+| Duplication estimate (6-line windows) | **9.0%** | ~16% across 3 repos |
 | Import cycles | **0** | — |
 | TODO/FIXME/HACK | **0** | 0 |
 | Silent `catch (_)` | **57**, mostly documented best-effort fallbacks | — |
@@ -153,7 +175,7 @@ Extracting a shared `CataloguePageScaffold`, `SearchHeader` and
 
 Strengths:
 
-- 907 functional tests, 9 goldens, 79.43% line coverage.
+- 922 functional tests, 9 goldens, 82.06% line coverage.
 - Per-file floors for API client, API source, offline repository, remote sync,
   sync state and push.
 - New-file coverage floor (60% for added `lib/` files ≥40 lines).
@@ -380,7 +402,7 @@ add:
 
 | Metric | Current | Target |
 |---|---:|---:|
-| Total line coverage | 79.43% | **82%** |
+| Total line coverage | 82.06% | **82%** |
 | Files >500 lines | 0 | 0 |
 | Functions >150 lines | 9 | **≤3** |
 | Max complexity hotspot | 79 | **<40** |
