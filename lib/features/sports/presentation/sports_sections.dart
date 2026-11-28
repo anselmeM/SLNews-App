@@ -69,10 +69,6 @@ Widget _noticeSliver(
 }
 
 /// Confirmation surface for the tab's non-destructive actions.
-void _showSnack(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-}
-
 /// Full-bleed lead story at the top of the Sports feed.
 class _TopStoryHero extends StatelessWidget {
   const _TopStoryHero({required this.article, required this.onTap});

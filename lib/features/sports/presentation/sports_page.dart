@@ -337,7 +337,7 @@ class SportsPage extends ConsumerWidget {
                         .toggle(article.id),
                   ),
                   onMore: (ArticleAction action) =>
-                      _showSnack(context, '${action.label} · ${article.title}'),
+                      handleArticleAction(context, ref, article, action),
                 ),
               );
             },

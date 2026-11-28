@@ -43,7 +43,7 @@ lib/
     ├── article/                  # Reader: header, hero media, body, action bar
     ├── bookmarks/                # Saved stories (offline)
     ├── search/                   # Search v1
-    ├── onboarding/               # First-run topics + city picker
+    ├── onboarding/               # First-run topic picker
     ├── auth/                     # Sign-in page + account screen
     ├── video/                    # Video moments reel
     └── settings/                 # Preferences, legal, deletion
@@ -93,9 +93,10 @@ build artifact.
 ### Release signing
 
 `android/app/build.gradle.kts` reads `android/key.properties` (git-ignored).
-When it is absent the release build is signed with the **debug** key so you
-always get an installable artifact; copy `android/key.properties.example` and
-generate a keystore before shipping:
+A release build without a keystore now **fails** unless
+`SLNEWS_ALLOW_DEBUG_SIGNED_RELEASE=true` is set explicitly for a local
+compile-validation artifact. Never distribute that debug-signed APK. Copy
+`android/key.properties.example` and generate a keystore before shipping:
 
 ```bash
 keytool -genkeypair -v -keystore android/slnews-release.jks -storetype JKS \
@@ -138,8 +139,8 @@ connectivity still renders a complete Sierra Leonean feed.
 
 ```bash
 flutter analyze
-flutter test test/core test/data test/features test/sync   # functional suites
-flutter test test/golden test/push                          # screen renders + push
+flutter test test/core test/contracts test/data test/features test/sync test/push test/security --concurrency=4
+flutter test test/golden --concurrency=1                    # screen renders
 flutter test test/golden --update-goldens                   # regenerate renders
 ```
 
@@ -150,14 +151,18 @@ instant so renders are byte-comparable — and writes one PNG per screen
 `settings`, `sections`). It is the visual regression harness for the reference
 layout, and the clearest proof that the app renders with no connectivity at all.
 
-CI runs the functional suites (`test/core test/data test/features test/sync
-test/push`), then `scripts/check_app_coverage.py`, which enforces three gates in
-one place: total line coverage ≥ 76 %, a per-file floor on the critical modules
-(API client, sync, offline repository, push), and an 800-line budget per file
-(warned at 500). Flutter's coverage output has no branch records, so those
-per-file floors are what makes an untested critical module fail the build rather
-than hide inside the total. Goldens are excluded because pixel output depends on
-the host renderer.
+CI runs the functional, contract and security suites, then
+`scripts/check_app_coverage.py`, which enforces three gates in one place:
+total line coverage ≥ 75.5 %, per-file floors on the critical modules (API
+client, sync, offline repository, push) and an 800-line budget per file
+(warned at 500). A separate new-file gate requires 60 % coverage for added
+`lib/` files. Flutter's coverage output has no branch records, so those per-file
+floors are what makes an untested critical module fail the build rather than hide
+inside the total. Goldens are excluded from CI because pixel output depends on
+the host renderer; run them before release.
+
+Current technical-debt snapshot:
+[`docs/TECH-DEBT-AUDIT-2026-11-27.md`](docs/TECH-DEBT-AUDIT-2026-11-27.md).
 
 ### Verified on this machine (2026-11-15)
 

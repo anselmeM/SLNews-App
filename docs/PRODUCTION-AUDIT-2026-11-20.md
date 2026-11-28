@@ -1,3 +1,6 @@
+> **Superseded:** this is a historical point-in-time audit. For the current
+> technical-debt snapshot see [TECH-DEBT-AUDIT-2026-11-27.md](TECH-DEBT-AUDIT-2026-11-27.md).
+
 # Production code audit — 2026-11-20
 
 **Scope:** `SLNews-App` (Flutter, Android + iOS targets) working tree, uncommitted.

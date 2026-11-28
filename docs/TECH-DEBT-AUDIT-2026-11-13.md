@@ -1,3 +1,6 @@
+> **Superseded:** this is a historical point-in-time audit. For the current
+> technical-debt snapshot see [TECH-DEBT-AUDIT-2026-11-27.md](TECH-DEBT-AUDIT-2026-11-27.md).
+
 # Technical debt audit — SLNews (app, web, scraper)
 
 **Date:** 2026-11-13  
