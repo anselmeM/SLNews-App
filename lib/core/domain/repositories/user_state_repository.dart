@@ -69,6 +69,11 @@ abstract interface class UserStateRepository {
 
   Future<void> setPersonalizeFeed(bool enabled);
 
+  /// Whether the reader consents to aggregate diagnostics.
+  bool get analyticsEnabled;
+
+  Future<void> setAnalyticsEnabled(bool enabled);
+
   /// Device-local digest preferences, encoded as JSON under [device key].
   String? digestPreferencesFor(String deviceKey);
 

@@ -30,6 +30,9 @@ class BookmarksController extends Notifier<Set<String>> {
     state = <String>{...repository.bookmarkedIds};
     final bool nowSaved = state.contains(articleId);
     if (nowSaved) _askForPushAfterFirstAction(ref);
+    if (recordEngagement && !wasSaved && nowSaved) {
+      unawaited(_recordAggregateArticle(ref, articleId, FeedMetricKind.save));
+    }
     if (recordEngagement && recordProfile && !wasSaved && nowSaved) {
       unawaited(
         _recordProfile(
@@ -112,6 +115,9 @@ class LikesController extends Notifier<Set<String>> {
     state = <String>{...repository.likedIds};
     final bool nowLiked = state.contains(articleId);
     if (nowLiked) _askForPushAfterFirstAction(ref);
+    if (recordEngagement && !wasLiked && nowLiked) {
+      unawaited(_recordAggregateArticle(ref, articleId, FeedMetricKind.like));
+    }
     if (recordEngagement && recordProfile && !wasLiked && nowLiked) {
       unawaited(
         _recordProfile(
@@ -245,6 +251,23 @@ bool _personalizationEnabled(Ref ref) {
     return ref.read(settingsControllerProvider).personalizeFeed;
   } catch (_) {
     return true;
+  }
+}
+
+Future<void> _recordAggregateArticle(
+  Ref ref,
+  String articleId,
+  FeedMetricKind metric,
+) async {
+  try {
+    if (!ref.read(settingsControllerProvider).analyticsEnabled) return;
+    final Article? article = await ref
+        .read(articleRepositoryProvider)
+        .byId(articleId);
+    if (article == null) return;
+    ref.read(aggregateMetricsProvider.notifier).recordArticle(metric, article);
+  } catch (_) {
+    // Diagnostics are best-effort and never affect the action.
   }
 }
 

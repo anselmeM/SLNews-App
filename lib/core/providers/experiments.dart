@@ -38,6 +38,37 @@ final Provider<String> anonymousExperimentSeedProvider = Provider<String>((
   return seed;
 }, name: 'anonymousExperimentSeed');
 
+/// Remote-config transport seam. Phase 3B-A has no endpoint, so the default
+/// source returns null and every reader keeps the local disabled experiment.
+abstract interface class RankingExperimentConfigSource {
+  Future<Object?> fetch();
+}
+
+final Provider<RankingExperimentConfigSource?> experimentConfigSourceProvider =
+    Provider<RankingExperimentConfigSource?>(
+      (Ref _) => null,
+      name: 'experimentConfigSource',
+    );
+
+/// Best-effort remote config. Any error, timeout or malformed payload falls
+/// back to null; no ranking change is applied by this phase.
+final FutureProvider<RemoteRankingExperimentConfig?>
+remoteRankingExperimentConfigProvider =
+    FutureProvider<RemoteRankingExperimentConfig?>((Ref ref) async {
+      final RankingExperimentConfigSource? source = ref.watch(
+        experimentConfigSourceProvider,
+      );
+      if (source == null) return null;
+      try {
+        final Object? wire = await source.fetch().timeout(
+          const Duration(seconds: 3),
+        );
+        return RemoteRankingExperimentConfig.tryParse(wire);
+      } catch (_) {
+        return null;
+      }
+    }, name: 'remoteRankingExperimentConfig');
+
 /// Config seam for tests and the later remote-config rollout.
 final Provider<RankingExperimentConfig> forYouRankingExperimentConfigProvider =
     Provider<RankingExperimentConfig>(

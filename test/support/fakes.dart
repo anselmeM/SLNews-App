@@ -292,6 +292,13 @@ class FakeUserStateRepository implements UserStateRepository {
   @override
   bool personalizeFeed = true;
 
+  @override
+  bool analyticsEnabled = false;
+
+  @override
+  Future<void> setAnalyticsEnabled(bool enabled) async =>
+      analyticsEnabled = enabled;
+
   /// Optional gate for testing rapid settings taps.
   Completer<void>? personalizeGate;
 

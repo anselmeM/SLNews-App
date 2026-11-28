@@ -50,17 +50,26 @@ class _ReaderBodyState extends ConsumerState<_ReaderBody>
     // Record the open after the frame: provider mutation during initState can
     // race the first build in Riverpod.
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-      if (!mounted || !_profileEnabled) return;
+      if (!mounted) return;
+      if (_profileEnabled) {
+        try {
+          ref
+              .read(personalizationProfileProvider.notifier)
+              .recordOpen(
+                widget.article,
+                accountKey: _profileAccountKey,
+                generation: _profileGeneration,
+              );
+        } catch (_) {
+          // Personalization is best-effort and must never affect reading.
+        }
+      }
       try {
         ref
-            .read(personalizationProfileProvider.notifier)
-            .recordOpen(
-              widget.article,
-              accountKey: _profileAccountKey,
-              generation: _profileGeneration,
-            );
+            .read(aggregateMetricsProvider.notifier)
+            .recordArticle(FeedMetricKind.open, widget.article);
       } catch (_) {
-        // Personalization is best-effort and must never affect reading.
+        // Diagnostics are best-effort and must never affect reading.
       }
     });
   }
@@ -455,25 +464,6 @@ class _PreviewStoryCard extends StatelessWidget {
 }
 
 /// Reader placeholder that reserves the real layout's geometry.
-class _ReaderSkeleton extends StatelessWidget {
-  const _ReaderSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SafeArea(
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xxl),
-          child: CircularProgressIndicator(),
-        ),
-      ),
-    );
-  }
-}
-
-/// The `article_end` sold placement, rendered after the story body and before
-/// related stories. The provider is allowed to fail or stay empty: an ad must
-/// never break reading.
 class _ArticleEndAd extends ConsumerWidget {
   const _ArticleEndAd();
 

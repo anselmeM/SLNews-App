@@ -15,6 +15,7 @@ import '../../../core/domain/models/article.dart';
 import '../../../core/domain/models/index_quote.dart';
 import '../../../core/domain/models/sports_models.dart';
 import '../../../core/domain/models/video_moment.dart';
+import '../../../core/providers/aggregate_metrics.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/controllers.dart';
 import '../../../core/routing/app_routes.dart';
@@ -64,6 +65,21 @@ class ForYouPage extends ConsumerWidget {
           breakingCount: feed.breakingCount,
         ),
       );
+      final List<Article> impressions = <Article>[
+        ...feed.hero,
+        ...feed.followingStories,
+        ...feed.stream,
+      ];
+      WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+        if (!context.mounted) return;
+        try {
+          ref
+              .read(aggregateMetricsProvider.notifier)
+              .recordImpressions(impressions);
+        } catch (_) {
+          // Diagnostics must never affect rendering.
+        }
+      });
     }
     final AsyncValue<List<Article>> topStories = ref.watch(topStoriesProvider);
     final AppSettings settings = ref.watch(settingsControllerProvider);

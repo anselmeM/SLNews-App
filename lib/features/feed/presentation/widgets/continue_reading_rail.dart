@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/domain/analytics/aggregate_feed_metrics.dart';
+import '../../../../core/providers/aggregate_metrics.dart';
 import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -54,10 +56,18 @@ class ContinueReadingRail extends ConsumerWidget {
                       child: ArticleGridTile(
                         article: entry.article,
                         maxTitleLines: 2,
-                        onTap: () => context.push(
-                          AppRoutes.articleFor(entry.article.id),
-                          extra: entry.progress,
-                        ),
+                        onTap: () {
+                          ref
+                              .read(aggregateMetricsProvider.notifier)
+                              .recordArticle(
+                                FeedMetricKind.continueReadingOpen,
+                                entry.article,
+                              );
+                          context.push(
+                            AppRoutes.articleFor(entry.article.id),
+                            extra: entry.progress,
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),

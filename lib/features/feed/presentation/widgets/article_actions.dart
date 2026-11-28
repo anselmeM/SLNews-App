@@ -6,8 +6,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/domain/follow_targets.dart';
+import '../../../../core/domain/analytics/aggregate_feed_metrics.dart';
 import '../../../../core/domain/models/article.dart';
 import '../../../../core/domain/models/follow_models.dart';
+import '../../../../core/providers/aggregate_metrics.dart';
 import '../../../../core/providers/controllers.dart';
 import '../../../../core/providers/personalization_profile.dart';
 import '../../../../core/widgets/overflow_menu_button.dart';
@@ -121,6 +123,9 @@ void _showLessLikeThis(
 ) {
   try {
     ref.read(personalizationProfileProvider.notifier).recordDismiss(article);
+    ref
+        .read(aggregateMetricsProvider.notifier)
+        .recordArticle(FeedMetricKind.dismiss, article);
     _showMessage(messenger, "We'll show you less like this");
   } catch (_) {
     _showMessage(messenger, "Couldn't update your feed preferences");

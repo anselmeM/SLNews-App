@@ -115,9 +115,66 @@ void main() {
     expect(assignment.experimentKey, 'ranker');
   });
 
+  test('remote config rejects malformed payloads', () {
+    expect(RemoteRankingExperimentConfig.tryParse(null), isNull);
+    expect(RemoteRankingExperimentConfig.tryParse('bad'), isNull);
+    expect(
+      RemoteRankingExperimentConfig.tryParse(<String, dynamic>{
+        'key': 'ranker',
+        'enabled': true,
+        'treatmentPercent': 101,
+        'killSwitch': false,
+      }),
+      isNull,
+    );
+    final RemoteRankingExperimentConfig? valid =
+        RemoteRankingExperimentConfig.tryParse(<String, dynamic>{
+          'key': 'ranker',
+          'enabled': true,
+          'treatmentPercent': 10,
+          'killSwitch': false,
+        });
+    expect(valid, isNotNull);
+    expect(valid!.treatmentPercent, 10);
+  });
+
+  test('a remote kill switch disables an enabled payload', () {
+    const RemoteRankingExperimentConfig remote = RemoteRankingExperimentConfig(
+      key: 'ranker',
+      enabled: true,
+      treatmentPercent: 10,
+      killSwitch: true,
+    );
+    final RankingExperimentConfig applied = remote.apply(
+      forYouRankingExperiment,
+    );
+    expect(applied.enabled, isFalse);
+    expect(applied.key, forYouRankingExperiment.key);
+  });
+
+  test('remote source failures fall back to no config', () async {
+    final ProviderContainer container = ProviderContainer(
+      overrides: [
+        experimentConfigSourceProvider.overrideWithValue(
+          _ThrowingConfigSource(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    expect(
+      await container.read(remoteRankingExperimentConfigProvider.future),
+      isNull,
+    );
+  });
+
   test('the default experiment is disabled', () {
     expect(forYouRankingExperiment.enabled, isFalse);
     expect(forYouRankingExperiment.isActive, isFalse);
     expect(ExperimentAssigner.bucketCount, 1000);
   });
+}
+
+class _ThrowingConfigSource implements RankingExperimentConfigSource {
+  @override
+  Future<Object?> fetch() async => throw StateError('offline');
 }
