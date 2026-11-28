@@ -41,6 +41,16 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # The checked-in baseline was rendered with the US Eastern zone. Pin it
+      # explicitly: Windows runners default to UTC, which changes the article
+      # publication line ("EST" vs "UTC") and makes one golden fail for reasons
+      # unrelated to UI changes.
+      - name: Pin runner time zone to the golden baseline
+        shell: pwsh
+        run: |
+          tzutil /s "Eastern Standard Time"
+          Get-TimeZone
+
       - name: Render and compare goldens
         run: flutter test test/golden --concurrency=1
 
