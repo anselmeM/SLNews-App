@@ -40,6 +40,7 @@ class AppSettings {
     this.followedTopicAlertsEnabled = true,
     this.weatherForecastEnabled = true,
     this.personalizeFeed = true,
+    this.analyticsEnabled = false,
     this.digestEnabled = true,
     this.quietHoursStart,
     this.quietHoursEnd,
@@ -73,6 +74,10 @@ class AppSettings {
   /// not use follows, saves or reading history to re-rank stories.
   final bool personalizeFeed;
 
+  /// Off by default. When true the app may collect aggregate diagnostics
+  /// locally; Phase 3B-A still uploads nothing.
+  final bool analyticsEnabled;
+
   /// Daily follow-digest delivery and its local quiet window (minutes).
   final bool digestEnabled;
   final int? quietHoursStart;
@@ -101,6 +106,7 @@ class AppSettings {
     bool? followedTopicAlertsEnabled,
     bool? weatherForecastEnabled,
     bool? personalizeFeed,
+    bool? analyticsEnabled,
     bool? digestEnabled,
     int? quietHoursStart,
     int? quietHoursEnd,
@@ -121,6 +127,7 @@ class AppSettings {
       weatherForecastEnabled:
           weatherForecastEnabled ?? this.weatherForecastEnabled,
       personalizeFeed: personalizeFeed ?? this.personalizeFeed,
+      analyticsEnabled: analyticsEnabled ?? this.analyticsEnabled,
       digestEnabled: digestEnabled ?? this.digestEnabled,
       quietHoursStart: clearQuietHours
           ? null
@@ -147,6 +154,7 @@ class AppSettings {
       other.followedTopicAlertsEnabled == followedTopicAlertsEnabled &&
       other.weatherForecastEnabled == weatherForecastEnabled &&
       other.personalizeFeed == personalizeFeed &&
+      other.analyticsEnabled == analyticsEnabled &&
       other.digestEnabled == digestEnabled &&
       other.quietHoursStart == quietHoursStart &&
       other.quietHoursEnd == quietHoursEnd &&
@@ -163,6 +171,7 @@ class AppSettings {
     followedTopicAlertsEnabled,
     weatherForecastEnabled,
     personalizeFeed,
+    analyticsEnabled,
     digestEnabled,
     quietHoursStart,
     quietHoursEnd,

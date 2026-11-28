@@ -8,7 +8,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/ads/sponsorship_launcher.dart';
 import '../../../core/domain/models/ad_placement.dart';
 import '../../../core/domain/models/ad_unit.dart';
+import '../../../core/domain/analytics/aggregate_feed_metrics.dart';
 import '../../../core/domain/models/article.dart';
+import '../../../core/providers/aggregate_metrics.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
@@ -32,6 +34,7 @@ import 'widgets/article_hero_media.dart';
 import 'widgets/related_stories.dart';
 
 part 'article_reader_body.dart';
+part 'article_reader_skeleton.dart';
 
 int _profileGenerationOf(WidgetRef ref) {
   try {

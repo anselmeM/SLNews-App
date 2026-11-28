@@ -40,6 +40,7 @@ abstract final class FeedMix {
     return lower.contains(_sierraLeone) || lower.contains('freetown');
   }
 
+  /// Coarse audience label used by feed ordering and aggregate diagnostics.
   static FeedAudience audienceOf(Article article) {
     if (isSports(article)) return FeedAudience.sports;
     if (isSierraLeone(article)) return FeedAudience.sierraLeone;

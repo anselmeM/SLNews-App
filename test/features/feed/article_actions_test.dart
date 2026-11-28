@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/personalization_profile.dart';
+import 'package:slnews_mobile/core/providers/aggregate_metrics.dart';
 import 'package:slnews_mobile/core/providers/personalization_profile.dart';
 import 'package:slnews_mobile/core/providers/controllers.dart';
 import 'package:slnews_mobile/core/widgets/overflow_menu_button.dart';
@@ -89,6 +90,48 @@ void main() {
       isNot(contains(article.id)),
     );
     expect(find.text('Removed from saved'), findsOneWidget);
+  });
+
+  testWidgets('consented saves reach the aggregate metrics store', (
+    WidgetTester tester,
+  ) async {
+    final FakeUserStateRepository userState = FakeUserStateRepository()
+      ..analyticsEnabled = true;
+    late WidgetRef capturedRef;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: feedTestOverrides(
+          articles: FakeArticleRepository(topStories: <Article>[article]),
+          userState: userState,
+        ),
+        child: themedChild(
+          Consumer(
+            builder: (BuildContext context, WidgetRef ref, Widget? child) {
+              capturedRef = ref;
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => handleArticleAction(
+                    context,
+                    ref,
+                    article,
+                    ArticleAction.bookmark,
+                  ),
+                  child: const Text('save'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('save'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 20));
+
+    expect(capturedRef.read(aggregateMetricsProvider).totalCount, 1);
   });
 
   testWidgets('show less like this hides the story and records dismissal', (

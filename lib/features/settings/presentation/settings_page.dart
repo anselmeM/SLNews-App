@@ -16,6 +16,7 @@ import '../../../core/observability/sentry_settings.dart';
 import '../../../core/domain/models/app_settings.dart';
 import '../../../core/domain/models/personalization_profile.dart';
 import '../../../core/domain/models/weather_location_state.dart';
+import '../../../core/providers/aggregate_metrics.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/controllers.dart';
@@ -61,6 +62,9 @@ class SettingsPage extends ConsumerWidget {
     final PersonalizationProfile personalizationProfile = ref.watch(
       personalizationProfileProvider,
     );
+    final int aggregateDiagnosticCount = ref
+        .watch(aggregateMetricsProvider)
+        .totalCount;
     final SettingsController controller = ref.read(
       settingsControllerProvider.notifier,
     );
@@ -226,6 +230,23 @@ class SettingsPage extends ConsumerWidget {
                         personalizationProfile,
                         ref,
                       ),
+                    ),
+                    SettingsSwitchRow(
+                      title: 'Anonymous diagnostics',
+                      subtitle:
+                          'Allow aggregate usage counts that help improve '
+                          'rankings. No account details or reading history. '
+                          'Off by default.',
+                      value: settings.analyticsEnabled,
+                      onChanged: controller.setAnalyticsEnabled,
+                    ),
+                    SettingsValueRow(
+                      title: 'Anonymous diagnostics data',
+                      subtitle:
+                          'Stored on this phone. Nothing is uploaded yet.',
+                      value: aggregateDiagnosticCount == 0
+                          ? 'None'
+                          : '$aggregateDiagnosticCount counters',
                     ),
                     SettingsValueRow(
                       title: 'Weather location',

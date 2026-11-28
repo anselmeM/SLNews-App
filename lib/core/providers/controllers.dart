@@ -12,6 +12,8 @@ import '../domain/models/digest_preferences.dart';
 import '../domain/repositories/notification_repository.dart';
 import '../domain/repositories/user_state_repository.dart';
 import '../domain/sync/sync_repository.dart';
+import '../domain/analytics/aggregate_feed_metrics.dart';
+import 'aggregate_metrics.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'digest_preferences_store.dart';
@@ -31,6 +33,9 @@ settingsControllerProvider = NotifierProvider<SettingsController, AppSettings>(
 
 class SettingsController extends Notifier<AppSettings> {
   bool _persistedPersonalize = true;
+  bool _persistedAnalytics = false;
+  Future<void> _analyticsWrite = Future<void>.value();
+  int _analyticsRequest = 0;
 
   @override
   AppSettings build() {
@@ -49,12 +54,14 @@ class SettingsController extends Notifier<AppSettings> {
       followedTopicAlertsEnabled: repository.followedTopicAlertsEnabled,
       weatherForecastEnabled: repository.weatherForecastEnabled,
       personalizeFeed: repository.personalizeFeed,
+      analyticsEnabled: repository.analyticsEnabled,
       digestEnabled: digest.digestEnabled,
       quietHoursStart: digest.quietHoursStart,
       quietHoursEnd: digest.quietHoursEnd,
       onboardingCompleted: repository.onboardingCompleted,
     );
     _persistedPersonalize = settings.personalizeFeed;
+    _persistedAnalytics = settings.analyticsEnabled;
     return settings;
   }
 
@@ -180,6 +187,27 @@ class SettingsController extends Notifier<AppSettings> {
     );
     await store.write(next);
     state = state.copyWith(digestEnabled: enabled);
+  }
+
+  /// Explicit, off-by-default aggregate-diagnostics consent.
+  ///
+  /// Turning it off rebuilds the aggregate metrics provider, which removes any
+  /// locally stored counters and cancels session-level impression tracking.
+  Future<void> setAnalyticsEnabled(bool enabled) async {
+    final int request = ++_analyticsRequest;
+    state = state.copyWith(analyticsEnabled: enabled);
+    final Future<void> write = _analyticsWrite.then(
+      (_) => ref.read(userStateProvider).setAnalyticsEnabled(enabled),
+    );
+    _analyticsWrite = write.catchError((Object _) {});
+    try {
+      await write;
+      _persistedAnalytics = enabled;
+    } catch (_) {
+      if (request == _analyticsRequest) {
+        state = state.copyWith(analyticsEnabled: _persistedAnalytics);
+      }
+    }
   }
 
   /// Sets or clears the digest quiet-hours window.

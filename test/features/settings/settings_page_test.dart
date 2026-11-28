@@ -192,6 +192,19 @@ void main() {
     },
   );
 
+  testWidgets('anonymous diagnostics is off by default and persists', (
+    WidgetTester tester,
+  ) async {
+    await pumpPage(tester);
+
+    expect(switchValue(tester, 'Anonymous diagnostics'), isFalse);
+    await tester.tap(find.text('Anonymous diagnostics'));
+    await tester.pumpAndSettle();
+
+    expect(userState.analyticsEnabled, isTrue);
+    expect(switchValue(tester, 'Anonymous diagnostics'), isTrue);
+  });
+
   testWidgets('rapid personalization taps persist the final intent', (
     WidgetTester tester,
   ) async {

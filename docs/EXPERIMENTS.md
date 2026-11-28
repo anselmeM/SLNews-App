@@ -1,8 +1,14 @@
 # Phase 3 — experiments, metrics and scale
 
-Status: **3A foundation only**. This build computes an anonymous, sticky
-experiment assignment and defines local aggregate metric/guardrail shapes, but
-it does **not** upload any analytics and the ranker experiment is disabled.
+Status: **3B-A (dormant upload)**. This build computes an anonymous, sticky
+experiment assignment, collects consent-gated aggregate counters locally, and
+ships the remote-config/outbox seams. It does **not** upload any analytics and
+the ranker experiment is disabled.
+
+The reader-facing control is Settings → News → **Anonymous diagnostics**,
+default **off**. With it off no aggregate counters are recorded. With it on,
+only category-level local counters are written; article ids are used solely in
+memory to avoid double-counting impressions and are never persisted.
 
 The product rule stays: personalization is local-first, explainable and
 account-scoped. Phase 3 must not turn reading behaviour into a server-side user
@@ -95,6 +101,24 @@ headline clicks that bounce immediately.
 
 A treatment that improves opens but breaches a guardrail does not ship. The
 decision unit is the experiment cohort, never an individual reader.
+
+## 3B-A implementation (this change)
+
+- **Consent:** `analyticsEnabled` defaults to false, is device-local, and
+  clearing it removes the local aggregate document and session impression set.
+- **Local metrics:** impressions, opens, saves, likes, dismissals and Continue
+  reading taps feed `aggregateMetricsProvider`. Counters are day/category/
+  audience/variant only, pruned to 30 days and suppressed below k = 50 on
+  publishable reads.
+- **Remote config:** `RemoteRankingExperimentConfig` strictly parses
+  `{key, enabled, treatmentPercent, killSwitch}`; malformed payloads, errors
+  and timeouts return no config. A remote kill switch always disables the
+  experiment. There is no endpoint or fetch in 3B-A.
+- **Upload outbox:** `AggregateUploadOutbox` deduplicates k-anonymous batches,
+  caps the queue, retries with backoff and deletes successful batches. No
+  production code calls it and `aggregateUploadEnabled` is false.
+- **Data Safety:** unchanged, because nothing is transmitted.
+- **Ranking:** unchanged; the experiment remains disabled.
 
 ## 4. Gates before enabling upload (3B)
 
