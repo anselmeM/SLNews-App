@@ -7,7 +7,10 @@ import 'package:slnews_mobile/core/domain/models/article.dart';
 import 'package:slnews_mobile/core/domain/models/follow_models.dart';
 import 'package:slnews_mobile/core/domain/models/sports_models.dart';
 import 'package:slnews_mobile/core/providers/app_providers.dart';
+import 'package:slnews_mobile/core/providers/personalization_profile.dart';
+import 'package:slnews_mobile/core/widgets/article_tile.dart';
 import 'package:slnews_mobile/core/theme/app_theme.dart';
+import 'package:slnews_mobile/core/widgets/overflow_menu_button.dart';
 import 'package:slnews_mobile/core/widgets/state_views.dart';
 import 'package:slnews_mobile/features/sports/presentation/sports_page.dart';
 import 'package:slnews_mobile/features/sports/presentation/widgets/followed_teams_row.dart';
@@ -311,6 +314,37 @@ void main() {
       expect(find.text('Sports'), findsOneWidget);
     },
   );
+
+  testWidgets('sports story overflow routes the dismiss action', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildApp());
+    await settle(tester);
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(SportsPage)),
+    );
+    final Finder tile = find.ancestor(
+      of: find.text('Leone Stars hold Bo Rangers in Freetown derby'),
+      matching: find.byType(ArticleTile),
+    );
+    await tester.scrollUntilVisible(
+      tile,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(
+      find.descendant(of: tile, matching: find.byType(OverflowMenuButton)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Show less like this').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(personalizationProfileProvider).dismissedArticleIds(),
+      isNotEmpty,
+    );
+    expect(find.text("We'll show you less like this"), findsOneWidget);
+  });
 
   testWidgets(
     'empty following row prompts the reader and routes to /following',

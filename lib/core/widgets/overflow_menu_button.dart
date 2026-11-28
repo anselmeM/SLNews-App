@@ -82,7 +82,13 @@ class OverflowMenuButton extends StatelessWidget {
                     color: context.colors.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  Text(action.label, style: context.typography.button),
+                  Flexible(
+                    child: Text(
+                      action.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.typography.button,
+                    ),
+                  ),
                 ],
               ),
             ),
